@@ -39,8 +39,11 @@ struct ProcessedEvent {
 /// Pass2 event format for JSON export.
 ///
 /// This structure represents pass2 events in the format expected for debugging:
-/// - Both addr and data fields contain the register address and data value
+/// - addr field: YM2151 register address
+/// - data field: Data value to write
 /// - is_data field indicates whether this is address write (0) or data write (1)
+/// Note: In pass2 format, both address and data writes carry the same addr/data values
+///       but differ only in the is_data flag and timing
 #[derive(Debug, Clone, Serialize)]
 pub struct Pass2Event {
     /// Sample time when this event should occur
@@ -193,7 +196,7 @@ impl Player {
     /// The format matches the expected pass2 format with `is_data` field.
     ///
     /// # Parameters
-    /// - `pass2_events`: Vector of pass2 events to export
+    /// - `pass2_events`: Slice of pass2 events to export
     /// - `output_path`: Path to the output JSON file
     ///
     /// # Returns
@@ -212,8 +215,9 @@ impl Player {
         pass2_events: &[Pass2Event],
         output_path: P,
     ) -> anyhow::Result<()> {
+        let event_count = pass2_events.len();
         let log = Pass2EventLog {
-            event_count: pass2_events.len(),
+            event_count,
             events: pass2_events.to_vec(),
         };
 
