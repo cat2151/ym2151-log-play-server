@@ -106,15 +106,18 @@ impl OpmChip {
     /// chip.generate_samples(&mut buffer);
     /// ```
     pub fn generate_samples(&mut self, buffer: &mut [i16]) {
-        assert!(buffer.len().is_multiple_of(2), "Buffer length must be even for stereo output");
+        assert!(
+            buffer.len().is_multiple_of(2),
+            "Buffer length must be even for stereo output"
+        );
 
         let num_samples = buffer.len() / 2;
-        
+
         // The OPM_Clock function generates one stereo sample per call
         // and outputs 32-bit values that need to be converted to 16-bit
         for i in 0..num_samples {
             let mut output: [i32; 2] = [0; 2];
-            
+
             unsafe {
                 opm_ffi::OPM_Clock(
                     &mut self.chip,
@@ -124,7 +127,7 @@ impl OpmChip {
                     std::ptr::null_mut(), // so - not used
                 );
             }
-            
+
             // Convert 32-bit samples to 16-bit and store in buffer
             // The OPM outputs values in roughly -16384 to +16384 range,
             // so we need to scale and clamp them to i16 range
@@ -201,10 +204,10 @@ mod tests {
     fn test_generate_samples() {
         let mut chip = OpmChip::new();
         let mut buffer = vec![0i16; 1024]; // 512 stereo samples
-        
+
         // Should generate samples without panicking
         chip.generate_samples(&mut buffer);
-        
+
         // Initially, with no setup, samples should be mostly silent
         // (not all zeros due to chip initialization state)
     }
@@ -222,7 +225,7 @@ mod tests {
         let mut chip = OpmChip::new();
         chip.write_register(0x08, 0xFF);
         chip.reset();
-        
+
         // After reset, chip should be in initial state
         let mut buffer = vec![0i16; 100];
         chip.generate_samples(&mut buffer);
@@ -236,11 +239,11 @@ mod tests {
     #[test]
     fn test_sample_generation_with_register_writes() {
         let mut chip = OpmChip::new();
-        
+
         // Set up a simple tone (following sample_events.json pattern)
         // Configure operator settings
         chip.write_register(0x20, 0xC7); // RL/FB/CON for channel 0
-        chip.write_register(0x38, 0x00); // PMS/AMS for channel 0  
+        chip.write_register(0x38, 0x00); // PMS/AMS for channel 0
         chip.write_register(0x40, 0x01); // DT1/MUL for operator M1
         chip.write_register(0x60, 0x00); // TL for operator M1
         chip.write_register(0x80, 0x1F); // KS/AR for operator M1
@@ -250,11 +253,11 @@ mod tests {
         chip.write_register(0x28, 0x3E); // KC (key code) for channel 0
         chip.write_register(0x30, 0x00); // KF (key fraction) for channel 0
         chip.write_register(0x08, 0x78); // Key on for channel 0, all operators
-        
+
         // Generate samples - the chip should process these registers
         let mut buffer = vec![0i16; 10000];
         chip.generate_samples(&mut buffer);
-        
+
         // We've successfully exercised the register write and sample generation paths
         // The actual audio output depends on proper operator configuration which is
         // beyond the scope of this basic FFI binding test

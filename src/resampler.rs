@@ -114,7 +114,7 @@ impl AudioResampler {
 
         // If input doesn't match expected chunk size, pad with zeros
         let frames_needed = chunk_size;
-        
+
         // Clear and prepare input buffer with exact chunk size
         for ch in 0..self.channels {
             self.input_buffer[ch].clear();
@@ -122,7 +122,11 @@ impl AudioResampler {
         }
 
         // De-interleave and convert to f32, only up to available input
-        for (frame_idx, stereo_frame) in input.chunks_exact(self.channels).enumerate().take(frames_needed) {
+        for (frame_idx, stereo_frame) in input
+            .chunks_exact(self.channels)
+            .enumerate()
+            .take(frames_needed)
+        {
             for (ch, &sample) in stereo_frame.iter().enumerate() {
                 // Convert i16 to f32 in range [-1.0, 1.0]
                 let normalized = sample as f32 / 32768.0;
@@ -138,7 +142,9 @@ impl AudioResampler {
 
         // Calculate how many frames we actually used from input
         let frames_consumed = num_frames.min(frames_needed);
-        let output_frames_count = (frames_consumed as f64 * OUTPUT_SAMPLE_RATE as f64 / OPM_SAMPLE_RATE as f64).ceil() as usize;
+        let output_frames_count = (frames_consumed as f64 * OUTPUT_SAMPLE_RATE as f64
+            / OPM_SAMPLE_RATE as f64)
+            .ceil() as usize;
 
         // Interleave and convert back to i16, only up to the proportional output
         let mut result = Vec::with_capacity(output_frames_count * self.channels);
@@ -217,10 +223,10 @@ mod tests {
         // Create 1024 stereo samples (2048 i16 values)
         let input = vec![0i16; 2048];
         let result = resampler.resample(&input);
-        
+
         assert!(result.is_ok());
         let output = result.unwrap();
-        
+
         // Output should be roughly (2048 / 2) * (48000 / 55930) * 2
         // = 1024 * 0.858 * 2 ≈ 1758 samples
         assert!(output.len() > 0);
@@ -231,12 +237,12 @@ mod tests {
     #[test]
     fn test_resample_sine_wave() {
         let mut resampler = AudioResampler::new().unwrap();
-        
+
         // Generate a simple sine wave at input rate
         let freq = 440.0; // A4 note
         let duration_samples = 1024;
         let mut input = Vec::with_capacity(duration_samples * 2);
-        
+
         for i in 0..duration_samples {
             let t = i as f32 / OPM_SAMPLE_RATE as f32;
             let sample = (2.0 * std::f32::consts::PI * freq * t).sin();
@@ -244,14 +250,14 @@ mod tests {
             input.push(i16_sample); // Left
             input.push(i16_sample); // Right
         }
-        
+
         let result = resampler.resample(&input);
         assert!(result.is_ok());
-        
+
         let output = result.unwrap();
         assert!(output.len() > 0);
         assert_eq!(output.len() % 2, 0);
-        
+
         // Output should be non-zero (contains actual audio)
         let max_sample = output.iter().map(|&s| s.abs()).max().unwrap();
         assert!(max_sample > 100); // Should have significant amplitude
@@ -260,7 +266,7 @@ mod tests {
     #[test]
     fn test_expected_output_frames() {
         let resampler = AudioResampler::new().unwrap();
-        
+
         // For 1000 input frames at 55930 Hz -> ~858 frames at 48000 Hz
         let output_frames = resampler.expected_output_frames(1000);
         assert!(output_frames >= 857 && output_frames <= 859);
@@ -269,14 +275,14 @@ mod tests {
     #[test]
     fn test_resample_multiple_chunks() {
         let mut resampler = AudioResampler::new().unwrap();
-        
+
         // Process multiple small chunks
         let chunk_size = 256;
         for _ in 0..5 {
             let input = vec![0i16; chunk_size * 2]; // Stereo
             let result = resampler.resample(&input);
             assert!(result.is_ok());
-            
+
             let output = result.unwrap();
             assert!(output.len() > 0);
             assert_eq!(output.len() % 2, 0);

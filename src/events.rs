@@ -27,15 +27,15 @@ where
 pub struct RegisterEvent {
     /// Sample time at which this event should occur (absolute time, not delta).
     pub time: u32,
-    
+
     /// YM2151 register address to write to (parsed from hex string like "0x08").
     #[serde(deserialize_with = "parse_hex_string")]
     pub addr: u8,
-    
+
     /// Data value to write to the register (parsed from hex string like "0xC7").
     #[serde(deserialize_with = "parse_hex_string")]
     pub data: u8,
-    
+
     /// Optional field indicating if this is a data write (0 or 1).
     /// This field is ignored during deserialization as the player automatically
     /// handles the two-step register write process.
@@ -50,7 +50,7 @@ pub struct RegisterEvent {
 pub struct EventLog {
     /// Total number of events in the log.
     pub event_count: usize,
-    
+
     /// List of register write events, ordered by time.
     pub events: Vec<RegisterEvent>,
 }
@@ -94,14 +94,14 @@ impl EventLog {
         if self.event_count != self.events.len() {
             return false;
         }
-        
+
         // Check events are sorted by time
         for i in 1..self.events.len() {
             if self.events[i].time < self.events[i - 1].time {
                 return false;
             }
         }
-        
+
         true
     }
 }
@@ -123,11 +123,11 @@ mod tests {
         let log: EventLog = serde_json::from_str(json).unwrap();
         assert_eq!(log.event_count, 2);
         assert_eq!(log.events.len(), 2);
-        
+
         assert_eq!(log.events[0].time, 0);
         assert_eq!(log.events[0].addr, 0x08);
         assert_eq!(log.events[0].data, 0x00);
-        
+
         assert_eq!(log.events[1].time, 2);
         assert_eq!(log.events[1].addr, 0x20);
         assert_eq!(log.events[1].data, 0xC7);

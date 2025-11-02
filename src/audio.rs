@@ -9,9 +9,9 @@ use anyhow::{Context, Result};
 #[cfg(feature = "realtime-audio")]
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 #[cfg(feature = "realtime-audio")]
-use std::sync::{Arc, Mutex};
-#[cfg(feature = "realtime-audio")]
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
+#[cfg(feature = "realtime-audio")]
+use std::sync::{Arc, Mutex};
 
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
@@ -86,7 +86,10 @@ impl AudioPlayer {
             .default_output_device()
             .ok_or_else(|| anyhow::anyhow!("No output device available"))?;
 
-        println!("Using audio device: {}", device.name().unwrap_or_else(|_| "Unknown".to_string()));
+        println!(
+            "Using audio device: {}",
+            device.name().unwrap_or_else(|_| "Unknown".to_string())
+        );
 
         // Configure audio stream
         let config = cpal::StreamConfig {
@@ -96,7 +99,8 @@ impl AudioPlayer {
         };
 
         // Create channels for sample passing
-        let (sample_tx, sample_rx): (SyncSender<Vec<f32>>, Receiver<Vec<f32>>) = mpsc::sync_channel(8);
+        let (sample_tx, sample_rx): (SyncSender<Vec<f32>>, Receiver<Vec<f32>>) =
+            mpsc::sync_channel(8);
         let (command_tx, command_rx) = mpsc::channel();
 
         // Shared state for tracking playback position
@@ -112,7 +116,7 @@ impl AudioPlayer {
                     if let Ok(samples) = sample_rx.try_recv() {
                         let len = data.len().min(samples.len());
                         data[..len].copy_from_slice(&samples[..len]);
-                        
+
                         // Fill remainder with silence if samples are exhausted
                         if len < data.len() {
                             data[len..].fill(0.0);
@@ -159,15 +163,20 @@ impl AudioPlayer {
         command_rx: Receiver<AudioCommand>,
         _position: Arc<Mutex<usize>>,
     ) -> Result<()> {
-        let mut resampler = AudioResampler::new()
-            .context("Failed to initialize resampler")?;
+        let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
 
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
         let total_samples = player.total_samples();
 
         println!("Starting audio playback...");
-        println!("  Duration: {:.2} seconds", total_samples as f64 / OPM_SAMPLE_RATE as f64);
-        println!("  Sample rate: {} Hz → {} Hz", OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE);
+        println!(
+            "  Duration: {:.2} seconds",
+            total_samples as f64 / OPM_SAMPLE_RATE as f64
+        );
+        println!(
+            "  Sample rate: {} Hz → {} Hz",
+            OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE
+        );
 
         loop {
             // Check for stop command
@@ -256,10 +265,10 @@ mod tests {
         };
 
         let player = Player::new(log);
-        
+
         // Try to create audio player - may fail in CI without audio device
         let result = AudioPlayer::new(player);
-        
+
         // Don't fail the test if no audio device is available
         match result {
             Ok(mut audio_player) => {
@@ -295,7 +304,7 @@ mod tests {
         };
 
         let player = Player::new(log);
-        
+
         match AudioPlayer::new(player) {
             Ok(mut audio_player) => {
                 // Let it play for a short time

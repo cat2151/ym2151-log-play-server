@@ -25,18 +25,18 @@ fn print_usage(program_name: &str) {
 fn main() {
     // Parse command-line arguments
     let args: Vec<String> = env::args().collect();
-    
+
     if args.len() < 2 {
         print_usage(&args[0]);
         std::process::exit(1);
     }
-    
+
     let json_path = &args[1];
-    
+
     // Print banner
     println!("YM2151 Log Player (Rust)");
     println!("=====================================\n");
-    
+
     // Load event log
     println!("イベントログを読み込み中: {}...", json_path);
     let log = match EventLog::from_file(json_path) {
@@ -47,7 +47,7 @@ fn main() {
                 std::process::exit(1);
             }
             println!("✅ {} イベントを読み込みました", log.event_count);
-            
+
             if let Some(last_event) = log.events.last() {
                 let duration_samples = last_event.time;
                 let duration_seconds = duration_samples as f64 / 55930.0; // OPM native sample rate
@@ -61,7 +61,7 @@ fn main() {
             std::process::exit(1);
         }
     };
-    
+
     // Convert to pass2 format and export to JSON
     println!("\npass2形式に変換してJSON出力中...");
     let pass2_events = Player::convert_to_pass2_format(&log.events);
@@ -69,14 +69,18 @@ fn main() {
     match Player::export_pass2_json(&pass2_events, pass2_filename) {
         Ok(_) => {
             println!("✅ pass2 JSONファイルを作成しました: {}", pass2_filename);
-            println!("   {} イベント (pass1の{}イベントから変換)", pass2_events.len(), log.event_count);
+            println!(
+                "   {} イベント (pass1の{}イベントから変換)",
+                pass2_events.len(),
+                log.event_count
+            );
         }
         Err(e) => {
             eprintln!("⚠️  警告: pass2 JSONファイルの出力に失敗しました: {}", e);
             // Continue execution even if JSON export fails
         }
     }
-    
+
     // Generate WAV file
     println!("\nWAVファイルを生成中...");
     let player = Player::new(log);
@@ -89,13 +93,13 @@ fn main() {
             std::process::exit(1);
         }
     }
-    
+
     // Real-time audio playback (if enabled)
     #[cfg(feature = "realtime-audio")]
     {
         println!("\nリアルタイム再生中...");
         println!("(Ctrl+C で停止)");
-        
+
         // Reload events for playback
         let log = match EventLog::from_file(json_path) {
             Ok(log) => log,
@@ -104,17 +108,17 @@ fn main() {
                 std::process::exit(1);
             }
         };
-        
+
         let player = Player::new(log);
-        
+
         use ym2151_log_player_rust::audio::AudioPlayer;
         match AudioPlayer::new(player) {
             Ok(mut audio_player) => {
                 println!("▶  再生開始");
-                
+
                 // Wait for playback to complete
                 audio_player.wait();
-                
+
                 println!("■  再生完了");
             }
             Err(e) => {
@@ -123,12 +127,12 @@ fn main() {
             }
         }
     }
-    
+
     #[cfg(not(feature = "realtime-audio"))]
     {
         println!("\n注: リアルタイム音声再生は有効ではありません");
         println!("    --features realtime-audio でビルドすると有効になります");
     }
-    
+
     println!("\n✅ 完了!");
 }
