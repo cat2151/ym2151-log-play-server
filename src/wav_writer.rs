@@ -3,6 +3,10 @@
 // This module provides functionality to write audio samples to WAV files
 // using the hound crate. It handles buffering and progress tracking for
 // long-running audio generation tasks.
+//
+// Note: WAV files are output at the native OPM sample rate (55930 Hz) without
+// resampling, matching the C implementation. The resampler module is still
+// used for real-time audio playback (see audio.rs), but not for WAV output.
 
 use anyhow::{Context, Result};
 use hound::{SampleFormat, WavSpec, WavWriter};
@@ -109,6 +113,8 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
     loop {
         // Generate samples from player
+        // Note: return value (has_more) is not used because we generate a fixed
+        // amount of samples (total_samples) to match the C implementation's behavior
         player.generate_samples(&mut generation_buffer);
         processed_samples += GENERATION_BUFFER_SIZE;
 

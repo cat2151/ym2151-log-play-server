@@ -272,7 +272,9 @@ impl Player {
         // Generate each sample individually, processing events at precise times
         // This matches the behavior of the original C implementation
         for i in 0..num_samples {
-            // Process all events that should occur at the current sample time
+            // Process all events that should occur at or before the current sample time
+            // Using <= is correct: events scheduled for sample N must be processed
+            // BEFORE generating sample N, to ensure the chip state is updated properly
             while self.next_event_idx < self.events.len() {
                 let event = &self.events[self.next_event_idx];
 
