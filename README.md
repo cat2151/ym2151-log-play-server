@@ -6,7 +6,7 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 
 ## ステータス
 
-✅ **Phase 1-6 完了** - 基本機能が実装され、動作可能です。
+✅ **全フェーズ完了** - すべての機能が実装され、動作可能です。
 
 - ✅ Phase 1: Nuked-OPM FFIバインディング
 - ✅ Phase 2: JSONイベント読み込み
@@ -14,6 +14,7 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 - ✅ Phase 4: WAVファイル出力
 - ✅ Phase 5: リアルタイムオーディオ再生
 - ✅ Phase 6: メインアプリケーション統合
+- ✅ Phase 7: Windows ビルドとテスト
 
 詳細は [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) を参照してください。
 
@@ -24,6 +25,12 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 - ✅ WAVファイル出力（output.wav）
 - ✅ Nuked-OPMライブラリによる正確なYM2151エミュレーション
 - ✅ 高品質サンプルレート変換（55930 Hz → 48000 Hz）
+
+## クイックスタート / Quick Start
+
+詳細なビルド手順については **[BUILD.md](BUILD.md)** を参照してください。
+
+For detailed build instructions, please refer to **[BUILD.md](BUILD.md)**.
 
 ## 使い方
 
@@ -114,7 +121,9 @@ cargo test --features realtime-audio
 - zig cc（Cコンパイラとして使用）
 - （オプション）ALSA開発ライブラリ（Linux環境でrealtime-audio機能を使用する場合）
 
-詳細は [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) を参照してください。
+**詳細なビルド手順は [BUILD.md](BUILD.md) を参照してください。**
+
+その他の詳細は [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) を参照してください。
 
 ## ライセンス
 
