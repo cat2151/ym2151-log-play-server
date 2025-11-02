@@ -8,7 +8,6 @@ use anyhow::{Context, Result};
 use hound::{SampleFormat, WavSpec, WavWriter};
 
 use crate::player::Player;
-use crate::resampler::AudioResampler;
 
 /// Default output WAV filename
 pub const DEFAULT_OUTPUT_FILENAME: &str = "output.wav";
@@ -93,19 +92,15 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
     let total_duration = total_samples as f64 / Player::sample_rate() as f64;
     println!("  Total duration: {:.2} seconds", total_duration);
     println!(
-        "  Sample rate: {} Hz → {} Hz (resampling)",
-        Player::sample_rate(),
-        AudioResampler::new()?.output_rate()
+        "  Sample rate: {} Hz (native OPM rate, no resampling)",
+        Player::sample_rate()
     );
 
-    // Create resampler
-    let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
+    // Pre-allocate output buffer for audio at native OPM sample rate
+    // To match the C implementation, we output WAV at 55930 Hz without resampling
+    let mut output_samples = Vec::with_capacity((total_samples as usize) * 2);
 
-    // Pre-allocate output buffer for resampled audio
-    let expected_output_samples = resampler.expected_output_frames(total_samples as usize);
-    let mut output_samples = Vec::with_capacity(expected_output_samples * 2);
-
-    // Generate and resample audio in chunks
+    // Generate audio in chunks
     let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
     let mut processed_samples = 0;
     let mut last_progress = 0;
@@ -114,15 +109,11 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
     loop {
         // Generate samples from player
-        let has_more = player.generate_samples(&mut generation_buffer);
+        player.generate_samples(&mut generation_buffer);
         processed_samples += GENERATION_BUFFER_SIZE;
 
-        // Resample the generated chunk
-        let resampled = resampler
-            .resample(&generation_buffer)
-            .context("Failed to resample audio")?;
-
-        output_samples.extend_from_slice(&resampled);
+        // Append to output buffer (no resampling)
+        output_samples.extend_from_slice(&generation_buffer);
 
         // Report progress every 10%
         let progress = (processed_samples * 100 / total_samples as usize).min(100);
@@ -131,8 +122,9 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
             last_progress = progress;
         }
 
-        // Check if we've processed all events
-        if !has_more && processed_samples >= total_samples as usize {
+        // Check if we've generated enough samples
+        // Continue even after all events are processed to allow audio to decay naturally
+        if processed_samples >= total_samples as usize {
             break;
         }
     }
@@ -141,13 +133,13 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
     println!(
         "  Generated {} samples ({:.2}s at {} Hz)",
         output_samples.len() / 2,
-        output_samples.len() as f64 / 2.0 / resampler.output_rate() as f64,
-        resampler.output_rate()
+        output_samples.len() as f64 / 2.0 / Player::sample_rate() as f64,
+        Player::sample_rate()
     );
 
-    // Write to WAV file
+    // Write to WAV file at native OPM sample rate (55930 Hz)
     println!("  Writing to file...");
-    write_wav(output_path, &output_samples, resampler.output_rate())
+    write_wav(output_path, &output_samples, Player::sample_rate())
         .with_context(|| format!("Failed to write WAV file: {}", output_path))?;
 
     println!("✅ WAV file created successfully!");
