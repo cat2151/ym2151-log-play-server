@@ -48,8 +48,8 @@ fn main() {
             }
             println!("✅ {} イベントを読み込みました", log.event_count);
             
-            if !log.events.is_empty() {
-                let duration_samples = log.events.last().unwrap().time;
+            if let Some(last_event) = log.events.last() {
+                let duration_samples = last_event.time;
                 let duration_seconds = duration_samples as f64 / 55930.0; // OPM native sample rate
                 println!("   再生時間: 約 {:.2} 秒", duration_seconds);
             }
