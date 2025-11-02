@@ -347,4 +347,4 @@ When reviewing Copilot-generated code:
 4. Look for edge cases that might not be covered
 5. Confirm documentation is accurate and complete
 
-Leave specific, actionable feedback in PR comments, mentioning @copilot if you want it to make corrections.
+Leave specific, actionable feedback in PR comments. Copilot coding agent will respond to direct feedback and can make corrections based on your review comments.
