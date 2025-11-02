@@ -106,7 +106,7 @@ impl OpmChip {
     /// chip.generate_samples(&mut buffer);
     /// ```
     pub fn generate_samples(&mut self, buffer: &mut [i16]) {
-        assert!(buffer.len() % 2 == 0, "Buffer length must be even for stereo output");
+        assert!(buffer.len().is_multiple_of(2), "Buffer length must be even for stereo output");
 
         let num_samples = buffer.len() / 2;
         
