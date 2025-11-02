@@ -5,6 +5,31 @@
 use ym2151_log_player_rust::events::EventLog;
 
 #[test]
+fn test_load_simple_fixture() {
+    let log = EventLog::from_file("tests/fixtures/simple.json")
+        .expect("Failed to load simple.json");
+    
+    assert_eq!(log.event_count, 3);
+    assert_eq!(log.events.len(), 3);
+    assert!(log.validate());
+}
+
+#[test]
+fn test_load_complex_fixture() {
+    let log = EventLog::from_file("tests/fixtures/complex.json")
+        .expect("Failed to load complex.json");
+    
+    assert_eq!(log.event_count, 10);
+    assert_eq!(log.events.len(), 10);
+    assert!(log.validate());
+    
+    // Verify that is_data field is ignored (should be None for all events)
+    for event in &log.events {
+        assert!(event.is_data.is_none(), "is_data should be ignored during parsing");
+    }
+}
+
+#[test]
 fn test_load_sample_events_json() {
     // Load the sample_events.json file
     let log = EventLog::from_file("sample_events.json")
