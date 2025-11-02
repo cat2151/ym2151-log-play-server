@@ -121,8 +121,11 @@ impl Player {
     /// Convert pass1 events to pass2 events.
     ///
     /// Each pass1 event (register write) is converted into two pass2 events:
-    /// 1. Address write at the original time
-    /// 2. Data write at original time + DELAY_SAMPLES
+    /// 1. Address write with accumulated delay for events at same time
+    /// 2. Data write after DELAY_SAMPLES from the address write
+    ///
+    /// For multiple events at the same timestamp, delays accumulate to prevent
+    /// overlapping register writes, matching the behavior of the original C implementation.
     ///
     /// # Parameters
     /// - `input`: Slice of pass1 register events
@@ -131,27 +134,32 @@ impl Player {
     /// Vector of processed events sorted by time
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
         let mut output = Vec::with_capacity(input.len() * 2);
+        let mut accumulated_delay = 0u32;
+        let mut last_time = 0u32;
         
         for event in input {
-            // Address write at original time
+            // If this event is at a different time, reset accumulated delay
+            if event.time != last_time {
+                accumulated_delay = 0;
+                last_time = event.time;
+            }
+            
+            // Address write at original time + accumulated delay
             output.push(ProcessedEvent {
-                time: event.time,
+                time: event.time + accumulated_delay,
                 port: OPM_ADDRESS_REGISTER,
                 value: event.addr,
             });
+            accumulated_delay += DELAY_SAMPLES;
             
             // Data write after delay
             output.push(ProcessedEvent {
-                time: event.time + DELAY_SAMPLES,
+                time: event.time + accumulated_delay,
                 port: OPM_DATA_REGISTER,
                 value: event.data,
             });
+            accumulated_delay += DELAY_SAMPLES;
         }
-        
-        // Events should already be sorted by time since the input is sorted,
-        // but the data writes might need reordering if events are very close together.
-        // However, with DELAY_SAMPLES = 2, this is typically not an issue.
-        // We'll keep the events in the order they were created.
         
         output
     }
@@ -161,6 +169,9 @@ impl Player {
     /// This function performs the same conversion as `convert_events`, but returns
     /// the result in a format suitable for JSON serialization with the `is_data` field.
     ///
+    /// For multiple events at the same timestamp, delays accumulate to prevent
+    /// overlapping register writes, matching the behavior of the original C implementation.
+    ///
     /// # Parameters
     /// - `input`: Slice of pass1 register events
     ///
@@ -168,23 +179,33 @@ impl Player {
     /// Vector of pass2 events ready for JSON export
     pub fn convert_to_pass2_format(input: &[RegisterEvent]) -> Vec<Pass2Event> {
         let mut output = Vec::with_capacity(input.len() * 2);
+        let mut accumulated_delay = 0u32;
+        let mut last_time = 0u32;
         
         for event in input {
-            // Address write at original time (is_data = 0)
+            // If this event is at a different time, reset accumulated delay
+            if event.time != last_time {
+                accumulated_delay = 0;
+                last_time = event.time;
+            }
+            
+            // Address write at original time + accumulated delay (is_data = 0)
             output.push(Pass2Event {
-                time: event.time,
+                time: event.time + accumulated_delay,
                 addr: event.addr,
                 data: event.data,
                 is_data: 0,
             });
+            accumulated_delay += DELAY_SAMPLES;
             
             // Data write after delay (is_data = 1)
             output.push(Pass2Event {
-                time: event.time + DELAY_SAMPLES,
+                time: event.time + accumulated_delay,
                 addr: event.addr,
                 data: event.data,
                 is_data: 1,
             });
+            accumulated_delay += DELAY_SAMPLES;
         }
         
         output
@@ -407,6 +428,65 @@ mod tests {
         
         // Verify DELAY_SAMPLES is applied correctly
         assert_eq!(processed[1].time - processed[0].time, DELAY_SAMPLES);
+    }
+
+    #[test]
+    fn test_convert_events_same_time_accumulation() {
+        // Test that multiple events at the same time accumulate delays
+        // This matches the behavior of the original C implementation
+        let events = vec![
+            RegisterEvent {
+                time: 0,
+                addr: 0x08,
+                data: 0x00,
+                is_data: None,
+            },
+            RegisterEvent {
+                time: 0,
+                addr: 0x20,
+                data: 0xC7,
+                is_data: None,
+            },
+            RegisterEvent {
+                time: 0,
+                addr: 0x28,
+                data: 0x3E,
+                is_data: None,
+            },
+        ];
+
+        let processed = Player::convert_events(&events);
+        
+        // Should create 6 events (2 per original event)
+        assert_eq!(processed.len(), 6);
+        
+        // Verify timing with accumulated delays (matching C implementation):
+        // Event 1: addr at 0, data at 2
+        // Event 2: addr at 4, data at 6 (accumulated)
+        // Event 3: addr at 8, data at 10 (accumulated)
+        assert_eq!(processed[0].time, 0);   // event 1 addr write
+        assert_eq!(processed[0].port, OPM_ADDRESS_REGISTER);
+        assert_eq!(processed[0].value, 0x08);
+        
+        assert_eq!(processed[1].time, 2);   // event 1 data write
+        assert_eq!(processed[1].port, OPM_DATA_REGISTER);
+        assert_eq!(processed[1].value, 0x00);
+        
+        assert_eq!(processed[2].time, 4);   // event 2 addr write (accumulated)
+        assert_eq!(processed[2].port, OPM_ADDRESS_REGISTER);
+        assert_eq!(processed[2].value, 0x20);
+        
+        assert_eq!(processed[3].time, 6);   // event 2 data write (accumulated)
+        assert_eq!(processed[3].port, OPM_DATA_REGISTER);
+        assert_eq!(processed[3].value, 0xC7);
+        
+        assert_eq!(processed[4].time, 8);   // event 3 addr write (accumulated)
+        assert_eq!(processed[4].port, OPM_ADDRESS_REGISTER);
+        assert_eq!(processed[4].value, 0x28);
+        
+        assert_eq!(processed[5].time, 10);  // event 3 data write (accumulated)
+        assert_eq!(processed[5].port, OPM_DATA_REGISTER);
+        assert_eq!(processed[5].value, 0x3E);
     }
 
     #[test]
