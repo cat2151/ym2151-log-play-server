@@ -236,19 +236,22 @@ fn main() {
 
 ## 段階的実装計画
 
-### Phase 0: プロジェクト初期化
+### Phase 0: プロジェクト初期化 ✅
 
 **目標:** 基本的なRustプロジェクト構造の構築
 
 **タスク:**
-- [ ] `cargo init` でプロジェクト初期化
-- [ ] Cargo.toml に依存関係を追加
-- [ ] build.rs を作成
-- [ ] .gitignore を更新（target/, Cargo.lock 等）
-- [ ] README.md を作成（日本語/英語）
+- [x] `cargo init` でプロジェクト初期化
+- [x] Cargo.toml に依存関係を追加
+- [x] build.rs を作成
+- [x] .gitignore を更新（target/, Cargo.lock 等）
+- [x] README.md を作成（日本語）
+- [x] opm.c, opm.h をダウンロード
+- [x] sample_events.json をダウンロード
+- [x] ビルドの動作確認
 
 **成果物:**
-- ビルド可能な空のRustプロジェクト
+- ビルド可能な空のRustプロジェクト ✅
 
 ### Phase 1: Nuked-OPM FFIバインディング
 
