@@ -6,13 +6,14 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 
 ## ステータス
 
-✅ **Phase 1-5 完了** - 基本機能が実装され、動作可能です。
+✅ **Phase 1-6 完了** - 基本機能が実装され、動作可能です。
 
 - ✅ Phase 1: Nuked-OPM FFIバインディング
 - ✅ Phase 2: JSONイベント読み込み
 - ✅ Phase 3: イベント処理エンジン
 - ✅ Phase 4: WAVファイル出力
 - ✅ Phase 5: リアルタイムオーディオ再生
+- ✅ Phase 6: メインアプリケーション統合
 
 詳細は [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) を参照してください。
 
@@ -26,18 +27,55 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 
 ## 使い方
 
-### WAVファイル出力のみ（デフォルト）
+### 基本的な使い方
 
 ```bash
-cargo run
+cargo run <json_log_file>
 ```
 
-WAVファイル出力のデモを実行し、`output.wav` が生成されます。
+例:
+```bash
+cargo run sample_events.json
+```
+
+これにより、JSONイベントログファイルを読み込み、`output.wav` ファイルが生成されます。
+
+### コマンドライン引数
+
+```
+使用方法:
+  ym2151-log-player-rust <json_log_file>
+
+例:
+  ym2151-log-player-rust events.json
+  ym2151-log-player-rust sample_events.json
+```
+
+### JSONイベントログファイル形式
+
+```json
+{
+  "event_count": 100,
+  "events": [
+    {"time": 0, "addr": "0x08", "data": "0x00"},
+    {"time": 2, "addr": "0x20", "data": "0xC7"}
+  ]
+}
+```
+
+- `event_count`: イベント総数
+- `events`: イベント配列
+  - `time`: サンプル時刻（絶対時刻）
+  - `addr`: YM2151レジスタアドレス（16進数文字列）
+  - `data`: レジスタに書き込むデータ（16進数文字列）
+  - `is_data`: （オプション、読み込み時は無視されます）
+
+**注意:** プログラムは入力イベントを自動的に2段階（アドレス書き込み→データ書き込み）に分割し、必要な遅延を挿入します。
 
 ### リアルタイムオーディオ再生を有効化
 
 ```bash
-cargo run --features realtime-audio
+cargo run --features realtime-audio sample_events.json
 ```
 
 リアルタイムオーディオ再生とWAVファイル出力の両方を実行します。
@@ -51,6 +89,13 @@ sudo apt-get install libasound2-dev
 
 # Fedora
 sudo dnf install alsa-lib-devel
+```
+
+### リリースビルド
+
+```bash
+cargo build --release
+./target/release/ym2151-log-player-rust sample_events.json
 ```
 
 ### テストの実行
