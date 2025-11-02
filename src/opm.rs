@@ -9,6 +9,11 @@ use std::mem;
 const OPM_PORT_ADDRESS: u32 = 0;
 const OPM_PORT_DATA: u32 = 1;
 
+/// Number of OPM clock cycles per audio sample
+/// The OPM chip runs at 3.579545 MHz, and we generate samples at ~55930 Hz
+/// This means each sample requires 64 clock cycles (3579545 / 55930 ≈ 64)
+const CYCLES_PER_SAMPLE: usize = 64;
+
 /// Safe wrapper for the OPM chip emulator.
 ///
 /// This structure manages the lifecycle and safe interaction with the
@@ -90,6 +95,10 @@ impl OpmChip {
     /// audio samples. The buffer should be sized as `num_samples * 2` to
     /// accommodate interleaved stereo output (left, right, left, right, ...).
     ///
+    /// The OPM chip requires multiple clock cycles per audio sample. This function
+    /// calls OPM_Clock 64 times per sample to properly accumulate the audio output,
+    /// matching the behavior of the original C implementation.
+    ///
     /// # Parameters
     /// - `buffer`: Output buffer for interleaved stereo i16 samples
     ///
@@ -113,19 +122,23 @@ impl OpmChip {
 
         let num_samples = buffer.len() / 2;
 
-        // The OPM_Clock function generates one stereo sample per call
-        // and outputs 32-bit values that need to be converted to 16-bit
+        // Generate each sample by calling OPM_Clock multiple times
+        // The OPM chip needs CYCLES_PER_SAMPLE (64) clock cycles to generate
+        // one complete audio sample. This matches the original C implementation.
         for i in 0..num_samples {
             let mut output: [i32; 2] = [0; 2];
 
-            unsafe {
-                opm_ffi::OPM_Clock(
-                    &mut self.chip,
-                    output.as_mut_ptr(),
-                    std::ptr::null_mut(), // sh1 - not used
-                    std::ptr::null_mut(), // sh2 - not used
-                    std::ptr::null_mut(), // so - not used
-                );
+            // Call OPM_Clock 64 times per sample to accumulate the audio
+            for _ in 0..CYCLES_PER_SAMPLE {
+                unsafe {
+                    opm_ffi::OPM_Clock(
+                        &mut self.chip,
+                        output.as_mut_ptr(),
+                        std::ptr::null_mut(), // sh1 - not used
+                        std::ptr::null_mut(), // sh2 - not used
+                        std::ptr::null_mut(), // so - not used
+                    );
+                }
             }
 
             // Convert 32-bit samples to 16-bit and store in buffer
