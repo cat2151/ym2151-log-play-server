@@ -159,13 +159,15 @@ Phases 1 and 2 are complete. The project can:
 Events use hex strings for addresses and data:
 ```json
 {
-  "event_count": 3,
+  "event_count": 2,
   "events": [
     {"time": 0, "addr": "0x08", "data": "0x00"},
     {"time": 2, "addr": "0x20", "data": "0xC7"}
   ]
 }
 ```
+
+**Note**: The current `sample_events.json` file contains pass2 format events with `is_data` field already set. This field is optional and ignored during parsing. Future implementation phases will convert pass1 events (simple register writes without `is_data`) into pass2 events automatically.
 
 ### Hex String Parsing
 Use custom deserializer in `events.rs`:
@@ -174,10 +176,14 @@ Use custom deserializer in `events.rs`:
 pub addr: u8,
 ```
 
-### Event Processing (Future)
-- Convert pass1 events (single write) to pass2 (address + data writes)
-- Insert DELAY_SAMPLES (2 samples) between address and data writes
-- OPM port 0 = address register, port 1 = data register
+### Event Processing (Planned for Phase 3)
+The player will process events as follows:
+- **Input**: Pass1 format events (simple register writes: `{"time": 0, "addr": "0x08", "data": "0x00"}`)
+- **Processing**: Convert to pass2 format (address write + data write pairs)
+- **Timing**: Insert DELAY_SAMPLES (2 samples) between address and data writes
+- **OPM Ports**: Port 0 = address register, Port 1 = data register
+
+Current Status: The `sample_events.json` file contains pass2 format data for testing purposes. Phase 3 will implement the pass1→pass2 conversion logic.
 
 ### Audio Specifications
 - OPM internal rate: 55930 Hz
