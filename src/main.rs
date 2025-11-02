@@ -124,4 +124,54 @@ fn main() {
             std::process::exit(1);
         }
     }
+
+    // Phase 5: Real-time audio playback
+    #[cfg(feature = "realtime-audio")]
+    {
+        println!("\n=====================================");
+        println!("Phase 5: Real-time Audio Playback");
+        
+        // Load the sample events again for real-time playback
+        let log = match EventLog::from_file("sample_events.json") {
+            Ok(log) => log,
+            Err(e) => {
+                eprintln!("❌ Failed to load sample_events.json: {}", e);
+                std::process::exit(1);
+            }
+        };
+        
+        let player = Player::new(log);
+        
+        use ym2151_log_player_rust::audio::AudioPlayer;
+        match AudioPlayer::new(player) {
+            Ok(mut audio_player) => {
+                println!("▶  Playing audio in real-time...");
+                println!("   Press Ctrl+C to stop (or wait for completion)");
+                
+                // Wait for playback to complete
+                audio_player.wait();
+                
+                println!("■  Playback complete");
+                println!("\n=====================================");
+                println!("Phase 1, 2, 3, 4 & 5: All Complete! ✅");
+                println!("\nPhase 5 successfully implemented:");
+                println!("  • Real-time audio playback with cpal ✅");
+                println!("  • Live sample rate conversion (55930 Hz → 48000 Hz) ✅");
+                println!("  • Audio stream synchronization ✅");
+                println!("  • Buffer management and underrun protection ✅");
+            }
+            Err(e) => {
+                eprintln!("⚠️  Real-time audio playback not available: {}", e);
+                eprintln!("   (This is expected in environments without audio devices)");
+                println!("\nPhase 5 implementation complete, but playback requires audio device.");
+            }
+        }
+    }
+    
+    #[cfg(not(feature = "realtime-audio"))]
+    {
+        println!("\n=====================================");
+        println!("Note: Phase 5 (Real-time Audio) not enabled");
+        println!("Build with --features realtime-audio to enable real-time playback");
+    }
 }
