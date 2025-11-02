@@ -94,9 +94,11 @@ cargo test -- --nocapture
 1. **zig のインストール / Install zig**
 
 ```bash
-# zig の最新版をダウンロード / Download latest zig
+# zig をダウンロード / Download zig
 # https://ziglang.org/download/ から適切なバージョンを選択
 # Choose appropriate version from https://ziglang.org/download/
+# 推奨: 0.13.0 以降、最小要件: 0.11.0 以降
+# Recommended: 0.13.0 or later, Minimum: 0.11.0 or later
 
 # 例（Linux x86_64の場合） / Example (for Linux x86_64)
 wget https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz
@@ -210,8 +212,11 @@ cargo build --release --features realtime-audio
 
 ### バイナリサイズの削減 / Reducing Binary Size
 
-`Cargo.toml` に以下の設定を追加することで、バイナリサイズを削減できます：
-You can reduce binary size by adding the following configuration to `Cargo.toml`:
+**オプション設定 / Optional Configuration**
+
+デフォルトのビルド設定で十分ですが、さらにバイナリサイズを削減したい場合は、`Cargo.toml` に以下の設定を追加できます：
+
+The default build configuration is sufficient, but if you want to further reduce binary size, you can add the following configuration to `Cargo.toml`:
 
 ```toml
 [profile.release]
@@ -224,6 +229,9 @@ panic = "abort"        # パニック時にアンワインドしない / Don't u
 
 **注意 / Note:** これらの設定はコンパイル時間を増加させますが、実行ファイルサイズを大幅に削減します。
 These settings increase compilation time but significantly reduce executable size.
+
+**参考 / Reference:** デフォルト設定でのバイナリサイズは約 767KB です。strip を有効化すると約 598KB に削減されます。
+With default settings, binary size is approximately 767KB. Enabling strip reduces it to approximately 598KB.
 
 ### 追加の最適化オプション / Additional Optimization Options
 
@@ -294,8 +302,8 @@ error: linking with `zig cc` failed
 
 **確認事項 / Check:**
 
-1. zig のバージョンが 0.11.0 以降であること
-   zig version is 0.11.0 or later
+1. zig のバージョンが 0.11.0 以降であること（0.13.0 以降を推奨）
+   zig version is 0.11.0 or later (0.13.0 or later recommended)
 
 2. Windows ターゲットが追加されているか確認
    Verify Windows target is added:
