@@ -265,7 +265,10 @@ impl AudioPlayer {
     /// # Returns
     /// Vector of interleaved stereo i16 samples
     pub fn get_wav_buffer(&self) -> Vec<i16> {
-        self.wav_buffer.lock().unwrap().clone()
+        self.wav_buffer
+            .lock()
+            .expect("Failed to lock WAV buffer - mutex poisoned")
+            .clone()
     }
 }
 

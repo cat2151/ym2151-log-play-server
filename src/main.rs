@@ -179,5 +179,5 @@ fn main() {
         std::process::exit(1);
     }
 
-    println!("\n✅ Playback complete!");
+    println!("\n✅ 再生完了!");
 }
