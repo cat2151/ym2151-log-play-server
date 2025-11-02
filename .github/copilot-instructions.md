@@ -231,3 +231,120 @@ Current Status: The `sample_events.json` file contains pass2 format data for tes
 - User-facing messages: Japanese
 - Technical documentation: English is acceptable
 - Commit messages: English preferred
+
+## Code Quality and Linting
+
+### Running Linters
+
+Always run linters before committing code:
+
+```bash
+# Format code with rustfmt
+cargo fmt
+
+# Check formatting without modifying files
+cargo fmt -- --check
+
+# Run Clippy for code quality checks
+cargo clippy --all-targets
+
+# Run Clippy with warnings as errors (for CI)
+cargo clippy --all-targets -- -D warnings
+```
+
+### Pre-commit Checklist
+
+Before committing or requesting code review:
+
+1. **Format code**: Run `cargo fmt` to ensure consistent formatting
+2. **Fix linting issues**: Run `cargo clippy` and address warnings
+3. **Build successfully**: Run `cargo build` (or `cargo build --release`)
+4. **Run tests**: Execute `cargo test` to ensure all tests pass
+5. **Test with features**: If modifying audio code, test with `cargo test --features realtime-audio`
+6. **Update documentation**: If adding public APIs, update doc comments
+
+### Continuous Integration
+
+Currently, this repository doesn't have automated CI/CD workflows. When contributing:
+
+- Ensure your local build and tests pass before pushing
+- Code review is manual; maintainers will check for:
+  - Proper formatting (rustfmt)
+  - No clippy warnings
+  - All tests passing
+  - Documentation updated for new features
+
+## Acceptance Criteria for Changes
+
+### Bug Fixes
+
+A bug fix is complete when:
+- [ ] The bug is reproducible with a test case
+- [ ] The fix resolves the issue without breaking existing functionality
+- [ ] Tests are added to prevent regression
+- [ ] Code passes all linting checks
+- [ ] Documentation is updated if the bug was in documented behavior
+
+### New Features
+
+A new feature is complete when:
+- [ ] Implementation matches the specification in IMPLEMENTATION_PLAN.md
+- [ ] All public APIs have documentation comments
+- [ ] Unit tests cover the new functionality
+- [ ] Integration tests verify end-to-end behavior
+- [ ] Code follows project conventions and passes linting
+- [ ] README.md or relevant documentation is updated
+- [ ] No new clippy warnings are introduced
+
+### Refactoring
+
+A refactoring is complete when:
+- [ ] Behavior is unchanged (all existing tests still pass)
+- [ ] Code is more maintainable/readable
+- [ ] No new warnings or errors introduced
+- [ ] Performance is not negatively impacted (if relevant)
+
+### Documentation Updates
+
+Documentation changes are complete when:
+- [ ] Information is accurate and up-to-date
+- [ ] Examples compile and work correctly
+- [ ] Language conventions are followed (see Language and Documentation section)
+- [ ] No broken links or references
+
+## Working with GitHub Copilot
+
+### Well-Suited Tasks for Copilot
+
+Copilot works best on issues that are:
+
+- **Well-scoped**: Clear description of what needs to change
+- **Specific**: Affected files or components are identified
+- **Testable**: Expected behavior can be verified with tests
+- **Incremental**: Changes build on existing code rather than large rewrites
+
+Examples of good Copilot tasks:
+- "Add a new JSON field to the event format with parsing and tests"
+- "Fix clippy warning in src/player.rs about unused variable"
+- "Add validation for sample rate values in AudioResampler"
+- "Update documentation for the EventLog::from_file method"
+
+### Tasks Less Suited for Copilot
+
+Avoid assigning to Copilot:
+- Major architectural changes or redesigns
+- Tasks requiring domain expertise in audio processing or YM2151 chip behavior
+- Issues with ambiguous requirements or unclear success criteria
+- Tasks that require creative problem-solving without clear constraints
+
+### Providing Feedback on Copilot PRs
+
+When reviewing Copilot-generated code:
+
+1. Check that all acceptance criteria are met
+2. Verify tests are comprehensive and actually test the right behavior
+3. Ensure code follows project conventions
+4. Look for edge cases that might not be covered
+5. Confirm documentation is accurate and complete
+
+Leave specific, actionable feedback in PR comments. Copilot coding agent will respond to direct feedback and can make corrections based on your review comments.
