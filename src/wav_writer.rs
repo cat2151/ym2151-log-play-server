@@ -5,7 +5,7 @@
 // long-running audio generation tasks.
 
 use anyhow::{Context, Result};
-use hound::{WavSpec, WavWriter, SampleFormat};
+use hound::{SampleFormat, WavSpec, WavWriter};
 
 use crate::player::Player;
 use crate::resampler::AudioResampler;
@@ -88,17 +88,18 @@ pub fn write_wav(path: &str, samples: &[i16], sample_rate: u32) -> Result<()> {
 /// ```
 pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
     println!("Generating WAV file: {}", output_path);
-    
+
     let total_samples = player.total_samples();
     let total_duration = total_samples as f64 / Player::sample_rate() as f64;
     println!("  Total duration: {:.2} seconds", total_duration);
-    println!("  Sample rate: {} Hz → {} Hz (resampling)", 
-             Player::sample_rate(), 
-             AudioResampler::new()?.output_rate());
+    println!(
+        "  Sample rate: {} Hz → {} Hz (resampling)",
+        Player::sample_rate(),
+        AudioResampler::new()?.output_rate()
+    );
 
     // Create resampler
-    let mut resampler = AudioResampler::new()
-        .context("Failed to initialize resampler")?;
+    let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
 
     // Pre-allocate output buffer for resampled audio
     let expected_output_samples = resampler.expected_output_frames(total_samples as usize);
@@ -120,7 +121,7 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
         let resampled = resampler
             .resample(&generation_buffer)
             .context("Failed to resample audio")?;
-        
+
         output_samples.extend_from_slice(&resampled);
 
         // Report progress every 10%
@@ -137,10 +138,12 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
     }
 
     println!("  Progress: 100%");
-    println!("  Generated {} samples ({:.2}s at {} Hz)",
-             output_samples.len() / 2,
-             output_samples.len() as f64 / 2.0 / resampler.output_rate() as f64,
-             resampler.output_rate());
+    println!(
+        "  Generated {} samples ({:.2}s at {} Hz)",
+        output_samples.len() / 2,
+        output_samples.len() as f64 / 2.0 / resampler.output_rate() as f64,
+        resampler.output_rate()
+    );
 
     // Write to WAV file
     println!("  Writing to file...");
@@ -183,7 +186,7 @@ mod tests {
         // Create 1 second of silence
         let samples = vec![0i16; 48000 * 2];
         let result = write_wav(temp_path_str, &samples, 48000);
-        
+
         assert!(result.is_ok());
         assert!(Path::new(temp_path_str).exists());
 
@@ -199,7 +202,7 @@ mod tests {
 
         let samples = vec![];
         let result = write_wav(temp_path_str, &samples, 48000);
-        
+
         assert!(result.is_ok());
         assert!(Path::new(temp_path_str).exists());
 
@@ -221,7 +224,7 @@ mod tests {
         }
 
         let result = write_wav(temp_path_str, &samples, 48000);
-        
+
         assert!(result.is_ok());
         assert!(Path::new(temp_path_str).exists());
 
@@ -260,7 +263,7 @@ mod tests {
 
         let player = Player::new(log);
         let result = generate_wav(player, temp_path_str);
-        
+
         assert!(result.is_ok(), "Failed to generate WAV: {:?}", result.err());
         assert!(Path::new(temp_path_str).exists());
 

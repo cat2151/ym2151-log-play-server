@@ -44,13 +44,7 @@ extern "C" {
     /// - `chip` must be a valid pointer to an initialized opm_t structure.
     /// - `output` must point to valid memory for at least 2 int32_t values.
     /// - If provided, `sh1`, `sh2`, and `so` must point to valid u8 memory.
-    pub fn OPM_Clock(
-        chip: *mut opm_t,
-        output: *mut c_int,
-        sh1: *mut u8,
-        sh2: *mut u8,
-        so: *mut u8,
-    );
+    pub fn OPM_Clock(chip: *mut opm_t, output: *mut c_int, sh1: *mut u8, sh2: *mut u8, so: *mut u8);
 
     /// Read a byte from the OPM chip register.
     ///
