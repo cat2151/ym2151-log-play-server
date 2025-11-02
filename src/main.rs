@@ -92,4 +92,36 @@ fn main() {
     println!("  • Delay insertion (DELAY_SAMPLES=2) ✅");
     println!("  • Event timing and scheduling ✅");
     println!("  • Sample generation with events ✅");
+    
+    // Phase 4: WAV file output
+    println!("\n=====================================");
+    println!("Phase 4: WAV File Output");
+    
+    // Load the sample events again for WAV generation
+    let log = match EventLog::from_file("sample_events.json") {
+        Ok(log) => log,
+        Err(e) => {
+            eprintln!("❌ Failed to load sample_events.json: {}", e);
+            std::process::exit(1);
+        }
+    };
+    
+    let player = Player::new(log);
+    
+    use ym2151_log_player_rust::wav_writer;
+    match wav_writer::generate_wav_default(player) {
+        Ok(_) => {
+            println!("\n=====================================");
+            println!("Phase 1, 2, 3 & 4: All Complete! ✅");
+            println!("\nPhase 4 successfully implemented:");
+            println!("  • WAV file output ✅");
+            println!("  • Sample rate conversion (55930 Hz → 48000 Hz) ✅");
+            println!("  • High-quality resampling with rubato ✅");
+            println!("  • Progress reporting ✅");
+        }
+        Err(e) => {
+            eprintln!("❌ Failed to generate WAV file: {}", e);
+            std::process::exit(1);
+        }
+    }
 }
