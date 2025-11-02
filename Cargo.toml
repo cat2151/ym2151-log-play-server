@@ -9,10 +9,14 @@ description = "YM2151 Log Player - Rust implementation"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-cpal = "0.15.3"  # Pinned for reproducible audio processing
+cpal = { version = "0.15.3", optional = true }  # Pinned for reproducible audio processing
 hound = "3.5"
 rubato = "0.14.1"  # Pinned for reproducible resampling
 anyhow = "1.0"
+
+[features]
+default = []
+realtime-audio = ["cpal"]
 
 [build-dependencies]
 cc = "1.0"
