@@ -62,6 +62,21 @@ fn main() {
         }
     };
     
+    // Convert to pass2 format and export to JSON
+    println!("\npass2形式に変換してJSON出力中...");
+    let pass2_events = Player::convert_to_pass2_format(&log.events);
+    let pass2_filename = "output_pass2.json";
+    match Player::export_pass2_json(&pass2_events, pass2_filename) {
+        Ok(_) => {
+            println!("✅ pass2 JSONファイルを作成しました: {}", pass2_filename);
+            println!("   {} イベント (pass1の{}イベントから変換)", pass2_events.len(), log.event_count);
+        }
+        Err(e) => {
+            eprintln!("⚠️  警告: pass2 JSONファイルの出力に失敗しました: {}", e);
+            // Continue execution even if JSON export fails
+        }
+    }
+    
     // Generate WAV file
     println!("\nWAVファイルを生成中...");
     let player = Player::new(log);
