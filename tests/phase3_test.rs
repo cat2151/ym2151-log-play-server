@@ -293,3 +293,62 @@ fn test_phase3_total_samples_calculation() {
     let expected = 1002 + 55930;
     assert_eq!(player.total_samples(), expected);
 }
+
+#[test]
+fn test_phase3_pass2_json_export() {
+    use std::fs;
+    use std::path::Path;
+    
+    // Create a simple event log
+    let events = vec![
+        RegisterEvent {
+            time: 0,
+            addr: 0x08,
+            data: 0x00,
+            is_data: None,
+        },
+        RegisterEvent {
+            time: 100,
+            addr: 0x20,
+            data: 0xC7,
+            is_data: None,
+        },
+    ];
+    
+    // Convert to pass2 format
+    let pass2_events = Player::convert_to_pass2_format(&events);
+    
+    // Should have 4 events (2 pass1 events * 2)
+    assert_eq!(pass2_events.len(), 4);
+    
+    // Verify first event (address write)
+    assert_eq!(pass2_events[0].time, 0);
+    assert_eq!(pass2_events[0].addr, 0x08);
+    assert_eq!(pass2_events[0].data, 0x00);
+    assert_eq!(pass2_events[0].is_data, 0);
+    
+    // Verify second event (data write)
+    assert_eq!(pass2_events[1].time, 2); // 0 + DELAY_SAMPLES
+    assert_eq!(pass2_events[1].addr, 0x08);
+    assert_eq!(pass2_events[1].data, 0x00);
+    assert_eq!(pass2_events[1].is_data, 1);
+    
+    // Export to JSON file
+    let output_path = "/tmp/test_pass2_output.json";
+    Player::export_pass2_json(&pass2_events, output_path).unwrap();
+    
+    // Verify file was created
+    assert!(Path::new(output_path).exists());
+    
+    // Read and verify JSON content
+    let json_content = fs::read_to_string(output_path).unwrap();
+    assert!(json_content.contains("\"event_count\": 4"));
+    assert!(json_content.contains("\"is_data\": 0"));
+    assert!(json_content.contains("\"is_data\": 1"));
+    assert!(json_content.contains("\"0x08\""));
+    assert!(json_content.contains("\"0x20\""));
+    assert!(json_content.contains("\"0xC7\""));
+    
+    // Clean up
+    fs::remove_file(output_path).ok();
+}
