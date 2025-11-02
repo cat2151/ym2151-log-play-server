@@ -183,7 +183,8 @@ impl AudioPlayer {
             }
 
             // Generate samples
-            let _has_more = player.generate_samples(&mut generation_buffer);
+            // Note: We check completion above, so we don't need the return value here
+            player.generate_samples(&mut generation_buffer);
 
             // Resample
             let resampled = resampler
@@ -191,10 +192,10 @@ impl AudioPlayer {
                 .context("Failed to resample audio")?;
 
             // Convert to f32 and send to audio callback
-            let mut f32_samples = Vec::with_capacity(resampled.len());
-            for &sample in &resampled {
-                f32_samples.push(sample as f32 / 32768.0);
-            }
+            let f32_samples: Vec<f32> = resampled
+                .iter()
+                .map(|&sample| sample as f32 / 32768.0)
+                .collect();
 
             // Send samples to audio callback
             // If the queue is full, this will block until space is available
