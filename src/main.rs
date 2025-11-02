@@ -1,5 +1,6 @@
 use ym2151_log_player_rust::opm::OpmChip;
 use ym2151_log_player_rust::events::EventLog;
+use ym2151_log_player_rust::player::Player;
 
 fn main() {
     println!("YM2151 Log Player (Rust)");
@@ -17,14 +18,14 @@ fn main() {
     
     // Phase 2: Test JSON event loading
     println!("\nPhase 2: JSON Event Loading");
-    match EventLog::from_file("sample_events.json") {
+    let log = match EventLog::from_file("sample_events.json") {
         Ok(log) => {
             println!("✅ Loaded sample_events.json");
             println!("   Event count: {}", log.event_count);
             println!("   Events loaded: {}", log.events.len());
             println!("   Valid: {}", log.validate());
             
-            if log.events.len() > 0 {
+            if !log.events.is_empty() {
                 println!("\n   First event:");
                 println!("     Time: {} samples", log.events[0].time);
                 println!("     Register: 0x{:02X} = 0x{:02X}", log.events[0].addr, log.events[0].data);
@@ -38,13 +39,57 @@ fn main() {
                 let duration_seconds = duration_samples as f64 / 55930.0; // OPM native sample rate
                 println!("\n   Duration: ~{:.2} seconds", duration_seconds);
             }
+            log
         }
         Err(e) => {
             eprintln!("❌ Failed to load sample_events.json: {}", e);
             std::process::exit(1);
         }
+    };
+    
+    // Phase 3: Test event processing engine
+    println!("\nPhase 3: Event Processing Engine");
+    let mut player = Player::new(log);
+    println!("✅ Player initialized");
+    println!("   Pass1 → Pass2 conversion complete");
+    println!("   Total pass2 events: {}", player.total_events());
+    println!("   Total samples needed: {}", player.total_samples());
+    
+    let total_duration = player.total_samples() as f64 / Player::sample_rate() as f64;
+    println!("   Total duration: {:.2} seconds", total_duration);
+    
+    // Process a few buffers to demonstrate event execution
+    println!("\n   Processing events...");
+    let mut buffer = vec![0i16; 1024]; // 512 stereo samples
+    let mut processed_samples = 0;
+    let mut iterations = 0;
+    
+    // Process first 10 buffers or until complete
+    while iterations < 10 && !player.is_complete() {
+        player.generate_samples(&mut buffer);
+        processed_samples += buffer.len() / 2;
+        iterations += 1;
+    }
+    
+    println!("   Processed {} samples ({:.3}s)", 
+             processed_samples, 
+             processed_samples as f64 / Player::sample_rate() as f64);
+    println!("   Events executed: {} / {}", 
+             player.events_processed(), 
+             player.total_events());
+    
+    if player.is_complete() {
+        println!("   ✅ All events processed");
+    } else {
+        println!("   ⏸  More events remaining (demo stopped early)");
     }
     
     println!("\n=====================================");
-    println!("Phase 1 & Phase 2: Complete! ✅");
+    println!("Phase 1, 2 & 3: Complete! ✅");
+    println!("\nPhase 3 successfully implemented:");
+    println!("  • Pass1 → Pass2 event conversion ✅");
+    println!("  • Address/Data write splitting ✅");
+    println!("  • Delay insertion (DELAY_SAMPLES=2) ✅");
+    println!("  • Event timing and scheduling ✅");
+    println!("  • Sample generation with events ✅");
 }

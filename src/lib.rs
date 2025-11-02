@@ -6,3 +6,4 @@
 pub mod opm_ffi;
 pub mod opm;
 pub mod events;
+pub mod player;
