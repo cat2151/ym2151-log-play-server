@@ -269,27 +269,32 @@ impl Player {
     pub fn generate_samples(&mut self, buffer: &mut [i16]) -> bool {
         let num_samples = buffer.len() / 2; // Stereo samples
 
-        // Execute all events that should occur before or during this buffer
-        let end_time = self.samples_played + num_samples as u32;
+        // Generate each sample individually, processing events at precise times
+        // This matches the behavior of the original C implementation
+        for i in 0..num_samples {
+            // Process all events that should occur at or before the current sample time
+            // Using <= is correct: events scheduled for sample N must be processed
+            // BEFORE generating sample N, to ensure the chip state is updated properly
+            while self.next_event_idx < self.events.len() {
+                let event = &self.events[self.next_event_idx];
 
-        while self.next_event_idx < self.events.len() {
-            let event = &self.events[self.next_event_idx];
-
-            if event.time < end_time {
-                // This event should be executed during this buffer
-                self.chip.write(event.port, event.value);
-                self.next_event_idx += 1;
-            } else {
-                // This event is in the future
-                break;
+                if event.time <= self.samples_played {
+                    // This event should be executed before or at the current sample
+                    self.chip.write(event.port, event.value);
+                    self.next_event_idx += 1;
+                } else {
+                    // This event is in the future
+                    break;
+                }
             }
+
+            // Generate one stereo sample
+            let sample_buffer = &mut buffer[i * 2..(i + 1) * 2];
+            self.chip.generate_samples(sample_buffer);
+
+            // Update playback position after generating this sample
+            self.samples_played += 1;
         }
-
-        // Generate samples from the chip
-        self.chip.generate_samples(buffer);
-
-        // Update playback position
-        self.samples_played += num_samples as u32;
 
         // Return true if there are more events to process
         self.next_event_idx < self.events.len()
