@@ -11,7 +11,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 #[cfg(feature = "realtime-audio")]
 use std::sync::{Arc, Mutex};
 #[cfg(feature = "realtime-audio")]
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
 
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
@@ -96,7 +96,7 @@ impl AudioPlayer {
         };
 
         // Create channels for sample passing
-        let (sample_tx, sample_rx): (Sender<Vec<f32>>, Receiver<Vec<f32>>) = mpsc::sync_channel(8);
+        let (sample_tx, sample_rx): (SyncSender<Vec<f32>>, Receiver<Vec<f32>>) = mpsc::sync_channel(8);
         let (command_tx, command_rx) = mpsc::channel();
 
         // Shared state for tracking playback position
@@ -155,9 +155,9 @@ impl AudioPlayer {
     /// from the player, resamples them, and sends them to the audio callback.
     fn generate_samples_thread(
         mut player: Player,
-        sample_tx: Sender<Vec<f32>>,
+        sample_tx: SyncSender<Vec<f32>>,
         command_rx: Receiver<AudioCommand>,
-        position: Arc<Mutex<usize>>,
+        _position: Arc<Mutex<usize>>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new()
             .context("Failed to initialize resampler")?;
