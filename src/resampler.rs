@@ -122,8 +122,8 @@ impl AudioResampler {
         }
 
         // De-interleave and convert to f32, only up to available input
-        for (frame_idx, frame) in input.chunks_exact(self.channels).enumerate().take(frames_needed) {
-            for (ch, &sample) in frame.iter().enumerate() {
+        for (frame_idx, stereo_frame) in input.chunks_exact(self.channels).enumerate().take(frames_needed) {
+            for (ch, &sample) in stereo_frame.iter().enumerate() {
                 // Convert i16 to f32 in range [-1.0, 1.0]
                 let normalized = sample as f32 / 32768.0;
                 self.input_buffer[ch][frame_idx] = normalized;
