@@ -4,6 +4,10 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 
 [ym2151-log-player](https://github.com/cat2151/ym2151-log-player) のRust版です。
 
+## 状況
+
+開発中です。致命的な不具合が複数発生しています
+
 ## ステータス
 
 ✅ **全フェーズ完了** - すべての機能が実装され、動作可能です。
@@ -33,6 +37,24 @@ YM2151（OPM）レジスタイベントログをJSONファイルから読み込�
 For detailed build instructions, please refer to **[BUILD.md](BUILD.md)**.
 
 ## 使い方
+
+### 注意
+
+メンテ中です。以降の情報は長くて読みづらいことがあります
+
+#### 主な使い方
+
+ビルドして音を鳴らします
+
+```
+cargo run --release --features realtime-audio output_ym2151.json
+```
+
+ビルド済みのexeで音を鳴らします
+
+```
+./target/release/ym2151-log-player-rust output_ym2151.json
+```
 
 ### 基本的な使い方
 
