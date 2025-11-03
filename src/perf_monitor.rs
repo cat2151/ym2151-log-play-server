@@ -99,6 +99,10 @@ pub struct PerfMonitor {
     pub threshold: Duration,
     /// Start time of monitoring
     start_time: Instant,
+    /// Actual audio device buffer size (in samples, stereo interleaved)
+    audio_buffer_size: Option<usize>,
+    /// Generation buffer size (in stereo frames)
+    generation_buffer_size: usize,
 }
 
 impl PerfMonitor {
@@ -106,7 +110,13 @@ impl PerfMonitor {
     ///
     /// # Parameters
     /// - `threshold_ms`: Threshold in milliseconds for flagging slow operations
-    pub fn new(threshold_ms: u64) -> Self {
+    /// - `audio_buffer_size`: Actual audio device buffer size (in samples, stereo interleaved)
+    /// - `generation_buffer_size`: Generation buffer size (in stereo frames)
+    pub fn new(
+        threshold_ms: u64,
+        audio_buffer_size: Option<usize>,
+        generation_buffer_size: usize,
+    ) -> Self {
         let threshold = Duration::from_millis(threshold_ms);
         Self {
             opm_generation: PerfStats::new("OPM Generation"),
@@ -116,6 +126,8 @@ impl PerfMonitor {
             total_iteration: PerfStats::new("Total Iteration"),
             threshold,
             start_time: Instant::now(),
+            audio_buffer_size,
+            generation_buffer_size,
         }
     }
 
@@ -125,7 +137,39 @@ impl PerfMonitor {
 
         println!("\n=== Performance Report ===");
         println!("Total monitoring time: {:.2}s", elapsed.as_secs_f64());
+
+        // Print buffer configuration
+        println!("\n=== Buffer Configuration ===");
+        if let Some(buffer_size) = self.audio_buffer_size {
+            let buffer_frames = buffer_size / 2;
+            let buffer_duration_ms = (buffer_frames as f64 / 48000.0) * 1000.0;
+            println!(
+                "Audio device buffer: {} samples ({} stereo frames)",
+                buffer_size, buffer_frames
+            );
+            println!(
+                "Audio buffer duration: {:.2}ms at 48000 Hz",
+                buffer_duration_ms
+            );
+        } else {
+            println!("Audio device buffer: Unknown (fallback mode)");
+        }
+        println!(
+            "Generation buffer: {} samples ({} stereo frames) at 55930 Hz",
+            self.generation_buffer_size * 2,
+            self.generation_buffer_size
+        );
+        let gen_duration_ms = (self.generation_buffer_size as f64 / 55930.0) * 1000.0;
+        println!("Generation buffer duration: {:.2}ms", gen_duration_ms);
+
+        println!("\n=== Performance Threshold ===");
         println!("Threshold: {:.2}ms", self.threshold.as_secs_f64() * 1000.0);
+        if self.audio_buffer_size.is_some() {
+            println!("(Based on actual audio device buffer size)");
+        } else {
+            println!("(Based on generation buffer size - fallback)");
+        }
+        println!("Rationale: Processing must complete within this time to avoid audio underruns");
         println!();
 
         // Print stats for each operation
@@ -266,8 +310,10 @@ mod tests {
 
     #[test]
     fn test_perf_monitor_creation() {
-        let monitor = PerfMonitor::new(10);
+        let monitor = PerfMonitor::new(10, Some(4096), 2048);
         assert_eq!(monitor.threshold, Duration::from_millis(10));
         assert_eq!(monitor.opm_generation.count, 0);
+        assert_eq!(monitor.audio_buffer_size, Some(4096));
+        assert_eq!(monitor.generation_buffer_size, 2048);
     }
 }
