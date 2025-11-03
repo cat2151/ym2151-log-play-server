@@ -5,9 +5,11 @@
 
 use std::time::Instant;
 use ym2151_log_player_rust::opm::OpmChip;
+use ym2151_log_player_rust::player::Player;
 
-const SAMPLE_RATE: u32 = 55930;
-const CYCLES_PER_SAMPLE: u32 = 64;
+// Use constants from the main module
+const SAMPLE_RATE: u32 = Player::sample_rate();
+const CYCLES_PER_SAMPLE: u32 = 64; // This is internal to OpmChip, not exposed
 const DURATION_SECONDS: f64 = 1.0;
 
 fn main() {

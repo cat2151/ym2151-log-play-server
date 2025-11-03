@@ -128,9 +128,9 @@ impl OpmChip {
                         std::ptr::null_mut(), // so - not used
                     );
                 }
-                // Count each FFI call
-                FFI_CALL_COUNTER.fetch_add(1, Ordering::Relaxed);
             }
+            // Count FFI calls after all cycles for this sample (64 calls per sample)
+            FFI_CALL_COUNTER.fetch_add(CYCLES_PER_SAMPLE as u64, Ordering::Relaxed);
 
             // Convert 32-bit samples to 16-bit and store in buffer
             // The OPM outputs values in roughly -16384 to +16384 range,

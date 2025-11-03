@@ -60,7 +60,8 @@ fn main() {
             all_passed = false;
             
             // Show first few differences for debugging
-            if differences <= 10 {
+            const MAX_DIFFERENCES_TO_SHOW: usize = 10;
+            if differences <= MAX_DIFFERENCES_TO_SHOW {
                 println!("  Differences:");
                 for i in 0..size {
                     if buffer1[i] != buffer2[i] {
