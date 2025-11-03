@@ -24,9 +24,18 @@ fn main() {
     let expected_ffi_calls_batched = samples_per_second;
 
     println!("Expected FFI calls per second:");
-    println!("  Unbatched (individual OPM_Clock): {:.0}", expected_ffi_calls_unbatched);
-    println!("  Batched (OPM_Clock_Batch):        {:.0}", expected_ffi_calls_batched);
-    println!("  Reduction factor:                 {}x\n", CYCLES_PER_SAMPLE);
+    println!(
+        "  Unbatched (individual OPM_Clock): {:.0}",
+        expected_ffi_calls_unbatched
+    );
+    println!(
+        "  Batched (OPM_Clock_Batch):        {:.0}",
+        expected_ffi_calls_batched
+    );
+    println!(
+        "  Reduction factor:                 {}x\n",
+        CYCLES_PER_SAMPLE
+    );
 
     // Test unbatched implementation
     println!("--- Testing Unbatched Implementation ---");
@@ -47,14 +56,23 @@ fn main() {
     println!("Elapsed time:         {:.3} seconds", elapsed.as_secs_f64());
     println!("Total FFI calls:      {}", ffi_calls);
     println!("FFI calls per second: {:.0}", ffi_calls_per_second);
-    println!("Time per FFI call:    {:.3} µs", elapsed.as_secs_f64() * 1_000_000.0 / ffi_calls as f64);
-    
+    println!(
+        "Time per FFI call:    {:.3} µs",
+        elapsed.as_secs_f64() * 1_000_000.0 / ffi_calls as f64
+    );
+
     // Verify expected call count
     let expected_calls = samples as u64 * CYCLES_PER_SAMPLE as u64;
     if ffi_calls == expected_calls {
-        println!("✓ FFI call count matches expected: {} calls", expected_calls);
+        println!(
+            "✓ FFI call count matches expected: {} calls",
+            expected_calls
+        );
     } else {
-        println!("⚠ FFI call count mismatch: expected {}, got {}", expected_calls, ffi_calls);
+        println!(
+            "⚠ FFI call count mismatch: expected {}, got {}",
+            expected_calls, ffi_calls
+        );
     }
 
     // Test batched implementation
@@ -73,18 +91,36 @@ fn main() {
     println!("Elapsed time:         {:.3} seconds", elapsed.as_secs_f64());
     println!("Total FFI calls:      {}", ffi_calls);
     println!("FFI calls per second: {:.0}", ffi_calls_per_second);
-    println!("Time per FFI call:    {:.3} µs", elapsed.as_secs_f64() * 1_000_000.0 / ffi_calls as f64);
-    
+    println!(
+        "Time per FFI call:    {:.3} µs",
+        elapsed.as_secs_f64() * 1_000_000.0 / ffi_calls as f64
+    );
+
     // Verify expected call count
     let expected_calls = samples as u64;
     if ffi_calls == expected_calls {
-        println!("✓ FFI call count matches expected: {} calls", expected_calls);
+        println!(
+            "✓ FFI call count matches expected: {} calls",
+            expected_calls
+        );
     } else {
-        println!("⚠ FFI call count mismatch: expected {}, got {}", expected_calls, ffi_calls);
+        println!(
+            "⚠ FFI call count mismatch: expected {}, got {}",
+            expected_calls, ffi_calls
+        );
     }
 
     println!("\n=== Summary ===");
-    println!("The unbatched version makes ~{:.1}M FFI calls per second", expected_ffi_calls_unbatched / 1_000_000.0);
-    println!("The batched version reduces this to ~{:.0}K FFI calls per second", expected_ffi_calls_batched / 1_000.0);
-    println!("This is a {}x reduction in FFI overhead!", CYCLES_PER_SAMPLE);
+    println!(
+        "The unbatched version makes ~{:.1}M FFI calls per second",
+        expected_ffi_calls_unbatched / 1_000_000.0
+    );
+    println!(
+        "The batched version reduces this to ~{:.0}K FFI calls per second",
+        expected_ffi_calls_batched / 1_000.0
+    );
+    println!(
+        "This is a {}x reduction in FFI overhead!",
+        CYCLES_PER_SAMPLE
+    );
 }

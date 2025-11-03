@@ -14,7 +14,11 @@ fn main() {
     let mut all_passed = true;
 
     for &size in &test_sizes {
-        println!("Testing buffer size: {} samples ({} stereo samples)", size, size / 2);
+        println!(
+            "Testing buffer size: {} samples ({} stereo samples)",
+            size,
+            size / 2
+        );
 
         // Generate samples with unbatched implementation
         let mut chip1 = OpmChip::new();
@@ -56,16 +60,22 @@ fn main() {
         if differences == 0 {
             println!("  ✓ PASS: Output is identical");
         } else {
-            println!("  ✗ FAIL: Found {} differences, max difference: {}", differences, max_diff);
+            println!(
+                "  ✗ FAIL: Found {} differences, max difference: {}",
+                differences, max_diff
+            );
             all_passed = false;
-            
+
             // Show first few differences for debugging
             const MAX_DIFFERENCES_TO_SHOW: usize = 10;
             if differences <= MAX_DIFFERENCES_TO_SHOW {
                 println!("  Differences:");
                 for i in 0..size {
                     if buffer1[i] != buffer2[i] {
-                        println!("    [{}]: unbatched={}, batched={}", i, buffer1[i], buffer2[i]);
+                        println!(
+                            "    [{}]: unbatched={}, batched={}",
+                            i, buffer1[i], buffer2[i]
+                        );
                     }
                 }
             }
