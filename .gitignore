@@ -28,3 +28,4 @@ target
 # Output files
 output.wav
 output_pass2.json
+test_*.json

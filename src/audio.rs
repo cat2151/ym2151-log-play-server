@@ -150,7 +150,7 @@ impl AudioPlayer {
                 break;
             }
 
-            if player.is_complete() && player.current_sample() >= total_samples {
+            if player.current_sample() >= total_samples {
                 let elapsed = playback_start_time.elapsed();
                 println!("■  Playback complete");
                 println!("  Wall-clock time: {:.2} seconds", elapsed.as_secs_f64());
