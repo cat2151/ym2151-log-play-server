@@ -12,7 +12,11 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
 #[cfg(feature = "realtime-audio")]
 use std::sync::{Arc, Mutex};
+#[cfg(feature = "realtime-audio")]
+use std::time::Instant;
 
+#[cfg(feature = "realtime-audio")]
+use crate::perf_monitor::{PerfMonitor, ScopedTimer};
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
 #[cfg(feature = "realtime-audio")]
@@ -171,6 +175,8 @@ impl AudioPlayer {
     /// from the player, resamples them, and sends them to the audio callback.
     /// It also captures the original samples to a WAV buffer for later file output,
     /// matching the behavior of the C implementation.
+    ///
+    /// Performance monitoring is enabled via PERF_MONITOR environment variable.
     fn generate_samples_thread(
         mut player: Player,
         sample_tx: SyncSender<Vec<f32>>,
@@ -183,6 +189,20 @@ impl AudioPlayer {
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
         let total_samples = player.total_samples();
 
+        // Performance monitoring (enabled via environment variable)
+        let enable_perf_monitor = std::env::var("PERF_MONITOR").is_ok();
+        let mut perf_monitor = if enable_perf_monitor {
+            println!("📊 Performance monitoring enabled (PERF_MONITOR=1)");
+            // Calculate threshold based on buffer size
+            // GENERATION_BUFFER_SIZE samples at OPM_SAMPLE_RATE
+            let buffer_duration_ms = (GENERATION_BUFFER_SIZE as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
+            println!("   Buffer duration: {:.2}ms", buffer_duration_ms);
+            println!("   Performance threshold: {:.2}ms", buffer_duration_ms);
+            Some(PerfMonitor::new(buffer_duration_ms as u64))
+        } else {
+            None
+        };
+
         println!("▶  Playing sequence...");
         println!(
             "  Duration: {:.2} seconds",
@@ -194,6 +214,13 @@ impl AudioPlayer {
         );
 
         loop {
+            // Start timing total iteration
+            let iteration_start = if perf_monitor.is_some() {
+                Some(Instant::now())
+            } else {
+                None
+            };
+
             // Check for stop command
             if let Ok(AudioCommand::Stop) = command_rx.try_recv() {
                 println!("Stopping audio playback...");
@@ -207,24 +234,56 @@ impl AudioPlayer {
             }
 
             // Generate samples
-            // Note: We check completion above, so we don't need the return value here
-            player.generate_samples(&mut generation_buffer);
+            if let Some(ref mut monitor) = perf_monitor {
+                let _timer = ScopedTimer::new(&mut monitor.opm_generation, monitor.threshold);
+                player.generate_samples(&mut generation_buffer);
+            } else {
+                player.generate_samples(&mut generation_buffer);
+            }
 
             // Capture samples to WAV buffer (at native OPM rate, matching C implementation)
-            if let Ok(mut buffer) = wav_buffer.lock() {
-                buffer.extend_from_slice(&generation_buffer);
+            if let Some(ref mut monitor) = perf_monitor {
+                let _timer = ScopedTimer::new(&mut monitor.wav_capture, monitor.threshold);
+                if let Ok(mut buffer) = wav_buffer.lock() {
+                    buffer.extend_from_slice(&generation_buffer);
+                }
+            } else {
+                if let Ok(mut buffer) = wav_buffer.lock() {
+                    buffer.extend_from_slice(&generation_buffer);
+                }
             }
 
             // Resample for audio output
-            let resampled = resampler
-                .resample(&generation_buffer)
-                .context("Failed to resample audio")?;
+            let resampled = if let Some(ref mut monitor) = perf_monitor {
+                let _timer = ScopedTimer::new(&mut monitor.resampling, monitor.threshold);
+                resampler
+                    .resample(&generation_buffer)
+                    .context("Failed to resample audio")?
+            } else {
+                resampler
+                    .resample(&generation_buffer)
+                    .context("Failed to resample audio")?
+            };
 
             // Convert to f32 and send to audio callback
-            let f32_samples: Vec<f32> = resampled
-                .iter()
-                .map(|&sample| sample as f32 / 32768.0)
-                .collect();
+            let f32_samples = if let Some(ref mut monitor) = perf_monitor {
+                let _timer = ScopedTimer::new(&mut monitor.format_conversion, monitor.threshold);
+                resampled
+                    .iter()
+                    .map(|&sample| sample as f32 / 32768.0)
+                    .collect::<Vec<f32>>()
+            } else {
+                resampled
+                    .iter()
+                    .map(|&sample| sample as f32 / 32768.0)
+                    .collect()
+            };
+
+            // Record total iteration time
+            if let (Some(ref mut monitor), Some(start)) = (&mut perf_monitor, iteration_start) {
+                let duration = start.elapsed();
+                monitor.total_iteration.record(duration, monitor.threshold);
+            }
 
             // Send samples to audio callback
             // If the queue is full, this will block until space is available
@@ -235,6 +294,11 @@ impl AudioPlayer {
 
             // Yield to prevent tight spinning
             std::thread::yield_now();
+        }
+
+        // Print performance report if monitoring was enabled
+        if let Some(monitor) = perf_monitor {
+            monitor.report();
         }
 
         Ok(())
