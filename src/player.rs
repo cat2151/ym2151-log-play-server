@@ -7,6 +7,18 @@ const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
 
+/// Minimum duration to generate after events complete (500ms in samples at OPM_SAMPLE_RATE)
+const TAIL_MIN_DURATION_MS: u32 = 500;
+const TAIL_MIN_SAMPLES: u32 =
+    (OPM_SAMPLE_RATE as f64 * TAIL_MIN_DURATION_MS as f64 / 1000.0) as u32;
+
+/// Threshold for silence detection (absolute value of sample)
+const SILENCE_THRESHOLD: i16 = 10;
+
+/// Number of consecutive silent samples required to stop tail generation
+const SILENCE_DURATION_MS: u32 = 100;
+const SILENCE_SAMPLES: u32 = (OPM_SAMPLE_RATE as f64 * SILENCE_DURATION_MS as f64 / 1000.0) as u32;
+
 #[derive(Debug, Clone)]
 struct ProcessedEvent {
     time: u32,
@@ -24,6 +36,9 @@ pub struct Player {
     next_event_idx: usize,
 
     samples_played: u32,
+
+    /// Count of consecutive silent samples
+    consecutive_silent_samples: u32,
 }
 
 impl Player {
@@ -34,6 +49,7 @@ impl Player {
             events,
             next_event_idx: 0,
             samples_played: 0,
+            consecutive_silent_samples: 0,
         }
     }
 
@@ -84,6 +100,15 @@ impl Player {
             let sample_buffer = &mut buffer[i * 2..(i + 1) * 2];
             self.chip.generate_samples(sample_buffer);
 
+            // Track silence for tail generation
+            let left = sample_buffer[0];
+            let right = sample_buffer[1];
+            if Self::is_sample_silent(left, right) {
+                self.consecutive_silent_samples += 1;
+            } else {
+                self.consecutive_silent_samples = 0;
+            }
+
             self.samples_played += 1;
         }
 
@@ -112,6 +137,41 @@ impl Player {
 
     pub const fn sample_rate() -> u32 {
         OPM_SAMPLE_RATE
+    }
+
+    /// Check if a stereo sample pair is below the silence threshold
+    fn is_sample_silent(left: i16, right: i16) -> bool {
+        left.abs() < SILENCE_THRESHOLD && right.abs() < SILENCE_THRESHOLD
+    }
+
+    /// Check if tail generation should continue
+    /// Returns true if we should keep generating samples after events complete
+    pub fn should_continue_tail(&self) -> bool {
+        if !self.is_complete() {
+            // Still processing events
+            return true;
+        }
+
+        let samples_after_events = self.samples_played - self.total_samples();
+
+        // Always generate at least TAIL_MIN_SAMPLES after events complete
+        if samples_after_events < TAIL_MIN_SAMPLES {
+            return true;
+        }
+
+        // After minimum tail duration, check for silence
+        self.consecutive_silent_samples < SILENCE_SAMPLES
+    }
+
+    /// Get information about tail generation progress
+    pub fn tail_info(&self) -> Option<(u32, u32)> {
+        if self.is_complete() {
+            let samples_after_events = self.samples_played.saturating_sub(self.total_samples());
+            if samples_after_events > 0 {
+                return Some((samples_after_events, self.consecutive_silent_samples));
+            }
+        }
+        None
     }
 }
 

@@ -140,9 +140,17 @@ fn main() {
 
     #[cfg(not(feature = "realtime-audio"))]
     {
-        eprintln!("❌ エラー: このビルドはリアルタイム音声再生に対応していません");
-        eprintln!("   --features realtime-audio でビルドしてください");
-        std::process::exit(1);
+        println!("\nWAVファイルを生成中...");
+        let player = Player::new(log);
+        match wav_writer::generate_wav_default(player) {
+            Ok(_) => {
+                println!("✅ WAVファイルを作成しました: output.wav");
+            }
+            Err(e) => {
+                eprintln!("❌ エラー: WAVファイルの生成に失敗しました: {}", e);
+                std::process::exit(1);
+            }
+        }
     }
 
     println!("\n✅ 再生完了!");

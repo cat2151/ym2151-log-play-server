@@ -39,11 +39,12 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
         Player::sample_rate()
     );
 
-    let mut output_samples = Vec::with_capacity((total_samples as usize) * 2);
+    let mut output_samples = Vec::new();
 
     let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
     let mut processed_samples = 0;
     let mut last_progress = 0;
+    let mut tail_started = false;
 
     println!("  Progress: 0%");
 
@@ -53,18 +54,34 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
         output_samples.extend_from_slice(&generation_buffer);
 
-        let progress = (processed_samples * 100 / total_samples as usize).min(100);
-        if progress >= last_progress + 10 {
-            println!("  Progress: {}%", progress);
-            last_progress = progress;
+        // Progress reporting for main event playback
+        if processed_samples < total_samples as usize {
+            let progress = (processed_samples * 100 / total_samples as usize).min(100);
+            if progress >= last_progress + 10 {
+                println!("  Progress: {}%", progress);
+                last_progress = progress;
+            }
+        } else if !tail_started {
+            println!("  Progress: 100%");
+            tail_started = true;
         }
 
-        if processed_samples >= total_samples as usize {
+        // Check if we should continue tail generation
+        if !player.should_continue_tail() {
+            if let Some((tail_samples, _)) = player.tail_info() {
+                let tail_ms = tail_samples as f64 / Player::sample_rate() as f64 * 1000.0;
+                println!("  演奏データの余韻{}ms 波形生成 OK", tail_ms as u32);
+            }
+            break;
+        }
+
+        // Safety limit: prevent infinite loop
+        if processed_samples > (total_samples as usize) * 10 {
+            println!("  Warning: Tail generation exceeded safety limit");
             break;
         }
     }
 
-    println!("  Progress: 100%");
     println!(
         "  Generated {} samples ({:.2}s at {} Hz)",
         output_samples.len() / 2,
