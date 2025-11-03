@@ -35,7 +35,7 @@ fn test_resampler_downsampling() {
     // Due to filter latency and edge effects, actual output may be lower
     let output_frames = output.len() / 2;
     assert!(
-        output_frames >= 700 && output_frames <= 910,
+        (700..=910).contains(&output_frames),
         "Expected ~750-880 frames, got {}",
         output_frames
     );

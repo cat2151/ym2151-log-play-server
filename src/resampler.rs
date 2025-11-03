@@ -49,7 +49,7 @@ impl AudioResampler {
             return Ok(Vec::new());
         }
 
-        if input.len() % 2 != 0 {
+        if !input.len().is_multiple_of(2) {
             anyhow::bail!("Input buffer must have even length (stereo samples)");
         }
 
@@ -58,11 +58,11 @@ impl AudioResampler {
         let mut output = Vec::with_capacity(output_frames * 2);
 
         let mut pos = self.position;
-        
+
         while (pos as usize + 1) * 2 < input.len() {
             let frame_idx = pos as usize;
             let frac = pos - frame_idx as f64;
-            
+
             if frame_idx + 1 >= input_frames {
                 break;
             }
@@ -71,8 +71,8 @@ impl AudioResampler {
             let left0 = input[frame_idx * 2] as f64;
             let left1 = input[(frame_idx + 1) * 2] as f64;
             let left_out = left0 + (left1 - left0) * frac;
-            
-            // Linear interpolation for right channel  
+
+            // Linear interpolation for right channel
             let right0 = input[frame_idx * 2 + 1] as f64;
             let right1 = input[(frame_idx + 1) * 2 + 1] as f64;
             let right_out = right0 + (right1 - right0) * frac;
@@ -152,7 +152,7 @@ mod tests {
         let output = result.unwrap();
 
         // Output should be smaller (downsampling from 55930 to 48000)
-        assert!(output.len() > 0);
+        assert!(!output.is_empty());
         assert!(output.len() < input.len());
         assert_eq!(output.len() % 2, 0); // Still stereo
     }
@@ -178,7 +178,7 @@ mod tests {
         assert!(result.is_ok());
 
         let output = result.unwrap();
-        assert!(output.len() > 0);
+        assert!(!output.is_empty());
         assert_eq!(output.len() % 2, 0);
 
         // Output should be non-zero (contains actual audio)
@@ -192,7 +192,7 @@ mod tests {
 
         // For 1000 input frames at 55930 Hz -> ~858 frames at 48000 Hz
         let output_frames = resampler.expected_output_frames(1000);
-        assert!(output_frames >= 857 && output_frames <= 859);
+        assert!((857..=859).contains(&output_frames));
     }
 
     #[test]
@@ -207,7 +207,7 @@ mod tests {
             assert!(result.is_ok());
 
             let output = result.unwrap();
-            assert!(output.len() > 0);
+            assert!(!output.is_empty());
             assert_eq!(output.len() % 2, 0);
         }
     }
