@@ -186,7 +186,13 @@ impl AudioPlayer {
                             offset += to_copy;
 
                             // Remove used samples from leftover buffer
-                            leftover.drain(..to_copy);
+                            // Use split_off for better performance: extract the remaining part
+                            // and replace the buffer with it
+                            if to_copy < leftover.len() {
+                                *leftover = leftover.split_off(to_copy);
+                            } else {
+                                leftover.clear();
+                            }
                         }
                     }
 
@@ -212,8 +218,8 @@ impl AudioPlayer {
                             // If we didn't use all samples, store the remainder for next callback
                             if to_copy < samples.len() {
                                 if let Ok(mut leftover) = leftover_buffer_clone.lock() {
-                                    leftover.clear();
-                                    leftover.extend_from_slice(&samples[to_copy..]);
+                                    // More efficient: replace buffer contents instead of clear+extend
+                                    *leftover = samples[to_copy..].to_vec();
                                 }
                                 break; // Device buffer is full
                             }
