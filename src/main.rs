@@ -25,12 +25,32 @@ fn print_usage(program_name: &str) {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() < 2 {
+    if args.len() != 2 {
         print_usage(&args[0]);
+        if args.len() > 2 {
+            eprintln!("\n❌ エラー: 引数が多すぎます");
+        }
         std::process::exit(1);
     }
 
     let json_path = &args[1];
+
+    // Reject arguments that look like options
+    if json_path.starts_with("--") {
+        eprintln!("❌ エラー: 不明なオプション: {}", json_path);
+        eprintln!();
+        if json_path == "--no-audio" {
+            eprintln!("ヒント: --no-audio オプションは廃止されました。");
+            eprintln!("      CI/ヘッドレス環境では、ALSA設定を使用してください。");
+            eprintln!("      詳細は CI_TDD_GUIDE.md または README.md を参照してください。");
+        } else {
+            eprintln!("ヒント: このプログラムはオプションを受け付けません。");
+            eprintln!("      JSONファイルのパスを直接指定してください。");
+        }
+        eprintln!();
+        print_usage(&args[0]);
+        std::process::exit(1);
+    }
 
     println!("YM2151 Log Player (Rust)");
     println!("=====================================\n");
