@@ -31,6 +31,14 @@ const GENERATION_BUFFER_SIZE: usize = 2048;
 #[allow(dead_code)]
 const SAMPLE_QUEUE_SIZE: usize = 16384;
 
+/// Maximum attempts to detect audio buffer size (100 attempts * 10ms = 1 second timeout)
+#[cfg(feature = "realtime-audio")]
+const BUFFER_SIZE_DETECTION_MAX_ATTEMPTS: usize = 100;
+
+/// Sleep duration between buffer size detection attempts
+#[cfg(feature = "realtime-audio")]
+const BUFFER_SIZE_DETECTION_SLEEP_MS: u64 = 10;
+
 /// Commands that can be sent to the audio thread
 #[cfg(feature = "realtime-audio")]
 enum AudioCommand {
@@ -122,12 +130,24 @@ impl AudioPlayer {
         let wav_buffer = Arc::new(Mutex::new(Vec::new()));
         let wav_buffer_clone = wav_buffer.clone();
 
+        // Shared state for audio buffer size (captured from first callback)
+        let audio_buffer_size = Arc::new(Mutex::new(None::<usize>));
+        let audio_buffer_size_clone = audio_buffer_size.clone();
+
         // Build output stream
         let stream = device
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
                     // Audio callback - runs in real-time audio thread
+
+                    // Capture buffer size on first call
+                    if let Ok(mut size) = audio_buffer_size_clone.lock() {
+                        if size.is_none() {
+                            *size = Some(data.len());
+                        }
+                    }
+
                     if let Ok(samples) = sample_rx.try_recv() {
                         let len = data.len().min(samples.len());
                         data[..len].copy_from_slice(&samples[..len]);
@@ -162,6 +182,7 @@ impl AudioPlayer {
                 command_rx,
                 position,
                 wav_buffer_clone,
+                audio_buffer_size,
             ) {
                 eprintln!("Sample generation error: {}", e);
             }
@@ -189,23 +210,84 @@ impl AudioPlayer {
         command_rx: Receiver<AudioCommand>,
         _position: Arc<Mutex<usize>>,
         wav_buffer: Arc<Mutex<Vec<i16>>>,
+        audio_buffer_size: Arc<Mutex<Option<usize>>>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
 
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
         let total_samples = player.total_samples();
 
+        // Wait for audio buffer size to be captured (with timeout)
+        let mut actual_audio_buffer_size = None;
+        println!("⏳ Waiting for audio device buffer size...");
+        for _ in 0..BUFFER_SIZE_DETECTION_MAX_ATTEMPTS {
+            if let Ok(size) = audio_buffer_size.lock() {
+                if let Some(buffer_size) = *size {
+                    actual_audio_buffer_size = Some(buffer_size);
+                    break;
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(
+                BUFFER_SIZE_DETECTION_SLEEP_MS,
+            ));
+        }
+
+        // Print buffer size information
+        if let Some(buffer_size) = actual_audio_buffer_size {
+            // Buffer size is in samples (stereo interleaved), convert to frames
+            let buffer_frames = buffer_size / 2;
+            let buffer_duration_ms = (buffer_frames as f64 / OUTPUT_SAMPLE_RATE as f64) * 1000.0;
+            println!("✅ Audio device buffer detected:");
+            println!(
+                "   Buffer size: {} samples ({} stereo frames)",
+                buffer_size, buffer_frames
+            );
+            println!(
+                "   Buffer duration: {:.2}ms at {} Hz",
+                buffer_duration_ms, OUTPUT_SAMPLE_RATE
+            );
+        } else {
+            println!(
+                "⚠️  Could not detect audio buffer size, using generation buffer size as fallback"
+            );
+        }
+
+        println!(
+            "   Generation buffer: {} samples ({} stereo frames) at {} Hz",
+            GENERATION_BUFFER_SIZE * 2,
+            GENERATION_BUFFER_SIZE,
+            OPM_SAMPLE_RATE
+        );
+        let gen_buffer_duration_ms =
+            (GENERATION_BUFFER_SIZE as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
+        println!("   Generation duration: {:.2}ms", gen_buffer_duration_ms);
+
         // Performance monitoring (enabled via environment variable)
         let enable_perf_monitor = std::env::var("PERF_MONITOR").is_ok();
         let mut perf_monitor = if enable_perf_monitor {
-            println!("📊 Performance monitoring enabled (PERF_MONITOR=1)");
-            // Calculate threshold based on buffer size
-            // GENERATION_BUFFER_SIZE samples at OPM_SAMPLE_RATE
-            let buffer_duration_ms =
-                (GENERATION_BUFFER_SIZE as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
-            println!("   Buffer duration: {:.2}ms", buffer_duration_ms);
-            println!("   Performance threshold: {:.2}ms", buffer_duration_ms);
-            Some(PerfMonitor::new(buffer_duration_ms as u64))
+            println!("\n📊 Performance monitoring enabled (PERF_MONITOR=1)");
+
+            // Calculate threshold based on ACTUAL audio buffer size (not generation buffer)
+            // This is the real deadline we need to meet to avoid stuttering
+            let threshold_ms = if let Some(buffer_size) = actual_audio_buffer_size {
+                let buffer_frames = buffer_size / 2;
+                (buffer_frames as f64 / OUTPUT_SAMPLE_RATE as f64) * 1000.0
+            } else {
+                // Fallback to generation buffer duration
+                gen_buffer_duration_ms
+            };
+
+            println!(
+                "   Performance threshold: {:.2}ms (based on audio device buffer)",
+                threshold_ms
+            );
+            println!("   This is the time we have to generate audio before underrun occurs");
+
+            Some(PerfMonitor::new(
+                threshold_ms as u64,
+                actual_audio_buffer_size,
+                GENERATION_BUFFER_SIZE,
+            ))
         } else {
             None
         };
