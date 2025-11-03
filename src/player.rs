@@ -1,16 +1,11 @@
 use crate::events::{EventLog, RegisterEvent};
 use crate::opm::OpmChip;
+use crate::resampler::OPM_SAMPLE_RATE;
 
 const OPM_ADDRESS_REGISTER: u8 = 0;
 const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
-
-/// YM2151 master clock frequency in Hz (NTSC colorburst frequency)
-const YM2151_CLOCK: u32 = 3_579_545;
-
-/// OPM internal sample rate calculated as clock / 64
-const OPM_SAMPLE_RATE: u32 = YM2151_CLOCK / 64;
 
 #[derive(Debug, Clone)]
 struct ProcessedEvent {
