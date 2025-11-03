@@ -58,11 +58,11 @@ impl AudioResampler {
         let mut output = Vec::with_capacity(output_frames * 2);
 
         let mut pos = self.position;
-        
+
         while (pos as usize + 1) * 2 < input.len() {
             let frame_idx = pos as usize;
             let frac = pos - frame_idx as f64;
-            
+
             if frame_idx + 1 >= input_frames {
                 break;
             }
@@ -71,8 +71,8 @@ impl AudioResampler {
             let left0 = input[frame_idx * 2] as f64;
             let left1 = input[(frame_idx + 1) * 2] as f64;
             let left_out = left0 + (left1 - left0) * frac;
-            
-            // Linear interpolation for right channel  
+
+            // Linear interpolation for right channel
             let right0 = input[frame_idx * 2 + 1] as f64;
             let right1 = input[(frame_idx + 1) * 2 + 1] as f64;
             let right_out = right0 + (right1 - right0) * frac;
