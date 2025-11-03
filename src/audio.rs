@@ -146,6 +146,10 @@ impl AudioPlayer {
         let samples_silenced_total = Arc::new(Mutex::new(0u64));
         let samples_silenced_clone = samples_silenced_total.clone();
 
+        // Buffer to hold leftover samples from previous callback
+        let leftover_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
+        let leftover_buffer_clone = leftover_buffer.clone();
+
         // Build output stream
         let stream = device
             .build_output_stream(
@@ -165,37 +169,70 @@ impl AudioPlayer {
                         *count += 1;
                     }
 
-                    if let Ok(samples) = sample_rx.try_recv() {
-                        let len = data.len().min(samples.len());
-                        data[..len].copy_from_slice(&samples[..len]);
+                    let mut offset = 0;
 
-                        // Track diagnostic counters
-                        if let Ok(mut total) = samples_received_clone.lock() {
-                            *total += samples.len() as u64;
-                        }
-                        if let Ok(mut total) = samples_used_clone.lock() {
-                            *total += len as u64;
-                        }
+                    // First, use any leftover samples from the previous callback
+                    if let Ok(mut leftover) = leftover_buffer_clone.lock() {
+                        if !leftover.is_empty() {
+                            let available = leftover.len();
+                            let to_copy = available.min(data.len());
+                            data[..to_copy].copy_from_slice(&leftover[..to_copy]);
 
-                        // Fill remainder with silence if samples are exhausted
-                        if len < data.len() {
-                            let silenced = data.len() - len;
-                            data[len..].fill(0.0);
-                            if let Ok(mut total) = samples_silenced_clone.lock() {
-                                *total += silenced as u64;
+                            // Track usage
+                            if let Ok(mut total) = samples_used_clone.lock() {
+                                *total += to_copy as u64;
                             }
-                        }
 
-                        // Update position
-                        if let Ok(mut pos) = position_clone.lock() {
-                            *pos += len / 2; // Convert to frame count (stereo)
+                            offset += to_copy;
+
+                            // Remove used samples from leftover buffer
+                            leftover.drain(..to_copy);
                         }
-                    } else {
-                        // No samples available - fill with silence to prevent underrun
-                        data.fill(0.0);
-                        if let Ok(mut total) = samples_silenced_clone.lock() {
-                            *total += data.len() as u64;
+                    }
+
+                    // Fill the rest of the device buffer with new samples from the channel
+                    while offset < data.len() {
+                        if let Ok(samples) = sample_rx.try_recv() {
+                            // Track that we received a buffer
+                            if let Ok(mut total) = samples_received_clone.lock() {
+                                *total += samples.len() as u64;
+                            }
+
+                            let remaining = data.len() - offset;
+                            let to_copy = remaining.min(samples.len());
+                            data[offset..offset + to_copy].copy_from_slice(&samples[..to_copy]);
+
+                            // Track usage
+                            if let Ok(mut total) = samples_used_clone.lock() {
+                                *total += to_copy as u64;
+                            }
+
+                            offset += to_copy;
+
+                            // If we didn't use all samples, store the remainder for next callback
+                            if to_copy < samples.len() {
+                                if let Ok(mut leftover) = leftover_buffer_clone.lock() {
+                                    leftover.clear();
+                                    leftover.extend_from_slice(&samples[to_copy..]);
+                                }
+                                break; // Device buffer is full
+                            }
+                        } else {
+                            // No more samples available - fill remainder with silence
+                            let silenced = data.len() - offset;
+                            if silenced > 0 {
+                                data[offset..].fill(0.0);
+                                if let Ok(mut total) = samples_silenced_clone.lock() {
+                                    *total += silenced as u64;
+                                }
+                            }
+                            break;
                         }
+                    }
+
+                    // Update playback position
+                    if let Ok(mut pos) = position_clone.lock() {
+                        *pos += offset / 2; // Convert to frame count (stereo)
                     }
                 },
                 |err| eprintln!("Audio stream error: {}", err),
