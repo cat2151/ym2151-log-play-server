@@ -8,18 +8,22 @@ fn print_usage(program_name: &str) {
     eprintln!("YM2151 Log Player - Rust implementation");
     eprintln!();
     eprintln!("使用方法:");
-    eprintln!("  {} <json_log_file>", program_name);
+    eprintln!("  {} [オプション] <json_log_file>", program_name);
+    eprintln!();
+    eprintln!("オプション:");
+    eprintln!("  --no-audio    音声デバイスなしでWAVファイルのみ生成");
+    eprintln!("                (デフォルトはリアルタイム再生+WAV保存)");
     eprintln!();
     eprintln!("例:");
     eprintln!("  {} events.json", program_name);
-    eprintln!("  {} sample_events.json", program_name);
+    eprintln!("  {} --no-audio sample_events.json", program_name);
     eprintln!();
     eprintln!("機能:");
     eprintln!("  - JSONイベントログファイルを読み込み");
     eprintln!("  - YM2151レジスタ操作を再現");
-    eprintln!("  - WAVファイル (output.wav) を生成");
     #[cfg(feature = "realtime-audio")]
-    eprintln!("  - リアルタイム音声再生");
+    eprintln!("  - リアルタイム音声再生 (デフォルト)");
+    eprintln!("  - WAVファイル (output.wav) を生成");
 }
 
 fn main() {
@@ -31,7 +35,25 @@ fn main() {
         std::process::exit(1);
     }
 
-    let json_path = &args[1];
+    // Parse options and file path
+    let mut no_audio = false;
+    let mut json_path = None;
+
+    for arg in args.iter().skip(1) {
+        if arg == "--no-audio" {
+            no_audio = true;
+        } else if !arg.starts_with("--") {
+            json_path = Some(arg.as_str());
+        }
+    }
+
+    let json_path = match json_path {
+        Some(path) => path,
+        None => {
+            print_usage(&args[0]);
+            std::process::exit(1);
+        }
+    };
 
     // Print banner
     println!("YM2151 Log Player (Rust)");
@@ -62,7 +84,7 @@ fn main() {
         }
     };
 
-    // Convert to pass2 format and export to JSON
+    // Convert to pass2 format and export to JSON (for debugging)
     println!("\npass2形式に変換してJSON出力中...");
     let pass2_events = Player::convert_to_pass2_format(&log.events);
     let pass2_filename = "output_pass2.json";
@@ -81,58 +103,81 @@ fn main() {
         }
     }
 
-    // Generate WAV file
-    println!("\nWAVファイルを生成中...");
-    let player = Player::new(log);
-    match wav_writer::generate_wav_default(player) {
-        Ok(_) => {
-            println!("✅ WAVファイルを作成しました: output.wav");
-        }
-        Err(e) => {
-            eprintln!("❌ エラー: WAVファイルの生成に失敗しました: {}", e);
-            std::process::exit(1);
-        }
-    }
-
-    // Real-time audio playback (if enabled)
+    // Real-time audio playback with simultaneous WAV capture
+    // This matches the behavior of the C implementation:
+    // - Starts playback immediately after initialization
+    // - Generates samples on-demand during playback
+    // - Captures samples to WAV buffer simultaneously
+    // - Saves WAV file after playback completes
     #[cfg(feature = "realtime-audio")]
     {
-        println!("\nリアルタイム再生中...");
-        println!("(Ctrl+C で停止)");
-
-        // Reload events for playback
-        let log = match EventLog::from_file(json_path) {
-            Ok(log) => log,
-            Err(e) => {
-                eprintln!("❌ エラー: イベントログの再読み込みに失敗しました: {}", e);
-                std::process::exit(1);
+        if no_audio {
+            // Fallback mode for CI/headless environments: generate WAV without audio device
+            println!("\n⚠️  --no-audio モード: 音声デバイスなしでWAVファイルを生成");
+            println!("WAVファイルを生成中...");
+            let player = Player::new(log);
+            match wav_writer::generate_wav_default(player) {
+                Ok(_) => {
+                    println!("✅ WAVファイルを作成しました: output.wav");
+                }
+                Err(e) => {
+                    eprintln!("❌ エラー: WAVファイルの生成に失敗しました: {}", e);
+                    std::process::exit(1);
+                }
             }
-        };
+        } else {
+            // Normal mode: real-time playback with WAV capture
+            println!("\nオーディオを初期化中...");
 
-        let player = Player::new(log);
+            let player = Player::new(log);
 
-        use ym2151_log_player_rust::audio::AudioPlayer;
-        match AudioPlayer::new(player) {
-            Ok(mut audio_player) => {
-                println!("▶  再生開始");
+            use ym2151_log_player_rust::audio::AudioPlayer;
+            match AudioPlayer::new(player) {
+                Ok(mut audio_player) => {
+                    println!("✅ オーディオを初期化しました\n");
 
-                // Wait for playback to complete
-                audio_player.wait();
+                    // Wait for playback to complete
+                    // (Playback message is printed by the audio thread)
+                    audio_player.wait();
 
-                println!("■  再生完了");
-            }
-            Err(e) => {
-                eprintln!("⚠️  リアルタイム音声再生が利用できません: {}", e);
-                eprintln!("   (音声デバイスが必要です)");
+                    // Save WAV file after playback
+                    println!("\nWAVファイルを保存中...");
+                    let wav_samples = audio_player.get_wav_buffer();
+                    match wav_writer::write_wav(
+                        wav_writer::DEFAULT_OUTPUT_FILENAME,
+                        &wav_samples,
+                        Player::sample_rate(),
+                    ) {
+                        Ok(_) => {
+                            println!(
+                                "✅ WAVファイルを作成しました: {}",
+                                wav_writer::DEFAULT_OUTPUT_FILENAME
+                            );
+                        }
+                        Err(e) => {
+                            eprintln!("❌ エラー: WAVファイルの保存に失敗しました: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ エラー: オーディオの初期化に失敗しました: {}", e);
+                    eprintln!("   (音声デバイスが必要です)");
+                    eprintln!();
+                    eprintln!("ヒント: --no-audio オプションを使用すると、");
+                    eprintln!("       音声デバイスなしでWAVファイルのみ生成できます");
+                    std::process::exit(1);
+                }
             }
         }
     }
 
     #[cfg(not(feature = "realtime-audio"))]
     {
-        println!("\n注: リアルタイム音声再生は有効ではありません");
-        println!("    --features realtime-audio でビルドすると有効になります");
+        eprintln!("❌ エラー: このビルドはリアルタイム音声再生に対応していません");
+        eprintln!("   --features realtime-audio でビルドしてください");
+        std::process::exit(1);
     }
 
-    println!("\n✅ 完了!");
+    println!("\n✅ 再生完了!");
 }

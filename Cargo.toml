@@ -15,7 +15,7 @@ rubato = "0.14.1"  # Pinned for reproducible resampling
 anyhow = "1.0"
 
 [features]
-default = []
+default = ["realtime-audio"]
 realtime-audio = ["cpal"]
 
 [build-dependencies]

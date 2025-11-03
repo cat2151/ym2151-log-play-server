@@ -24,6 +24,7 @@ const GENERATION_BUFFER_SIZE: usize = 2048;
 
 /// Size of the sample queue (in stereo samples)
 #[cfg(feature = "realtime-audio")]
+#[allow(dead_code)]
 const SAMPLE_QUEUE_SIZE: usize = 16384;
 
 /// Commands that can be sent to the audio thread
@@ -37,11 +38,17 @@ enum AudioCommand {
 /// This struct manages the audio stream and coordinates sample generation
 /// with real-time audio output. It runs a background thread that generates
 /// samples and feeds them to the audio callback.
+/// 
+/// Samples are captured to a WAV buffer during playback for later file output,
+/// matching the behavior of the C implementation.
 #[cfg(feature = "realtime-audio")]
 pub struct AudioPlayer {
+    #[allow(dead_code)]
     stream: cpal::Stream,
     command_tx: Sender<AudioCommand>,
     generator_handle: Option<std::thread::JoinHandle<()>>,
+    /// WAV buffer captured during playback (native OPM rate, i16 stereo samples)
+    wav_buffer: Arc<Mutex<Vec<i16>>>,
 }
 
 #[cfg(feature = "realtime-audio")]
@@ -107,6 +114,10 @@ impl AudioPlayer {
         let position = Arc::new(Mutex::new(0usize));
         let position_clone = position.clone();
 
+        // WAV buffer for capturing samples during playback
+        let wav_buffer = Arc::new(Mutex::new(Vec::new()));
+        let wav_buffer_clone = wav_buffer.clone();
+
         // Build output stream
         let stream = device
             .build_output_stream(
@@ -141,7 +152,7 @@ impl AudioPlayer {
 
         // Spawn sample generation thread
         let generator_handle = std::thread::spawn(move || {
-            if let Err(e) = Self::generate_samples_thread(player, sample_tx, command_rx, position) {
+            if let Err(e) = Self::generate_samples_thread(player, sample_tx, command_rx, position, wav_buffer_clone) {
                 eprintln!("Sample generation error: {}", e);
             }
         });
@@ -150,6 +161,7 @@ impl AudioPlayer {
             stream,
             command_tx,
             generator_handle: Some(generator_handle),
+            wav_buffer,
         })
     }
 
@@ -157,24 +169,27 @@ impl AudioPlayer {
     ///
     /// This runs in a background thread and continuously generates samples
     /// from the player, resamples them, and sends them to the audio callback.
+    /// It also captures the original samples to a WAV buffer for later file output,
+    /// matching the behavior of the C implementation.
     fn generate_samples_thread(
         mut player: Player,
         sample_tx: SyncSender<Vec<f32>>,
         command_rx: Receiver<AudioCommand>,
         _position: Arc<Mutex<usize>>,
+        wav_buffer: Arc<Mutex<Vec<i16>>>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
 
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
         let total_samples = player.total_samples();
 
-        println!("Starting audio playback...");
+        println!("▶  Playing sequence...");
         println!(
             "  Duration: {:.2} seconds",
             total_samples as f64 / OPM_SAMPLE_RATE as f64
         );
         println!(
-            "  Sample rate: {} Hz → {} Hz",
+            "  Sample rate: {} Hz → {} Hz (resampled for playback)",
             OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE
         );
 
@@ -187,7 +202,7 @@ impl AudioPlayer {
 
             // Check if playback is complete
             if player.is_complete() && player.current_sample() >= total_samples {
-                println!("Playback complete!");
+                println!("■  Playback complete");
                 break;
             }
 
@@ -195,7 +210,12 @@ impl AudioPlayer {
             // Note: We check completion above, so we don't need the return value here
             player.generate_samples(&mut generation_buffer);
 
-            // Resample
+            // Capture samples to WAV buffer (at native OPM rate, matching C implementation)
+            if let Ok(mut buffer) = wav_buffer.lock() {
+                buffer.extend_from_slice(&generation_buffer);
+            }
+
+            // Resample for audio output
             let resampled = resampler
                 .resample(&generation_buffer)
                 .context("Failed to resample audio")?;
@@ -235,6 +255,20 @@ impl AudioPlayer {
     pub fn stop(&mut self) {
         let _ = self.command_tx.send(AudioCommand::Stop);
         self.wait();
+    }
+
+    /// Get the captured WAV buffer.
+    ///
+    /// This returns a copy of all samples captured during playback at the native
+    /// OPM sample rate (55930 Hz). Should be called after playback completes.
+    ///
+    /// # Returns
+    /// Vector of interleaved stereo i16 samples
+    pub fn get_wav_buffer(&self) -> Vec<i16> {
+        self.wav_buffer
+            .lock()
+            .expect("Failed to lock WAV buffer - mutex poisoned")
+            .clone()
     }
 }
 

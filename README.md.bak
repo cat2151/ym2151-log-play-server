@@ -39,47 +39,46 @@ For detailed build instructions, please refer to **[BUILD.md](BUILD.md)**.
 
 ## 使い方
 
-### 基本的な使い方（リアルタイム再生 + WAV保存）
+### 注意
 
-```bash
-cargo run --release sample_events.json
+メンテ中です。以降の情報は長くて読みづらいことがあります
+
+#### 主な使い方
+
+ビルドして音を鳴らします
+
+```
+cargo run --release --features realtime-audio output_ym2151.json
 ```
 
-または、ビルド済みの場合：
+ビルド済みのexeで音を鳴らします
 
-```bash
-./target/release/ym2151-log-player-rust sample_events.json
+```
+./target/release/ym2151-log-player-rust output_ym2151.json
 ```
 
-**動作:**
-1. イベントログを読み込み
-2. **即座にリアルタイム音声再生を開始**（C言語版と同じ）
-3. 再生と同時にWAVファイルをキャプチャ
-4. 再生完了後、`output.wav` を保存
-
-### CI/ヘッドレス環境用（音声デバイスなし）
-
-音声デバイスが利用できない環境では、`--no-audio` オプションを使用できます：
+### 基本的な使い方
 
 ```bash
-cargo run --release -- --no-audio sample_events.json
+cargo run <json_log_file>
 ```
 
-このモードでは、リアルタイム再生なしでWAVファイルのみ生成します。
+例:
+```bash
+cargo run sample_events.json
+```
+
+これにより、JSONイベントログファイルを読み込み、`output.wav` ファイルが生成されます。
 
 ### コマンドライン引数
 
 ```
 使用方法:
-  ym2151-log-player-rust [オプション] <json_log_file>
-
-オプション:
-  --no-audio    音声デバイスなしでWAVファイルのみ生成
-                (デフォルトはリアルタイム再生+WAV保存)
+  ym2151-log-player-rust <json_log_file>
 
 例:
+  ym2151-log-player-rust events.json
   ym2151-log-player-rust sample_events.json
-  ym2151-log-player-rust --no-audio sample_events.json
 ```
 
 ### JSONイベントログファイル形式
@@ -103,10 +102,16 @@ cargo run --release -- --no-audio sample_events.json
 
 **注意:** プログラムは入力イベントを自動的に2段階（アドレス書き込み→データ書き込み）に分割し、必要な遅延を挿入します。
 
-### ビルド要件
+### リアルタイムオーディオ再生を有効化
 
-**注意:** リアルタイムオーディオ再生（デフォルト）には音声出力デバイスが必要です。
-Linux環境では、ALSA開発ライブラリのインストールが必要です：
+```bash
+cargo run --features realtime-audio sample_events.json
+```
+
+リアルタイムオーディオ再生とWAVファイル出力の両方を実行します。
+
+**注意:** リアルタイムオーディオ再生には音声出力デバイスが必要です。
+Linux環境では、ALSA開発ライブラリのインストールが必要な場合があります：
 
 ```bash
 # Ubuntu/Debian
@@ -126,8 +131,11 @@ cargo build --release
 ### テストの実行
 
 ```bash
-# 標準テスト（realtime-audio機能込み）
+# 基本テスト（realtime-audio機能なし）
 cargo test
+
+# realtime-audio機能を含むテスト
+cargo test --features realtime-audio
 ```
 
 ## ビルド要件
