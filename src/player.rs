@@ -92,10 +92,7 @@ impl Player {
     }
 
     pub fn total_samples(&self) -> u32 {
-        self.events
-            .last()
-            .map(|e| e.time + OPM_SAMPLE_RATE)
-            .unwrap_or(0)
+        self.events.last().map(|e| e.time).unwrap_or(0)
     }
 
     pub fn current_sample(&self) -> u32 {
@@ -343,7 +340,7 @@ mod tests {
 
         let player = Player::new(log);
 
-        let expected = 1002 + OPM_SAMPLE_RATE;
+        let expected = 1002;
         assert_eq!(player.total_samples(), expected);
     }
 
