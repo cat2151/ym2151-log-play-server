@@ -4,6 +4,7 @@
 
 use crate::opm_ffi;
 use std::mem;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Port constants for OPM register writes
 const OPM_PORT_ADDRESS: u32 = 0;
@@ -13,6 +14,9 @@ const OPM_PORT_DATA: u32 = 1;
 /// The OPM chip runs at 3.579545 MHz, and we generate samples at ~55930 Hz
 /// This means each sample requires 64 clock cycles (3579545 / 55930 ≈ 64)
 const CYCLES_PER_SAMPLE: usize = 64;
+
+/// Global counter for FFI calls to OPM_Clock (for performance analysis)
+static FFI_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Safe wrapper for the OPM chip emulator.
 ///
@@ -89,32 +93,17 @@ impl OpmChip {
         self.write(OPM_PORT_DATA as u8, data);
     }
 
-    /// Generate audio samples from the OPM chip.
+    /// Generate audio samples from the OPM chip (original implementation with individual FFI calls).
     ///
-    /// This function advances the chip's internal state and generates stereo
-    /// audio samples. The buffer should be sized as `num_samples * 2` to
-    /// accommodate interleaved stereo output (left, right, left, right, ...).
-    ///
-    /// The OPM chip requires multiple clock cycles per audio sample. This function
-    /// calls OPM_Clock 64 times per sample to properly accumulate the audio output,
-    /// matching the behavior of the original C implementation.
+    /// This is the original implementation that calls OPM_Clock individually 64 times per sample.
+    /// This method is kept for performance comparison purposes.
     ///
     /// # Parameters
     /// - `buffer`: Output buffer for interleaved stereo i16 samples
     ///
     /// # Panics
     /// Panics if the buffer length is not even (stereo requires pairs).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ym2151_log_player_rust::opm::OpmChip;
-    ///
-    /// let mut chip = OpmChip::new();
-    /// let mut buffer = vec![0i16; 1024]; // 512 stereo samples
-    /// chip.generate_samples(&mut buffer);
-    /// ```
-    pub fn generate_samples(&mut self, buffer: &mut [i16]) {
+    pub fn generate_samples_unbatched(&mut self, buffer: &mut [i16]) {
         assert!(
             buffer.len().is_multiple_of(2),
             "Buffer length must be even for stereo output"
@@ -140,6 +129,68 @@ impl OpmChip {
                     );
                 }
             }
+            // Count FFI calls after all cycles for this sample (64 calls per sample)
+            FFI_CALL_COUNTER.fetch_add(CYCLES_PER_SAMPLE as u64, Ordering::Relaxed);
+
+            // Convert 32-bit samples to 16-bit and store in buffer
+            // The OPM outputs values in roughly -16384 to +16384 range,
+            // so we need to scale and clamp them to i16 range
+            buffer[i * 2] = Self::convert_sample(output[0]);
+            buffer[i * 2 + 1] = Self::convert_sample(output[1]);
+        }
+    }
+
+    /// Generate audio samples from the OPM chip (batched implementation).
+    ///
+    /// This function advances the chip's internal state and generates stereo
+    /// audio samples. The buffer should be sized as `num_samples * 2` to
+    /// accommodate interleaved stereo output (left, right, left, right, ...).
+    ///
+    /// The OPM chip requires multiple clock cycles per audio sample. This function
+    /// uses OPM_Clock_Batch to call OPM_Clock 64 times per sample in a tight C loop,
+    /// reducing FFI overhead significantly compared to calling OPM_Clock individually
+    /// from Rust.
+    ///
+    /// # Parameters
+    /// - `buffer`: Output buffer for interleaved stereo i16 samples
+    ///
+    /// # Panics
+    /// Panics if the buffer length is not even (stereo requires pairs).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ym2151_log_player_rust::opm::OpmChip;
+    ///
+    /// let mut chip = OpmChip::new();
+    /// let mut buffer = vec![0i16; 1024]; // 512 stereo samples
+    /// chip.generate_samples(&mut buffer);
+    /// ```
+    pub fn generate_samples(&mut self, buffer: &mut [i16]) {
+        assert!(
+            buffer.len().is_multiple_of(2),
+            "Buffer length must be even for stereo output"
+        );
+
+        let num_samples = buffer.len() / 2;
+
+        // Generate each sample by calling OPM_Clock_Batch once per sample
+        // The OPM chip needs CYCLES_PER_SAMPLE (64) clock cycles to generate
+        // one complete audio sample. The batched function reduces FFI overhead
+        // by performing all 64 cycles in C code.
+        for i in 0..num_samples {
+            let mut output: [i32; 2] = [0; 2];
+
+            // Call OPM_Clock_Batch once per sample (batches 64 cycles internally)
+            unsafe {
+                opm_ffi::OPM_Clock_Batch(
+                    &mut self.chip,
+                    output.as_mut_ptr(),
+                    CYCLES_PER_SAMPLE as u32,
+                );
+            }
+            // Count one FFI call per sample (not per cycle)
+            FFI_CALL_COUNTER.fetch_add(1, Ordering::Relaxed);
 
             // Convert 32-bit samples to 16-bit and store in buffer
             // The OPM outputs values in roughly -16384 to +16384 range,
@@ -175,6 +226,41 @@ impl OpmChip {
         unsafe {
             opm_ffi::OPM_Reset(&mut self.chip);
         }
+    }
+
+    /// Get the total number of FFI calls made to OPM_Clock (for performance analysis).
+    ///
+    /// This counter tracks all FFI calls across all OpmChip instances to help
+    /// identify the FFI call frequency bottleneck.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ym2151_log_player_rust::opm::OpmChip;
+    ///
+    /// OpmChip::reset_ffi_call_count();
+    /// let mut chip = OpmChip::new();
+    /// let mut buffer = vec![0i16; 1024];
+    /// chip.generate_samples(&mut buffer);
+    /// let count = OpmChip::get_ffi_call_count();
+    /// println!("FFI calls: {}", count);
+    /// ```
+    pub fn get_ffi_call_count() -> u64 {
+        FFI_CALL_COUNTER.load(Ordering::Relaxed)
+    }
+
+    /// Reset the FFI call counter (for testing and benchmarking).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ym2151_log_player_rust::opm::OpmChip;
+    ///
+    /// OpmChip::reset_ffi_call_count();
+    /// assert_eq!(OpmChip::get_ffi_call_count(), 0);
+    /// ```
+    pub fn reset_ffi_call_count() {
+        FFI_CALL_COUNTER.store(0, Ordering::Relaxed);
     }
 }
 
