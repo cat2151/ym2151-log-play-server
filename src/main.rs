@@ -1,6 +1,7 @@
 use std::env;
 use ym2151_log_player_rust::events::EventLog;
 use ym2151_log_player_rust::player::Player;
+use ym2151_log_player_rust::resampler::OPM_SAMPLE_RATE;
 use ym2151_log_player_rust::wav_writer;
 
 fn print_usage(program_name: &str) {
@@ -67,7 +68,7 @@ fn main() {
 
             if let Some(last_event) = log.events.last() {
                 let duration_samples = last_event.time;
-                let duration_seconds = duration_samples as f64 / 55930.0;
+                let duration_seconds = duration_samples as f64 / OPM_SAMPLE_RATE as f64;
                 println!("   再生時間: 約 {:.2} 秒", duration_seconds);
             }
             log
