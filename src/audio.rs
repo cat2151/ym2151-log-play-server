@@ -136,6 +136,16 @@ impl AudioPlayer {
         let audio_buffer_size = Arc::new(Mutex::new(None::<usize>));
         let audio_buffer_size_clone = audio_buffer_size.clone();
 
+        // Diagnostic counters for investigating playback speed issue
+        let callback_count = Arc::new(Mutex::new(0u64));
+        let callback_count_clone = callback_count.clone();
+        let samples_received_total = Arc::new(Mutex::new(0u64));
+        let samples_received_clone = samples_received_total.clone();
+        let samples_used_total = Arc::new(Mutex::new(0u64));
+        let samples_used_clone = samples_used_total.clone();
+        let samples_silenced_total = Arc::new(Mutex::new(0u64));
+        let samples_silenced_clone = samples_silenced_total.clone();
+
         // Build output stream
         let stream = device
             .build_output_stream(
@@ -150,13 +160,30 @@ impl AudioPlayer {
                         }
                     }
 
+                    // Increment callback counter
+                    if let Ok(mut count) = callback_count_clone.lock() {
+                        *count += 1;
+                    }
+
                     if let Ok(samples) = sample_rx.try_recv() {
                         let len = data.len().min(samples.len());
                         data[..len].copy_from_slice(&samples[..len]);
 
+                        // Track diagnostic counters
+                        if let Ok(mut total) = samples_received_clone.lock() {
+                            *total += samples.len() as u64;
+                        }
+                        if let Ok(mut total) = samples_used_clone.lock() {
+                            *total += len as u64;
+                        }
+
                         // Fill remainder with silence if samples are exhausted
                         if len < data.len() {
+                            let silenced = data.len() - len;
                             data[len..].fill(0.0);
+                            if let Ok(mut total) = samples_silenced_clone.lock() {
+                                *total += silenced as u64;
+                            }
                         }
 
                         // Update position
@@ -166,6 +193,9 @@ impl AudioPlayer {
                     } else {
                         // No samples available - fill with silence to prevent underrun
                         data.fill(0.0);
+                        if let Ok(mut total) = samples_silenced_clone.lock() {
+                            *total += data.len() as u64;
+                        }
                     }
                 },
                 |err| eprintln!("Audio stream error: {}", err),
@@ -185,6 +215,10 @@ impl AudioPlayer {
                 position,
                 wav_buffer_clone,
                 audio_buffer_size,
+                callback_count,
+                samples_received_total,
+                samples_used_total,
+                samples_silenced_total,
             ) {
                 eprintln!("Sample generation error: {}", e);
             }
@@ -206,6 +240,7 @@ impl AudioPlayer {
     /// matching the behavior of the C implementation.
     ///
     /// Performance monitoring is enabled via PERF_MONITOR environment variable.
+    #[allow(clippy::too_many_arguments)]
     fn generate_samples_thread(
         mut player: Player,
         sample_tx: SyncSender<Vec<f32>>,
@@ -213,6 +248,10 @@ impl AudioPlayer {
         _position: Arc<Mutex<usize>>,
         wav_buffer: Arc<Mutex<Vec<i16>>>,
         audio_buffer_size: Arc<Mutex<Option<usize>>>,
+        callback_count: Arc<Mutex<u64>>,
+        samples_received_total: Arc<Mutex<u64>>,
+        samples_used_total: Arc<Mutex<u64>>,
+        samples_silenced_total: Arc<Mutex<u64>>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
 
@@ -386,6 +425,62 @@ impl AudioPlayer {
         if let Some(monitor) = perf_monitor {
             monitor.report();
         }
+
+        // Print diagnostic information to help identify playback speed issue
+        println!("\n=== Audio Playback Diagnostics ===");
+        if let Ok(count) = callback_count.lock() {
+            println!("Total audio callbacks: {}", *count);
+        }
+        if let Ok(size) = audio_buffer_size.lock() {
+            if let Some(buffer_size) = *size {
+                let frames = buffer_size / 2;
+                let duration_ms = (frames as f64 / OUTPUT_SAMPLE_RATE as f64) * 1000.0;
+                println!(
+                    "Audio callback buffer size: {} samples ({} stereo frames)",
+                    buffer_size, frames
+                );
+                println!("Audio callback buffer duration: {:.2} ms", duration_ms);
+            }
+        }
+        if let (Ok(received), Ok(used), Ok(silenced)) = (
+            samples_received_total.lock(),
+            samples_used_total.lock(),
+            samples_silenced_total.lock(),
+        ) {
+            let received_val = *received;
+            let used_val = *used;
+            let silenced_val = *silenced;
+            println!("\nSample statistics:");
+            println!("  Samples received from generation: {}", received_val);
+            println!("  Samples actually used: {}", used_val);
+            println!("  Samples filled with silence: {}", silenced_val);
+
+            if received_val > 0 {
+                let usage_pct = (used_val as f64 / received_val as f64) * 100.0;
+                println!("  Usage percentage: {:.1}%", usage_pct);
+            }
+
+            if used_val > 0 {
+                let duration_used_sec = (used_val / 2) as f64 / OUTPUT_SAMPLE_RATE as f64;
+                let duration_total_sec =
+                    ((used_val + silenced_val) / 2) as f64 / OUTPUT_SAMPLE_RATE as f64;
+                println!("\nTiming analysis:");
+                println!("  Audio content played: {:.2} seconds", duration_used_sec);
+                println!("  Total callback time: {:.2} seconds", duration_total_sec);
+                if duration_total_sec > 0.0 {
+                    let speedup = duration_total_sec / duration_used_sec;
+                    println!("  *** Speed-up factor: {:.2}x ***", speedup);
+                    if speedup > 1.1 {
+                        println!("\n⚠️  WARNING: Audio is playing FASTER than intended!");
+                        println!("  This is caused by the audio callback receiving fewer samples");
+                        println!(
+                            "  than the device buffer size, causing gaps filled with silence."
+                        );
+                    }
+                }
+            }
+        }
+        println!("==================================\n");
 
         Ok(())
     }
