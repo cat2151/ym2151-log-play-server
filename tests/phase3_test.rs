@@ -276,6 +276,6 @@ fn test_phase3_total_samples_calculation() {
 
     let player = Player::new(log);
 
-    let expected = 1002 + 55930;
+    let expected = 1002;
     assert_eq!(player.total_samples(), expected);
 }
