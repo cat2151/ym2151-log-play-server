@@ -1,162 +1,73 @@
-# GitHub Copilot Instructions for ym2151-log-player-rust
+# GitHub Copilot 指示書 - ym2151-log-player-rust
 
-## Project Overview
+## プロジェクト概要
 
-This is a Rust implementation of a YM2151 (OPM) chip register event log player. It reads JSON event logs and performs real-time audio playback and WAV file output using the Nuked-OPM emulator.
+YM2151 (OPM) チップレジスタイベントログプレイヤーのRust実装です。JSONイベントログを読み込み、Nuked-OPMエミュレータを使用してリアルタイム音声再生とWAVファイル出力を行います。
 
-This is a Rust port of the original C implementation: https://github.com/cat2151/ym2151-log-player
+オリジナルC実装: https://github.com/cat2151/ym2151-log-player
 
-### Key Features
-- JSON event log parsing with hex string support ("0x08" format)
-- Real-time audio playback via cpal
-- WAV file output via hound
-- Sample rate conversion (55930 Hz → 48000 Hz) using rubato
-- Nuked-OPM emulation via FFI
+### 主要機能
+- 16進文字列対応JSONイベントログ解析 ("0x08"形式)
+- cpalによるリアルタイム音声再生
+- houndによるWAVファイル出力
+- rubato使用のサンプルレート変換 (55930 Hz → 48000 Hz)
+- FFI経由のNuked-OPMエミュレーション
 
-## Build Instructions
+## ビルド手順
 
-### Prerequisites
-- Rust 1.70 or later
-- zig cc (required for C compilation)
-- **DO NOT USE**: mingw, msys2, or MSVC
+### 前提条件
+- Rust 1.70以降
+- zig cc (C言語コンパイル用)
+- **使用禁止**: mingw, msys2, MSVC
 
-### Building the Project
+### ビルドとテスト
 
 ```bash
-# Standard build
+# 標準ビルド
 cargo build
 
-# Release build
+# リリースビルド
 cargo build --release
 
-# Run the program
+# プログラム実行
 cargo run -- sample_events.json
-```
 
-### Cross-compilation to Windows (from Linux)
-
-```bash
-# Set up zig cc
-export CC="zig cc -target x86_64-windows"
-export AR="zig ar"
-
-# Build
-cargo build --release --target x86_64-pc-windows-gnu
-```
-
-### Testing
-
-```bash
-# Run all tests
+# 全テスト実行
 cargo test
 
-# Run specific test
+# 特定テスト実行
 cargo test integration_test
-
-# Run with output
-cargo test -- --nocapture
 ```
 
-**Note**: Build may fail on Linux due to ALSA dependencies in cpal. This is expected in CI environments. Tests can still be run on platforms with proper audio support.
+## コーディング規約とプロジェクト構造
 
-## Code Style and Conventions
+### 一般ガイドライン
+- 標準Rust規約に従う (rustfmt)
+- 分かりやすい変数名を使用
+- 複雑なFFI操作にはコメント追加
+- unsafeコードブロックには安全性の根拠を文書化
 
-### General Guidelines
-- Follow standard Rust conventions (rustfmt)
-- Use descriptive variable names
-- Add comments for complex FFI interactions
-- Document unsafe code blocks with safety justifications
-- Keep functions focused and small
+### エラーハンドリング
+- アプリケーションコードでは `anyhow::Result` を使用
+- ライブラリコードでは独自エラー型と `Result<T, E>` を使用
 
-### Error Handling
-- Use `anyhow::Result` for error propagation in application code
-- Use `Result<T, E>` with custom error types for library code
-- Provide context with error messages
+### FFI安全性
+- 全てのunsafe FFI呼び出しを安全なRust APIでラップ
+- 全FFIバインディングは `src/omp_ffi.rs` に配置
+- 安全ラッパーは `src/opm.rs` に配置
 
-### FFI Safety
-- All unsafe FFI calls must be wrapped in safe Rust APIs
-- Document safety requirements for unsafe functions
-- Minimize the unsafe code surface area
-- All FFI bindings are in `src/opm_ffi.rs`
-- Safe wrappers are in `src/opm.rs`
+### 主要ファイル
+- `src/main.rs` - エントリーポイント
+- `src/events.rs` - 16進対応JSONイベント解析
+- `src/player.rs` - イベント処理エンジン
+- `src/wav_writer.rs` - WAVファイル出力
+- `src/audio.rs` - リアルタイム音声再生
+- `omp.c`, `opm.h` - Nuked-OPM C実装
 
-### Testing
-- Write unit tests for each module
-- Place integration tests in `tests/` directory
-- Use fixtures in `tests/fixtures/` for test data
-- Test both success and error cases
+## 実装の詳細
 
-## Project Structure
-
-```
-ym2151-log-player-rust/
-├── src/
-│   ├── main.rs          # Entry point with phase demos
-│   ├── lib.rs           # Library exports
-│   ├── opm_ffi.rs       # Raw FFI bindings to Nuked-OPM
-│   ├── opm.rs           # Safe Rust wrapper for OPM chip
-│   ├── events.rs        # JSON event parsing with hex support
-│   └── (more modules coming in future phases)
-├── tests/
-│   ├── integration_test.rs  # Integration tests
-│   └── fixtures/            # Test JSON files
-├── opm.c                # Nuked-OPM C implementation
-├── opm.h                # Nuked-OPM header
-├── build.rs             # Build script for compiling opm.c
-├── sample_events.json   # Sample event log
-├── Cargo.toml           # Dependencies (versions pinned for reproducibility)
-└── IMPLEMENTATION_PLAN.md  # Detailed implementation roadmap
-```
-
-## Technology Stack
-
-### Rust Dependencies
-- **serde + serde_json**: JSON deserialization with custom hex string parsing
-- **cpal**: Cross-platform audio I/O (pinned to 0.15.3 for stability)
-- **hound**: WAV file reading/writing
-- **rubato**: High-quality sample rate conversion (pinned to 0.14.1)
-- **anyhow**: Error handling with context
-
-### Build Dependencies
-- **cc**: Compiles opm.c during build via build.rs
-
-### C Library (via FFI)
-- **Nuked-OPM**: YM2151 emulator (LGPL 2.1 licensed)
-  - Source: opm.c, opm.h in project root
-  - Compiled with zig cc and linked via build.rs
-
-## Development Workflow
-
-### Implementation Phases
-The project follows a phased implementation approach documented in `IMPLEMENTATION_PLAN.md`:
-
-- **Phase 0**: ✅ Project initialization
-- **Phase 1**: ✅ Nuked-OPM FFI bindings (completed)
-- **Phase 2**: ✅ JSON event loading (completed)
-- **Phase 3**: Event processing engine (planned)
-- **Phase 4**: WAV file output (planned)
-- **Phase 5**: Real-time audio playback (planned)
-- **Phase 6**: Main application integration (planned)
-- **Phase 7**: Windows build and testing (planned)
-
-### Current Status
-Phases 1 and 2 are complete. The project can:
-- Initialize Nuked-OPM chip
-- Generate audio samples
-- Load and parse JSON event files with hex strings
-
-### Adding New Features
-1. Check the phase plan in `IMPLEMENTATION_PLAN.md`
-2. Ensure dependencies are in `Cargo.toml`
-3. Write tests first when possible
-4. Implement in appropriate module
-5. Update main.rs if adding new phase demo
-6. Run tests to verify
-
-## Important Implementation Details
-
-### JSON Event Format
-Events use hex strings for addresses and data:
+### JSONイベント形式
+イベントはアドレスとデータに16進文字列を使用:
 ```json
 {
   "event_count": 2,
@@ -167,184 +78,82 @@ Events use hex strings for addresses and data:
 }
 ```
 
-**Note**: The current `sample_events.json` file contains pass2 format events with `is_data` field already set. This field is optional and ignored during parsing. Future implementation phases will convert pass1 events (simple register writes without `is_data`) into pass2 events automatically.
-
-### Hex String Parsing
-Use custom deserializer in `events.rs`:
+### 16進文字列解析
+`events.rs`でカスタムデシリアライザーを使用:
 ```rust
 #[serde(deserialize_with = "parse_hex_string")]
 pub addr: u8,
 ```
 
-### Event Processing (Planned for Phase 3)
-The player will process events as follows:
-- **Input**: Pass1 format events (simple register writes: `{"time": 0, "addr": "0x08", "data": "0x00"}`)
-- **Processing**: Convert to pass2 format (address write + data write pairs)
-- **Timing**: Insert DELAY_SAMPLES (2 samples) between address and data writes
-- **OPM Ports**: Port 0 = address register, Port 1 = data register
+### イベント処理
+- **入力**: Pass1形式イベント (単純レジスタ書き込み)
+- **処理**: Pass2形式に変換 (アドレス書き込み + データ書き込みペア)
+- **タイミング**: アドレスとデータ書き込み間にDELAY_SAMPLES (2サンプル) 挿入
+- **OPMポート**: ポート0 = アドレスレジスタ, ポート1 = データレジスタ
 
-Current Status: The `sample_events.json` file contains pass2 format data for testing purposes. Phase 3 will implement the pass1→pass2 conversion logic.
+### 音声仕様
+- OPM内部レート: 55930 Hz
+- 出力レート: 48000 Hz (リサンプリング必要)
+- フォーマット: 16ビット符号付きステレオ
 
-### Audio Specifications
-- OPM internal rate: 55930 Hz
-- Output rate: 48000 Hz (requires resampling)
-- Format: 16-bit signed stereo
-- Channels: 2 (stereo)
+## よくあるタスク
 
-### Safety and Security
-- All `unsafe` code must be documented
-- FFI boundaries are the only unsafe areas
-- Use safe wrappers for all public APIs
-- Validate all external inputs (JSON, user args)
+### 新しいモジュールの追加
+1. `src/module_name.rs` を作成
+2. `src/lib.rs` に追加: `pub mod module_name;`
+3. 必要に応じてmain.rsを更新
+4. 同ファイルまたは `tests/` にテストを記述
 
-## Common Tasks
+### FFIの操作
+1. `src/opm_ffi.rs` にC関数宣言を追加
+2. `src/opm.rs` に安全なラッパーを作成
+3. 安全性要件を文書化
+4. 単体テストでテスト
 
-### Adding a New Module
-1. Create `src/module_name.rs`
-2. Add to `src/lib.rs`: `pub mod module_name;`
-3. Update main.rs to use if needed
-4. Write tests in same file or `tests/`
+### 依存関係の追加
+1. 特定バージョンで `Cargo.toml` を更新
+2. 音声/信号処理クレートのバージョンを固定
+3. ライセンス互換性を確認 (プロジェクトはMIT)
+4. 依存関係が必要な理由を文書化
 
-### Working with FFI
-1. Add C function declaration to `src/opm_ffi.rs`
-2. Create safe wrapper in `src/opm.rs`
-3. Document safety requirements
-4. Test with unit tests
+## コード品質とリンティング
 
-### Adding Dependencies
-1. Update `Cargo.toml` with specific version
-2. Pin versions for audio/signal processing crates
-3. Check license compatibility (project is MIT)
-4. Document why dependency is needed
+### リンターの実行
 
-## References
-
-- Original implementation: https://github.com/cat2151/ym2151-log-player
-- Nuked-OPM: https://github.com/nukeykt/Nuked-OPM
-- Implementation plan: See `IMPLEMENTATION_PLAN.md` for detailed phase breakdown
-- YM2151 specs: Yamaha YM2151 datasheet
-
-## Language and Documentation
-
-- Code comments: Use English for code comments and documentation
-- README files: Japanese (as per project convention)
-- User-facing messages: Japanese
-- Technical documentation: English is acceptable
-- Commit messages: English preferred
-
-## Code Quality and Linting
-
-### Running Linters
-
-Always run linters before committing code:
+コミット前に必ずリンターを実行:
 
 ```bash
-# Format code with rustfmt
+# rustfmtでコードをフォーマット
 cargo fmt
 
-# Check formatting without modifying files
+# ファイルを変更せずにフォーマットをチェック
 cargo fmt -- --check
 
-# Run Clippy for code quality checks
+# Clippyでコード品質をチェック
 cargo clippy --all-targets
 
-# Run Clippy with warnings as errors (for CI)
+# 警告をエラーとして扱うClippy (CI用)
 cargo clippy --all-targets -- -D warnings
 ```
 
-### Pre-commit Checklist
+### コミット前チェックリスト
 
-Before committing or requesting code review:
+コミットまたはコードレビュー要求前に:
 
-1. **Format code**: Run `cargo fmt` to ensure consistent formatting
-2. **Fix linting issues**: Run `cargo clippy` and address warnings
-3. **Build successfully**: Run `cargo build` (or `cargo build --release`)
-4. **Run tests**: Execute `cargo test` to ensure all tests pass
-5. **Test with features**: If modifying audio code, test with `cargo test --features realtime-audio`
-6. **Update documentation**: If adding public APIs, update doc comments
+1. **コードフォーマット**: `cargo fmt` を実行して一貫したフォーマットを確保
+2. **リンティング問題修正**: `cargo clippy` を実行して警告に対処
+3. **ビルド成功**: `cargo build` (または `cargo build --release`) を実行
+4. **テスト実行**: `cargo test` を実行して全テストが通ることを確認
+5. **ドキュメント更新**: パブリックAPIを追加した場合、docコメントを更新
 
-### Continuous Integration
+## 参考資料
 
-Currently, this repository doesn't have automated CI/CD workflows. When contributing:
+- オリジナル実装: https://github.com/cat2151/ym2151-log-player
+- Nuked-OPM: https://github.com/nukeykt/Nuked-OPM
+- 実装計画: 詳細なフェーズ分けは `IMPLEMENTATION_PLAN.md` を参照
+- YM2151仕様: Yamaha YM2151データシート
 
-- Ensure your local build and tests pass before pushing
-- Code review is manual; maintainers will check for:
-  - Proper formatting (rustfmt)
-  - No clippy warnings
-  - All tests passing
-  - Documentation updated for new features
-
-## Acceptance Criteria for Changes
-
-### Bug Fixes
-
-A bug fix is complete when:
-- [ ] The bug is reproducible with a test case
-- [ ] The fix resolves the issue without breaking existing functionality
-- [ ] Tests are added to prevent regression
-- [ ] Code passes all linting checks
-- [ ] Documentation is updated if the bug was in documented behavior
-
-### New Features
-
-A new feature is complete when:
-- [ ] Implementation matches the specification in IMPLEMENTATION_PLAN.md
-- [ ] All public APIs have documentation comments
-- [ ] Unit tests cover the new functionality
-- [ ] Integration tests verify end-to-end behavior
-- [ ] Code follows project conventions and passes linting
-- [ ] README.md or relevant documentation is updated
-- [ ] No new clippy warnings are introduced
-
-### Refactoring
-
-A refactoring is complete when:
-- [ ] Behavior is unchanged (all existing tests still pass)
-- [ ] Code is more maintainable/readable
-- [ ] No new warnings or errors introduced
-- [ ] Performance is not negatively impacted (if relevant)
-
-### Documentation Updates
-
-Documentation changes are complete when:
-- [ ] Information is accurate and up-to-date
-- [ ] Examples compile and work correctly
-- [ ] Language conventions are followed (see Language and Documentation section)
-- [ ] No broken links or references
-
-## Working with GitHub Copilot
-
-### Well-Suited Tasks for Copilot
-
-Copilot works best on issues that are:
-
-- **Well-scoped**: Clear description of what needs to change
-- **Specific**: Affected files or components are identified
-- **Testable**: Expected behavior can be verified with tests
-- **Incremental**: Changes build on existing code rather than large rewrites
-
-Examples of good Copilot tasks:
-- "Add a new JSON field to the event format with parsing and tests"
-- "Fix clippy warning in src/player.rs about unused variable"
-- "Add validation for sample rate values in AudioResampler"
-- "Update documentation for the EventLog::from_file method"
-
-### Tasks Less Suited for Copilot
-
-Avoid assigning to Copilot:
-- Major architectural changes or redesigns
-- Tasks requiring domain expertise in audio processing or YM2151 chip behavior
-- Issues with ambiguous requirements or unclear success criteria
-- Tasks that require creative problem-solving without clear constraints
-
-### Providing Feedback on Copilot PRs
-
-When reviewing Copilot-generated code:
-
-1. Check that all acceptance criteria are met
-2. Verify tests are comprehensive and actually test the right behavior
-3. Ensure code follows project conventions
-4. Look for edge cases that might not be covered
-5. Confirm documentation is accurate and complete
-
-Leave specific, actionable feedback in PR comments. Copilot coding agent will respond to direct feedback and can make corrections based on your review comments.
+# userからの指示
+- 作業報告は、プルリクエストのコメントに書く。document作成禁止
+  - DRY原則に準拠し、「codeやbuild scriptと同じことを、documentに書いたせいで、そのdocumentが陳腐化してハルシネーションやuserレビューコスト増大や混乱ほか様々なトラブル原因になる」を防止する
+  - なおissue-notes/は、userがissueごとの意図を記録する用途で使う
