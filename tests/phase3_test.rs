@@ -316,7 +316,6 @@ fn test_phase3_total_samples_calculation() {
 #[test]
 fn test_phase3_pass2_json_export() {
     use std::fs;
-    
 
     // Create a simple event log
     let events = vec![
