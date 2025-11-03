@@ -111,10 +111,12 @@ impl AudioPlayer {
         );
 
         // Configure audio stream
+        // Buffer size set to 4224 samples (2112 stereo frames) = 44ms at 48kHz
+        // This is 2x the previous default size to prevent audio underruns
         let config = cpal::StreamConfig {
             channels: 2,
             sample_rate: cpal::SampleRate(OUTPUT_SAMPLE_RATE),
-            buffer_size: cpal::BufferSize::Default,
+            buffer_size: cpal::BufferSize::Fixed(4224),
         };
 
         // Create channels for sample passing
