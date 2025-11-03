@@ -6,6 +6,10 @@ authors = ["cat2151"]
 license = "MIT"
 description = "YM2151 Log Player - Rust implementation"
 
+[lib]
+name = "ym2151_log_player_rust"
+path = "src/lib.rs"
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
