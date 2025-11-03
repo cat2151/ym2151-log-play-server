@@ -7,14 +7,7 @@ const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
 
-/// Minimum duration to generate after events complete (500ms in samples at OPM_SAMPLE_RATE)
-const TAIL_MIN_DURATION_MS: u32 = 500;
-const TAIL_MIN_SAMPLES: u32 = TAIL_MIN_DURATION_MS * OPM_SAMPLE_RATE / 1000;
-
-/// Threshold for silence detection (absolute value of sample)
-const SILENCE_THRESHOLD: i16 = 10;
-
-/// Number of consecutive silent samples required to stop tail generation
+/// Number of consecutive silent samples (zero volume) required to stop tail generation (100ms)
 const SILENCE_DURATION_MS: u32 = 100;
 const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
@@ -138,9 +131,9 @@ impl Player {
         OPM_SAMPLE_RATE
     }
 
-    /// Check if a stereo sample pair is below the silence threshold
+    /// Check if a stereo sample pair has zero volume
     fn is_sample_silent(left: i16, right: i16) -> bool {
-        left.abs() < SILENCE_THRESHOLD && right.abs() < SILENCE_THRESHOLD
+        left == 0 && right == 0
     }
 
     /// Check if tail generation should continue
@@ -151,14 +144,7 @@ impl Player {
             return true;
         }
 
-        let samples_after_events = self.samples_played - self.total_samples();
-
-        // Always generate at least TAIL_MIN_SAMPLES after events complete
-        if samples_after_events < TAIL_MIN_SAMPLES {
-            return true;
-        }
-
-        // After minimum tail duration, check for silence
+        // Continue until we have 100ms of consecutive zero volume
         self.consecutive_silent_samples < SILENCE_SAMPLES
     }
 

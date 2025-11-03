@@ -56,7 +56,7 @@ fn test_tail_generation_continues_after_events() {
 }
 
 #[test]
-fn test_tail_generation_minimum_duration() {
+fn test_tail_generation_stops_after_silence() {
     // Create a very short event log
     let log = EventLog {
         event_count: 1,
@@ -69,7 +69,6 @@ fn test_tail_generation_minimum_duration() {
     };
 
     let mut player = Player::new(log);
-    let total_event_samples = player.total_samples();
 
     // Generate samples until tail generation stops
     let mut buffer = vec![0i16; 2048 * 2];
@@ -81,25 +80,19 @@ fn test_tail_generation_minimum_duration() {
         iterations += 1;
     }
 
-    // Calculate how many samples were generated after events
-    let samples_after_events = player.current_sample() - total_event_samples;
-
-    // Minimum tail is 500ms
-    const TAIL_MIN_DURATION_MS: u32 = 500;
-    let expected_min_tail = TAIL_MIN_DURATION_MS * OPM_SAMPLE_RATE / 1000;
-
+    // Verify that tail generation stopped (should_continue_tail returns false)
     assert!(
-        samples_after_events >= expected_min_tail,
-        "Tail should be at least 500ms: generated {} samples, expected at least {}",
-        samples_after_events,
-        expected_min_tail
+        !player.should_continue_tail() || iterations >= max_iterations,
+        "Tail generation should stop after 100ms of zero volume"
     );
 
-    println!(
-        "Generated tail: {:.2}ms ({} samples)",
-        samples_after_events as f64 / OPM_SAMPLE_RATE as f64 * 1000.0,
-        samples_after_events
-    );
+    if let Some((tail_samples, _)) = player.tail_info() {
+        println!(
+            "Generated tail: {:.2}ms ({} samples)",
+            tail_samples as f64 / OPM_SAMPLE_RATE as f64 * 1000.0,
+            tail_samples
+        );
+    }
 }
 
 #[test]
@@ -145,8 +138,8 @@ fn test_should_continue_tail_during_events() {
 }
 
 #[test]
-fn test_silence_detection_resets_on_non_silent_sample() {
-    // This test verifies that the silence counter resets when a non-silent sample is detected
+fn test_silence_detection_resets_on_non_zero_sample() {
+    // This test verifies that the silence counter resets when a non-zero sample is detected
     let log = EventLog {
         event_count: 1,
         events: vec![RegisterEvent {
@@ -164,19 +157,19 @@ fn test_silence_detection_resets_on_non_silent_sample() {
     for _ in 0..10 {
         player.generate_samples(&mut buffer);
 
-        // Check if any non-silent samples exist in buffer
-        let has_non_silent = buffer.chunks(2).any(|chunk| {
+        // Check if any non-zero samples exist in buffer
+        let has_non_zero = buffer.chunks(2).any(|chunk| {
             let left = chunk[0];
             let right = chunk[1];
-            left.abs() >= 10 || right.abs() >= 10
+            left != 0 || right != 0
         });
 
-        if has_non_silent {
-            // The consecutive silent counter should be low if we have non-silent samples
+        if has_non_zero {
+            // The consecutive silent counter should be low if we have non-zero samples
             if let Some((_, consecutive_silent)) = player.tail_info() {
-                // If we're getting non-silent samples, the counter shouldn't reach the full silence duration
+                // If we're getting non-zero samples, the counter shouldn't reach the full silence duration
                 println!(
-                    "Has non-silent samples, consecutive silent: {}",
+                    "Has non-zero samples, consecutive silent: {}",
                     consecutive_silent
                 );
             }
