@@ -76,8 +76,20 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
         }
 
         // Safety limit: prevent infinite loop
-        if processed_samples > (total_samples as usize) * 10 {
+        // Allow at least 10 seconds of tail, or 10x the event duration, whichever is larger
+        let max_tail_samples = std::cmp::max(
+            Player::sample_rate() * 10, // 10 seconds
+            total_samples * 10,         // 10x event duration
+        );
+        if processed_samples > (total_samples as usize + max_tail_samples as usize) {
             println!("  Warning: Tail generation exceeded safety limit");
+            if let Some((tail_samples, _)) = player.tail_info() {
+                let tail_ms = tail_samples as f64 / Player::sample_rate() as f64 * 1000.0;
+                println!(
+                    "  演奏データの余韻{}ms 波形生成 OK (safety limit)",
+                    tail_ms as u32
+                );
+            }
             break;
         }
     }
