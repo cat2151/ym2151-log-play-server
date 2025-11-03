@@ -31,6 +31,14 @@ const GENERATION_BUFFER_SIZE: usize = 2048;
 #[allow(dead_code)]
 const SAMPLE_QUEUE_SIZE: usize = 16384;
 
+/// Maximum attempts to detect audio buffer size (100 attempts * 10ms = 1 second timeout)
+#[cfg(feature = "realtime-audio")]
+const BUFFER_SIZE_DETECTION_MAX_ATTEMPTS: usize = 100;
+
+/// Sleep duration between buffer size detection attempts
+#[cfg(feature = "realtime-audio")]
+const BUFFER_SIZE_DETECTION_SLEEP_MS: u64 = 10;
+
 /// Commands that can be sent to the audio thread
 #[cfg(feature = "realtime-audio")]
 enum AudioCommand {
@@ -212,14 +220,16 @@ impl AudioPlayer {
         // Wait for audio buffer size to be captured (with timeout)
         let mut actual_audio_buffer_size = None;
         println!("⏳ Waiting for audio device buffer size...");
-        for _ in 0..100 {
+        for _ in 0..BUFFER_SIZE_DETECTION_MAX_ATTEMPTS {
             if let Ok(size) = audio_buffer_size.lock() {
                 if let Some(buffer_size) = *size {
                     actual_audio_buffer_size = Some(buffer_size);
                     break;
                 }
             }
-            std::thread::sleep(std::time::Duration::from_millis(10));
+            std::thread::sleep(std::time::Duration::from_millis(
+                BUFFER_SIZE_DETECTION_SLEEP_MS,
+            ));
         }
 
         // Print buffer size information

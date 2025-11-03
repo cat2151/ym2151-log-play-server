@@ -3,6 +3,7 @@
 // This module provides lightweight performance instrumentation to measure
 // timing of critical audio rendering operations.
 
+use crate::resampler::{OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 use std::time::{Duration, Instant};
 
 /// Performance statistics for a specific operation
@@ -142,24 +143,26 @@ impl PerfMonitor {
         println!("\n=== Buffer Configuration ===");
         if let Some(buffer_size) = self.audio_buffer_size {
             let buffer_frames = buffer_size / 2;
-            let buffer_duration_ms = (buffer_frames as f64 / 48000.0) * 1000.0;
+            let buffer_duration_ms = (buffer_frames as f64 / OUTPUT_SAMPLE_RATE as f64) * 1000.0;
             println!(
                 "Audio device buffer: {} samples ({} stereo frames)",
                 buffer_size, buffer_frames
             );
             println!(
-                "Audio buffer duration: {:.2}ms at 48000 Hz",
-                buffer_duration_ms
+                "Audio buffer duration: {:.2}ms at {} Hz",
+                buffer_duration_ms, OUTPUT_SAMPLE_RATE
             );
         } else {
             println!("Audio device buffer: Unknown (fallback mode)");
         }
         println!(
-            "Generation buffer: {} samples ({} stereo frames) at 55930 Hz",
+            "Generation buffer: {} samples ({} stereo frames) at {} Hz",
             self.generation_buffer_size * 2,
-            self.generation_buffer_size
+            self.generation_buffer_size,
+            OPM_SAMPLE_RATE
         );
-        let gen_duration_ms = (self.generation_buffer_size as f64 / 55930.0) * 1000.0;
+        let gen_duration_ms =
+            (self.generation_buffer_size as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
         println!("Generation buffer duration: {:.2}ms", gen_duration_ms);
 
         println!("\n=== Performance Threshold ===");
