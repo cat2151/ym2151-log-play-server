@@ -93,8 +93,6 @@ impl OpmChip {
         self.write(OPM_PORT_DATA as u8, data);
     }
 
-
-
     /// Generate audio samples from the OPM chip.
     ///
     /// This function advances the chip's internal state and generates stereo
