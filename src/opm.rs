@@ -2,9 +2,6 @@ use crate::opm_ffi;
 use std::mem;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const OPM_PORT_ADDRESS: u32 = 0;
-const OPM_PORT_DATA: u32 = 1;
-
 const CYCLES_PER_SAMPLE: usize = 64;
 
 static FFI_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
@@ -26,11 +23,6 @@ impl OpmChip {
         unsafe {
             opm_ffi::OPM_Write(&mut self.chip, port as u32, data);
         }
-    }
-
-    pub fn write_register(&mut self, address: u8, data: u8) {
-        self.write(OPM_PORT_ADDRESS as u8, address);
-        self.write(OPM_PORT_DATA as u8, data);
     }
 
     pub fn generate_samples(&mut self, buffer: &mut [i16]) {
@@ -109,13 +101,6 @@ mod tests {
     }
 
     #[test]
-    fn test_write_register() {
-        let mut chip = OpmChip::new();
-
-        chip.write_register(0x08, 0x00);
-    }
-
-    #[test]
     fn test_generate_samples() {
         let mut chip = OpmChip::new();
         let mut buffer = vec![0i16; 1024];
@@ -132,37 +117,7 @@ mod tests {
     }
 
     #[test]
-    fn test_reset() {
-        let mut chip = OpmChip::new();
-        chip.write_register(0x08, 0xFF);
-        chip.reset();
-
-        let mut buffer = vec![0i16; 100];
-        chip.generate_samples(&mut buffer);
-    }
-
-    #[test]
     fn test_default() {
         let _chip = OpmChip::default();
-    }
-
-    #[test]
-    fn test_sample_generation_with_register_writes() {
-        let mut chip = OpmChip::new();
-
-        chip.write_register(0x20, 0xC7);
-        chip.write_register(0x38, 0x00);
-        chip.write_register(0x40, 0x01);
-        chip.write_register(0x60, 0x00);
-        chip.write_register(0x80, 0x1F);
-        chip.write_register(0xA0, 0x05);
-        chip.write_register(0xC0, 0x05);
-        chip.write_register(0xE0, 0xF7);
-        chip.write_register(0x28, 0x3E);
-        chip.write_register(0x30, 0x00);
-        chip.write_register(0x08, 0x78);
-
-        let mut buffer = vec![0i16; 10000];
-        chip.generate_samples(&mut buffer);
     }
 }
