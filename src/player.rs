@@ -6,10 +6,6 @@
 
 use crate::events::{EventLog, RegisterEvent};
 use crate::opm::OpmChip;
-use serde::Serialize;
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
 /// OPM register port constants
 const OPM_ADDRESS_REGISTER: u8 = 0;
@@ -34,45 +30,6 @@ struct ProcessedEvent {
     port: u8,
     /// Value to write to the port
     value: u8,
-}
-
-/// Pass2 event format for JSON export.
-///
-/// This structure represents pass2 events in the format expected for debugging:
-/// - addr field: YM2151 register address
-/// - data field: Data value to write
-/// - is_data field indicates whether this is address write (0) or data write (1)
-/// Note: In pass2 format, both address and data writes carry the same addr/data values
-///       but differ only in the is_data flag and timing
-#[derive(Debug, Clone, Serialize)]
-pub struct Pass2Event {
-    /// Sample time when this event should occur
-    pub time: u32,
-    /// YM2151 register address (formatted as hex string)
-    #[serde(serialize_with = "serialize_hex_u8")]
-    pub addr: u8,
-    /// Data value (formatted as hex string)
-    #[serde(serialize_with = "serialize_hex_u8")]
-    pub data: u8,
-    /// Flag: 0 = address write, 1 = data write
-    pub is_data: u8,
-}
-
-/// Pass2 event log for JSON export.
-#[derive(Debug, Serialize)]
-pub struct Pass2EventLog {
-    /// Total number of events in the log
-    pub event_count: usize,
-    /// List of pass2 events
-    pub events: Vec<Pass2Event>,
-}
-
-/// Serialize u8 as hex string (e.g., 0x08)
-fn serialize_hex_u8<S>(value: &u8, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    serializer.serialize_str(&format!("0x{:02X}", value))
 }
 
 /// The event player that manages playback of YM2151 register events.
@@ -127,50 +84,12 @@ impl Player {
     /// For multiple events at the same timestamp, delays accumulate to prevent
     /// overlapping register writes, matching the behavior of the original C implementation.
     ///
-    /// This function internally uses `convert_to_pass2_format()` to avoid code duplication.
-    ///
     /// # Parameters
     /// - `input`: Slice of pass1 register events
     ///
     /// # Returns
     /// Vector of processed events sorted by time
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
-        // Use the shared conversion logic
-        let pass2_events = Self::convert_to_pass2_format(input);
-
-        // Convert Pass2Event to ProcessedEvent
-        pass2_events
-            .into_iter()
-            .map(|event| ProcessedEvent {
-                time: event.time,
-                port: if event.is_data == 0 {
-                    OPM_ADDRESS_REGISTER
-                } else {
-                    OPM_DATA_REGISTER
-                },
-                value: if event.is_data == 0 {
-                    event.addr
-                } else {
-                    event.data
-                },
-            })
-            .collect()
-    }
-
-    /// Convert pass1 events to pass2 format for JSON export.
-    ///
-    /// This function performs the same conversion as `convert_events`, but returns
-    /// the result in a format suitable for JSON serialization with the `is_data` field.
-    ///
-    /// For multiple events at the same timestamp, delays accumulate to prevent
-    /// overlapping register writes, matching the behavior of the original C implementation.
-    ///
-    /// # Parameters
-    /// - `input`: Slice of pass1 register events
-    ///
-    /// # Returns
-    /// Vector of pass2 events ready for JSON export
-    pub fn convert_to_pass2_format(input: &[RegisterEvent]) -> Vec<Pass2Event> {
         let mut output = Vec::with_capacity(input.len() * 2);
         let mut accumulated_delay = 0u32;
         let mut last_time = 0u32;
@@ -182,64 +101,24 @@ impl Player {
                 last_time = event.time;
             }
 
-            // Address write at original time + accumulated delay (is_data = 0)
-            output.push(Pass2Event {
+            // Address write at original time + accumulated delay
+            output.push(ProcessedEvent {
                 time: event.time + accumulated_delay,
-                addr: event.addr,
-                data: event.data,
-                is_data: 0,
+                port: OPM_ADDRESS_REGISTER,
+                value: event.addr,
             });
             accumulated_delay += DELAY_SAMPLES;
 
-            // Data write after delay (is_data = 1)
-            output.push(Pass2Event {
+            // Data write after delay
+            output.push(ProcessedEvent {
                 time: event.time + accumulated_delay,
-                addr: event.addr,
-                data: event.data,
-                is_data: 1,
+                port: OPM_DATA_REGISTER,
+                value: event.data,
             });
             accumulated_delay += DELAY_SAMPLES;
         }
 
         output
-    }
-
-    /// Export pass2 events to JSON file.
-    ///
-    /// This function writes the pass2 events to a JSON file for debugging purposes.
-    /// The format matches the expected pass2 format with `is_data` field.
-    ///
-    /// # Parameters
-    /// - `pass2_events`: Slice of pass2 events to export
-    /// - `output_path`: Path to the output JSON file
-    ///
-    /// # Returns
-    /// Result indicating success or error
-    ///
-    /// # Examples
-    /// ```no_run
-    /// use ym2151_log_player_rust::events::EventLog;
-    /// use ym2151_log_player_rust::player::Player;
-    ///
-    /// let log = EventLog::from_file("sample_events.json").unwrap();
-    /// let pass2_events = Player::convert_to_pass2_format(&log.events);
-    /// Player::export_pass2_json(&pass2_events, "output_pass2.json").unwrap();
-    /// ```
-    pub fn export_pass2_json<P: AsRef<Path>>(
-        pass2_events: &[Pass2Event],
-        output_path: P,
-    ) -> anyhow::Result<()> {
-        let event_count = pass2_events.len();
-        let log = Pass2EventLog {
-            event_count,
-            events: pass2_events.to_vec(),
-        };
-
-        let json = serde_json::to_string_pretty(&log)?;
-        let mut file = File::create(output_path)?;
-        file.write_all(json.as_bytes())?;
-
-        Ok(())
     }
 
     /// Generate audio samples and execute events.

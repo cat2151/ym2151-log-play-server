@@ -6,7 +6,6 @@
 pub mod events;
 pub mod opm;
 pub mod opm_ffi;
-pub mod perf_monitor;
 pub mod player;
 pub mod resampler;
 pub mod wav_writer;
