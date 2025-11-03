@@ -1,12 +1,11 @@
 use crate::events::{EventLog, RegisterEvent};
 use crate::opm::OpmChip;
+use crate::resampler::OPM_SAMPLE_RATE;
 
 const OPM_ADDRESS_REGISTER: u8 = 0;
 const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
-
-const OPM_SAMPLE_RATE: u32 = 55930;
 
 #[derive(Debug, Clone)]
 struct ProcessedEvent {
