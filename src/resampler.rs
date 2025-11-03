@@ -1,21 +1,9 @@
-// Simple sample rate conversion using linear interpolation
-//
-// This module provides a simple resampler for converting audio
-// from OPM's native sample rate (55930 Hz) to standard audio
-// output rate (48000 Hz) using linear interpolation.
-
 use anyhow::Result;
 
-/// Native sample rate of the OPM chip
 pub const OPM_SAMPLE_RATE: u32 = 55930;
 
-/// Standard output sample rate
 pub const OUTPUT_SAMPLE_RATE: u32 = 48000;
 
-/// Simple audio resampler using linear interpolation.
-///
-/// This uses basic linear interpolation to convert between sample rates.
-/// It's simple, fast, and bug-free, though lower quality than sinc interpolation.
 pub struct AudioResampler {
     input_rate: f64,
     output_rate: f64,
@@ -24,12 +12,10 @@ pub struct AudioResampler {
 }
 
 impl AudioResampler {
-    /// Create a new resampler for OPM to output sample rate conversion.
     pub fn new() -> Result<Self> {
         Self::with_rates(OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE)
     }
 
-    /// Create a new resampler with custom sample rates.
     pub fn with_rates(input_rate: u32, output_rate: u32) -> Result<Self> {
         let input_rate = input_rate as f64;
         let output_rate = output_rate as f64;
@@ -43,7 +29,6 @@ impl AudioResampler {
         })
     }
 
-    /// Resample interleaved stereo i16 samples using linear interpolation.
     pub fn resample(&mut self, input: &[i16]) -> Result<Vec<i16>> {
         if input.is_empty() {
             return Ok(Vec::new());
@@ -67,12 +52,10 @@ impl AudioResampler {
                 break;
             }
 
-            // Linear interpolation for left channel
             let left0 = input[frame_idx * 2] as f64;
             let left1 = input[(frame_idx + 1) * 2] as f64;
             let left_out = left0 + (left1 - left0) * frac;
 
-            // Linear interpolation for right channel
             let right0 = input[frame_idx * 2 + 1] as f64;
             let right1 = input[(frame_idx + 1) * 2 + 1] as f64;
             let right_out = right0 + (right1 - right0) * frac;
@@ -83,7 +66,6 @@ impl AudioResampler {
             pos += self.ratio;
         }
 
-        // Update position for next call, wrapping around input length
         self.position = pos - input_frames as f64;
         if self.position < 0.0 {
             self.position = 0.0;
@@ -92,17 +74,14 @@ impl AudioResampler {
         Ok(output)
     }
 
-    /// Get the output sample rate.
     pub fn output_rate(&self) -> u32 {
         self.output_rate as u32
     }
 
-    /// Get the input sample rate.
     pub fn input_rate(&self) -> u32 {
         self.input_rate as u32
     }
 
-    /// Calculate the expected output size for a given input size.
     pub fn expected_output_frames(&self, input_frames: usize) -> usize {
         ((input_frames as f64) / self.ratio).ceil() as usize
     }
@@ -136,7 +115,7 @@ mod tests {
     #[test]
     fn test_resample_odd_length() {
         let mut resampler = AudioResampler::new().unwrap();
-        let input = vec![0i16; 3]; // Odd length - invalid for stereo
+        let input = vec![0i16; 3];
         let result = resampler.resample(&input);
         assert!(result.is_err());
     }
@@ -144,25 +123,23 @@ mod tests {
     #[test]
     fn test_resample_basic() {
         let mut resampler = AudioResampler::new().unwrap();
-        // Create 1024 stereo samples (2048 i16 values)
+
         let input = vec![0i16; 2048];
         let result = resampler.resample(&input);
 
         assert!(result.is_ok());
         let output = result.unwrap();
 
-        // Output should be smaller (downsampling from 55930 to 48000)
         assert!(!output.is_empty());
         assert!(output.len() < input.len());
-        assert_eq!(output.len() % 2, 0); // Still stereo
+        assert_eq!(output.len() % 2, 0);
     }
 
     #[test]
     fn test_resample_sine_wave() {
         let mut resampler = AudioResampler::new().unwrap();
 
-        // Generate a simple sine wave at input rate
-        let freq = 440.0; // A4 note
+        let freq = 440.0;
         let duration_samples = 1024;
         let mut input = Vec::with_capacity(duration_samples * 2);
 
@@ -170,8 +147,8 @@ mod tests {
             let t = i as f32 / OPM_SAMPLE_RATE as f32;
             let sample = (2.0 * std::f32::consts::PI * freq * t).sin();
             let i16_sample = (sample * 16384.0) as i16;
-            input.push(i16_sample); // Left
-            input.push(i16_sample); // Right
+            input.push(i16_sample);
+            input.push(i16_sample);
         }
 
         let result = resampler.resample(&input);
@@ -181,16 +158,14 @@ mod tests {
         assert!(!output.is_empty());
         assert_eq!(output.len() % 2, 0);
 
-        // Output should be non-zero (contains actual audio)
         let max_sample = output.iter().map(|&s| s.abs()).max().unwrap_or(0);
-        assert!(max_sample > 100); // Should have significant amplitude
+        assert!(max_sample > 100);
     }
 
     #[test]
     fn test_expected_output_frames() {
         let resampler = AudioResampler::new().unwrap();
 
-        // For 1000 input frames at 55930 Hz -> ~858 frames at 48000 Hz
         let output_frames = resampler.expected_output_frames(1000);
         assert!((857..=859).contains(&output_frames));
     }
@@ -199,10 +174,9 @@ mod tests {
     fn test_resample_multiple_chunks() {
         let mut resampler = AudioResampler::new().unwrap();
 
-        // Process multiple small chunks
         let chunk_size = 256;
         for _ in 0..5 {
-            let input = vec![1000i16; chunk_size * 2]; // Non-zero input
+            let input = vec![1000i16; chunk_size * 2];
             let result = resampler.resample(&input);
             assert!(result.is_ok());
 

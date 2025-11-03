@@ -1,16 +1,7 @@
-// Event structures and JSON deserialization for YM2151 register events
-//
-// This module provides structures and functions for loading and parsing
-// JSON event log files containing YM2151 register operations.
-
 use serde::{Deserialize, Deserializer};
 use std::fs;
 use std::path::Path;
 
-/// Parse a hexadecimal string (e.g., "0x08", "0xFF") into a u8 value.
-///
-/// # Errors
-/// Returns an error if the string cannot be parsed as a hexadecimal number.
 fn parse_hex_string<'de, D>(deserializer: D) -> Result<u8, D::Error>
 where
     D: Deserializer<'de>,
@@ -20,82 +11,39 @@ where
     u8::from_str_radix(without_prefix, 16).map_err(serde::de::Error::custom)
 }
 
-/// Represents a single YM2151 register write event.
-///
-/// Each event specifies when (in samples) to write what data to which register address.
 #[derive(Debug, Clone, Deserialize)]
 pub struct RegisterEvent {
-    /// Sample time at which this event should occur (absolute time, not delta).
     pub time: u32,
 
-    /// YM2151 register address to write to (parsed from hex string like "0x08").
     #[serde(deserialize_with = "parse_hex_string")]
     pub addr: u8,
 
-    /// Data value to write to the register (parsed from hex string like "0xC7").
     #[serde(deserialize_with = "parse_hex_string")]
     pub data: u8,
 
-    /// Optional field indicating if this is a data write (0 or 1).
-    /// This field is ignored during deserialization as the player automatically
-    /// handles the two-step register write process.
     #[serde(default, skip_deserializing)]
     pub is_data: Option<u8>,
 }
 
-/// Represents a complete event log loaded from JSON.
-///
-/// The log contains metadata about the number of events and the list of events themselves.
 #[derive(Debug, Deserialize)]
 pub struct EventLog {
-    /// Total number of events in the log.
     pub event_count: usize,
 
-    /// List of register write events, ordered by time.
     pub events: Vec<RegisterEvent>,
 }
 
 impl EventLog {
-    /// Load an event log from a JSON file.
-    ///
-    /// # Parameters
-    /// - `path`: Path to the JSON file to load
-    ///
-    /// # Errors
-    /// Returns an error if:
-    /// - The file cannot be read
-    /// - The JSON is malformed
-    /// - Required fields are missing
-    /// - Hex strings cannot be parsed
-    ///
-    /// # Examples
-    /// ```no_run
-    /// use ym2151_log_player_rust::events::EventLog;
-    ///
-    /// let log = EventLog::from_file("sample_events.json").unwrap();
-    /// println!("Loaded {} events", log.event_count);
-    /// ```
     pub fn from_file<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let content = fs::read_to_string(path)?;
         let log: EventLog = serde_json::from_str(&content)?;
         Ok(log)
     }
 
-    /// Validate that the event log is well-formed.
-    ///
-    /// Checks that:
-    /// - The event_count matches the actual number of events
-    /// - Events are sorted by time (non-strictly, duplicates allowed)
-    ///
-    /// # Returns
-    /// `true` if the log is valid, `false` otherwise.
     pub fn validate(&self) -> bool {
-        // Check event count matches
         if self.event_count != self.events.len() {
             return false;
         }
 
-        // Check events are sorted by time
         for i in 1..self.events.len() {
             if self.events[i].time < self.events[i - 1].time {
                 return false;
@@ -144,7 +92,7 @@ mod tests {
 
         let log: EventLog = serde_json::from_str(json).unwrap();
         assert_eq!(log.events.len(), 1);
-        // is_data should be ignored (None)
+
         assert!(log.events[0].is_data.is_none());
     }
 

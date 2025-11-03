@@ -1,8 +1,3 @@
-// Phase 5 Integration Tests
-//
-// These tests verify the real-time audio playback functionality.
-// Note: These tests are only compiled when the realtime-audio feature is enabled.
-
 #[cfg(feature = "realtime-audio")]
 mod realtime_audio_tests {
     use ym2151_log_player_rust::audio::AudioPlayer;
@@ -11,7 +6,6 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_creation() {
-        // Create a minimal event log
         let log = EventLog {
             event_count: 1,
             events: vec![RegisterEvent {
@@ -24,19 +18,14 @@ mod realtime_audio_tests {
 
         let player = Player::new(log);
 
-        // Try to create audio player - may fail in CI without audio device
         let result = AudioPlayer::new(player);
 
-        // This test passes regardless of whether an audio device is available
-        // We just verify that the code compiles and doesn't panic
         match result {
             Ok(mut audio_player) => {
-                // Successfully created - stop immediately
                 audio_player.stop();
                 println!("✅ Audio player created successfully");
             }
             Err(e) => {
-                // Expected in CI environments without audio
                 println!("ℹ️  Audio player creation failed (expected in CI): {}", e);
             }
         }
@@ -44,7 +33,6 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_with_events() {
-        // Create a simple event log with a few events
         let log = EventLog {
             event_count: 5,
             events: vec![
@@ -85,7 +73,6 @@ mod realtime_audio_tests {
 
         match AudioPlayer::new(player) {
             Ok(mut audio_player) => {
-                // Let it play for a very short time
                 std::thread::sleep(std::time::Duration::from_millis(50));
                 audio_player.stop();
                 println!("✅ Audio playback test completed");
@@ -98,7 +85,6 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_early_stop() {
-        // Create a longer event sequence
         let mut events = Vec::new();
         for i in 0..20 {
             events.push(RegisterEvent {
@@ -118,7 +104,6 @@ mod realtime_audio_tests {
 
         match AudioPlayer::new(player) {
             Ok(mut audio_player) => {
-                // Start playback then immediately stop
                 audio_player.stop();
                 println!("✅ Early stop test completed");
             }
@@ -130,7 +115,6 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_drop() {
-        // Test that dropping the player stops playback gracefully
         let log = EventLog {
             event_count: 1,
             events: vec![RegisterEvent {
@@ -145,7 +129,6 @@ mod realtime_audio_tests {
 
         match AudioPlayer::new(player) {
             Ok(audio_player) => {
-                // Let drop handle cleanup
                 drop(audio_player);
                 println!("✅ Drop test completed");
             }
@@ -159,6 +142,5 @@ mod realtime_audio_tests {
 #[cfg(not(feature = "realtime-audio"))]
 #[test]
 fn test_realtime_audio_not_enabled() {
-    // This test just verifies that the test file compiles without the feature
     println!("ℹ️  Real-time audio tests are disabled (feature not enabled)");
 }
