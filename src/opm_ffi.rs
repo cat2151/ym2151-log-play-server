@@ -83,6 +83,22 @@ extern "C" {
     /// # Safety
     /// `chip` must be a valid pointer to an initialized opm_t structure.
     pub fn OPM_SetIC(chip: *mut opm_t, ic: u8);
+
+    /// Batch process multiple OPM_Clock cycles.
+    ///
+    /// This function calls OPM_Clock multiple times in a tight C loop,
+    /// reducing FFI overhead. The output buffer will contain the accumulated
+    /// result from the last OPM_Clock call.
+    ///
+    /// # Parameters
+    /// - `chip`: Pointer to the OPM chip structure
+    /// - `output`: Pointer to output buffer for stereo samples (2 x int32_t)
+    /// - `cycles`: Number of clock cycles to execute
+    ///
+    /// # Safety
+    /// - `chip` must be a valid pointer to an initialized opm_t structure.
+    /// - `output` must point to valid memory for at least 2 int32_t values.
+    pub fn OPM_Clock_Batch(chip: *mut opm_t, output: *mut c_int, cycles: u32);
 }
 
 #[cfg(test)]
