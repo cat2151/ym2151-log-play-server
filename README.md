@@ -31,7 +31,6 @@ pass2 json出力は、シンプル化のために削除済みです。必要に�
 - ✅ **再生と同時にWAVファイルをキャプチャ保存**（output.wav）
 - ✅ Nuked-OPMライブラリによる正確なYM2151エミュレーション
 - ✅ 高品質サンプルレート変換（55930 Hz → 48000 Hz、再生用）
-- ✅ CI/ヘッドレス環境用の `--no-audio` オプション
 
 ## クイックスタート / Quick Start
 
@@ -59,29 +58,37 @@ cargo run --release sample_events.json
 3. 再生と同時にWAVファイルをキャプチャ
 4. 再生完了後、`output.wav` を保存
 
-### CI/ヘッドレス環境用（音声デバイスなし）
+### CI/ヘッドレス環境での実行
 
-音声デバイスが利用できない環境では、`--no-audio` オプションを使用できます：
+音声デバイスが利用できない環境（CI/ヘッドレス環境）では、ALSA設定ファイルを使用して音声出力をファイルにリダイレクトできます：
 
 ```bash
-cargo run --release -- --no-audio sample_events.json
+# ALSA設定ファイルを作成
+cat <<'EOF' > ~/.asoundrc
+pcm.!default {
+  type file
+  slave.pcm "null"
+  file "/tmp/alsa_capture.wav"
+  format "wav"
+}
+EOF
+
+# 通常通りプログラムを実行
+cargo run --release sample_events.json
 ```
 
-このモードでは、リアルタイム再生なしでWAVファイルのみ生成します。
+この設定により、音声デバイスなしでもプログラムが正常に動作します。
+音声出力は `/tmp/alsa_capture.wav` に保存され、同時に `output.wav` も生成されます。
 
 ### コマンドライン引数
 
 ```
 使用方法:
-  ym2151-log-player-rust [オプション] <json_log_file>
-
-オプション:
-  --no-audio    音声デバイスなしでWAVファイルのみ生成
-                (デフォルトはリアルタイム再生+WAV保存)
+  ym2151-log-player-rust <json_log_file>
 
 例:
   ym2151-log-player-rust sample_events.json
-  ym2151-log-player-rust --no-audio sample_events.json
+  ym2151-log-player-rust events.json
 ```
 
 ### JSONイベントログファイル形式
