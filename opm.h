@@ -1,28 +1,4 @@
-/* Nuked OPM
- * Copyright (C) 2020 Nuke.YKT
- *
- * This file is part of Nuked OPM.
- *
- * Nuked OPM is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 2.1
- * of the License, or (at your option) any later version.
- *
- * Nuked OPM is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Nuked OPM. If not, see <https://www.gnu.org/licenses/>.
- *
- *  Nuked OPM emulator.
- *  Thanks:
- *      siliconpr0n.org(digshadow, John McMaster):
- *          YM2151 and other FM chip decaps and die shots.
- *
- * version: 0.9.2 beta
- */
+
 #ifndef _OPM_H_
 #define _OPM_H_
 
@@ -36,7 +12,7 @@ typedef struct {
     uint32_t cycles;
     uint8_t ic;
     uint8_t ic2;
-    // IO
+    
     uint8_t write_data;
     uint8_t write_a;
     uint8_t write_a_en;
@@ -48,7 +24,6 @@ typedef struct {
     uint8_t io_ct1;
     uint8_t io_ct2;
 
-    // LFO
     uint8_t lfo_am_lock;
     uint8_t lfo_pm_lock;
     uint8_t lfo_counter1;
@@ -77,7 +52,6 @@ typedef struct {
     uint8_t lfo_saw_sign;
     uint8_t lfo_bit_counter;
 
-    // Env Gen
     uint8_t eg_state[32];
     uint16_t eg_level[32];
     uint8_t eg_rate[2];
@@ -109,8 +83,6 @@ typedef struct {
     uint8_t eg_serial_bit;
     uint8_t eg_test;
     
-
-    // Phase Gen
     uint16_t pg_fnum[32];
     uint8_t pg_kcode[32];
     uint32_t pg_inc[32];
@@ -119,7 +91,6 @@ typedef struct {
     uint8_t pg_reset_latch[32];
     uint32_t pg_serial;
 
-    // Operator
     uint16_t op_phase_in;
     uint16_t op_mod_in;
     uint16_t op_phase;
@@ -142,8 +113,6 @@ typedef struct {
     uint8_t op_mixl;
     uint8_t op_mixr;
 
-    // Mixer
-
     int32_t mix[2];
     int32_t mix2[2];
     int32_t mix_op;
@@ -157,19 +126,16 @@ typedef struct {
     uint8_t mix_clamp_high[2];
     uint8_t mix_out_bit;
 
-    // Output
     uint8_t smp_so;
     uint8_t smp_sh1;
     uint8_t smp_sh2;
 
-    // Noise
     uint32_t noise_lfsr;
     uint32_t noise_timer;
     uint8_t noise_timer_of;
     uint8_t noise_update;
     uint8_t noise_temp;
 
-    // Register set
     uint8_t mode_test[8];
     uint8_t mode_kon_operator[4];
     uint8_t mode_kon_channel;
@@ -202,8 +168,6 @@ typedef struct {
     uint8_t noise_en;
     uint8_t noise_freq;
 
-
-    // Timer
     uint16_t timer_a_reg;
     uint8_t timer_b_reg;
     uint8_t timer_a_temp;
@@ -247,7 +211,6 @@ typedef struct {
     uint8_t kon2[32];
     uint8_t mode_kon[32];
 
-    // DAC
     uint8_t dac_osh1, dac_osh2;
     uint16_t dac_bits;
     int32_t dac_output[2];
@@ -263,7 +226,7 @@ void OPM_SetIC(opm_t *chip, uint8_t ic);
 void OPM_Reset(opm_t *chip);
 
 #ifdef __cplusplus
-} // extern "C"
+} 
 #endif
 
 #endif

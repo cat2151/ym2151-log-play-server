@@ -3,7 +3,6 @@ use ym2151_log_player_rust::events::EventLog;
 use ym2151_log_player_rust::player::Player;
 use ym2151_log_player_rust::wav_writer;
 
-/// Display usage information
 fn print_usage(program_name: &str) {
     eprintln!("YM2151 Log Player - Rust implementation");
     eprintln!();
@@ -27,7 +26,6 @@ fn print_usage(program_name: &str) {
 }
 
 fn main() {
-    // Parse command-line arguments
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 2 {
@@ -35,7 +33,6 @@ fn main() {
         std::process::exit(1);
     }
 
-    // Parse options and file path
     let mut no_audio = false;
     let mut json_path = None;
 
@@ -55,11 +52,9 @@ fn main() {
         }
     };
 
-    // Print banner
     println!("YM2151 Log Player (Rust)");
     println!("=====================================\n");
 
-    // Load event log
     println!("イベントログを読み込み中: {}...", json_path);
     let log = match EventLog::from_file(json_path) {
         Ok(log) => {
@@ -72,7 +67,7 @@ fn main() {
 
             if let Some(last_event) = log.events.last() {
                 let duration_samples = last_event.time;
-                let duration_seconds = duration_samples as f64 / 55930.0; // OPM native sample rate
+                let duration_seconds = duration_samples as f64 / 55930.0;
                 println!("   再生時間: 約 {:.2} 秒", duration_seconds);
             }
             log
@@ -84,16 +79,9 @@ fn main() {
         }
     };
 
-    // Real-time audio playback with simultaneous WAV capture
-    // This matches the behavior of the C implementation:
-    // - Starts playback immediately after initialization
-    // - Generates samples on-demand during playback
-    // - Captures samples to WAV buffer simultaneously
-    // - Saves WAV file after playback completes
     #[cfg(feature = "realtime-audio")]
     {
         if no_audio {
-            // Fallback mode for CI/headless environments: generate WAV without audio device
             println!("\n⚠️  --no-audio モード: 音声デバイスなしでWAVファイルを生成");
             println!("WAVファイルを生成中...");
             let player = Player::new(log);
@@ -107,7 +95,6 @@ fn main() {
                 }
             }
         } else {
-            // Normal mode: real-time playback with WAV capture
             println!("\nオーディオを初期化中...");
 
             let player = Player::new(log);
@@ -117,11 +104,8 @@ fn main() {
                 Ok(mut audio_player) => {
                     println!("✅ オーディオを初期化しました\n");
 
-                    // Wait for playback to complete
-                    // (Playback message is printed by the audio thread)
                     audio_player.wait();
 
-                    // Save WAV file after playback
                     println!("\nWAVファイルを保存中...");
                     let wav_samples = audio_player.get_wav_buffer();
                     match wav_writer::write_wav(
