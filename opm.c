@@ -337,7 +337,7 @@ static int32_t OPM_CalcKCode(int32_t kcf, int32_t lfo, int32_t lfo_sign, int32_t
     {
         sum = 8127;
     }
-        
+
     t2 = sum & 63;
     if (dt == 2)
         t2 += 20;
@@ -394,7 +394,7 @@ static void OPM_PhaseCalcIncrement(opm_t *chip)
     uint32_t block = kcode >> 2;
     uint32_t basefreq = (fnum << block) >> 2;
     uint32_t note, sum, sum_h, sum_l, inc;
-    
+
     if (dt_l)
     {
         if (kcode > 0x1c)
@@ -434,12 +434,12 @@ static void OPM_PhaseGenerate(opm_t *chip)
     uint32_t slot = (chip->cycles + 27) % 32;
     chip->pg_reset_latch[slot] = chip->pg_reset[slot];
     slot = (chip->cycles + 25) % 32;
-    
+
     if (chip->pg_reset_latch[slot])
     {
         chip->pg_inc[slot] = 0;
     }
-    
+
     slot = (chip->cycles + 24) % 32;
     if (chip->pg_reset_latch[slot] || chip->mode_test[3])
     {
@@ -520,7 +520,7 @@ static void OPM_EnvelopePhase2(opm_t *chip)
     {
         rate = 31;
     }
-    
+
     zr = rate == 0;
 
     ksv = chip->pg_kcode[slot] >> (chip->sl_ks[slot] ^ 3);
@@ -980,7 +980,7 @@ static void OPM_OperatorPhase15(opm_t *chip)
 static void OPM_OperatorPhase16(opm_t *chip)
 {
     uint32_t slot = (chip->cycles + 17) % 32;
-    
+
     chip->op_mod[2] = chip->op_mod[1];
     chip->op_fb[1] = chip->op_fb[0];
 
@@ -1117,7 +1117,7 @@ static void OPM_Mixer(opm_t *chip)
 {
     uint32_t slot = (chip->cycles + 18) % 32;
     uint32_t channel = (slot % 8);
-    
+
     chip->mix_serial[1] >>= 1;
     if (chip->cycles == 13)
     {
@@ -1164,7 +1164,7 @@ static void OPM_Mixer(opm_t *chip)
     {
         chip->mix_serial[1] |= 2;
     }
-    
+
     chip->mix_serial[0] >>= 1;
     if (chip->cycles == 29)
     {
@@ -1463,7 +1463,7 @@ static void OPM_DoLFO1(opm_t *chip)
     w[7] = ((chip->cycles + 1) % 16) < 8;
 
     w[6] = w[5] ^ w[3];
-    
+
     w[9] = ampm_sel ? ((chip->cycles % 16) == 6) : !chip->lfo_saw_sign;
 
     w[8] = chip->lfo_wave == 1 ? w[9] : w[6];
@@ -1481,7 +1481,7 @@ static void OPM_DoLFO1(opm_t *chip)
     chip->lfo_val_carry = sum >> 1;
     chip->lfo_val <<= 1;
     chip->lfo_val |= lfo_bit;
-    
+
     if (chip->cycles % 16 == 15 && (chip->lfo_bit_counter & 7) == 7)
     {
         if (ampm_sel)
@@ -1579,7 +1579,7 @@ static void OPM_NoiseChannel(opm_t *chip)
 
 static void OPM_DoIO(opm_t *chip)
 {
-    
+
     chip->write_busy_cnt += chip->write_busy;
     chip->write_busy = (!(chip->write_busy_cnt >> 5) && chip->write_busy && !chip->ic) | chip->write_d_en;
     chip->write_busy_cnt &= 0x1f;
@@ -1587,7 +1587,7 @@ static void OPM_DoIO(opm_t *chip)
     {
         chip->write_busy_cnt = 0;
     }
-    
+
     chip->write_a_en = chip->write_a;
     chip->write_d_en = chip->write_d;
     chip->write_a = 0;
@@ -1602,7 +1602,7 @@ static void OPM_DoRegWrite(opm_t *chip)
 
     if (chip->reg_data_ready)
     {
-        
+
         if ((chip->reg_address & 0xe7) == (0x20 | channel))
         {
             switch (chip->reg_address & 0x18)
@@ -1626,7 +1626,7 @@ static void OPM_DoRegWrite(opm_t *chip)
                 break;
             }
         }
-        
+
         if ((chip->reg_address & 0x1f) == slot)
         {
             switch (chip->reg_address & 0xe0)

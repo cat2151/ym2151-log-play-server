@@ -12,7 +12,7 @@ typedef struct {
     uint32_t cycles;
     uint8_t ic;
     uint8_t ic2;
-    
+
     uint8_t write_data;
     uint8_t write_a;
     uint8_t write_a_en;
@@ -82,7 +82,7 @@ typedef struct {
     uint32_t eg_serial;
     uint8_t eg_serial_bit;
     uint8_t eg_test;
-    
+
     uint16_t pg_fnum[32];
     uint8_t pg_kcode[32];
     uint32_t pg_inc[32];
