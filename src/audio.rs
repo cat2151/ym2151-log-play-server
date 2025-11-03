@@ -18,7 +18,7 @@ use std::time::Instant;
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
 #[cfg(feature = "realtime-audio")]
-use crate::resampler::{AudioResampler, OUTPUT_SAMPLE_RATE};
+use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 
 /// Buffer size for internal audio generation (in stereo samples)
 #[cfg(feature = "realtime-audio")]
@@ -211,7 +211,7 @@ impl AudioPlayer {
         println!("▶  Playing sequence...");
         println!(
             "  Duration: {:.2} seconds",
-            total_samples as f64 / Player::sample_rate() as f64
+            total_samples as f64 / OPM_SAMPLE_RATE as f64
         );
 
         loop {
