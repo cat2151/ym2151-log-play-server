@@ -23,6 +23,5 @@ cc = "1.0"
 # Performance optimization profile for release builds
 # These settings maximize runtime performance for audio processing
 [profile.release]
-opt-level = 3          # Maximum speed optimization (default, but explicit)
 lto = "fat"            # Full link-time optimization across all crates and C code
 codegen-units = 1      # Single codegen unit for better optimization (slower compile, faster runtime)
