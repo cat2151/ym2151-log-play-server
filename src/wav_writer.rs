@@ -7,6 +7,12 @@ pub const DEFAULT_OUTPUT_FILENAME: &str = "output.wav";
 
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
+/// Maximum tail duration in seconds (safety limit)
+const MAX_TAIL_SECONDS: u32 = 10;
+
+/// Multiplier for tail safety limit based on event duration
+const TAIL_DURATION_MULTIPLIER: u32 = 10;
+
 pub fn write_wav(path: &str, samples: &[i16], sample_rate: u32) -> Result<()> {
     let spec = WavSpec {
         channels: 2,
@@ -76,10 +82,10 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
         }
 
         // Safety limit: prevent infinite loop
-        // Allow at least 10 seconds of tail, or 10x the event duration, whichever is larger
+        // Allow at least MAX_TAIL_SECONDS of tail, or TAIL_DURATION_MULTIPLIER times the event duration
         let max_tail_samples = std::cmp::max(
-            Player::sample_rate() * 10, // 10 seconds
-            total_samples * 10,         // 10x event duration
+            Player::sample_rate() * MAX_TAIL_SECONDS,
+            total_samples * TAIL_DURATION_MULTIPLIER,
         );
         if processed_samples > (total_samples as usize + max_tail_samples as usize) {
             println!("  Warning: Tail generation exceeded safety limit");

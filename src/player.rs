@@ -9,15 +9,14 @@ const DELAY_SAMPLES: u32 = 2;
 
 /// Minimum duration to generate after events complete (500ms in samples at OPM_SAMPLE_RATE)
 const TAIL_MIN_DURATION_MS: u32 = 500;
-const TAIL_MIN_SAMPLES: u32 =
-    (OPM_SAMPLE_RATE as f64 * TAIL_MIN_DURATION_MS as f64 / 1000.0) as u32;
+const TAIL_MIN_SAMPLES: u32 = TAIL_MIN_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
 /// Threshold for silence detection (absolute value of sample)
 const SILENCE_THRESHOLD: i16 = 10;
 
 /// Number of consecutive silent samples required to stop tail generation
 const SILENCE_DURATION_MS: u32 = 100;
-const SILENCE_SAMPLES: u32 = (OPM_SAMPLE_RATE as f64 * SILENCE_DURATION_MS as f64 / 1000.0) as u32;
+const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
 #[derive(Debug, Clone)]
 struct ProcessedEvent {

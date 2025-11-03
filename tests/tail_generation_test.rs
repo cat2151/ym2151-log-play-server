@@ -84,8 +84,9 @@ fn test_tail_generation_minimum_duration() {
     // Calculate how many samples were generated after events
     let samples_after_events = player.current_sample() - total_event_samples;
 
-    // Minimum tail is 500ms, which at 55930 Hz is about 27965 samples
-    let expected_min_tail = (OPM_SAMPLE_RATE as f64 * 0.5) as u32;
+    // Minimum tail is 500ms
+    const TAIL_MIN_DURATION_MS: u32 = 500;
+    let expected_min_tail = TAIL_MIN_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
     assert!(
         samples_after_events >= expected_min_tail,
