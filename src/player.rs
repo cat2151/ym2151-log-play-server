@@ -7,6 +7,10 @@ const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
 
+/// Number of consecutive silent samples (zero volume) required to stop tail generation (100ms)
+const SILENCE_DURATION_MS: u32 = 100;
+const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
+
 #[derive(Debug, Clone)]
 struct ProcessedEvent {
     time: u32,
@@ -24,6 +28,9 @@ pub struct Player {
     next_event_idx: usize,
 
     samples_played: u32,
+
+    /// Count of consecutive silent samples
+    consecutive_silent_samples: u32,
 }
 
 impl Player {
@@ -34,6 +41,7 @@ impl Player {
             events,
             next_event_idx: 0,
             samples_played: 0,
+            consecutive_silent_samples: 0,
         }
     }
 
@@ -84,6 +92,15 @@ impl Player {
             let sample_buffer = &mut buffer[i * 2..(i + 1) * 2];
             self.chip.generate_samples(sample_buffer);
 
+            // Track silence for tail generation
+            let left = sample_buffer[0];
+            let right = sample_buffer[1];
+            if Self::is_sample_silent(left, right) {
+                self.consecutive_silent_samples += 1;
+            } else {
+                self.consecutive_silent_samples = 0;
+            }
+
             self.samples_played += 1;
         }
 
@@ -112,6 +129,34 @@ impl Player {
 
     pub const fn sample_rate() -> u32 {
         OPM_SAMPLE_RATE
+    }
+
+    /// Check if a stereo sample pair has zero volume
+    fn is_sample_silent(left: i16, right: i16) -> bool {
+        left == 0 && right == 0
+    }
+
+    /// Check if tail generation should continue
+    /// Returns true if we should keep generating samples after events complete
+    pub fn should_continue_tail(&self) -> bool {
+        if !self.is_complete() {
+            // Still processing events
+            return true;
+        }
+
+        // Continue until we have 100ms of consecutive zero volume
+        self.consecutive_silent_samples < SILENCE_SAMPLES
+    }
+
+    /// Get information about tail generation progress
+    pub fn tail_info(&self) -> Option<(u32, u32)> {
+        if self.is_complete() {
+            let samples_after_events = self.samples_played.saturating_sub(self.total_samples());
+            if samples_after_events > 0 {
+                return Some((samples_after_events, self.consecutive_silent_samples));
+            }
+        }
+        None
     }
 }
 

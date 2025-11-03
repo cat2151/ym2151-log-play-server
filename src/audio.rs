@@ -144,17 +144,31 @@ impl AudioPlayer {
             total_samples as f64 / OPM_SAMPLE_RATE as f64
         );
 
+        let mut tail_reported = false;
+
         loop {
             if let Ok(AudioCommand::Stop) = command_rx.try_recv() {
                 println!("Stopping audio playback...");
                 break;
             }
 
-            if player.current_sample() >= total_samples {
+            // Check if we should continue tail generation
+            if !player.should_continue_tail() {
                 let elapsed = playback_start_time.elapsed();
                 println!("■  Playback complete");
                 println!("  Wall-clock time: {:.2} seconds", elapsed.as_secs_f64());
+
+                if let Some((tail_samples, _)) = player.tail_info() {
+                    let tail_ms = tail_samples as f64 / OPM_SAMPLE_RATE as f64 * 1000.0;
+                    println!("  演奏データの余韻{}ms 波形生成 OK", tail_ms as u32);
+                }
                 break;
+            }
+
+            // Report when tail generation begins
+            if !tail_reported && player.is_complete() {
+                println!("  演奏データ終了、余韻を生成中...");
+                tail_reported = true;
             }
 
             player.generate_samples(&mut generation_buffer);
