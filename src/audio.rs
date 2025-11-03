@@ -42,7 +42,7 @@ enum AudioCommand {
 /// This struct manages the audio stream and coordinates sample generation
 /// with real-time audio output. It runs a background thread that generates
 /// samples and feeds them to the audio callback.
-/// 
+///
 /// Samples are captured to a WAV buffer during playback for later file output,
 /// matching the behavior of the C implementation.
 #[cfg(feature = "realtime-audio")]
@@ -156,7 +156,13 @@ impl AudioPlayer {
 
         // Spawn sample generation thread
         let generator_handle = std::thread::spawn(move || {
-            if let Err(e) = Self::generate_samples_thread(player, sample_tx, command_rx, position, wav_buffer_clone) {
+            if let Err(e) = Self::generate_samples_thread(
+                player,
+                sample_tx,
+                command_rx,
+                position,
+                wav_buffer_clone,
+            ) {
                 eprintln!("Sample generation error: {}", e);
             }
         });
@@ -195,7 +201,8 @@ impl AudioPlayer {
             println!("📊 Performance monitoring enabled (PERF_MONITOR=1)");
             // Calculate threshold based on buffer size
             // GENERATION_BUFFER_SIZE samples at OPM_SAMPLE_RATE
-            let buffer_duration_ms = (GENERATION_BUFFER_SIZE as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
+            let buffer_duration_ms =
+                (GENERATION_BUFFER_SIZE as f64 / OPM_SAMPLE_RATE as f64) * 1000.0;
             println!("   Buffer duration: {:.2}ms", buffer_duration_ms);
             println!("   Performance threshold: {:.2}ms", buffer_duration_ms);
             Some(PerfMonitor::new(buffer_duration_ms as u64))

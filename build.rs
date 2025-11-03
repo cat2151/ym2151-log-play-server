@@ -7,7 +7,7 @@ fn main() {
     cc::Build::new()
         .file("opm.c")
         .flag("-fwrapv")
-        .opt_level(3)      // Enable -O3 optimization for C code (CRITICAL for performance)
+        .opt_level(3) // Enable -O3 optimization for C code (CRITICAL for performance)
         .compile("opm");
 
     // Tell Cargo to rerun this build script if these files change

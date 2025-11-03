@@ -40,7 +40,7 @@ impl PerfStats {
         self.total_time += duration;
         self.min_time = self.min_time.min(duration);
         self.max_time = self.max_time.max(duration);
-        
+
         if duration > threshold {
             self.threshold_violations += 1;
         }
@@ -118,29 +118,32 @@ impl PerfMonitor {
     /// Print performance report
     pub fn report(&self) {
         let elapsed = self.start_time.elapsed();
-        
+
         println!("\n=== Performance Report ===");
         println!("Total monitoring time: {:.2}s", elapsed.as_secs_f64());
         println!("Threshold: {:.2}ms", self.threshold.as_secs_f64() * 1000.0);
         println!();
-        
+
         // Print stats for each operation
         println!("{}", self.opm_generation.format());
         println!("{}", self.resampling.format());
         println!("{}", self.wav_capture.format());
         println!("{}", self.format_conversion.format());
         println!("{}", self.total_iteration.format());
-        
+
         println!();
-        
+
         // Analyze bottlenecks
         let total_avg = self.total_iteration.avg_time().as_secs_f64() * 1000.0;
         if total_avg > 0.0 {
-            let opm_pct = (self.opm_generation.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
-            let resample_pct = (self.resampling.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
+            let opm_pct =
+                (self.opm_generation.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
+            let resample_pct =
+                (self.resampling.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
             let wav_pct = (self.wav_capture.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
-            let conv_pct = (self.format_conversion.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
-            
+            let conv_pct =
+                (self.format_conversion.avg_time().as_secs_f64() * 1000.0 / total_avg) * 100.0;
+
             println!("=== Time Breakdown ===");
             println!("OPM Generation:    {:.1}%", opm_pct);
             println!("Resampling:        {:.1}%", resample_pct);
@@ -148,19 +151,21 @@ impl PerfMonitor {
             println!("Format Conversion: {:.1}%", conv_pct);
             println!();
         }
-        
+
         // Warning if performance requirement not met
         if self.total_iteration.violation_percentage() > 1.0 {
             println!("⚠️  WARNING: Performance requirement NOT met!");
-            println!("   {:.1}% of iterations exceeded {:.2}ms threshold",
+            println!(
+                "   {:.1}% of iterations exceeded {:.2}ms threshold",
                 self.total_iteration.violation_percentage(),
-                self.threshold.as_secs_f64() * 1000.0);
+                self.threshold.as_secs_f64() * 1000.0
+            );
             println!("   This likely causes audio stuttering.");
         } else {
             println!("✅ Performance requirement met!");
             println!("   Audio should play smoothly without stuttering.");
         }
-        
+
         println!("==========================\n");
     }
 }
@@ -206,11 +211,11 @@ mod tests {
     fn test_perf_stats_record() {
         let mut stats = PerfStats::new("Test");
         let threshold = Duration::from_millis(10);
-        
+
         stats.record(Duration::from_millis(5), threshold);
         assert_eq!(stats.count, 1);
         assert_eq!(stats.threshold_violations, 0);
-        
+
         stats.record(Duration::from_millis(15), threshold);
         assert_eq!(stats.count, 2);
         assert_eq!(stats.threshold_violations, 1);
@@ -220,10 +225,10 @@ mod tests {
     fn test_perf_stats_avg_time() {
         let mut stats = PerfStats::new("Test");
         let threshold = Duration::from_millis(10);
-        
+
         stats.record(Duration::from_millis(5), threshold);
         stats.record(Duration::from_millis(15), threshold);
-        
+
         let avg = stats.avg_time();
         assert_eq!(avg, Duration::from_millis(10));
     }
@@ -232,12 +237,12 @@ mod tests {
     fn test_perf_stats_violation_percentage() {
         let mut stats = PerfStats::new("Test");
         let threshold = Duration::from_millis(10);
-        
+
         stats.record(Duration::from_millis(5), threshold);
         stats.record(Duration::from_millis(15), threshold);
         stats.record(Duration::from_millis(15), threshold);
         stats.record(Duration::from_millis(5), threshold);
-        
+
         assert_eq!(stats.violation_percentage(), 50.0);
     }
 
@@ -245,12 +250,12 @@ mod tests {
     fn test_scoped_timer() {
         let mut stats = PerfStats::new("Test");
         let threshold = Duration::from_millis(10);
-        
+
         {
             let _timer = ScopedTimer::new(&mut stats, threshold);
             thread::sleep(Duration::from_millis(5));
         }
-        
+
         assert_eq!(stats.count, 1);
         assert!(stats.avg_time() >= Duration::from_millis(4)); // Allow some variance
     }
