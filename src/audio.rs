@@ -240,51 +240,46 @@ impl AudioPlayer {
                 break;
             }
 
-            // Generate samples
-            if let Some(ref mut monitor) = perf_monitor {
-                let _timer = ScopedTimer::new(&mut monitor.opm_generation, monitor.threshold);
-                player.generate_samples(&mut generation_buffer);
-            } else {
-                player.generate_samples(&mut generation_buffer);
+            // Macro to conditionally time an operation
+            // This avoids code duplication while maintaining zero-cost abstraction
+            // when performance monitoring is disabled
+            macro_rules! timed {
+                ($monitor:expr, $stats:ident, $block:expr) => {{
+                    if let Some(ref mut monitor) = $monitor {
+                        let _timer = ScopedTimer::new(&mut monitor.$stats, monitor.threshold);
+                        $block
+                    } else {
+                        $block
+                    }
+                }};
             }
+
+            // Generate samples
+            timed!(perf_monitor, opm_generation, {
+                player.generate_samples(&mut generation_buffer)
+            });
 
             // Capture samples to WAV buffer (at native OPM rate, matching C implementation)
-            if let Some(ref mut monitor) = perf_monitor {
-                let _timer = ScopedTimer::new(&mut monitor.wav_capture, monitor.threshold);
+            timed!(perf_monitor, wav_capture, {
                 if let Ok(mut buffer) = wav_buffer.lock() {
                     buffer.extend_from_slice(&generation_buffer);
                 }
-            } else {
-                if let Ok(mut buffer) = wav_buffer.lock() {
-                    buffer.extend_from_slice(&generation_buffer);
-                }
-            }
+            });
 
             // Resample for audio output
-            let resampled = if let Some(ref mut monitor) = perf_monitor {
-                let _timer = ScopedTimer::new(&mut monitor.resampling, monitor.threshold);
+            let resampled = timed!(perf_monitor, resampling, {
                 resampler
                     .resample(&generation_buffer)
                     .context("Failed to resample audio")?
-            } else {
-                resampler
-                    .resample(&generation_buffer)
-                    .context("Failed to resample audio")?
-            };
+            });
 
             // Convert to f32 and send to audio callback
-            let f32_samples = if let Some(ref mut monitor) = perf_monitor {
-                let _timer = ScopedTimer::new(&mut monitor.format_conversion, monitor.threshold);
+            let f32_samples = timed!(perf_monitor, format_conversion, {
                 resampled
                     .iter()
                     .map(|&sample| sample as f32 / 32768.0)
                     .collect::<Vec<f32>>()
-            } else {
-                resampled
-                    .iter()
-                    .map(|&sample| sample as f32 / 32768.0)
-                    .collect()
-            };
+            });
 
             // Record total iteration time
             if let (Some(ref mut monitor), Some(start)) = (&mut perf_monitor, iteration_start) {

@@ -49,7 +49,11 @@ impl PerfStats {
     /// Get average time
     pub fn avg_time(&self) -> Duration {
         if self.count > 0 {
-            self.total_time / self.count as u32
+            // Use checked_div to safely divide by count as u32
+            // This avoids overflow when count is large
+            self.total_time
+                .checked_div(self.count as u32)
+                .unwrap_or(Duration::ZERO)
         } else {
             Duration::ZERO
         }
