@@ -1,62 +1,26 @@
-# ym2151-log-player-rust
+# ym2151-log-play-server
 
-YM2151（OPM）レジスタイベントログをJSONファイルから読み込んで、リアルタイム再生とWAVファイル出力を行うプログラムのRust実装版。
-
-[ym2151-log-player](https://github.com/cat2151/ym2151-log-player) のRust版です。
+YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー、を目指して開発中です
 
 ## 状況
 
-音は鳴っていますが不具合があります。issuesを参照ください。
+まだコピー元のままです。
 
-pass2 json出力は、シンプル化のために削除済みです。必要になったらagentに実装させてください。
+これから実装します。
 
-## ステータス
+## 次のタスク
 
-✅ **全フェーズ完了** - すべての機能が実装され、動作可能です。
+### 機能追加
+- コマンドライン引数 `--server` `--client` `--stop` `--shutdown` を受け取れるようにします
+- `--server sample_events.json` : サーバーとして常駐し、このjsonを演奏開始します。同時に名前付きパイプでクライアントからの接続を待機します
+- `--server --shutdown` : サーバーを演奏stopし、シャットダウンします
+- `--client sample_events.json` : sample_events.json を名前付きパイプでサーバーにわたします。サーバーは演奏stopし、このjsonを演奏します
+- `--client --stop` : サーバーに名前付きパイプで接続して「演奏をstopしてください」というメッセージを送信します
+- ※上記は検証を素早く進めるため、仮です。あとから破壊的変更します
 
-- ✅ Phase 1: Nuked-OPM FFIバインディング
-- ✅ Phase 2: JSONイベント読み込み
-- ✅ Phase 3: イベント処理エンジン
-- ✅ Phase 4: WAVファイル出力
-- ✅ Phase 5: リアルタイムオーディオ再生
-- ✅ Phase 6: メインアプリケーション統合
-- ✅ Phase 7: Windows ビルドとテスト
-
-詳細は [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) を参照してください。
-
-## 機能
-
-- ✅ JSONログファイルからイベントを読み込み
-- ✅ **起動直後から即時リアルタイムオーディオ再生**（デフォルト、C言語版と同じロジック）
-- ✅ **再生と同時にWAVファイルをキャプチャ保存**（output.wav）
-- ✅ Nuked-OPMライブラリによる正確なYM2151エミュレーション
-- ✅ 高品質サンプルレート変換（55930 Hz → 48000 Hz、再生用）
-
-## クイックスタート / Quick Start
-
-詳細なビルド手順については **[BUILD.md](BUILD.md)** を参照してください。
-
-For detailed build instructions, please refer to **[BUILD.md](BUILD.md)**.
+## 移行は古い情報です
 
 ## 使い方
-
-### 基本的な使い方（リアルタイム再生 + WAV保存）
-
-```bash
-cargo run --release sample_events.json
-```
-
-または、ビルド済みの場合：
-
-```bash
-./target/release/ym2151-log-player-rust sample_events.json
-```
-
-**動作:**
-1. イベントログを読み込み
-2. **即座にリアルタイム音声再生を開始**（C言語版と同じ）
-3. 再生と同時にWAVファイルをキャプチャ
-4. 再生完了後、`output.wav` を保存
 
 ### CI/ヘッドレス環境での実行
 
