@@ -529,7 +529,6 @@ FIFO作成には `mkfifo()` システムコールが必要（Unixのみ）。標
 - 作成後のFIFOへの読み書きは `std::fs::File` と `std::fs::OpenOptions` で可能
 - プロトコルは単純なテキスト形式（`String` で十分）
 - スレッド管理は `std::thread`、同期は `std::sync`
-- スレッド管理は `std::thread`、同期は `std::sync`
 
 ### 既存依存関係の変更
 
