@@ -304,10 +304,11 @@ fn main() {
 ### Phase 2: 名前付きパイプ抽象化
 
 **タスク:**
-1. `src/ipc/pipe_unix.rs` 実装（Linux用）
-   - `mkfifo()` でパイプ作成
-   - `open()` で読み書き
-   - ノンブロッキングI/O
+1. `Cargo.toml` に `nix` クレートを追加
+2. `src/ipc/pipe_unix.rs` 実装（Linux用）
+   - `nix::unistd::mkfifo()` でFIFO作成
+   - `std::fs::File` と `std::fs::OpenOptions` で読み書き
+   - ノンブロッキングI/O対応
 2. `src/ipc/pipe_windows.rs` スタブ作成（将来実装）
 3. プラットフォーム切り替えロジック
 4. 統合テスト
@@ -499,10 +500,18 @@ cargo run -- --client nonexistent.json
 
 ### 新規追加が必要なクレート
 
-なし（標準ライブラリで実装可能）
+**検討中:**
+- `nix` (v0.27以降) - Unix名前付きパイプ（FIFO）作成用
+  - ライセンス: MIT
+  - 用途: `nix::unistd::mkfifo()` でFIFO作成
+  - 代替: `libc` クレートで直接 `mkfifo()` システムコールを使用
+
+**注記:**  
+FIFO作成には `mkfifo()` システムコールが必要（Unixのみ）。標準ライブラリのみでの実装は不可能なため、`nix` または `libc` クレートの使用を推奨。
 
 **理由:**
-- 名前付きパイプは `std::fs::File` と `std::fs::OpenOptions` で実装可能（Unix）
+- 名前付きパイプ（FIFO）の作成には `nix` クレートまたは直接システムコール (`libc::mkfifo`) を使用
+- 作成後のFIFOへの読み書きは `std::fs::File` と `std::fs::OpenOptions` で可能
 - プロトコルは単純なテキスト形式（`String` で十分）
 - スレッド管理は `std::thread`、同期は `std::sync`
 
@@ -607,9 +616,14 @@ cargo run -- --client nonexistent.json
 
 ### Rust標準ライブラリ
 
-- `std::fs::{File, OpenOptions, remove_file}` - 名前付きパイプI/O
+- `std::fs::{File, OpenOptions, remove_file}` - 作成済みFIFOへの読み書き
 - `std::sync::{Arc, Mutex, atomic::AtomicBool}`
 - `std::thread`
+
+### Unix システムコール / クレート
+
+- `nix::unistd::mkfifo` または `libc::mkfifo` - FIFO作成（Unix）
+- `nix::sys::stat::Mode` - パーミッション設定
 
 ### 既存実装参照
 
