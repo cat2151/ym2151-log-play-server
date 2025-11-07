@@ -515,19 +515,20 @@ cargo run -- --client nonexistent.json
 
 ### 新規追加が必要なクレート
 
-**検討中:**
+**必須:**
 - `nix` (v0.27以降) - Unix名前付きパイプ（FIFO）作成用
   - ライセンス: MIT
   - 用途: `nix::unistd::mkfifo()` でFIFO作成
-  - 代替: `libc` クレートで直接 `mkfifo()` システムコールを使用
+  - 代替案: `libc` クレートで直接 `mkfifo()` システムコールを使用することも可能
 
 **注記:**  
-FIFO作成には `mkfifo()` システムコールが必要（Unixのみ）。標準ライブラリのみでの実装は不可能なため、`nix` または `libc` クレートの使用を推奨。
+FIFO作成には `mkfifo()` システムコールが必要（Unixのみ）。標準ライブラリのみでの実装は不可能なため、`nix` クレートの使用を推奨します（`libc` より安全で使いやすい）。
 
 **理由:**
 - 名前付きパイプ（FIFO）の作成には `nix` クレートまたは直接システムコール (`libc::mkfifo`) を使用
 - 作成後のFIFOへの読み書きは `std::fs::File` と `std::fs::OpenOptions` で可能
 - プロトコルは単純なテキスト形式（`String` で十分）
+- スレッド管理は `std::thread`、同期は `std::sync`
 - スレッド管理は `std::thread`、同期は `std::sync`
 
 ### 既存依存関係の変更
