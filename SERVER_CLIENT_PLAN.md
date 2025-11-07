@@ -502,7 +502,7 @@ cargo run -- --client nonexistent.json
 なし（標準ライブラリで実装可能）
 
 **理由:**
-- 名前付きパイプは `std::fs` と `std::os::unix::net::UnixStream` で実装可能（Unix）
+- 名前付きパイプは `std::fs::File` と `std::fs::OpenOptions` で実装可能（Unix）
 - プロトコルは単純なテキスト形式（`String` で十分）
 - スレッド管理は `std::thread`、同期は `std::sync`
 
@@ -607,8 +607,7 @@ cargo run -- --client nonexistent.json
 
 ### Rust標準ライブラリ
 
-- `std::fs::remove_file`
-- `std::os::unix::net::UnixStream` (代替案検討時)
+- `std::fs::{File, OpenOptions, remove_file}` - 名前付きパイプI/O
 - `std::sync::{Arc, Mutex, atomic::AtomicBool}`
 - `std::thread`
 
