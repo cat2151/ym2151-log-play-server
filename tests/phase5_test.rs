@@ -1,4 +1,3 @@
-#[cfg(feature = "realtime-audio")]
 mod realtime_audio_tests {
     use ym2151_log_player_rust::audio::AudioPlayer;
     use ym2151_log_player_rust::events::{EventLog, RegisterEvent};
@@ -140,7 +139,7 @@ mod realtime_audio_tests {
 }
 
 /// Integration tests for Phase 5: Server with playback control
-#[cfg(all(unix, feature = "realtime-audio"))]
+#[cfg(unix)]
 mod server_playback_tests {
     use std::thread;
     use std::time::Duration;
@@ -277,10 +276,4 @@ mod server_playback_tests {
 
         eprintln!("Test complete");
     }
-}
-
-#[cfg(not(feature = "realtime-audio"))]
-#[test]
-fn test_realtime_audio_not_enabled() {
-    println!("ℹ️  Real-time audio tests are disabled (feature not enabled)");
 }

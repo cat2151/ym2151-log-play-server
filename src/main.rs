@@ -43,7 +43,6 @@ fn print_usage(program_name: &str) {
     eprintln!("機能:");
     eprintln!("  - JSONイベントログファイルを読み込み");
     eprintln!("  - YM2151レジスタ操作を再現");
-    #[cfg(feature = "realtime-audio")]
     eprintln!("  - リアルタイム音声再生");
     eprintln!("  - WAVファイル (output.wav) を生成");
     eprintln!("  - サーバー/クライアントモード (Unix/Linux/Windows)");
@@ -181,61 +180,43 @@ fn main() {
         }
     };
 
-    #[cfg(feature = "realtime-audio")]
-    {
-        println!("\nオーディオを初期化中...");
+    println!("\nオーディオを初期化中...");
 
-        let player = Player::new(log);
+    let player = Player::new(log);
 
-        use ym2151_log_player_rust::audio::AudioPlayer;
-        match AudioPlayer::new(player) {
-            Ok(mut audio_player) => {
-                println!("✅ オーディオを初期化しました\n");
+    use ym2151_log_player_rust::audio::AudioPlayer;
+    match AudioPlayer::new(player) {
+        Ok(mut audio_player) => {
+            println!("✅ オーディオを初期化しました\n");
 
-                audio_player.wait();
+            audio_player.wait();
 
-                println!("\nWAVファイルを保存中...");
-                let wav_samples = audio_player.get_wav_buffer();
-                match wav_writer::write_wav(
-                    wav_writer::DEFAULT_OUTPUT_FILENAME,
-                    &wav_samples,
-                    Player::sample_rate(),
-                ) {
-                    Ok(_) => {
-                        println!(
-                            "✅ WAVファイルを作成しました: {}",
-                            wav_writer::DEFAULT_OUTPUT_FILENAME
-                        );
-                    }
-                    Err(e) => {
-                        eprintln!("❌ エラー: WAVファイルの保存に失敗しました: {}", e);
-                        std::process::exit(1);
-                    }
+            println!("\nWAVファイルを保存中...");
+            let wav_samples = audio_player.get_wav_buffer();
+            match wav_writer::write_wav(
+                wav_writer::DEFAULT_OUTPUT_FILENAME,
+                &wav_samples,
+                Player::sample_rate(),
+            ) {
+                Ok(_) => {
+                    println!(
+                        "✅ WAVファイルを作成しました: {}",
+                        wav_writer::DEFAULT_OUTPUT_FILENAME
+                    );
+                }
+                Err(e) => {
+                    eprintln!("❌ エラー: WAVファイルの保存に失敗しました: {}", e);
+                    std::process::exit(1);
                 }
             }
-            Err(e) => {
-                eprintln!("❌ エラー: オーディオの初期化に失敗しました: {}", e);
-                eprintln!();
-                eprintln!("ヒント: Linux/CI環境では、ALSA設定ファイル (~/.asoundrc) を使用して");
-                eprintln!("       音声出力をファイルにリダイレクトできます。");
-                eprintln!("       詳細はREADME.mdを参照してください。");
-                std::process::exit(1);
-            }
         }
-    }
-
-    #[cfg(not(feature = "realtime-audio"))]
-    {
-        println!("\nWAVファイルを生成中...");
-        let player = Player::new(log);
-        match wav_writer::generate_wav_default(player) {
-            Ok(_) => {
-                println!("✅ WAVファイルを作成しました: output.wav");
-            }
-            Err(e) => {
-                eprintln!("❌ エラー: WAVファイルの生成に失敗しました: {}", e);
-                std::process::exit(1);
-            }
+        Err(e) => {
+            eprintln!("❌ エラー: オーディオの初期化に失敗しました: {}", e);
+            eprintln!();
+            eprintln!("ヒント: Linux/CI環境では、ALSA設定ファイル (~/.asoundrc) を使用して");
+            eprintln!("       音声出力をファイルにリダイレクトできます。");
+            eprintln!("       詳細はREADME.mdを参照してください。");
+            std::process::exit(1);
         }
     }
 

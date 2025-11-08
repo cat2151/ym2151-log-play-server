@@ -6,7 +6,7 @@
 //! - Multiple client connections
 //! - Long-running tests for memory leak verification
 
-#[cfg(all(unix, feature = "realtime-audio"))]
+#[cfg(unix)]
 mod integration_tests {
     use std::fs;
     use std::thread;
@@ -177,7 +177,6 @@ mod error_tests {
     }
 
     /// Test play with non-existent file (server should handle gracefully)
-    #[cfg(feature = "realtime-audio")]
     #[test]
     fn test_play_nonexistent_file() {
         cleanup_pipe();
@@ -209,7 +208,6 @@ mod error_tests {
     }
 
     /// Test malformed command handling
-    #[cfg(feature = "realtime-audio")]
     #[test]
     fn test_invalid_command() {
         cleanup_pipe();
@@ -241,7 +239,7 @@ mod error_tests {
 }
 
 /// Long-running test for memory leak verification
-#[cfg(all(unix, feature = "realtime-audio"))]
+#[cfg(unix)]
 mod longrun_tests {
     use std::fs;
     use std::thread;
@@ -304,10 +302,4 @@ mod longrun_tests {
 
         eprintln!("✅ Long-run test completed successfully");
     }
-}
-
-#[cfg(not(all(unix, feature = "realtime-audio")))]
-#[test]
-fn phase7_tests_require_unix_and_realtime_audio() {
-    println!("ℹ️  Phase 7 integration tests require Unix platform and realtime-audio feature");
 }

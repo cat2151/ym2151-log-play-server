@@ -116,10 +116,6 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn generate_wav_default(player: Player) -> Result<()> {
-    generate_wav(player, DEFAULT_OUTPUT_FILENAME)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

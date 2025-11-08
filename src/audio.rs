@@ -1,28 +1,18 @@
-#[cfg(feature = "realtime-audio")]
 use anyhow::{Context, Result};
-#[cfg(feature = "realtime-audio")]
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-#[cfg(feature = "realtime-audio")]
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
-#[cfg(feature = "realtime-audio")]
 use std::sync::{Arc, Mutex};
-#[cfg(feature = "realtime-audio")]
 use std::time::Instant;
 
-#[cfg(feature = "realtime-audio")]
 use crate::player::Player;
-#[cfg(feature = "realtime-audio")]
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 
-#[cfg(feature = "realtime-audio")]
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
-#[cfg(feature = "realtime-audio")]
 enum AudioCommand {
     Stop,
 }
 
-#[cfg(feature = "realtime-audio")]
 pub struct AudioPlayer {
     #[allow(dead_code)]
     stream: cpal::Stream,
@@ -32,7 +22,6 @@ pub struct AudioPlayer {
     wav_buffer: Arc<Mutex<Vec<i16>>>,
 }
 
-#[cfg(feature = "realtime-audio")]
 impl AudioPlayer {
     pub fn new(player: Player) -> Result<Self> {
         let host = cpal::default_host();
@@ -215,7 +204,6 @@ impl AudioPlayer {
     }
 }
 
-#[cfg(feature = "realtime-audio")]
 impl Drop for AudioPlayer {
     fn drop(&mut self) {
         self.stop();
@@ -223,7 +211,6 @@ impl Drop for AudioPlayer {
 }
 
 #[cfg(test)]
-#[cfg(feature = "realtime-audio")]
 mod tests {
     use super::*;
     use crate::events::{EventLog, RegisterEvent};

@@ -153,7 +153,7 @@ mod protocol_error_tests {
     }
 }
 
-#[cfg(all(unix, feature = "realtime-audio"))]
+#[cfg(unix)]
 mod server_error_tests {
     use std::fs;
     use std::thread;

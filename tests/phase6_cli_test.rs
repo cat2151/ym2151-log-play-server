@@ -162,23 +162,6 @@ fn test_client_option_without_argument_fails() {
 }
 
 #[test]
-fn test_no_audio_deprecated_message() {
-    let binary = get_binary_path();
-    let output = Command::new(&binary)
-        .arg("--no-audio")
-        .output()
-        .expect("Failed to execute binary");
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-
-    assert!(stderr.contains("--no-audio"));
-    assert!(stderr.contains("廃止"));
-
-    // Exit code should be 1 (error)
-    assert_eq!(output.status.code(), Some(1));
-}
-
-#[test]
 fn test_standalone_mode_with_valid_file() {
     let binary = get_binary_path();
     let output = Command::new(&binary)
