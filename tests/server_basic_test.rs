@@ -3,6 +3,8 @@
 //! These tests verify the server's ability to create named pipes,
 //! listen for commands, and process them correctly.
 
+mod test_utils;
+
 use std::{thread, time::Duration};
 use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
 use ym2151_log_play_server::ipc::protocol::Command;
@@ -57,59 +59,37 @@ fn test_multiple_server_instances() {
 }
 
 #[test]
-#[ignore] // This test requires manual verification
-fn test_server_startup_manual() {
-    // This test is ignored by default because it requires manual verification
-    // To run: cargo test test_server_startup_manual -- --ignored --nocapture
-    //
-    // This test verifies that:
-    // 1. Server can start successfully
-    // 2. Named pipe is created
-    // 3. Server can receive shutdown signal
-    //
-    // Note: This is a basic smoke test. Full server-client integration
-    // testing will be done in Phase 5 when playback control is integrated.
+fn test_server_startup_automated() {
+    // Acquire lock to prevent parallel execution of server tests
+    let _lock = test_utils::server_test_lock();
 
-    eprintln!("Starting server startup test...");
+    // This test verifies basic server startup and shutdown functionality
+    // automatically without requiring manual verification
 
     let server = Server::new();
-    let test_json = "sample_events.json";
+    let test_json = "test_sample.json";
 
     // Start server in a separate thread
-    let _server_handle = thread::spawn(move || {
-        eprintln!("Server thread starting...");
-        let result = server.run(test_json);
-        eprintln!("Server thread finished with result: {:?}", result);
-        result
-    });
+    let server_handle = thread::spawn(move || server.run(test_json));
 
     // Give server time to start
-    thread::sleep(Duration::from_millis(500));
+    thread::sleep(Duration::from_millis(100));
 
-    eprintln!("Attempting to connect to server...");
+    // Send shutdown command
+    let result = NamedPipe::connect_default().and_then(|mut writer| {
+        let cmd = Command::Shutdown;
+        writer.write_str(&cmd.serialize())
+    });
 
-    // Try to send a shutdown command
-    match NamedPipe::connect_default() {
-        Ok(mut writer) => {
-            eprintln!("Connected to server, sending shutdown...");
-            let cmd = Command::Shutdown;
-            if let Err(e) = writer.write_str(&cmd.serialize()) {
-                eprintln!("Failed to send shutdown: {}", e);
-            } else {
-                eprintln!("Shutdown command sent successfully");
-            }
-        }
-        Err(e) => {
-            eprintln!("Failed to connect to server: {}", e);
-            eprintln!("This is expected if server startup is too slow");
-        }
-    }
+    // The connection should succeed
+    assert!(
+        result.is_ok(),
+        "Failed to connect to server or send shutdown command"
+    );
 
-    // Wait for server to finish
-    thread::sleep(Duration::from_millis(500));
-
-    // The server should have shut down by now
-    eprintln!("Test complete");
+    // Wait for server to finish and verify it shuts down cleanly
+    let server_result = server_handle.join();
+    assert!(server_result.is_ok(), "Server thread panicked");
 }
 
 #[test]

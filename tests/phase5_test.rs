@@ -1,10 +1,19 @@
+//! Phase 5 integration tests for real-time audio playback and server control
+
+mod test_utils;
+
 mod realtime_audio_tests {
     use ym2151_log_play_server::audio::AudioPlayer;
     use ym2151_log_play_server::events::{EventLog, RegisterEvent};
     use ym2151_log_play_server::player::Player;
 
+    // Import test utilities for sequential audio tests
+    use super::test_utils::audio_test_lock;
+
     #[test]
     fn test_audio_player_creation() {
+        // Acquire lock to prevent parallel execution of audio tests
+        let _lock = audio_test_lock();
         let log = EventLog {
             event_count: 1,
             events: vec![RegisterEvent {
@@ -32,6 +41,8 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_with_events() {
+        // Acquire lock to prevent parallel execution of audio tests
+        let _lock = audio_test_lock();
         let log = EventLog {
             event_count: 5,
             events: vec![
@@ -84,6 +95,8 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_early_stop() {
+        // Acquire lock to prevent parallel execution of audio tests
+        let _lock = audio_test_lock();
         let mut events = Vec::new();
         for i in 0..20 {
             events.push(RegisterEvent {
@@ -114,6 +127,8 @@ mod realtime_audio_tests {
 
     #[test]
     fn test_audio_player_drop() {
+        // Acquire lock to prevent parallel execution of audio tests
+        let _lock = audio_test_lock();
         let log = EventLog {
             event_count: 1,
             events: vec![RegisterEvent {
@@ -146,10 +161,14 @@ mod server_playback_tests {
     use ym2151_log_play_server::ipc::protocol::Command;
     use ym2151_log_play_server::server::Server;
 
+    // Import test utilities from the parent module
+    use super::test_utils::server_test_lock;
+
     /// Test server can start with initial playback and accept PLAY command
     #[test]
-    #[ignore] // Manual test - requires audio device
     fn test_server_play_command() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
         eprintln!("Starting server PLAY command test...");
 
         let server = Server::new();
@@ -157,7 +176,7 @@ mod server_playback_tests {
         // Start server in a separate thread
         let server_handle = thread::spawn(move || {
             eprintln!("Server thread starting...");
-            let result = server.run("sample_events.json");
+            let result = server.run("output_ym2151.json");
             eprintln!("Server thread finished with result: {:?}", result);
             result
         });
@@ -171,7 +190,7 @@ mod server_playback_tests {
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
                 eprintln!("Connected to server, sending PLAY command...");
-                let cmd = Command::Play("test_input.json".to_string());
+                let cmd = Command::Play("output_ym2151.json".to_string());
                 if let Err(e) = writer.write_str(&cmd.serialize()) {
                     eprintln!("Failed to send PLAY: {}", e);
                 } else {
@@ -216,8 +235,9 @@ mod server_playback_tests {
 
     /// Test server STOP command
     #[test]
-    #[ignore] // Manual test - requires audio device
     fn test_server_stop_command() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
         eprintln!("Starting server STOP command test...");
 
         let server = Server::new();
@@ -225,7 +245,7 @@ mod server_playback_tests {
         // Start server
         let server_handle = thread::spawn(move || {
             eprintln!("Server thread starting...");
-            server.run("sample_events.json")
+            server.run("output_ym2151.json")
         });
 
         // Give server time to start

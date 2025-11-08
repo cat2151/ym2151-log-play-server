@@ -13,16 +13,13 @@ use crate::audio::AudioPlayer;
 use crate::ipc::pipe_windows::NamedPipe;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(dead_code)]
 enum ServerState {
     Playing,
     Stopped,
 }
 
 pub struct Server {
-    #[allow(dead_code)]
     state: Arc<Mutex<ServerState>>,
-    #[allow(dead_code)]
     shutdown_flag: Arc<AtomicBool>,
 }
 
@@ -37,7 +34,10 @@ impl Server {
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
-        eprintln!("   Named pipe path: {}", crate::ipc::pipe_windows::DEFAULT_PIPE_PATH);
+        eprintln!(
+            "   Named pipe path: {}",
+            crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
+        );
 
         let mut audio_player: Option<AudioPlayer> = None;
         match Self::load_and_start_playback(json_path) {
@@ -64,7 +64,10 @@ impl Server {
             let connection_pipe = match NamedPipe::create() {
                 Ok(p) => p,
                 Err(e) => {
-                    eprintln!("⚠️  Warning: Failed to create new pipe for connection: {}", e);
+                    eprintln!(
+                        "⚠️  Warning: Failed to create new pipe for connection: {}",
+                        e
+                    );
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
@@ -106,7 +109,8 @@ impl Server {
                     Ok(cmd) => cmd,
                     Err(e) => {
                         eprintln!("⚠️  Warning: Failed to parse command: {}", e);
-                        let _ = writer.write_str(&Response::Error(format!("Parse error: {}", e)).serialize());
+                        let _ = writer
+                            .write_str(&Response::Error(format!("Parse error: {}", e)).serialize());
                         continue;
                     }
                 };
@@ -187,7 +191,6 @@ impl Server {
         self.shutdown_flag.load(Ordering::Relaxed)
     }
 
-    #[allow(dead_code)]
     fn load_and_start_playback(json_path: &str) -> Result<AudioPlayer> {
         let log = EventLog::from_file(json_path)
             .with_context(|| format!("Failed to load JSON file: {}", json_path))?;

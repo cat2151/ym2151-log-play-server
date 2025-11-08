@@ -2,11 +2,16 @@
 //!
 //! These tests verify that the client can send commands to a mock server.
 
+mod test_utils;
+
 mod client_integration_tests {
     use std::thread;
     use std::time::Duration;
     use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
-    use ym2151_log_play_server::ipc::protocol::Command;
+    use ym2151_log_play_server::ipc::protocol::{Command, Response};
+
+    // Import test utilities for sequential server tests
+    use super::test_utils::server_test_lock;
 
     /// Helper to clean up pipe before test
     fn cleanup_pipe() {
@@ -15,8 +20,10 @@ mod client_integration_tests {
     }
 
     #[test]
-    #[ignore] // Windows pipe tests require manual verification
     fn test_client_play_file() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
+
         cleanup_pipe();
 
         // Start a mock server in a separate thread
@@ -31,17 +38,22 @@ mod client_integration_tests {
             // Verify it's a PLAY command with the correct path
             match cmd {
                 Command::Play(ref path) => {
-                    assert_eq!(path, "test_file.json");
+                    assert_eq!(path, "output_ym2151.json");
                 }
                 _ => panic!("Expected PLAY command"),
             }
+
+            // Send OK response
+            let mut writer = pipe.open_write().unwrap();
+            let response = Response::Ok;
+            writer.write_str(&response.serialize()).unwrap();
         });
 
         // Give server time to start and create the pipe
         thread::sleep(Duration::from_millis(200));
 
         // Send PLAY command from client
-        let result = ym2151_log_play_server::client::play_file("test_file.json");
+        let result = ym2151_log_play_server::client::play_file("output_ym2151.json");
         assert!(result.is_ok());
 
         // Wait for server to finish
@@ -49,8 +61,10 @@ mod client_integration_tests {
     }
 
     #[test]
-    #[ignore] // Windows pipe tests require manual verification
     fn test_client_stop_playback() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
+
         cleanup_pipe();
 
         let server_handle = thread::spawn(|| {
@@ -63,6 +77,11 @@ mod client_integration_tests {
 
             // Verify it's a STOP command
             assert!(matches!(cmd, Command::Stop));
+
+            // Send OK response
+            let mut writer = pipe.open_write().unwrap();
+            let response = Response::Ok;
+            writer.write_str(&response.serialize()).unwrap();
         });
 
         thread::sleep(Duration::from_millis(200));
@@ -74,8 +93,10 @@ mod client_integration_tests {
     }
 
     #[test]
-    #[ignore] // Windows pipe tests require manual verification
     fn test_client_shutdown_server() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
+
         cleanup_pipe();
 
         let server_handle = thread::spawn(|| {
@@ -88,6 +109,11 @@ mod client_integration_tests {
 
             // Verify it's a SHUTDOWN command
             assert!(matches!(cmd, Command::Shutdown));
+
+            // Send OK response
+            let mut writer = pipe.open_write().unwrap();
+            let response = Response::Ok;
+            writer.write_str(&response.serialize()).unwrap();
         });
 
         thread::sleep(Duration::from_millis(200));
@@ -100,6 +126,9 @@ mod client_integration_tests {
 
     #[test]
     fn test_client_no_server() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
+
         cleanup_pipe();
 
         // Try to send a command when no server is running

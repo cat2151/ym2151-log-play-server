@@ -1032,6 +1032,7 @@ dependencies = [
  "cc",
  "cpal",
  "hound",
+ "once_cell",
  "serde",
  "serde_json",
  "windows 0.58.0",

@@ -14,7 +14,7 @@ enum AudioCommand {
 }
 
 pub struct AudioPlayer {
-    #[allow(dead_code)]
+    #[allow(dead_code)] // Stream must be kept alive for audio playback until dropped
     stream: cpal::Stream,
     command_tx: Sender<AudioCommand>,
     generator_handle: Option<std::thread::JoinHandle<()>>,

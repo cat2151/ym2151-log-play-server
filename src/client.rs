@@ -51,27 +51,6 @@ mod tests {
     use super::*;
 
     #[test]
-    #[ignore]
-    fn test_play_file_with_server() {
-        let result = play_file("sample_events.json");
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn test_stop_playback_with_server() {
-        let result = stop_playback();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    #[ignore]
-    fn test_shutdown_server_with_server() {
-        let result = shutdown_server();
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn test_send_command_without_server() {
         let result = send_command(Command::Stop);
         assert!(result.is_err());
