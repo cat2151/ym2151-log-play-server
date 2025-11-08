@@ -19,11 +19,17 @@ fn send_command(command: Command) -> Result<()> {
         .context("Failed to connect to server. Is the server running?")?;
 
     let message = command.serialize();
+
+    // コマンドの内容を表示
+    match &command {
+        Command::Play(path) => eprintln!("⏳ サーバーに演奏要求を送信中: {}", path),
+        Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
+        Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
+    }
+
     writer
         .write_str(&message)
         .context("Failed to send command to server")?;
-
-    eprintln!("📤 Command sent successfully");
 
     // サーバーからのレスポンスを読み取り
     let response_line = writer
@@ -35,10 +41,14 @@ fn send_command(command: Command) -> Result<()> {
 
     match response {
         Response::Ok => {
-            eprintln!("✅ Server confirmed: Command executed successfully");
+            match &command {
+                Command::Play(path) => eprintln!("✅ 演奏開始: {}", path),
+                Command::Stop => eprintln!("✅ 演奏停止しました"),
+                Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+            }
         }
         Response::Error(msg) => {
-            eprintln!("❌ Server error: {}", msg);
+            eprintln!("❌ サーバーエラー: {}", msg);
             return Err(anyhow::anyhow!("Server returned error: {}", msg));
         }
     }

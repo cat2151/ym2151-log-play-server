@@ -32,10 +32,10 @@ impl Server {
     }
 
     pub fn run(&self, json_path: &str) -> Result<()> {
-        eprintln!("🚀 Starting YM2151 server...");
-        eprintln!("   Initial file: {}", json_path);
+        eprintln!("🚀 YM2151サーバーを起動中...");
+        eprintln!("   初期ファイル: {}", json_path);
         eprintln!(
-            "   Named pipe path: {}",
+            "   名前付きパイプ: {}",
             crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
         );
 
@@ -43,10 +43,10 @@ impl Server {
         match Self::load_and_start_playback(json_path) {
             Ok(player) => {
                 audio_player = Some(player);
-                eprintln!("✅ Initial audio playback started");
+                eprintln!("✅ 初期音声の再生を開始しました");
             }
             Err(e) => {
-                eprintln!("⚠️  Warning: Failed to start initial audio playback: {}", e);
+                eprintln!("⚠️  警告: 初期音声の再生開始に失敗しました: {}", e);
             }
         }
 
@@ -54,6 +54,8 @@ impl Server {
             let mut state = self.state.lock().unwrap();
             *state = ServerState::Playing;
         }
+
+        eprintln!("🎵 音声生成が開始されました。クライアントからの接続を待機中...");
 
         loop {
             if self.shutdown_flag.load(Ordering::Relaxed) {
@@ -65,7 +67,7 @@ impl Server {
                 Ok(p) => p,
                 Err(e) => {
                     eprintln!(
-                        "⚠️  Warning: Failed to create new pipe for connection: {}",
+                        "⚠️  警告: 接続用の新しいパイプの作成に失敗しました: {}",
                         e
                     );
                     std::thread::sleep(std::time::Duration::from_millis(100));
@@ -73,24 +75,24 @@ impl Server {
                 }
             };
 
-            eprintln!("💬 Waiting for client connection...");
+            eprintln!("💬 クライアント接続を待機中...");
 
             let mut reader = match connection_pipe.open_read() {
                 Ok(r) => r,
                 Err(e) => {
-                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    eprintln!("⚠️  警告: パイプの読み取りオープンに失敗しました: {}", e);
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
             };
 
-            eprintln!("📞 Client connected");
+            eprintln!("📞 クライアントが接続されました");
 
             // レスポンス送信用のライターも取得
             let mut writer = match connection_pipe.open_write() {
                 Ok(w) => w,
                 Err(e) => {
-                    eprintln!("⚠️  Warning: Failed to open pipe for writing: {}", e);
+                    eprintln!("⚠️  警告: パイプの書き込みオープンに失敗しました: {}", e);
                     continue;
                 }
             };
@@ -100,7 +102,7 @@ impl Server {
                 let line = match reader.read_line() {
                     Ok(l) => l,
                     Err(e) => {
-                        eprintln!("📞 Client disconnected: {}", e);
+                        eprintln!("📞 クライアントが切断されました: {}", e);
                         break; // 内側のループを抜けて新しい接続を待機
                     }
                 };
@@ -108,18 +110,18 @@ impl Server {
                 let command = match Command::parse(&line) {
                     Ok(cmd) => cmd,
                     Err(e) => {
-                        eprintln!("⚠️  Warning: Failed to parse command: {}", e);
+                        eprintln!("⚠️  警告: コマンドの解析に失敗しました: {}", e);
                         let _ = writer
                             .write_str(&Response::Error(format!("Parse error: {}", e)).serialize());
                         continue;
                     }
                 };
 
-                eprintln!("📩 Received command: {:?}", command);
+                eprintln!("📩 コマンドを受信しました: {:?}", command);
 
                 let response = match command {
                     Command::Play(json_path) => {
-                        eprintln!("🎵 Loading new audio file: {}", json_path);
+                        eprintln!("🎵 新しい音声ファイルを読み込み中: {}", json_path);
 
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
@@ -128,7 +130,7 @@ impl Server {
                         match Self::load_and_start_playback(&json_path) {
                             Ok(player) => {
                                 audio_player = Some(player);
-                                eprintln!("✅ Audio playback started: {}", json_path);
+                                eprintln!("✅ 音声再生を開始しました: {}", json_path);
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Playing;
@@ -136,13 +138,13 @@ impl Server {
                                 Response::Ok
                             }
                             Err(e) => {
-                                eprintln!("❌ Failed to start audio playback: {}", e);
+                                eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
                                 Response::Error(format!("Failed to start playback: {}", e))
                             }
                         }
                     }
                     Command::Stop => {
-                        eprintln!("⏹️  Stopping audio playback");
+                        eprintln!("⏹️  音声再生を停止中...");
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
@@ -150,10 +152,11 @@ impl Server {
                         let mut state = self.state.lock().unwrap();
                         *state = ServerState::Stopped;
 
+                        eprintln!("✅ 音声再生を停止しました");
                         Response::Ok
                     }
                     Command::Shutdown => {
-                        eprintln!("🛑 Shutdown requested");
+                        eprintln!("🛑 シャットダウン要求を受信しました");
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
@@ -161,23 +164,24 @@ impl Server {
 
                         // シャットダウンレスポンスを送信
                         let _ = writer.write_str(&Response::Ok.serialize());
+                        eprintln!("✅ シャットダウン完了");
                         return Ok(()); // 外側のループも抜けて終了
                     }
                 };
 
                 // レスポンスを送信
                 if let Err(e) = writer.write_str(&response.serialize()) {
-                    eprintln!("⚠️  Warning: Failed to send response: {}", e);
+                    eprintln!("⚠️  警告: レスポンス送信に失敗しました: {}", e);
                     break; // 書き込みに失敗したら接続を閉じる
                 }
 
-                eprintln!("📤 Response sent: {:?}", response);
+                eprintln!("📤 レスポンスを送信しました: {:?}", response);
             }
 
-            eprintln!("🔄 Ready for next connection...");
+            eprintln!("🔄 次の接続を待機中...");
         }
 
-        eprintln!("👋 Server shutdown complete");
+        eprintln!("👋 サーバーのシャットダウンが完了しました");
         Ok(())
     }
 

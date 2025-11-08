@@ -71,7 +71,6 @@ fn main() {
             if args.len() == 3 && args[2] == "--stop" {
                 match client::stop_playback() {
                     Ok(_) => {
-                        println!("✅ 停止要求を送信しました");
                         std::process::exit(0);
                     }
                     Err(e) => {
@@ -83,7 +82,6 @@ fn main() {
             } else if args.len() == 3 && args[2] == "--shutdown" {
                 match client::shutdown_server() {
                     Ok(_) => {
-                        println!("✅ サーバーシャットダウン要求を送信しました");
                         std::process::exit(0);
                     }
                     Err(e) => {
@@ -96,7 +94,6 @@ fn main() {
                 let json_path = &args[2];
                 match client::play_file(json_path) {
                     Ok(_) => {
-                        println!("✅ 演奏要求を送信しました: {}", json_path);
                         std::process::exit(0);
                     }
                     Err(e) => {
