@@ -173,6 +173,19 @@ cargo test
 - 高度な機能
 - 既存曲の再現
 
+## 開発方法
+- WindowsでagentにTDD
+- このプロジェクトに限ってはLinux禁止
+  - なぜなら、
+    - 序盤で、実質Linux専用のcodeが生成された
+      - Windows版の土台には役立ったかも
+    - Unix/Linux/Windows分岐、realtime-audio有無の分岐、ほか分岐、それらに付随する大量のコメント、
+      - でcode肥大してハルシネーションの温床となった
+      - 低品質codeになり、ムダなallow deadcode、testのignored、重複test、ムダなcfg windows分岐なども多かった
+      - ハルシネーション多発し、バグ修正や、Windows版の機能実装ができなくなった
+    - このプロジェクトならWindowsでのagentのTDDがよく機能することが判明した
+      - 上記のハルシネーションやムダも、TDDを利用した堅牢なリファクタリングで解決できた
+
 ## ライセンス
 
 MIT License
