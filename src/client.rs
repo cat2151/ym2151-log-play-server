@@ -1,6 +1,6 @@
+use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::Command;
 use anyhow::{Context, Result};
-use crate::ipc::pipe_windows::NamedPipe;
 
 pub fn play_file(json_path: &str) -> Result<()> {
     send_command(Command::Play(json_path.to_string()))
