@@ -106,7 +106,7 @@ fn test_client_without_server_fails() {
 fn test_server_shutdown_without_server_fails() {
     let binary = get_binary_path();
     let output = Command::new(&binary)
-        .arg("--server")
+        .arg("--client")
         .arg("--shutdown")
         .output()
         .expect("Failed to execute binary");
