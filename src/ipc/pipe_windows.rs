@@ -4,10 +4,9 @@
 //! the Windows API CreateNamedPipe and related functions.
 
 use std::ffi::OsStr;
-use std::io::{self, BufRead, BufReader, Write};
+use std::io;
 use std::os::windows::ffi::OsStrExt;
 use std::path::{Path, PathBuf};
-use std::ptr;
 use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
 use windows::Win32::Storage::FileSystem::{
