@@ -4,10 +4,10 @@
 
 #[cfg(unix)]
 mod client_error_tests {
-    use ym2151_log_player_rust::client;
     use std::fs;
     use std::thread;
     use std::time::Duration;
+    use ym2151_log_player_rust::client;
 
     fn cleanup_pipe() {
         let _ = fs::remove_file("/tmp/ym2151_server.pipe");
@@ -22,7 +22,8 @@ mod client_error_tests {
         let err = result.unwrap_err().to_string();
         assert!(
             err.contains("Failed to connect") || err.contains("No such file"),
-            "Error should indicate connection failure: {}", err
+            "Error should indicate connection failure: {}",
+            err
         );
     }
 
@@ -111,7 +112,7 @@ mod protocol_error_tests {
         let result1 = Command::parse("play test.json");
         let result2 = Command::parse("Play test.json");
         let result3 = Command::parse("PLAY test.json");
-        
+
         // At least one should work (likely uppercase)
         let _ = result1;
         let _ = result2;
@@ -171,11 +172,9 @@ mod server_error_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        
+
         // Try to start server with non-existent file
-        let result = std::panic::catch_unwind(|| {
-            server.run("nonexistent_initial_file.json")
-        });
+        let result = std::panic::catch_unwind(|| server.run("nonexistent_initial_file.json"));
 
         // Server should handle this gracefully (either error or panic is acceptable)
         cleanup_pipe();
@@ -186,22 +185,22 @@ mod server_error_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
         // Try to send commands very quickly in succession
-        let handles: Vec<_> = (0..3).map(|i| {
-            thread::spawn(move || {
-                thread::sleep(Duration::from_millis(i * 50));
-                let mut writer = NamedPipe::connect_default();
-                if let Ok(mut w) = writer {
-                    let _ = w.write_str(&Command::Stop.serialize());
-                }
+        let handles: Vec<_> = (0..3)
+            .map(|i| {
+                thread::spawn(move || {
+                    thread::sleep(Duration::from_millis(i * 50));
+                    let mut writer = NamedPipe::connect_default();
+                    if let Ok(mut w) = writer {
+                        let _ = w.write_str(&Command::Stop.serialize());
+                    }
+                })
             })
-        }).collect();
+            .collect();
 
         for h in handles {
             let _ = h.join();
@@ -222,9 +221,7 @@ mod server_error_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
@@ -248,10 +245,10 @@ mod server_error_tests {
 
 #[cfg(unix)]
 mod pipe_error_tests {
-    use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
     use std::fs;
     use std::thread;
     use std::time::Duration;
+    use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
 
     fn cleanup_pipe() {
         let _ = fs::remove_file("/tmp/ym2151_server.pipe");
@@ -261,9 +258,12 @@ mod pipe_error_tests {
     #[test]
     fn test_connect_to_nonexistent_pipe() {
         cleanup_pipe();
-        
+
         let result = NamedPipe::connect_default();
-        assert!(result.is_err(), "Should fail to connect to non-existent pipe");
+        assert!(
+            result.is_err(),
+            "Should fail to connect to non-existent pipe"
+        );
     }
 
     #[test]
@@ -278,7 +278,7 @@ mod pipe_error_tests {
         let pipe2 = NamedPipe::create();
         // May succeed or fail depending on implementation
         // Just ensure no panic
-        
+
         cleanup_pipe();
     }
 
@@ -298,10 +298,10 @@ mod pipe_error_tests {
 
         // Give it a short time
         thread::sleep(Duration::from_millis(200));
-        
+
         // Clean up
         cleanup_pipe();
-        
+
         // Don't wait for handle as it might be blocking
     }
 }

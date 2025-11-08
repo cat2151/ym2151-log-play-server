@@ -31,39 +31,43 @@ mod integration_tests {
         let server = Server::new();
 
         // Start server in background thread
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         // Wait for server to start and create pipe
         thread::sleep(Duration::from_millis(500));
 
         // Test 1: Send PLAY command
         {
-            let mut writer = NamedPipe::connect_default()
-                .expect("Failed to connect to server for PLAY");
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for PLAY");
             let cmd = Command::Play("test_input.json".to_string());
-            writer.write_str(&cmd.serialize()).expect("Failed to send PLAY");
+            writer
+                .write_str(&cmd.serialize())
+                .expect("Failed to send PLAY");
         }
 
         thread::sleep(Duration::from_millis(300));
 
         // Test 2: Send STOP command
         {
-            let mut writer = NamedPipe::connect_default()
-                .expect("Failed to connect to server for STOP");
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for STOP");
             let cmd = Command::Stop;
-            writer.write_str(&cmd.serialize()).expect("Failed to send STOP");
+            writer
+                .write_str(&cmd.serialize())
+                .expect("Failed to send STOP");
         }
 
         thread::sleep(Duration::from_millis(200));
 
         // Test 3: Send SHUTDOWN command
         {
-            let mut writer = NamedPipe::connect_default()
-                .expect("Failed to connect to server for SHUTDOWN");
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for SHUTDOWN");
             let cmd = Command::Shutdown;
-            writer.write_str(&cmd.serialize()).expect("Failed to send SHUTDOWN");
+            writer
+                .write_str(&cmd.serialize())
+                .expect("Failed to send SHUTDOWN");
         }
 
         // Wait for server to finish
@@ -79,9 +83,7 @@ mod integration_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
@@ -89,11 +91,12 @@ mod integration_tests {
         for i in 0..5 {
             let mut writer = NamedPipe::connect_default()
                 .expect(&format!("Failed to connect (iteration {})", i));
-            
+
             let cmd = Command::Stop;
-            writer.write_str(&cmd.serialize())
+            writer
+                .write_str(&cmd.serialize())
                 .expect(&format!("Failed to send STOP (iteration {})", i));
-            
+
             thread::sleep(Duration::from_millis(100));
         }
 
@@ -114,21 +117,20 @@ mod integration_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
         // Rapid fire connections
         for i in 0..10 {
-            let mut writer = NamedPipe::connect_default()
-                .expect(&format!("Failed to connect (rapid {})", i));
-            
+            let mut writer =
+                NamedPipe::connect_default().expect(&format!("Failed to connect (rapid {})", i));
+
             let cmd = Command::Stop;
-            writer.write_str(&cmd.serialize())
+            writer
+                .write_str(&cmd.serialize())
                 .expect(&format!("Failed to send (rapid {})", i));
-            
+
             // No sleep - rapid fire!
         }
 
@@ -167,9 +169,10 @@ mod error_tests {
 
         let err = result.unwrap_err().to_string();
         assert!(
-            err.contains("Failed to connect to server") 
-            || err.contains("No such file or directory"),
-            "Error should indicate connection failure, got: {}", err
+            err.contains("Failed to connect to server")
+                || err.contains("No such file or directory"),
+            "Error should indicate connection failure, got: {}",
+            err
         );
     }
 
@@ -179,14 +182,12 @@ mod error_tests {
     fn test_play_nonexistent_file() {
         cleanup_pipe();
 
-        use ym2151_log_player_rust::server::Server;
         use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
         use ym2151_log_player_rust::ipc::protocol::Command;
+        use ym2151_log_player_rust::server::Server;
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
@@ -213,14 +214,12 @@ mod error_tests {
     fn test_invalid_command() {
         cleanup_pipe();
 
-        use ym2151_log_player_rust::server::Server;
         use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
         use ym2151_log_player_rust::ipc::protocol::Command;
+        use ym2151_log_player_rust::server::Server;
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
@@ -264,9 +263,7 @@ mod longrun_tests {
         cleanup_pipe();
 
         let server = Server::new();
-        let server_handle = thread::spawn(move || {
-            server.run("sample_events.json")
-        });
+        let server_handle = thread::spawn(move || server.run("sample_events.json"));
 
         thread::sleep(Duration::from_millis(500));
 
