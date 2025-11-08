@@ -4,12 +4,10 @@
 //! and controls YM2151 playback. The server runs in the background and accepts
 //! commands from clients to play files, stop playback, or shutdown.
 
-#[cfg(unix)]
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-#[cfg(unix)]
 use std::thread;
 
 #[cfg(feature = "realtime-audio")]
@@ -17,13 +15,16 @@ use crate::events::EventLog;
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
 #[cfg(feature = "realtime-audio")]
-use std::sync::mpsc::Receiver;
+use std::sync::mpsc::{self, Receiver, Sender};
 
 #[cfg(feature = "realtime-audio")]
 use crate::audio::AudioPlayer;
 
 #[cfg(unix)]
 use crate::ipc::pipe_unix::NamedPipe;
+
+#[cfg(windows)]
+use crate::ipc::pipe_windows::NamedPipe;
 
 /// Internal command for playback control
 #[cfg(feature = "realtime-audio")]
@@ -85,7 +86,7 @@ impl Server {
     /// let server = Server::new();
     /// server.run("sample_events.json").expect("Server failed");
     /// ```
-    #[cfg(all(unix, feature = "realtime-audio"))]
+    #[cfg(feature = "realtime-audio")]
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
@@ -130,7 +131,7 @@ impl Server {
         Ok(())
     }
 
-    #[cfg(all(unix, not(feature = "realtime-audio")))]
+    #[cfg(not(feature = "realtime-audio"))]
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
@@ -273,7 +274,7 @@ impl Server {
     ///
     /// This runs in a separate thread and continuously accepts connections
     /// on the named pipe, processing each command until shutdown is signaled.
-    #[cfg(all(unix, feature = "realtime-audio"))]
+    #[cfg(feature = "realtime-audio")]
     fn ipc_listener_loop(
         pipe: NamedPipe,
         _state: Arc<Mutex<ServerState>>,
@@ -348,7 +349,7 @@ impl Server {
     }
 
     /// IPC listener loop (without realtime-audio feature)
-    #[cfg(all(unix, not(feature = "realtime-audio")))]
+    #[cfg(not(feature = "realtime-audio"))]
     fn ipc_listener_loop_no_audio(
         pipe: NamedPipe,
         state: Arc<Mutex<ServerState>>,
