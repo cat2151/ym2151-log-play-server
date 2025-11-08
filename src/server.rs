@@ -4,14 +4,18 @@
 //! and controls YM2151 playback. The server runs in the background and accepts
 //! commands from clients to play files, stop playback, or shutdown.
 
-use crate::events::EventLog;
 use crate::ipc::protocol::{Command, Response};
-use crate::player::Player;
 use anyhow::{Context, Result};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
+
+#[cfg(feature = "realtime-audio")]
+use crate::events::EventLog;
+#[cfg(feature = "realtime-audio")]
+use crate::player::Player;
+#[cfg(feature = "realtime-audio")]
+use std::sync::mpsc::{self, Receiver, Sender};
 
 #[cfg(feature = "realtime-audio")]
 use crate::audio::AudioPlayer;
