@@ -4,9 +4,7 @@ use ym2151_log_player_rust::player::Player;
 use ym2151_log_player_rust::resampler::OPM_SAMPLE_RATE;
 use ym2151_log_player_rust::wav_writer;
 
-#[cfg(unix)]
 use ym2151_log_player_rust::client;
-#[cfg(unix)]
 use ym2151_log_player_rust::server::Server;
 
 fn print_usage(program_name: &str) {
@@ -17,36 +15,30 @@ fn print_usage(program_name: &str) {
         "  {} <json_log_file>              # スタンドアロン演奏",
         program_name
     );
-    #[cfg(unix)]
-    {
-        eprintln!(
-            "  {} --server <json_file>         # サーバーとして起動",
-            program_name
-        );
-        eprintln!(
-            "  {} --server --shutdown          # サーバーをシャットダウン",
-            program_name
-        );
-        eprintln!(
-            "  {} --client <json_file>         # サーバーに演奏指示",
-            program_name
-        );
-        eprintln!(
-            "  {} --client --stop              # サーバーに停止指示",
-            program_name
-        );
-    }
+    eprintln!(
+        "  {} --server <json_file>         # サーバーとして起動",
+        program_name
+    );
+    eprintln!(
+        "  {} --server --shutdown          # サーバーをシャットダウン",
+        program_name
+    );
+    eprintln!(
+        "  {} --client <json_file>         # サーバーに演奏指示",
+        program_name
+    );
+    eprintln!(
+        "  {} --client --stop              # サーバーに停止指示",
+        program_name
+    );
     eprintln!();
     eprintln!("例:");
     eprintln!("  {} events.json", program_name);
     eprintln!("  {} sample_events.json", program_name);
-    #[cfg(unix)]
-    {
-        eprintln!("  {} --server sample_events.json", program_name);
-        eprintln!("  {} --client test_input.json", program_name);
-        eprintln!("  {} --client --stop", program_name);
-        eprintln!("  {} --server --shutdown", program_name);
-    }
+    eprintln!("  {} --server sample_events.json", program_name);
+    eprintln!("  {} --client test_input.json", program_name);
+    eprintln!("  {} --client --stop", program_name);
+    eprintln!("  {} --server --shutdown", program_name);
     eprintln!();
     eprintln!("機能:");
     eprintln!("  - JSONイベントログファイルを読み込み");
@@ -54,88 +46,82 @@ fn print_usage(program_name: &str) {
     #[cfg(feature = "realtime-audio")]
     eprintln!("  - リアルタイム音声再生");
     eprintln!("  - WAVファイル (output.wav) を生成");
-    #[cfg(unix)]
-    {
-        eprintln!("  - サーバー/クライアントモード (Unix/Linux)");
-    }
+    eprintln!("  - サーバー/クライアントモード (Unix/Linux/Windows)");
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
     // Parse command-line arguments
-    #[cfg(unix)]
-    {
-        if args.len() >= 2 {
-            if args[1] == "--server" {
-                // Server mode
-                if args.len() == 3 && args[2] == "--shutdown" {
-                    // Shutdown server
-                    match client::shutdown_server() {
-                        Ok(_) => {
-                            println!("✅ サーバーシャットダウン要求を送信しました");
-                            std::process::exit(0);
-                        }
-                        Err(e) => {
-                            eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
-                            eprintln!("   サーバーが起動しているか確認してください");
-                            std::process::exit(1);
-                        }
+    if args.len() >= 2 {
+        if args[1] == "--server" {
+            // Server mode
+            if args.len() == 3 && args[2] == "--shutdown" {
+                // Shutdown server
+                match client::shutdown_server() {
+                    Ok(_) => {
+                        println!("✅ サーバーシャットダウン要求を送信しました");
+                        std::process::exit(0);
                     }
-                } else if args.len() == 3 {
-                    // Start server with JSON file
-                    let json_path = &args[2];
-                    let server = Server::new();
-                    match server.run(json_path) {
-                        Ok(_) => {
-                            std::process::exit(0);
-                        }
-                        Err(e) => {
-                            eprintln!("❌ エラー: サーバーの起動に失敗しました: {}", e);
-                            std::process::exit(1);
-                        }
+                    Err(e) => {
+                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
                     }
-                } else {
-                    eprintln!("❌ エラー: --server オプションには引数が必要です");
-                    eprintln!();
-                    print_usage(&args[0]);
-                    std::process::exit(1);
                 }
-            } else if args[1] == "--client" {
-                // Client mode
-                if args.len() == 3 && args[2] == "--stop" {
-                    // Stop playback
-                    match client::stop_playback() {
-                        Ok(_) => {
-                            println!("✅ 停止要求を送信しました");
-                            std::process::exit(0);
-                        }
-                        Err(e) => {
-                            eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
-                            eprintln!("   サーバーが起動しているか確認してください");
-                            std::process::exit(1);
-                        }
+            } else if args.len() == 3 {
+                // Start server with JSON file
+                let json_path = &args[2];
+                let server = Server::new();
+                match server.run(json_path) {
+                    Ok(_) => {
+                        std::process::exit(0);
                     }
-                } else if args.len() == 3 {
-                    // Play file
-                    let json_path = &args[2];
-                    match client::play_file(json_path) {
-                        Ok(_) => {
-                            println!("✅ 演奏要求を送信しました: {}", json_path);
-                            std::process::exit(0);
-                        }
-                        Err(e) => {
-                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
-                            eprintln!("   サーバーが起動しているか確認してください");
-                            std::process::exit(1);
-                        }
+                    Err(e) => {
+                        eprintln!("❌ エラー: サーバーの起動に失敗しました: {}", e);
+                        std::process::exit(1);
                     }
-                } else {
-                    eprintln!("❌ エラー: --client オプションには引数が必要です");
-                    eprintln!();
-                    print_usage(&args[0]);
-                    std::process::exit(1);
                 }
+            } else {
+                eprintln!("❌ エラー: --server オプションには引数が必要です");
+                eprintln!();
+                print_usage(&args[0]);
+                std::process::exit(1);
+            }
+        } else if args[1] == "--client" {
+            // Client mode
+            if args.len() == 3 && args[2] == "--stop" {
+                // Stop playback
+                match client::stop_playback() {
+                    Ok(_) => {
+                        println!("✅ 停止要求を送信しました");
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
+                    }
+                }
+            } else if args.len() == 3 {
+                // Play file
+                let json_path = &args[2];
+                match client::play_file(json_path) {
+                    Ok(_) => {
+                        println!("✅ 演奏要求を送信しました: {}", json_path);
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                eprintln!("❌ エラー: --client オプションには引数が必要です");
+                eprintln!();
+                print_usage(&args[0]);
+                std::process::exit(1);
             }
         }
     }

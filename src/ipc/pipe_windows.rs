@@ -102,8 +102,7 @@ impl NamedPipe {
         // Wait for a client to connect
         // SAFETY: handle is valid and owned by this NamedPipe
         unsafe {
-            ConnectNamedPipe(self.handle, None)
-                .map_err(io::Error::other)?;
+            ConnectNamedPipe(self.handle, None).map_err(io::Error::other)?;
         }
 
         Ok(PipeReader {

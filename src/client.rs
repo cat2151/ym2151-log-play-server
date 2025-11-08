@@ -4,12 +4,13 @@
 //! YM2151 server via named pipes.
 
 use crate::ipc::protocol::Command;
-#[cfg(unix)]
-use anyhow::Context;
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 #[cfg(unix)]
 use crate::ipc::pipe_unix::NamedPipe;
+
+#[cfg(windows)]
+use crate::ipc::pipe_windows::NamedPipe;
 
 /// Send a PLAY command to the server to play a new JSON file
 ///
@@ -62,7 +63,6 @@ pub fn shutdown_server() -> Result<()> {
     send_command(Command::Shutdown)
 }
 
-#[cfg(unix)]
 fn send_command(command: Command) -> Result<()> {
     // Connect to the server's named pipe
     let mut writer = NamedPipe::connect_default()
@@ -80,14 +80,6 @@ fn send_command(command: Command) -> Result<()> {
     // request and response pipes, or a more sophisticated protocol.
 
     Ok(())
-}
-
-#[cfg(windows)]
-fn send_command(_command: Command) -> Result<()> {
-    // Windows implementation is not yet available
-    Err(anyhow::anyhow!(
-        "Windows client is not yet implemented. Use Unix/Linux systems."
-    ))
 }
 
 #[cfg(test)]
