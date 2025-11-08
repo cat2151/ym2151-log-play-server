@@ -11,10 +11,10 @@ use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FlushFileBuffers, ReadFile, WriteFile, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_NONE,
-    OPEN_EXISTING,
+    OPEN_EXISTING, PIPE_ACCESS_DUPLEX,
 };
 use windows::Win32::System::Pipes::{
-    ConnectNamedPipe, CreateNamedPipeW, PIPE_ACCESS_DUPLEX, PIPE_READMODE_BYTE, PIPE_TYPE_BYTE,
+    ConnectNamedPipe, CreateNamedPipeW, PIPE_READMODE_BYTE, PIPE_TYPE_BYTE,
     PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
 use windows::Win32::System::IO::OVERLAPPED;
@@ -102,7 +102,7 @@ impl NamedPipe {
         // Wait for a client to connect
         // SAFETY: handle is valid and owned by this NamedPipe
         unsafe {
-            ConnectNamedPipe(self.handle, None as *const OVERLAPPED)
+            ConnectNamedPipe(self.handle, None)
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
         }
 
