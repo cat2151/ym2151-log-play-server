@@ -4,14 +4,28 @@
 //! and controls YM2151 playback. The server runs in the background and accepts
 //! commands from clients to play files, stop playback, or shutdown.
 
+use crate::events::EventLog;
 use crate::ipc::protocol::{Command, Response};
+use crate::player::Player;
 use anyhow::{Context, Result};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+#[cfg(feature = "realtime-audio")]
+use crate::audio::AudioPlayer;
+
 #[cfg(unix)]
 use crate::ipc::pipe_unix::NamedPipe;
+
+/// Internal command for playback control
+#[cfg(feature = "realtime-audio")]
+enum PlaybackCommand {
+    Play(String), // JSON path
+    Stop,
+    Shutdown,
+}
 
 /// Server state indicating current playback status
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -61,7 +75,7 @@ impl Server {
     /// let server = Server::new();
     /// server.run("sample_events.json").expect("Server failed");
     /// ```
-    #[cfg(unix)]
+    #[cfg(all(unix, feature = "realtime-audio"))]
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
@@ -70,20 +84,63 @@ impl Server {
         let pipe = NamedPipe::create().context("Failed to create named pipe")?;
         eprintln!("✅ Named pipe created at: {:?}", pipe.path());
 
-        // TODO: In Phase 5, start playback of the initial JSON file
-        // For now, just set state to Playing
-        {
-            let mut state = self.state.lock().unwrap();
-            *state = ServerState::Playing;
-        }
-        eprintln!("🎵 Initial playback started (stub)");
+        // Create a channel for playback commands
+        let (cmd_tx, cmd_rx): (Sender<PlaybackCommand>, Receiver<PlaybackCommand>) =
+            mpsc::channel();
+
+        // Start the playback controller thread
+        let state_clone = Arc::clone(&self.state);
+        let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let initial_json = json_path.to_string();
+        let controller_handle = thread::spawn(move || {
+            Self::playback_controller_thread(initial_json, cmd_rx, state_clone, shutdown_flag_clone)
+        });
 
         // Start the IPC listener thread
         let state_clone = Arc::clone(&self.state);
         let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let listener_handle = thread::spawn(move || {
+            Self::ipc_listener_loop(pipe, state_clone, shutdown_flag_clone, cmd_tx)
+        });
 
-        let listener_handle =
-            thread::spawn(move || Self::ipc_listener_loop(pipe, state_clone, shutdown_flag_clone));
+        eprintln!("✅ Server is ready and listening for commands");
+
+        // Wait for threads to finish
+        listener_handle
+            .join()
+            .map_err(|_| anyhow::anyhow!("Listener thread panicked"))?
+            .context("Listener thread error")?;
+
+        controller_handle
+            .join()
+            .map_err(|_| anyhow::anyhow!("Controller thread panicked"))?
+            .context("Controller thread error")?;
+
+        eprintln!("👋 Server shutdown complete");
+        Ok(())
+    }
+
+    #[cfg(all(unix, not(feature = "realtime-audio")))]
+    pub fn run(&self, json_path: &str) -> Result<()> {
+        eprintln!("🚀 Starting YM2151 server...");
+        eprintln!("   Initial file: {}", json_path);
+
+        // Create the named pipe
+        let pipe = NamedPipe::create().context("Failed to create named pipe")?;
+        eprintln!("✅ Named pipe created at: {:?}", pipe.path());
+
+        {
+            let mut state = self.state.lock().unwrap();
+            *state = ServerState::Playing;
+        }
+        eprintln!("🎵 Initial playback started (audio feature disabled)");
+
+        // Start the IPC listener thread
+        let state_clone = Arc::clone(&self.state);
+        let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let listener_handle = thread::spawn(move || {
+            Self::ipc_listener_loop_no_audio(pipe, state_clone, shutdown_flag_clone)
+        });
 
         eprintln!("✅ Server is ready and listening for commands");
 
@@ -97,12 +154,187 @@ impl Server {
         Ok(())
     }
 
+    /// Playback controller thread that manages the AudioPlayer
+    ///
+    /// This thread owns the AudioPlayer and processes playback commands from the IPC listener.
+    #[cfg(feature = "realtime-audio")]
+    fn playback_controller_thread(
+        initial_json: String,
+        cmd_rx: Receiver<PlaybackCommand>,
+        state: Arc<Mutex<ServerState>>,
+        shutdown_flag: Arc<AtomicBool>,
+    ) -> Result<()> {
+        // Start initial playback
+        let mut audio_player: Option<AudioPlayer> = None;
+        match Self::load_and_start_playback(&initial_json) {
+            Ok(player) => {
+                audio_player = Some(player);
+                if let Ok(mut s) = state.lock() {
+                    *s = ServerState::Playing;
+                }
+                eprintln!("🎵 Initial playback started");
+            }
+            Err(e) => {
+                eprintln!("⚠️  Failed to start initial playback: {}", e);
+            }
+        }
+
+        // Process commands
+        loop {
+            match cmd_rx.recv() {
+                Ok(PlaybackCommand::Play(json_path)) => {
+                    eprintln!("🎵 Controller: Processing PLAY command: {}", json_path);
+
+                    // Stop current playback
+                    if let Some(ref mut player) = audio_player {
+                        player.stop();
+                    }
+                    audio_player = None;
+
+                    // Start new playback
+                    match Self::load_and_start_playback(&json_path) {
+                        Ok(player) => {
+                            audio_player = Some(player);
+                            if let Ok(mut s) = state.lock() {
+                                *s = ServerState::Playing;
+                            }
+                            eprintln!("✅ Playback started: {}", json_path);
+                        }
+                        Err(e) => {
+                            eprintln!("❌ Failed to start playback: {}", e);
+                            if let Ok(mut s) = state.lock() {
+                                *s = ServerState::Stopped;
+                            }
+                        }
+                    }
+                }
+                Ok(PlaybackCommand::Stop) => {
+                    eprintln!("⏸️  Controller: Processing STOP command");
+                    if let Some(ref mut player) = audio_player {
+                        player.stop();
+                    }
+                    audio_player = None;
+                    if let Ok(mut s) = state.lock() {
+                        *s = ServerState::Stopped;
+                    }
+                }
+                Ok(PlaybackCommand::Shutdown) => {
+                    eprintln!("🛑 Controller: Processing SHUTDOWN command");
+                    if let Some(ref mut player) = audio_player {
+                        player.stop();
+                    }
+                    audio_player = None;
+                    break;
+                }
+                Err(_) => {
+                    // Channel closed, probably server shutting down
+                    if shutdown_flag.load(Ordering::Relaxed) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Load a JSON file and create an AudioPlayer
+    #[cfg(feature = "realtime-audio")]
+    fn load_and_start_playback(json_path: &str) -> Result<AudioPlayer> {
+        let log = EventLog::from_file(json_path)
+            .with_context(|| format!("Failed to load JSON file: {}", json_path))?;
+
+        if !log.validate() {
+            return Err(anyhow::anyhow!(
+                "Event log validation failed: event_count doesn't match events array length"
+            ));
+        }
+
+        let player = Player::new(log);
+        AudioPlayer::new(player).context("Failed to create audio player")
+    }
+
     /// IPC listener loop that processes incoming commands
     ///
     /// This runs in a separate thread and continuously accepts connections
     /// on the named pipe, processing each command until shutdown is signaled.
-    #[cfg(unix)]
+    #[cfg(all(unix, feature = "realtime-audio"))]
     fn ipc_listener_loop(
+        pipe: NamedPipe,
+        state: Arc<Mutex<ServerState>>,
+        shutdown_flag: Arc<AtomicBool>,
+        cmd_tx: Sender<PlaybackCommand>,
+    ) -> Result<()> {
+        loop {
+            // Check if shutdown was requested
+            if shutdown_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
+            // Open the pipe for reading (this blocks until a client connects)
+            let mut reader = match pipe.open_read() {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    continue;
+                }
+            };
+
+            // Read the command from the client
+            let line = match reader.read_line() {
+                Ok(l) => l,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to read from pipe: {}", e);
+                    continue;
+                }
+            };
+
+            // Parse the command
+            let command = match Command::parse(&line) {
+                Ok(cmd) => cmd,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to parse command: {}", e);
+                    continue;
+                }
+            };
+
+            eprintln!("📩 Received command: {:?}", command);
+
+            // Send command to controller thread
+            let response = match command {
+                Command::Play(ref json_path) => {
+                    match cmd_tx.send(PlaybackCommand::Play(json_path.clone())) {
+                        Ok(_) => Response::Ok,
+                        Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                    }
+                }
+                Command::Stop => match cmd_tx.send(PlaybackCommand::Stop) {
+                    Ok(_) => Response::Ok,
+                    Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                },
+                Command::Shutdown => match cmd_tx.send(PlaybackCommand::Shutdown) {
+                    Ok(_) => {
+                        shutdown_flag.store(true, Ordering::Relaxed);
+                        Response::Ok
+                    }
+                    Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                },
+            };
+
+            eprintln!("📤 Response: {:?}", response);
+
+            // If shutdown was requested, break the loop
+            if shutdown_flag.load(Ordering::Relaxed) {
+                break;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// IPC listener loop (without realtime-audio feature)
+    #[cfg(all(unix, not(feature = "realtime-audio")))]
+    fn ipc_listener_loop_no_audio(
         pipe: NamedPipe,
         state: Arc<Mutex<ServerState>>,
         shutdown_flag: Arc<AtomicBool>,
@@ -136,22 +368,42 @@ impl Server {
                 Ok(cmd) => cmd,
                 Err(e) => {
                     eprintln!("⚠️  Warning: Failed to parse command: {}", e);
-                    // Send error response
-                    // Note: In this temporary implementation, we don't have bidirectional
-                    // communication, so we just log the error
                     continue;
                 }
             };
 
             eprintln!("📩 Received command: {:?}", command);
 
-            // Process the command
-            let response = Self::process_command(&command, &state, &shutdown_flag);
+            // Process the command (simplified without audio)
+            let response = match command {
+                Command::Play(ref json_path) => {
+                    eprintln!("🎵 Processing PLAY command: {} (audio disabled)", json_path);
+                    match state.lock() {
+                        Ok(mut s) => {
+                            *s = ServerState::Playing;
+                            Response::Ok
+                        }
+                        Err(e) => Response::Error(format!("Failed to update state: {}", e)),
+                    }
+                }
+                Command::Stop => {
+                    eprintln!("⏸️  Processing STOP command (audio disabled)");
+                    match state.lock() {
+                        Ok(mut s) => {
+                            *s = ServerState::Stopped;
+                            Response::Ok
+                        }
+                        Err(e) => Response::Error(format!("Failed to update state: {}", e)),
+                    }
+                }
+                Command::Shutdown => {
+                    eprintln!("🛑 Processing SHUTDOWN command");
+                    shutdown_flag.store(true, Ordering::Relaxed);
+                    Response::Ok
+                }
+            };
 
             eprintln!("📤 Response: {:?}", response);
-
-            // Note: In this temporary implementation, we don't send responses back
-            // A production implementation would use bidirectional communication
 
             // If shutdown was requested, break the loop
             if shutdown_flag.load(Ordering::Relaxed) {
@@ -160,55 +412,6 @@ impl Server {
         }
 
         Ok(())
-    }
-
-    /// Process a command and return the appropriate response
-    ///
-    /// # Arguments
-    /// * `command` - The command to process
-    /// * `state` - Shared server state
-    /// * `shutdown_flag` - Shared shutdown flag
-    ///
-    /// # Returns
-    /// Response indicating success or failure
-    fn process_command(
-        command: &Command,
-        state: &Arc<Mutex<ServerState>>,
-        shutdown_flag: &Arc<AtomicBool>,
-    ) -> Response {
-        match command {
-            Command::Play(json_path) => {
-                eprintln!("🎵 Processing PLAY command: {}", json_path);
-                // TODO: In Phase 5, implement actual playback control
-                // For now, just update state
-                match state.lock() {
-                    Ok(mut s) => {
-                        *s = ServerState::Playing;
-                        Response::Ok
-                    }
-                    Err(e) => Response::Error(format!("Failed to update state: {}", e)),
-                }
-            }
-            Command::Stop => {
-                eprintln!("⏸️  Processing STOP command");
-                // TODO: In Phase 5, implement actual playback stop
-                // For now, just update state
-                match state.lock() {
-                    Ok(mut s) => {
-                        *s = ServerState::Stopped;
-                        Response::Ok
-                    }
-                    Err(e) => Response::Error(format!("Failed to update state: {}", e)),
-                }
-            }
-            Command::Shutdown => {
-                eprintln!("🛑 Processing SHUTDOWN command");
-                // TODO: In Phase 5, stop any active playback
-                // For now, just set the shutdown flag
-                shutdown_flag.store(true, Ordering::Relaxed);
-                Response::Ok
-            }
-        }
     }
 
     /// Get the current server state
@@ -260,41 +463,8 @@ mod tests {
         assert_eq!(server.get_state(), ServerState::Stopped);
     }
 
-    #[test]
-    fn test_process_play_command() {
-        let state = Arc::new(Mutex::new(ServerState::Stopped));
-        let shutdown_flag = Arc::new(AtomicBool::new(false));
-
-        let command = Command::Play("test.json".to_string());
-        let response = Server::process_command(&command, &state, &shutdown_flag);
-
-        assert_eq!(response, Response::Ok);
-        assert_eq!(*state.lock().unwrap(), ServerState::Playing);
-        assert!(!shutdown_flag.load(Ordering::Relaxed));
-    }
-
-    #[test]
-    fn test_process_stop_command() {
-        let state = Arc::new(Mutex::new(ServerState::Playing));
-        let shutdown_flag = Arc::new(AtomicBool::new(false));
-
-        let command = Command::Stop;
-        let response = Server::process_command(&command, &state, &shutdown_flag);
-
-        assert_eq!(response, Response::Ok);
-        assert_eq!(*state.lock().unwrap(), ServerState::Stopped);
-        assert!(!shutdown_flag.load(Ordering::Relaxed));
-    }
-
-    #[test]
-    fn test_process_shutdown_command() {
-        let state = Arc::new(Mutex::new(ServerState::Playing));
-        let shutdown_flag = Arc::new(AtomicBool::new(false));
-
-        let command = Command::Shutdown;
-        let response = Server::process_command(&command, &state, &shutdown_flag);
-
-        assert_eq!(response, Response::Ok);
-        assert!(shutdown_flag.load(Ordering::Relaxed));
-    }
+    // Note: The process_command tests have been removed because the new architecture
+    // uses a channel-based system with separate controller and listener threads.
+    // The command processing is now tested through integration tests that exercise
+    // the full server/client interaction.
 }
