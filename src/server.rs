@@ -223,7 +223,10 @@ impl Server {
                     if let Some(ref mut player) = audio_player {
                         player.stop();
                     }
-                    audio_player = None;
+                    #[allow(unused_assignments)]
+                    {
+                        audio_player = None;
+                    }
                     break;
                 }
                 Err(_) => {
@@ -261,7 +264,7 @@ impl Server {
     #[cfg(all(unix, feature = "realtime-audio"))]
     fn ipc_listener_loop(
         pipe: NamedPipe,
-        state: Arc<Mutex<ServerState>>,
+        _state: Arc<Mutex<ServerState>>,
         shutdown_flag: Arc<AtomicBool>,
         cmd_tx: Sender<PlaybackCommand>,
     ) -> Result<()> {
