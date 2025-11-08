@@ -4,7 +4,9 @@
 //! YM2151 server via named pipes.
 
 use crate::ipc::protocol::Command;
-use anyhow::{Context, Result};
+#[cfg(unix)]
+use anyhow::Context;
+use anyhow::Result;
 
 #[cfg(unix)]
 use crate::ipc::pipe_unix::NamedPipe;
