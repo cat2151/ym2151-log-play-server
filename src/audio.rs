@@ -141,7 +141,7 @@ impl AudioPlayer {
                 break;
             }
 
-            // Check if we should continue tail generation
+
             if !player.should_continue_tail() {
                 let elapsed = playback_start_time.elapsed();
                 println!("■  Playback complete");
@@ -154,7 +154,7 @@ impl AudioPlayer {
                 break;
             }
 
-            // Report when tail generation begins
+
             if !tail_reported && player.is_complete() {
                 println!("  演奏データ終了、余韻を生成中...");
                 tail_reported = true;

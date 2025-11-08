@@ -51,12 +51,12 @@ fn print_usage(program_name: &str) {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    // Parse command-line arguments
+
     if args.len() >= 2 {
         if args[1] == "--server" {
-            // Server mode
+
             if args.len() == 3 && args[2] == "--shutdown" {
-                // Shutdown server
+
                 match client::shutdown_server() {
                     Ok(_) => {
                         println!("✅ サーバーシャットダウン要求を送信しました");
@@ -69,7 +69,7 @@ fn main() {
                     }
                 }
             } else if args.len() == 3 {
-                // Start server with JSON file
+
                 let json_path = &args[2];
                 let server = Server::new();
                 match server.run(json_path) {
@@ -88,9 +88,9 @@ fn main() {
                 std::process::exit(1);
             }
         } else if args[1] == "--client" {
-            // Client mode
+
             if args.len() == 3 && args[2] == "--stop" {
-                // Stop playback
+
                 match client::stop_playback() {
                     Ok(_) => {
                         println!("✅ 停止要求を送信しました");
@@ -103,7 +103,7 @@ fn main() {
                     }
                 }
             } else if args.len() == 3 {
-                // Play file
+
                 let json_path = &args[2];
                 match client::play_file(json_path) {
                     Ok(_) => {
@@ -125,7 +125,7 @@ fn main() {
         }
     }
 
-    // Standalone mode (original behavior)
+
     if args.len() != 2 {
         print_usage(&args[0]);
         if args.len() > 2 {
@@ -136,7 +136,7 @@ fn main() {
 
     let json_path = &args[1];
 
-    // Reject arguments that look like options
+
     if json_path.starts_with("--") {
         eprintln!("❌ エラー: 不明なオプション: {}", json_path);
         eprintln!();

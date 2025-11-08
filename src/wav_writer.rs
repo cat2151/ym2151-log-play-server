@@ -7,10 +7,10 @@ pub const DEFAULT_OUTPUT_FILENAME: &str = "output.wav";
 
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
-/// Maximum tail duration in seconds (safety limit)
+
 const MAX_TAIL_SECONDS: u32 = 10;
 
-/// Multiplier for tail safety limit based on event duration
+
 const TAIL_DURATION_MULTIPLIER: u32 = 10;
 
 pub fn write_wav(path: &str, samples: &[i16], sample_rate: u32) -> Result<()> {
@@ -60,7 +60,7 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
         output_samples.extend_from_slice(&generation_buffer);
 
-        // Progress reporting for main event playback
+
         if processed_samples < total_samples as usize {
             let progress = (processed_samples * 100 / total_samples as usize).min(100);
             if progress >= last_progress + 10 {
@@ -72,7 +72,7 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
             tail_started = true;
         }
 
-        // Check if we should continue tail generation
+
         if !player.should_continue_tail() {
             if let Some((tail_samples, _)) = player.tail_info() {
                 let tail_ms = tail_samples as f64 / Player::sample_rate() as f64 * 1000.0;
@@ -81,8 +81,8 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
             break;
         }
 
-        // Safety limit: prevent infinite loop
-        // Allow at least MAX_TAIL_SECONDS of tail, or TAIL_DURATION_MULTIPLIER times the event duration
+
+
         let max_tail_samples = std::cmp::max(
             Player::sample_rate() * MAX_TAIL_SECONDS,
             total_samples * TAIL_DURATION_MULTIPLIER,

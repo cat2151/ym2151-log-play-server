@@ -57,7 +57,7 @@ impl OpmChip {
 
     #[inline]
     fn convert_sample(sample: i32) -> i16 {
-        // Divide by 2 to match C implementation volume level
+
         (sample / 2).clamp(i16::MIN as i32, i16::MAX as i32) as i16
     }
 

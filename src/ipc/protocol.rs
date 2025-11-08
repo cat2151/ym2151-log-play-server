@@ -1,54 +1,54 @@
-//! Protocol definitions for server-client IPC communication
-//!
-//! This module defines the message protocol for communication between
-//! the YM2151 server and clients. The protocol is text-based with
-//! newline-delimited messages.
-//!
-//! # Message Format
-//!
-//! Commands (Client → Server):
-//! - `PLAY <json_path>\n` - Stop current playback and play new JSON file
-//! - `STOP\n` - Stop playback (silence)
-//! - `SHUTDOWN\n` - Stop playback and shutdown server
-//!
-//! Responses (Server → Client):
-//! - `OK\n` - Command succeeded
-//! - `ERROR <message>\n` - Command failed with error message
 
-/// Command sent from client to server
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
-    /// Play a JSON file (stops current playback first)
+
     Play(String),
-    /// Stop current playback (silence)
+
     Stop,
-    /// Shutdown the server
+
     Shutdown,
 }
 
 impl Command {
-    /// Parse a command from a text line
-    ///
-    /// # Arguments
-    /// * `line` - Command string (without trailing newline)
-    ///
-    /// # Returns
-    /// * `Ok(Command)` - Successfully parsed command
-    /// * `Err(String)` - Parse error with description
-    ///
-    /// # Examples
-    /// ```
-    /// use ym2151_log_player_rust::ipc::protocol::Command;
-    ///
-    /// let cmd = Command::parse("PLAY /path/to/file.json").unwrap();
-    /// assert!(matches!(cmd, Command::Play(_)));
-    ///
-    /// let cmd = Command::parse("STOP").unwrap();
-    /// assert!(matches!(cmd, Command::Stop));
-    ///
-    /// let cmd = Command::parse("SHUTDOWN").unwrap();
-    /// assert!(matches!(cmd, Command::Shutdown));
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
 
@@ -72,21 +72,21 @@ impl Command {
         }
     }
 
-    /// Serialize command to string for transmission
-    ///
-    /// # Returns
-    /// Command string with trailing newline
-    ///
-    /// # Examples
-    /// ```
-    /// use ym2151_log_player_rust::ipc::protocol::Command;
-    ///
-    /// let cmd = Command::Play("/path/to/file.json".to_string());
-    /// assert_eq!(cmd.serialize(), "PLAY /path/to/file.json\n");
-    ///
-    /// let cmd = Command::Stop;
-    /// assert_eq!(cmd.serialize(), "STOP\n");
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn serialize(&self) -> String {
         match self {
             Command::Play(path) => format!("PLAY {}\n", path),
@@ -96,31 +96,31 @@ impl Command {
     }
 }
 
-/// Response sent from server to client
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Response {
-    /// Command succeeded
+
     Ok,
-    /// Command failed with error message
+
     Error(String),
 }
 
 impl Response {
-    /// Serialize response to string for transmission
-    ///
-    /// # Returns
-    /// Response string with trailing newline
-    ///
-    /// # Examples
-    /// ```
-    /// use ym2151_log_player_rust::ipc::protocol::Response;
-    ///
-    /// let resp = Response::Ok;
-    /// assert_eq!(resp.serialize(), "OK\n");
-    ///
-    /// let resp = Response::Error("File not found".to_string());
-    /// assert_eq!(resp.serialize(), "ERROR File not found\n");
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn serialize(&self) -> String {
         match self {
             Response::Ok => "OK\n".to_string(),
@@ -128,25 +128,25 @@ impl Response {
         }
     }
 
-    /// Parse a response from a text line
-    ///
-    /// # Arguments
-    /// * `line` - Response string (without trailing newline)
-    ///
-    /// # Returns
-    /// * `Ok(Response)` - Successfully parsed response
-    /// * `Err(String)` - Parse error with description
-    ///
-    /// # Examples
-    /// ```
-    /// use ym2151_log_player_rust::ipc::protocol::Response;
-    ///
-    /// let resp = Response::parse("OK").unwrap();
-    /// assert_eq!(resp, Response::Ok);
-    ///
-    /// let resp = Response::parse("ERROR File not found").unwrap();
-    /// assert!(matches!(resp, Response::Error(_)));
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
 
@@ -170,7 +170,7 @@ impl Response {
 mod tests {
     use super::*;
 
-    // Command parsing tests
+
 
     #[test]
     fn test_parse_play_command() {
@@ -226,7 +226,7 @@ mod tests {
         assert_eq!(cmd, Command::Stop);
     }
 
-    // Command serialization tests
+
 
     #[test]
     fn test_serialize_play_command() {
@@ -246,7 +246,7 @@ mod tests {
         assert_eq!(cmd.serialize(), "SHUTDOWN\n");
     }
 
-    // Response serialization tests
+
 
     #[test]
     fn test_serialize_ok_response() {
@@ -266,7 +266,7 @@ mod tests {
         assert_eq!(resp.serialize(), "ERROR Path: /invalid/path\n");
     }
 
-    // Response parsing tests
+
 
     #[test]
     fn test_parse_ok_response() {
@@ -309,7 +309,7 @@ mod tests {
         assert_eq!(resp, Response::Ok);
     }
 
-    // Round-trip tests (parse -> serialize -> parse)
+
 
     #[test]
     fn test_command_roundtrip_play() {

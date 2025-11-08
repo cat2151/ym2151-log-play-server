@@ -1,9 +1,9 @@
 use anyhow::Result;
 
-/// YM2151 master clock frequency in Hz (NTSC colorburst frequency)
+
 pub const YM2151_CLOCK: u32 = 3_579_545;
 
-/// OPM internal sample rate calculated as clock / 64
+
 pub const OPM_SAMPLE_RATE: u32 = YM2151_CLOCK / 64;
 
 pub const OUTPUT_SAMPLE_RATE: u32 = 48000;

@@ -1,7 +1,7 @@
-//! Windows named pipe implementation
-//!
-//! This module provides Windows-specific named pipe functionality using
-//! the Windows API CreateNamedPipe and related functions.
+
+
+
+
 
 use std::ffi::OsStr;
 use std::io;
@@ -18,75 +18,75 @@ use windows::Win32::System::Pipes::{
     PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
 
-/// Default pipe path for Windows
+
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151_server";
 
-/// Named pipe for Windows systems
+
 #[derive(Debug)]
 pub struct NamedPipe {
     path: PathBuf,
     handle: HANDLE,
 }
 
-// SAFETY: HANDLE can be safely sent between threads when properly managed
-// Windows HANDLEs are kernel objects that can be used across threads
-// as long as access is synchronized
+
+
+
 unsafe impl Send for NamedPipe {}
 unsafe impl Sync for NamedPipe {}
 
 impl NamedPipe {
-    /// Create a new named pipe at the default path
-    ///
-    /// # Returns
-    /// * `Ok(NamedPipe)` - Successfully created pipe
-    /// * `Err(io::Error)` - Failed to create pipe
-    ///
-    /// # Examples
-    /// ```no_run
-    /// use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-    ///
-    /// let pipe = NamedPipe::create().unwrap();
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn create() -> io::Result<Self> {
         Self::create_at(DEFAULT_PIPE_PATH)
     }
 
-    /// Create a new named pipe at a specific path
-    ///
-    /// # Arguments
-    /// * `path` - Path where the named pipe should be created
-    ///
-    /// # Returns
-    /// * `Ok(NamedPipe)` - Successfully created pipe
-    /// * `Err(io::Error)` - Failed to create pipe
-    ///
-    /// # Examples
-    /// ```no_run
-    /// use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-    ///
-    /// let pipe = NamedPipe::create_at(r"\\.\pipe\custom").unwrap();
-    /// ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     pub fn create_at<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let path = path.as_ref().to_path_buf();
 
-        // Convert path to wide string for Windows API
+
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
 
-        // Create the named pipe
-        // SAFETY: Calling Windows API with valid parameters
+
+
         let handle = unsafe {
             CreateNamedPipeW(
                 PCWSTR(wide_path.as_ptr()),
                 PIPE_ACCESS_DUPLEX,
                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                 PIPE_UNLIMITED_INSTANCES,
-                4096, // Output buffer size
-                4096, // Input buffer size
-                0,    // Default timeout
-                None, // Default security attributes
+                4096,
+                4096,
+                0,
+                None,
             )
         };
 
@@ -97,16 +97,16 @@ impl NamedPipe {
         Ok(NamedPipe { path, handle })
     }
 
-    /// Open the named pipe for reading (server side, blocking)
-    ///
-    /// This will block until a writer connects to the pipe.
-    ///
-    /// # Returns
-    /// * `Ok(PipeReader)` - Successfully opened for reading
-    /// * `Err(io::Error)` - Failed to open
+
+
+
+
+
+
+
     pub fn open_read(&self) -> io::Result<PipeReader> {
-        // Wait for a client to connect
-        // SAFETY: handle is valid and owned by this NamedPipe
+
+
         unsafe {
             ConnectNamedPipe(self.handle, None).map_err(io::Error::other)?;
         }
@@ -116,36 +116,36 @@ impl NamedPipe {
         })
     }
 
-    /// Open the named pipe for writing (not typically used on server side)
-    ///
-    /// # Returns
-    /// * `Ok(PipeWriter)` - Successfully opened for writing
-    /// * `Err(io::Error)` - Failed to open
+
+
+
+
+
     pub fn open_write(&self) -> io::Result<PipeWriter> {
         Ok(PipeWriter {
             handle: self.handle,
         })
     }
 
-    /// Connect to an existing named pipe for writing (client side)
-    ///
-    /// # Arguments
-    /// * `path` - Path to the existing named pipe
-    ///
-    /// # Returns
-    /// * `Ok(PipeWriter)` - Successfully connected
-    /// * `Err(io::Error)` - Failed to connect (pipe may not exist)
+
+
+
+
+
+
+
+
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let path = path.as_ref();
 
-        // Convert path to wide string
+
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
 
-        // Open the named pipe for read/write
-        // SAFETY: Calling Windows API with valid parameters
+
+
         let handle = unsafe {
             CreateFileW(
                 PCWSTR(wide_path.as_ptr()),
@@ -171,16 +171,16 @@ impl NamedPipe {
         Ok(PipeWriter { handle })
     }
 
-    /// Connect to the default named pipe for writing (client side)
-    ///
-    /// # Returns
-    /// * `Ok(PipeWriter)` - Successfully connected
-    /// * `Err(io::Error)` - Failed to connect (server may not be running)
+
+
+
+
+
     pub fn connect_default() -> io::Result<PipeWriter> {
         Self::connect(DEFAULT_PIPE_PATH)
     }
 
-    /// Get the path of this named pipe
+
     pub fn path(&self) -> &Path {
         &self.path
     }
@@ -188,25 +188,25 @@ impl NamedPipe {
 
 impl Drop for NamedPipe {
     fn drop(&mut self) {
-        // Close the pipe handle
-        // SAFETY: handle is valid and owned by this NamedPipe
+
+
         unsafe {
             let _ = CloseHandle(self.handle);
         }
     }
 }
 
-/// Reader for a named pipe
+
 pub struct PipeReader {
     handle: HANDLE,
 }
 
 impl PipeReader {
-    /// Read a line from the pipe
-    ///
-    /// # Returns
-    /// * `Ok(String)` - Successfully read a line
-    /// * `Err(io::Error)` - Read error or EOF
+
+
+
+
+
     pub fn read_line(&mut self) -> io::Result<String> {
         let mut buffer = Vec::new();
         let mut byte = [0u8; 1];
@@ -214,7 +214,7 @@ impl PipeReader {
         loop {
             let mut bytes_read = 0u32;
 
-            // SAFETY: handle is valid, buffer is valid
+
             let result =
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
 
@@ -223,12 +223,12 @@ impl PipeReader {
             }
 
             if bytes_read == 0 {
-                break; // EOF
+                break;
             }
 
             buffer.push(byte[0]);
 
-            // Stop at newline
+
             if byte[0] == b'\n' {
                 break;
             }
@@ -238,25 +238,25 @@ impl PipeReader {
     }
 }
 
-/// Writer for a named pipe
+
 pub struct PipeWriter {
     handle: HANDLE,
 }
 
 impl PipeWriter {
-    /// Write a string to the pipe
-    ///
-    /// # Arguments
-    /// * `data` - String to write
-    ///
-    /// # Returns
-    /// * `Ok(())` - Successfully written
-    /// * `Err(io::Error)` - Write error
+
+
+
+
+
+
+
+
     pub fn write_str(&mut self, data: &str) -> io::Result<()> {
         let bytes = data.as_bytes();
         let mut bytes_written = 0u32;
 
-        // SAFETY: handle is valid, buffer is valid
+
         let result = unsafe { WriteFile(self.handle, Some(bytes), Some(&mut bytes_written), None) };
 
         if let Err(e) = result {
@@ -270,8 +270,8 @@ impl PipeWriter {
             ));
         }
 
-        // Flush to ensure data is sent
-        // SAFETY: handle is valid
+
+
         unsafe {
             FlushFileBuffers(self.handle).map_err(io::Error::other)?;
         }
@@ -279,11 +279,11 @@ impl PipeWriter {
         Ok(())
     }
 
-    /// Read a response line from the pipe
-    ///
-    /// # Returns
-    /// * `Ok(String)` - Successfully read a line
-    /// * `Err(io::Error)` - Read error or EOF
+
+
+
+
+
     pub fn read_response(&mut self) -> io::Result<String> {
         let mut buffer = Vec::new();
         let mut byte = [0u8; 1];
@@ -291,7 +291,7 @@ impl PipeWriter {
         loop {
             let mut bytes_read = 0u32;
 
-            // SAFETY: handle is valid, buffer is valid
+
             let result =
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
 
@@ -300,12 +300,12 @@ impl PipeWriter {
             }
 
             if bytes_read == 0 {
-                break; // EOF
+                break;
             }
 
             buffer.push(byte[0]);
 
-            // Stop at newline
+
             if byte[0] == b'\n' {
                 break;
             }
@@ -317,8 +317,8 @@ impl PipeWriter {
 
 impl Drop for PipeWriter {
     fn drop(&mut self) {
-        // Close the pipe handle
-        // SAFETY: handle is valid and owned by this PipeWriter
+
+
         unsafe {
             let _ = CloseHandle(self.handle);
         }
