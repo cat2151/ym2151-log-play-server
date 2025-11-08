@@ -16,7 +16,7 @@ use std::thread;
 use crate::events::EventLog;
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
-#[cfg(all(unix, feature = "realtime-audio"))]
+#[cfg(feature = "realtime-audio")]
 use std::sync::mpsc::{self, Receiver, Sender};
 
 #[cfg(feature = "realtime-audio")]
