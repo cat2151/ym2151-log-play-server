@@ -17,6 +17,9 @@ cpal = { version = "0.15.3", optional = true }  # Pinned for reproducible audio 
 hound = "3.5"
 anyhow = "1.0"
 
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.27", features = ["fs"] }  # Unix named pipe (FIFO) creation
+
 [features]
 default = ["realtime-audio"]
 realtime-audio = ["cpal"]
