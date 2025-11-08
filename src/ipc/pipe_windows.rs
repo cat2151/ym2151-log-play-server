@@ -230,7 +230,6 @@ mod tests {
     use std::time::Duration;
 
     #[test]
-    #[cfg(windows)]
     fn test_create_pipe() {
         let test_path = r"\\.\pipe\test_ym2151_create";
         let pipe = NamedPipe::create_at(test_path).unwrap();
@@ -238,7 +237,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(windows)]
     fn test_write_read_pipe() {
         let test_path = r"\\.\pipe\test_ym2151_rw";
 
@@ -263,7 +261,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(windows)]
     fn test_multiple_messages() {
         let test_path = r"\\.\pipe\test_ym2151_multi";
 
