@@ -186,16 +186,17 @@ mod pipe_integration_tests {
 }
 
 #[cfg(windows)]
-mod windows_stub_tests {
+mod windows_implementation_tests {
     use ym2151_log_player_rust::ipc::pipe::NamedPipe;
 
     #[test]
-    fn test_windows_not_implemented() {
-        // Windows implementation should return an error
+    fn test_windows_implemented() {
+        // Windows implementation should now work
         let result = NamedPipe::create();
-        assert!(result.is_err());
-
-        let err = result.unwrap_err();
-        assert_eq!(err.kind(), std::io::ErrorKind::Unsupported);
+        // Just check that we don't get an Unsupported error
+        // The actual functionality is tested elsewhere
+        if let Err(e) = result {
+            assert_ne!(e.kind(), std::io::ErrorKind::Unsupported);
+        }
     }
 }

@@ -3,12 +3,10 @@
 //! These tests verify the server's ability to create named pipes,
 //! listen for commands, and process them correctly.
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use ym2151_log_player_rust::ipc::protocol::{Command, Response};
 use ym2151_log_player_rust::server::Server;
+
+#[cfg(unix)]
+use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
 
 #[cfg(unix)]
 use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
@@ -32,22 +30,22 @@ fn test_server_command_processing() {
 
     // Test PLAY command
     {
-        let state = Arc::new(Mutex::new(()));
-        let shutdown = Arc::new(AtomicBool::new(false));
+        let _state = Arc::new(Mutex::new(()));
+        let _shutdown = Arc::new(AtomicBool::new(false));
         // Command processing is tested in unit tests
     }
 
     // Test STOP command
     {
-        let state = Arc::new(Mutex::new(()));
-        let shutdown = Arc::new(AtomicBool::new(false));
+        let _state = Arc::new(Mutex::new(()));
+        let _shutdown = Arc::new(AtomicBool::new(false));
         // Command processing is tested in unit tests
     }
 
     // Test SHUTDOWN command
     {
-        let state = Arc::new(Mutex::new(()));
-        let shutdown = Arc::new(AtomicBool::new(false));
+        let _state = Arc::new(Mutex::new(()));
+        let _shutdown = Arc::new(AtomicBool::new(false));
         // Command processing is tested in unit tests
     }
 }
@@ -131,5 +129,5 @@ fn test_phase4_requirements_met() {
     let _server = Server::new();
 
     // Phase 4 requirements are met if this test compiles and runs
-    assert!(true, "Phase 4 basic server framework is implemented");
+    // Test passes if we reach this point without panicking
 }

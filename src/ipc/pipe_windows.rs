@@ -22,6 +22,7 @@ use windows::Win32::System::Pipes::{
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151_server";
 
 /// Named pipe for Windows systems
+#[derive(Debug)]
 pub struct NamedPipe {
     path: PathBuf,
     handle: HANDLE,
@@ -102,7 +103,7 @@ impl NamedPipe {
         // SAFETY: handle is valid and owned by this NamedPipe
         unsafe {
             ConnectNamedPipe(self.handle, None)
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                .map_err(io::Error::other)?;
         }
 
         Ok(PipeReader {
@@ -154,7 +155,7 @@ impl NamedPipe {
         };
 
         if let Err(e) = handle {
-            return Err(io::Error::new(io::ErrorKind::Other, e));
+            return Err(io::Error::other(e));
         }
 
         let handle = handle.unwrap();
@@ -213,7 +214,7 @@ impl PipeReader {
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
 
             if let Err(e) = result {
-                return Err(io::Error::new(io::ErrorKind::Other, e));
+                return Err(io::Error::other(e));
             }
 
             if bytes_read == 0 {
@@ -254,7 +255,7 @@ impl PipeWriter {
         let result = unsafe { WriteFile(self.handle, Some(bytes), Some(&mut bytes_written), None) };
 
         if let Err(e) = result {
-            return Err(io::Error::new(io::ErrorKind::Other, e));
+            return Err(io::Error::other(e));
         }
 
         if bytes_written as usize != bytes.len() {
@@ -267,7 +268,7 @@ impl PipeWriter {
         // Flush to ensure data is sent
         // SAFETY: handle is valid
         unsafe {
-            FlushFileBuffers(self.handle).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            FlushFileBuffers(self.handle).map_err(io::Error::other)?;
         }
 
         Ok(())
@@ -290,7 +291,7 @@ impl PipeWriter {
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
 
             if let Err(e) = result {
-                return Err(io::Error::new(io::ErrorKind::Other, e));
+                return Err(io::Error::other(e));
             }
 
             if bytes_read == 0 {

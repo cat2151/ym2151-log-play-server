@@ -17,7 +17,7 @@ use crate::events::EventLog;
 #[cfg(feature = "realtime-audio")]
 use crate::player::Player;
 #[cfg(feature = "realtime-audio")]
-use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::mpsc::Receiver;
 
 #[cfg(feature = "realtime-audio")]
 use crate::audio::AudioPlayer;
@@ -27,6 +27,7 @@ use crate::ipc::pipe_unix::NamedPipe;
 
 /// Internal command for playback control
 #[cfg(feature = "realtime-audio")]
+#[allow(dead_code)]
 enum PlaybackCommand {
     Play(String), // JSON path
     Stop,
@@ -35,6 +36,7 @@ enum PlaybackCommand {
 
 /// Server state indicating current playback status
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 enum ServerState {
     /// Server is playing audio
     Playing,
@@ -45,8 +47,10 @@ enum ServerState {
 /// Server structure that manages the YM2151 playback server
 pub struct Server {
     /// Current server state (playing or stopped)
+    #[allow(dead_code)]
     state: Arc<Mutex<ServerState>>,
     /// Flag to signal server shutdown
+    #[allow(dead_code)]
     shutdown_flag: Arc<AtomicBool>,
 }
 
@@ -164,6 +168,7 @@ impl Server {
     ///
     /// This thread owns the AudioPlayer and processes playback commands from the IPC listener.
     #[cfg(feature = "realtime-audio")]
+    #[allow(dead_code)]
     fn playback_controller_thread(
         initial_json: String,
         cmd_rx: Receiver<PlaybackCommand>,
@@ -249,6 +254,7 @@ impl Server {
 
     /// Load a JSON file and create an AudioPlayer
     #[cfg(feature = "realtime-audio")]
+    #[allow(dead_code)]
     fn load_and_start_playback(json_path: &str) -> Result<AudioPlayer> {
         let log = EventLog::from_file(json_path)
             .with_context(|| format!("Failed to load JSON file: {}", json_path))?;
