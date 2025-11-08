@@ -1,17 +1,17 @@
-# GitHub Copilot 指示書 - ym2151-log-player-rust
+# GitHub Copilot 指示書 - ym2151-log-play-server
 
 ## プロジェクト概要
 
-YM2151 (OPM) チップレジスタイベントログプレイヤーのRust実装です。JSONイベントログを読み込み、Nuked-OPMエミュレータを使用してリアルタイム音声再生とWAVファイル出力を行います。
+YM2151 (OPM) チップレジスタイベントログのサーバー・クライアントシステム。JSONイベントログを読み込み、Nuked-OPMエミュレータを使用してリアルタイム音声再生とWAVファイル出力を行います。
 
 オリジナルC実装: https://github.com/cat2151/ym2151-log-player
 
 ### 主要機能
+- スタンドアロンモード（従来の単体実行）
+- サーバー・クライアントモード（名前付きパイプ経由IPC）
 - 16進文字列対応JSONイベントログ解析 ("0x08"形式)
 - cpalによるリアルタイム音声再生
 - houndによるWAVファイル出力
-- rubato使用のサンプルレート変換 (55930 Hz → 48000 Hz)
-- FFI経由のNuked-OPMエミュレーション
 
 ## ビルド手順
 
@@ -26,17 +26,30 @@ YM2151 (OPM) チップレジスタイベントログプレイヤーのRust実装
 # 標準ビルド
 cargo build
 
-# リリースビルド
+# リリースビルド（本番推奨）
 cargo build --release
 
-# プログラム実行
-cargo run -- sample_events.json
+# スタンドアロンモード実行
+cargo run --release -- sample_events.json
+
+# サーバーモード起動
+cargo run --release -- --server sample_events.json
+
+# クライアントからファイル再生
+cargo run --release -- --client test_input.json
+
+# サーバーシャットダウン
+cargo run --release -- --server --shutdown
 
 # 全テスト実行
 cargo test
 
-# 特定テスト実行
-cargo test integration_test
+# 特定テスト実行（例: サーバー関連テスト）
+cargo test server_basic_test
+cargo test phase7_integration_test
+
+# 音声機能無効ビルド（CI用）
+cargo build --no-default-features
 ```
 
 ## コーディング規約とプロジェクト構造
@@ -57,33 +70,20 @@ cargo test integration_test
 - 安全ラッパーは `src/opm.rs` に配置
 
 ### 主要ファイル
-- `src/main.rs` - エントリーポイント
+- `src/main.rs` - エントリーポイント（スタンドアロン/サーバー/クライアント分岐）
+- `src/server.rs` - サーバーモード実装（名前付きパイプ待機、マルチスレッド）
+- `src/client.rs` - クライアント機能（サーバーへのコマンド送信）
 - `src/events.rs` - 16進対応JSONイベント解析
 - `src/player.rs` - イベント処理エンジン
 - `src/wav_writer.rs` - WAVファイル出力
 - `src/audio.rs` - リアルタイム音声再生
+- `src/ipc/` - プロセス間通信モジュール
+  - `protocol.rs` - コマンド/レスポンス定義
+  - `pipe_unix.rs` - Unix名前付きパイプ実装
+  - `pipe_windows.rs` - Windows名前付きパイプ実装（未実装）
 - `omp.c`, `opm.h` - Nuked-OPM C実装
 
 ## 実装の詳細
-
-### JSONイベント形式
-イベントはアドレスとデータに16進文字列を使用:
-```json
-{
-  "event_count": 2,
-  "events": [
-    {"time": 0, "addr": "0x08", "data": "0x00"},
-    {"time": 2, "addr": "0x20", "data": "0xC7"}
-  ]
-}
-```
-
-### 16進文字列解析
-`events.rs`でカスタムデシリアライザーを使用:
-```rust
-#[serde(deserialize_with = "parse_hex_string")]
-pub addr: u8,
-```
 
 ### イベント処理
 - **入力**: Pass1形式イベント (単純レジスタ書き込み)
@@ -95,6 +95,20 @@ pub addr: u8,
 - OPM内部レート: 55930 Hz
 - 出力レート: 48000 Hz (リサンプリング必要)
 - フォーマット: 16ビット符号付きステレオ
+
+### サーバー・クライアント通信
+- **通信方式**: 名前付きパイプ（Unix: `/tmp/ym2151_server.pipe`）
+- **プロトコル**: テキストベース（改行区切り）
+- **コマンド**: `PLAY <path>`, `STOP`, `SHUTDOWN`
+- **レスポンス**: `OK`, `ERROR <message>`
+- **スレッド構成**: IPCリスナー + 再生コントローラーの2スレッド分離
+- **状態管理**: `Arc<Mutex<ServerState>>` + `AtomicBool`（shutdown）
+
+### 重要なアーキテクチャ決定
+- **Pass1→Pass2変換**: 単一レジスタ書き込み → アドレス+データペア
+- **デュアルスレッド**: IPCブロッキングと音声処理の分離
+- **チャンネル通信**: `mpsc::channel`でスレッド間PlaybackCommand送信
+- **プラットフォーム分岐**: cfg(unix) で Unix 限定機能を条件分岐
 
 ## よくあるタスク
 
@@ -150,7 +164,6 @@ cargo clippy --all-targets -- -D warnings
 
 - オリジナル実装: https://github.com/cat2151/ym2151-log-player
 - Nuked-OPM: https://github.com/nukeykt/Nuked-OPM
-- 実装計画: 詳細なフェーズ分けは `IMPLEMENTATION_PLAN.md` を参照
 - YM2151仕様: Yamaha YM2151データシート
 
 # userからの指示

@@ -2,10 +2,6 @@
 
 このガイドは、GitHub Actions Linux RunnerやヘッドレスLinux環境で、音声デバイスなしでym2151-log-player-rustを実行するための設定方法を説明します。
 
-## 概要
-
-従来は `--no-audio` オプションを使用して音声デバイスなしで動作させていましたが、ALSA設定ファイルを使用することで、コードをシンプル化しつつ同じ機能を実現できます。
-
 ## セットアップ方法
 
 ### 1. ALSA開発ライブラリのインストール（ビルド時に必要）
@@ -32,49 +28,6 @@ EOF
 
 ```bash
 ./setup_ci_environment.sh
-```
-
-## GitHub Actions での使用例
-
-```yaml
-name: CI
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install ALSA development libraries
-      run: sudo apt-get update && sudo apt-get install -y libasound2-dev
-    
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    
-    - name: Configure ALSA for headless environment
-      run: |
-        cat <<'EOF' > ~/.asoundrc
-        pcm.!default {
-          type file
-          slave.pcm "null"
-          file "/tmp/alsa_capture.wav"
-          format "wav"
-        }
-        EOF
-    
-    - name: Build
-      run: cargo build --release
-    
-    - name: Run tests
-      run: cargo test
-    
-    - name: Run program
-      run: cargo run --release sample_events.json
 ```
 
 ## TDD（テスト駆動開発）での使用
@@ -133,8 +86,3 @@ ALSA開発ライブラリがインストールされていません：
 ```bash
 sudo apt-get install -y libasound2-dev
 ```
-
-## 参考
-
-- 元のissue: #44 - ALSA設定ファイルによる音声キャプチャの検証
-- 本issue: #72 - `--no-audio` オプションの廃止
