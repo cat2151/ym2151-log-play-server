@@ -1,7 +1,7 @@
 mod realtime_audio_tests {
-    use ym2151_log_player_rust::audio::AudioPlayer;
-    use ym2151_log_player_rust::events::{EventLog, RegisterEvent};
-    use ym2151_log_player_rust::player::Player;
+    use ym2151_log_play_server::audio::AudioPlayer;
+    use ym2151_log_play_server::events::{EventLog, RegisterEvent};
+    use ym2151_log_play_server::player::Player;
 
     #[test]
     fn test_audio_player_creation() {
@@ -142,9 +142,9 @@ mod realtime_audio_tests {
 mod server_playback_tests {
     use std::thread;
     use std::time::Duration;
-    use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-    use ym2151_log_player_rust::ipc::protocol::Command;
-    use ym2151_log_player_rust::server::Server;
+    use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
+    use ym2151_log_play_server::ipc::protocol::Command;
+    use ym2151_log_play_server::server::Server;
 
     /// Test server can start with initial playback and accept PLAY command
     #[test]

@@ -1,4 +1,4 @@
-use ym2151_log_player_rust::events::EventLog;
+use ym2151_log_play_server::events::EventLog;
 
 #[test]
 fn test_load_simple_fixture() {

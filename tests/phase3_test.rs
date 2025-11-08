@@ -1,5 +1,5 @@
-use ym2151_log_player_rust::events::{EventLog, RegisterEvent};
-use ym2151_log_player_rust::player::Player;
+use ym2151_log_play_server::events::{EventLog, RegisterEvent};
+use ym2151_log_play_server::player::Player;
 
 #[test]
 fn test_phase3_pass1_to_pass2_conversion() {

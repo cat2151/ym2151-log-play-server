@@ -1,6 +1,6 @@
 # CI/TDD Guide for Linux Runners
 
-このガイドは、GitHub Actions Linux RunnerやヘッドレスLinux環境で、音声デバイスなしでym2151-log-player-rustを実行するための設定方法を説明します。
+このガイドは、GitHub Actions Linux RunnerやヘッドレスLinux環境で、音声デバイスなしでym2151-log-play-serverを実行するための設定方法を説明します。
 
 ## セットアップ方法
 

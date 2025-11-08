@@ -4,9 +4,9 @@
 //! listen for commands, and process them correctly.
 
 use std::{thread, time::Duration};
-use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-use ym2151_log_player_rust::ipc::protocol::Command;
-use ym2151_log_player_rust::server::Server;
+use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
+use ym2151_log_play_server::ipc::protocol::Command;
+use ym2151_log_play_server::server::Server;
 
 /// Test that server can be created with default state
 #[test]

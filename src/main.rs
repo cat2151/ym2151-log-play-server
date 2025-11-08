@@ -1,11 +1,11 @@
 use std::env;
-use ym2151_log_player_rust::events::EventLog;
-use ym2151_log_player_rust::player::Player;
-use ym2151_log_player_rust::resampler::OPM_SAMPLE_RATE;
-use ym2151_log_player_rust::wav_writer;
+use ym2151_log_play_server::events::EventLog;
+use ym2151_log_play_server::player::Player;
+use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
+use ym2151_log_play_server::wav_writer;
 
-use ym2151_log_player_rust::client;
-use ym2151_log_player_rust::server::Server;
+use ym2151_log_play_server::client;
+use ym2151_log_play_server::server::Server;
 
 fn print_usage(program_name: &str) {
     eprintln!("YM2151 Log Player - Rust implementation");
@@ -175,7 +175,7 @@ fn main() {
 
     let player = Player::new(log);
 
-    use ym2151_log_player_rust::audio::AudioPlayer;
+    use ym2151_log_play_server::audio::AudioPlayer;
     match AudioPlayer::new(player) {
         Ok(mut audio_player) => {
             println!("✅ オーディオを初期化しました\n");

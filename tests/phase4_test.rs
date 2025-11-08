@@ -1,8 +1,8 @@
 use std::path::Path;
-use ym2151_log_player_rust::events::EventLog;
-use ym2151_log_player_rust::player::Player;
-use ym2151_log_player_rust::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
-use ym2151_log_player_rust::wav_writer::{generate_wav, write_wav, DEFAULT_OUTPUT_FILENAME};
+use ym2151_log_play_server::events::EventLog;
+use ym2151_log_play_server::player::Player;
+use ym2151_log_play_server::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
+use ym2151_log_play_server::wav_writer::{generate_wav, write_wav, DEFAULT_OUTPUT_FILENAME};
 
 #[test]
 fn test_resampler_initialization() {

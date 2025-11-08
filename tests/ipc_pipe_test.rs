@@ -3,7 +3,7 @@
 //! These tests verify that the named pipe implementation works correctly
 //! for server-client communication.
 
-use ym2151_log_player_rust::ipc::protocol::Command;
+use ym2151_log_play_server::ipc::protocol::Command;
 
 #[test]
 fn test_command_parsing() {

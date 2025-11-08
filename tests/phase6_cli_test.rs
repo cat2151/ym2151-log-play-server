@@ -22,7 +22,7 @@ fn get_binary_path() -> String {
             .to_path_buf();
     }
 
-    path.push("ym2151-log-player-rust");
+    path.push("ym2151-log-play-server");
     path.to_str().expect("Invalid path").to_string()
 }
 

@@ -1,9 +1,9 @@
 //! Test to verify that playback generates the correct number of samples
 //! This test validates the fix for the early termination issue
 
-use ym2151_log_player_rust::events::{EventLog, RegisterEvent};
-use ym2151_log_player_rust::player::Player;
-use ym2151_log_player_rust::resampler::OPM_SAMPLE_RATE;
+use ym2151_log_play_server::events::{EventLog, RegisterEvent};
+use ym2151_log_play_server::player::Player;
+use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 
 #[test]
 fn test_player_generates_all_samples() {

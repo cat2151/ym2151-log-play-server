@@ -1,6 +1,6 @@
-use ym2151_log_player_rust::events::{EventLog, RegisterEvent};
-use ym2151_log_player_rust::player::Player;
-use ym2151_log_player_rust::resampler::OPM_SAMPLE_RATE;
+use ym2151_log_play_server::events::{EventLog, RegisterEvent};
+use ym2151_log_play_server::player::Player;
+use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 
 #[test]
 fn test_tail_generation_continues_after_events() {

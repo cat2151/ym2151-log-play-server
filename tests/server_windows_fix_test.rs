@@ -3,7 +3,7 @@
 //! This test ensures that the server can be created and compiled properly
 //! across all platforms without thread safety issues or method conflicts.
 
-use ym2151_log_player_rust::server::Server;
+use ym2151_log_play_server::server::Server;
 
 #[test]
 fn test_server_creation() {

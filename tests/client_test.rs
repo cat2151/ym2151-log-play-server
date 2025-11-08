@@ -5,8 +5,8 @@
 mod client_integration_tests {
     use std::thread;
     use std::time::Duration;
-    use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-    use ym2151_log_player_rust::ipc::protocol::Command;
+    use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
+    use ym2151_log_play_server::ipc::protocol::Command;
 
     /// Helper to clean up pipe before test
     fn cleanup_pipe() {
@@ -41,7 +41,7 @@ mod client_integration_tests {
         thread::sleep(Duration::from_millis(200));
 
         // Send PLAY command from client
-        let result = ym2151_log_player_rust::client::play_file("test_file.json");
+        let result = ym2151_log_play_server::client::play_file("test_file.json");
         assert!(result.is_ok());
 
         // Wait for server to finish
@@ -67,7 +67,7 @@ mod client_integration_tests {
 
         thread::sleep(Duration::from_millis(200));
 
-        let result = ym2151_log_player_rust::client::stop_playback();
+        let result = ym2151_log_play_server::client::stop_playback();
         assert!(result.is_ok());
 
         server_handle.join().unwrap();
@@ -92,7 +92,7 @@ mod client_integration_tests {
 
         thread::sleep(Duration::from_millis(200));
 
-        let result = ym2151_log_player_rust::client::shutdown_server();
+        let result = ym2151_log_play_server::client::shutdown_server();
         assert!(result.is_ok());
 
         server_handle.join().unwrap();
@@ -104,7 +104,7 @@ mod client_integration_tests {
 
         // Try to send a command when no server is running
         // This should fail with a connection error
-        let result = ym2151_log_player_rust::client::stop_playback();
+        let result = ym2151_log_play_server::client::stop_playback();
         assert!(result.is_err());
 
         let err_msg = result.unwrap_err().to_string();

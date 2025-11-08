@@ -4,13 +4,7 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
 
 ## 対象プラットフォーム
 
-- Windowsを対象とします
-- Linuxは、agentがGitHub Linux Runner上でTDDする用に許可します
-- Windowsで以下のモードすべてが動作することを目指します：
-  - スタンドアロンモード
-  - サーバーモード
-  - クライアントモード
-
+- Windows専用
 - Linux専用codeの禁止
     - 当projectにおいてはハルシネーションの増大が認められたため、
         - Linux専用codeを禁止します
@@ -39,7 +33,7 @@ JSONファイルを直接再生：
 cargo run --release output_ym2151.json
 
 # または既にビルドされたバイナリを使用
-./target/release/ym2151-log-player-rust output_ym2151.json
+./target/release/ym2151-log-play-server output_ym2151.json
 ```
 
 ### サーバー・クライアントモード
@@ -53,7 +47,7 @@ cargo run --release output_ym2151.json
 cargo run --release -- --server output_ym2151.json
 
 # または
-./target/release/ym2151-log-player-rust --server output_ym2151.json
+./target/release/ym2151-log-play-server --server output_ym2151.json
 ```
 
 サーバーは `/tmp/ym2151_server.pipe` に名前付きパイプを作成し、クライアントからの接続を待機します。
@@ -77,11 +71,11 @@ cargo run --release -- --server --shutdown
 
 ```
 使用方法:
-  ym2151-log-player-rust <json_log_file>           # スタンドアロンモード
-  ym2151-log-player-rust --server <json_log_file>  # サーバーモード
-  ym2151-log-player-rust --server --shutdown       # サーバーシャットダウン
-  ym2151-log-player-rust --client <json_log_file>  # 新規JSONを演奏
-  ym2151-log-player-rust --client --stop           # 演奏停止
+  ym2151-log-play-server <json_log_file>           # スタンドアロンモード
+  ym2151-log-play-server --server <json_log_file>  # サーバーモード
+  ym2151-log-play-server --server --shutdown       # サーバーシャットダウン
+  ym2151-log-play-server --client <json_log_file>  # 新規JSONを演奏
+  ym2151-log-play-server --client --stop           # 演奏停止
 
 オプション:
   --server <file>    サーバーとして常駐し、指定されたJSONを演奏
@@ -91,19 +85,19 @@ cargo run --release -- --server --shutdown
 
 例:
   # スタンドアロンで再生
-  ym2151-log-player-rust output_ym2151.json
+  ym2151-log-play-server output_ym2151.json
 
   # サーバー起動
-  ym2151-log-player-rust --server output_ym2151.json
+  ym2151-log-play-server --server output_ym2151.json
 
   # 別のターミナルから: 演奏を切り替え
-  ym2151-log-player-rust --client test_input.json
+  ym2151-log-play-server --client test_input.json
 
   # 別のターミナルから: 演奏停止
-  ym2151-log-player-rust --client --stop
+  ym2151-log-play-server --client --stop
 
   # 別のターミナルから: サーバー終了
-  ym2151-log-player-rust --server --shutdown
+  ym2151-log-play-server --server --shutdown
 ```
 
 ### 使用例シナリオ
@@ -237,11 +231,11 @@ sudo apt-get install libasound2-dev
 
 ```
 使用方法:
-  ym2151-log-player-rust <json_log_file>
+  ym2151-log-play-server <json_log_file>
 
 例:
-  ym2151-log-player-rust output_ym2151.json
-  ym2151-log-player-rust events.json
+  ym2151-log-play-server output_ym2151.json
+  ym2151-log-play-server events.json
 ```
 
 ### ビルド要件
@@ -258,7 +252,7 @@ sudo apt-get install libasound2-dev
 
 ```bash
 cargo build --release
-./target/release/ym2151-log-player-rust output_ym2151.json
+./target/release/ym2151-log-play-server output_ym2151.json
 ```
 
 ### テストの実行
