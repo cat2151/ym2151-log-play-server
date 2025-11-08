@@ -137,7 +137,7 @@ $ cargo run --release -- --client music1.json
 
 - 現在の実装はシンプルさを優先
 - エラーハンドリングは最小限
-- Unix/Linux環境のみサポート（Windowsは未実装）
+- Unix/Linux および Windows 環境をサポート
 
 ### CI/ヘッドレス環境での実行
 
