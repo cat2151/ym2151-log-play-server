@@ -28,6 +28,12 @@ pub struct NamedPipe {
     handle: HANDLE,
 }
 
+// SAFETY: HANDLE can be safely sent between threads when properly managed
+// Windows HANDLEs are kernel objects that can be used across threads
+// as long as access is synchronized
+unsafe impl Send for NamedPipe {}
+unsafe impl Sync for NamedPipe {}
+
 impl NamedPipe {
     /// Create a new named pipe at the default path
     ///

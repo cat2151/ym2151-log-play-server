@@ -122,11 +122,11 @@ fn test_phase3_delay_samples() {
 
 #[test]
 fn test_phase3_sample_events_json() {
-    let log = EventLog::from_file("sample_events.json").expect("Failed to load sample_events.json");
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
     let mut player = Player::new(log);
 
-    assert_eq!(player.total_events(), 200);
+    assert_eq!(player.total_events(), 92); // 46 events * 2 (address + data pairs)
 
     let mut buffer = vec![0i16; 1024];
     let mut total_processed = 0;

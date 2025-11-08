@@ -139,7 +139,7 @@ fn test_generate_wav_from_sample_events() {
 
     let _ = std::fs::remove_file(temp_path_str);
 
-    let log = EventLog::from_file("sample_events.json").expect("Failed to load sample_events.json");
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
     let player = Player::new(log);
     let result = generate_wav(player, temp_path_str);

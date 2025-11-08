@@ -74,11 +74,10 @@ fn send_command(command: Command) -> Result<()> {
         .write_str(&message)
         .context("Failed to send command to server")?;
 
-    // Note: For this temporary implementation, we use a simple fire-and-forget approach.
-    // The server will process the command, but we don't wait for a response.
-    // A production implementation would use bidirectional communication with separate
-    // request and response pipes, or a more sophisticated protocol.
-
+    // For Windows implementation, we use fire-and-forget approach for now
+    // The server will process the command, but we don't wait for a response
+    // This simplifies the Windows named pipe communication
+    eprintln!("✅ Command sent successfully");
     Ok(())
 }
 

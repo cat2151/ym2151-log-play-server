@@ -5,10 +5,13 @@
 //! commands from clients to play files, stop playback, or shutdown.
 
 use crate::ipc::protocol::{Command, Response};
-use anyhow::{Context, Result};
-use std::sync::atomic::{AtomicBool, Ordering};
+use anyhow::Result;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
+
 use std::thread;
+use anyhow::Context;
+use std::sync::atomic::Ordering;
 
 #[cfg(feature = "realtime-audio")]
 use crate::events::EventLog;
@@ -86,7 +89,7 @@ impl Server {
     /// let server = Server::new();
     /// server.run("sample_events.json").expect("Server failed");
     /// ```
-    #[cfg(feature = "realtime-audio")]
+    #[cfg(all(feature = "realtime-audio", unix))]
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
@@ -131,7 +134,7 @@ impl Server {
         Ok(())
     }
 
-    #[cfg(not(feature = "realtime-audio"))]
+    #[cfg(all(not(feature = "realtime-audio"), unix))]
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
@@ -274,7 +277,7 @@ impl Server {
     ///
     /// This runs in a separate thread and continuously accepts connections
     /// on the named pipe, processing each command until shutdown is signaled.
-    #[cfg(feature = "realtime-audio")]
+    #[cfg(all(feature = "realtime-audio", unix))]
     fn ipc_listener_loop(
         pipe: NamedPipe,
         _state: Arc<Mutex<ServerState>>,
@@ -349,7 +352,7 @@ impl Server {
     }
 
     /// IPC listener loop (without realtime-audio feature)
-    #[cfg(not(feature = "realtime-audio"))]
+    #[cfg(all(not(feature = "realtime-audio"), unix))]
     fn ipc_listener_loop_no_audio(
         pipe: NamedPipe,
         state: Arc<Mutex<ServerState>>,
@@ -443,7 +446,15 @@ impl Server {
     /// This is primarily useful for testing
     #[cfg(test)]
     fn is_shutdown_requested(&self) -> bool {
+        use std::sync::atomic::Ordering;
         self.shutdown_flag.load(Ordering::Relaxed)
+    }
+
+    /// Windows implementation - currently returns error
+    #[cfg(windows)]
+    pub fn run(&self, json_path: &str) -> Result<()> {
+        // For now, implement the same logic as Unix but with Windows named pipes
+        self.run_windows(json_path)
     }
 }
 
@@ -455,10 +466,258 @@ impl Default for Server {
 
 #[cfg(windows)]
 impl Server {
-    pub fn run(&self, _json_path: &str) -> Result<()> {
-        Err(anyhow::anyhow!(
-            "Windows server is not yet implemented. Use Unix/Linux systems."
-        ))
+    /// Windows-specific server implementation
+    #[cfg(feature = "realtime-audio")]
+    fn run_windows(&self, json_path: &str) -> Result<()> {
+        eprintln!("🚀 Starting YM2151 server (Windows)...");
+        eprintln!("   Initial file: {}", json_path);
+
+        // Create the named pipe
+        let pipe = NamedPipe::create().context("Failed to create named pipe")?;
+        eprintln!("✅ Named pipe created at: {:?}", pipe.path());
+
+        // Create a channel for playback commands
+        let (cmd_tx, cmd_rx): (Sender<PlaybackCommand>, Receiver<PlaybackCommand>) =
+            mpsc::channel();
+
+        // Start the playback controller thread
+        let state_clone = Arc::clone(&self.state);
+        let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let initial_json = json_path.to_string();
+        let controller_handle = thread::spawn(move || {
+            Self::playback_controller_thread(initial_json, cmd_rx, state_clone, shutdown_flag_clone)
+        });
+
+        // Start the IPC listener thread
+        let state_clone = Arc::clone(&self.state);
+        let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let listener_handle = thread::spawn(move || {
+            Self::ipc_listener_loop_windows(pipe, state_clone, shutdown_flag_clone, cmd_tx)
+        });
+
+        eprintln!("✅ Server is ready and listening for commands");
+
+        // Wait for threads to finish
+        listener_handle
+            .join()
+            .map_err(|_| anyhow::anyhow!("Listener thread panicked"))?
+            .context("Listener thread error")?;
+
+        controller_handle
+            .join()
+            .map_err(|_| anyhow::anyhow!("Controller thread panicked"))?
+            .context("Controller thread error")?;
+
+        eprintln!("👋 Server shutdown complete");
+        Ok(())
+    }
+
+    #[cfg(not(feature = "realtime-audio"))]
+    fn run_windows(&self, json_path: &str) -> Result<()> {
+        eprintln!("🚀 Starting YM2151 server (Windows)...");
+        eprintln!("   Initial file: {}", json_path);
+
+        // Create the named pipe
+        let pipe = NamedPipe::create().context("Failed to create named pipe")?;
+        eprintln!("✅ Named pipe created at: {:?}", pipe.path());
+
+        {
+            let mut state = self.state.lock().unwrap();
+            *state = ServerState::Playing;
+        }
+        eprintln!("🎵 Initial playback started (audio feature disabled)");
+
+        // Start the IPC listener thread
+        let state_clone = Arc::clone(&self.state);
+        let shutdown_flag_clone = Arc::clone(&self.shutdown_flag);
+        let listener_handle = thread::spawn(move || {
+            Self::ipc_listener_loop_windows_no_audio(pipe, state_clone, shutdown_flag_clone)
+        });
+
+        eprintln!("✅ Server is ready and listening for commands");
+
+        // Wait for the listener thread to finish (on shutdown)
+        listener_handle
+            .join()
+            .map_err(|_| anyhow::anyhow!("Listener thread panicked"))?
+            .context("Listener thread error")?;
+
+        eprintln!("👋 Server shutdown complete");
+        Ok(())
+    }
+
+    /// Windows IPC listener loop that processes incoming commands (with audio)
+    #[cfg(feature = "realtime-audio")]
+    fn ipc_listener_loop_windows(
+        pipe: NamedPipe,
+        _state: Arc<Mutex<ServerState>>,
+        shutdown_flag: Arc<AtomicBool>,
+        cmd_tx: Sender<PlaybackCommand>,
+    ) -> Result<()> {
+        loop {
+            // Check if shutdown was requested
+            if shutdown_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
+            // Open the pipe for reading (this blocks until a client connects)
+            let mut reader = match pipe.open_read() {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    continue;
+                }
+            };
+
+            // For Windows, the same connection can be used for both read and write
+            // We'll use the PipeReader which has both read_line and write capabilities
+            loop {
+                // Read the command from the client
+                let line = match reader.read_line() {
+                    Ok(l) => l,
+                    Err(e) => {
+                        eprintln!("⚠️  Warning: Failed to read from pipe: {}", e);
+                        break; // Break inner loop to accept new connections
+                    }
+                };
+
+                // Parse the command
+                let command = match Command::parse(&line) {
+                    Ok(cmd) => cmd,
+                    Err(e) => {
+                        eprintln!("⚠️  Warning: Failed to parse command: {}", e);
+                        // Send error response using same reader (which can also write)
+                        let error_response = Response::Error(format!("Parse error: {}", e));
+                        // Note: For now, we'll just log the error and continue
+                        continue;
+                    }
+                };
+
+                eprintln!("📩 Received command: {:?}", command);
+
+                // Send command to controller thread
+                let response = match command {
+                    Command::Play(ref json_path) => {
+                        match cmd_tx.send(PlaybackCommand::Play(json_path.clone())) {
+                            Ok(_) => Response::Ok,
+                            Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                        }
+                    }
+                    Command::Stop => match cmd_tx.send(PlaybackCommand::Stop) {
+                        Ok(_) => Response::Ok,
+                        Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                    },
+                    Command::Shutdown => match cmd_tx.send(PlaybackCommand::Shutdown) {
+                        Ok(_) => {
+                            shutdown_flag.store(true, Ordering::Relaxed);
+                            Response::Ok
+                        }
+                        Err(e) => Response::Error(format!("Failed to send command: {}", e)),
+                    },
+                };
+
+                eprintln!("📤 Response: {:?}", response);
+
+                // Note: For now, Windows implementation uses fire-and-forget approach
+                // Response sending will be improved in future iterations
+
+                // If shutdown was requested, break both loops
+                if shutdown_flag.load(Ordering::Relaxed) {
+                    return Ok(());
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Windows IPC listener loop (without realtime-audio feature)
+    #[cfg(not(feature = "realtime-audio"))]
+    fn ipc_listener_loop_windows_no_audio(
+        pipe: NamedPipe,
+        state: Arc<Mutex<ServerState>>,
+        shutdown_flag: Arc<AtomicBool>,
+    ) -> Result<()> {
+        loop {
+            // Check if shutdown was requested
+            if shutdown_flag.load(Ordering::Relaxed) {
+                break;
+            }
+
+            // Open the pipe for reading (this blocks until a client connects)
+            let mut reader = match pipe.open_read() {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    continue;
+                }
+            };
+
+            // For Windows, the same connection can be used for both read and write
+            loop {
+                // Read the command from the client
+                let line = match reader.read_line() {
+                    Ok(l) => l,
+                    Err(e) => {
+                        eprintln!("⚠️  Warning: Failed to read from pipe: {}", e);
+                        break; // Break inner loop to accept new connections
+                    }
+                };
+
+                // Parse the command
+                let command = match Command::parse(&line) {
+                    Ok(cmd) => cmd,
+                    Err(e) => {
+                        eprintln!("⚠️  Warning: Failed to parse command: {}", e);
+                        // Note: For now, we'll just log the error and continue
+                        continue;
+                    }
+                };
+
+                eprintln!("📩 Received command: {:?}", command);
+
+                // Process the command (simplified without audio)
+                let response = match command {
+                    Command::Play(ref json_path) => {
+                        eprintln!("🎵 Processing PLAY command: {} (audio disabled)", json_path);
+                        match state.lock() {
+                            Ok(mut s) => {
+                                *s = ServerState::Playing;
+                                Response::Ok
+                            }
+                            Err(e) => Response::Error(format!("Failed to update state: {}", e)),
+                        }
+                    }
+                    Command::Stop => {
+                        eprintln!("⏸️  Processing STOP command (audio disabled)");
+                        match state.lock() {
+                            Ok(mut s) => {
+                                *s = ServerState::Stopped;
+                                Response::Ok
+                            }
+                            Err(e) => Response::Error(format!("Failed to update state: {}", e)),
+                        }
+                    }
+                    Command::Shutdown => {
+                        eprintln!("🛑 Processing SHUTDOWN command");
+                        shutdown_flag.store(true, Ordering::Relaxed);
+                        Response::Ok
+                    }
+                };
+
+                eprintln!("📤 Response: {:?}", response);
+
+                // Note: For now, Windows implementation uses fire-and-forget approach
+                // Response sending will be improved in future iterations
+
+                // If shutdown was requested, break both loops
+                if shutdown_flag.load(Ordering::Relaxed) {
+                    return Ok(());
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 

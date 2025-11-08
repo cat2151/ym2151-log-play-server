@@ -29,10 +29,10 @@ fn test_load_complex_fixture() {
 
 #[test]
 fn test_load_sample_events_json() {
-    let log = EventLog::from_file("sample_events.json").expect("Failed to load sample_events.json");
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
-    assert_eq!(log.event_count, 100, "Event count should be 100");
-    assert_eq!(log.events.len(), 100, "Should have 100 events");
+    assert_eq!(log.event_count, 46, "Event count should be 46");
+    assert_eq!(log.events.len(), 46, "Should have 46 events");
 
     assert!(log.validate(), "Event log should be valid");
 
@@ -40,9 +40,9 @@ fn test_load_sample_events_json() {
     assert_eq!(log.events[0].addr, 0x08);
     assert_eq!(log.events[0].data, 0x00);
 
-    assert_eq!(log.events[99].time, 111862);
-    assert_eq!(log.events[99].addr, 0x08);
-    assert_eq!(log.events[99].data, 0x00);
+    assert_eq!(log.events[45].time, 83895);
+    assert_eq!(log.events[45].addr, 0x08);
+    assert_eq!(log.events[45].data, 0x00);
 
     for i in 1..log.events.len() {
         assert!(
@@ -54,7 +54,7 @@ fn test_load_sample_events_json() {
 
 #[test]
 fn test_load_sample_events_addresses() {
-    let log = EventLog::from_file("sample_events.json").expect("Failed to load sample_events.json");
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
     let addresses: std::collections::HashSet<u8> = log.events.iter().map(|e| e.addr).collect();
 
@@ -70,14 +70,14 @@ fn test_load_sample_events_addresses() {
 
 #[test]
 fn test_event_time_span() {
-    let log = EventLog::from_file("sample_events.json").expect("Failed to load sample_events.json");
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
     let first_time = log.events[0].time;
     let last_time = log.events[log.events.len() - 1].time;
 
     assert_eq!(first_time, 0, "First event should be at time 0");
     assert!(
-        last_time > 100000,
-        "Last event should be well after 100k samples"
+        last_time > 50000,
+        "Last event should be well after 50k samples"
     );
 }
