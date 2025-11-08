@@ -7,9 +7,7 @@ pub const DEFAULT_OUTPUT_FILENAME: &str = "output.wav";
 
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
-
 const MAX_TAIL_SECONDS: u32 = 10;
-
 
 const TAIL_DURATION_MULTIPLIER: u32 = 10;
 
@@ -60,7 +58,6 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
         output_samples.extend_from_slice(&generation_buffer);
 
-
         if processed_samples < total_samples as usize {
             let progress = (processed_samples * 100 / total_samples as usize).min(100);
             if progress >= last_progress + 10 {
@@ -72,7 +69,6 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
             tail_started = true;
         }
 
-
         if !player.should_continue_tail() {
             if let Some((tail_samples, _)) = player.tail_info() {
                 let tail_ms = tail_samples as f64 / Player::sample_rate() as f64 * 1000.0;
@@ -80,8 +76,6 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
             }
             break;
         }
-
-
 
         let max_tail_samples = std::cmp::max(
             Player::sample_rate() * MAX_TAIL_SECONDS,

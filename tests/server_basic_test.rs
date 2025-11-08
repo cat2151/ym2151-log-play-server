@@ -3,10 +3,10 @@
 //! These tests verify the server's ability to create named pipes,
 //! listen for commands, and process them correctly.
 
-use ym2151_log_player_rust::server::Server;
+use std::{thread, time::Duration};
 use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
 use ym2151_log_player_rust::ipc::protocol::Command;
-use std::{thread, time::Duration};
+use ym2151_log_player_rust::server::Server;
 
 /// Test that server can be created with default state
 #[test]

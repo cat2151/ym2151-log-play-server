@@ -12,14 +12,12 @@ use crate::player::Player;
 use crate::audio::AudioPlayer;
 use crate::ipc::pipe_windows::NamedPipe;
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(dead_code)]
 enum ServerState {
     Playing,
     Stopped,
 }
-
 
 pub struct Server {
     #[allow(dead_code)]

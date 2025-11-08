@@ -1,8 +1,6 @@
 use anyhow::Result;
 
-
 pub const YM2151_CLOCK: u32 = 3_579_545;
-
 
 pub const OPM_SAMPLE_RATE: u32 = YM2151_CLOCK / 64;
 

@@ -141,7 +141,6 @@ impl AudioPlayer {
                 break;
             }
 
-
             if !player.should_continue_tail() {
                 let elapsed = playback_start_time.elapsed();
                 println!("■  Playback complete");
@@ -153,7 +152,6 @@ impl AudioPlayer {
                 }
                 break;
             }
-
 
             if !tail_reported && player.is_complete() {
                 println!("  演奏データ終了、余韻を生成中...");

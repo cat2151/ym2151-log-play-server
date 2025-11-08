@@ -1,24 +1,5 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Command {
-
     Play(String),
 
     Stop,
@@ -27,28 +8,6 @@ pub enum Command {
 }
 
 impl Command {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
 
@@ -72,21 +31,6 @@ impl Command {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     pub fn serialize(&self) -> String {
         match self {
             Command::Play(path) => format!("PLAY {}\n", path),
@@ -96,56 +40,20 @@ impl Command {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Response {
-
     Ok,
 
     Error(String),
 }
 
 impl Response {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     pub fn serialize(&self) -> String {
         match self {
             Response::Ok => "OK\n".to_string(),
             Response::Error(msg) => format!("ERROR {}\n", msg),
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
@@ -169,8 +77,6 @@ impl Response {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-
 
     #[test]
     fn test_parse_play_command() {
@@ -226,8 +132,6 @@ mod tests {
         assert_eq!(cmd, Command::Stop);
     }
 
-
-
     #[test]
     fn test_serialize_play_command() {
         let cmd = Command::Play("/path/to/file.json".to_string());
@@ -246,8 +150,6 @@ mod tests {
         assert_eq!(cmd.serialize(), "SHUTDOWN\n");
     }
 
-
-
     #[test]
     fn test_serialize_ok_response() {
         let resp = Response::Ok;
@@ -265,8 +167,6 @@ mod tests {
         let resp = Response::Error("Path: /invalid/path".to_string());
         assert_eq!(resp.serialize(), "ERROR Path: /invalid/path\n");
     }
-
-
 
     #[test]
     fn test_parse_ok_response() {
@@ -308,8 +208,6 @@ mod tests {
         let resp = Response::parse("  OK  ").unwrap();
         assert_eq!(resp, Response::Ok);
     }
-
-
 
     #[test]
     fn test_command_roundtrip_play() {

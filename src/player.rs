@@ -7,7 +7,6 @@ const OPM_DATA_REGISTER: u8 = 1;
 
 const DELAY_SAMPLES: u32 = 2;
 
-
 const SILENCE_DURATION_MS: u32 = 100;
 const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
@@ -28,7 +27,6 @@ pub struct Player {
     next_event_idx: usize,
 
     samples_played: u32,
-
 
     consecutive_silent_samples: u32,
 }
@@ -92,7 +90,6 @@ impl Player {
             let sample_buffer = &mut buffer[i * 2..(i + 1) * 2];
             self.chip.generate_samples(sample_buffer);
 
-
             let left = sample_buffer[0];
             let right = sample_buffer[1];
             if Self::is_sample_silent(left, right) {
@@ -131,23 +128,17 @@ impl Player {
         OPM_SAMPLE_RATE
     }
 
-
     fn is_sample_silent(left: i16, right: i16) -> bool {
         left == 0 && right == 0
     }
 
-
-
     pub fn should_continue_tail(&self) -> bool {
         if !self.is_complete() {
-
             return true;
         }
 
-
         self.consecutive_silent_samples < SILENCE_SAMPLES
     }
-
 
     pub fn tail_info(&self) -> Option<(u32, u32)> {
         if self.is_complete() {

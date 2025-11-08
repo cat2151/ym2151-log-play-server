@@ -1,8 +1,3 @@
-
-
-
-
-
 use std::ffi::OsStr;
 use std::io;
 use std::os::windows::ffi::OsStrExt;
@@ -18,9 +13,7 @@ use windows::Win32::System::Pipes::{
     PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
 
-
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151_server";
-
 
 #[derive(Debug)]
 pub struct NamedPipe {
@@ -28,54 +21,21 @@ pub struct NamedPipe {
     handle: HANDLE,
 }
 
-
-
-
 unsafe impl Send for NamedPipe {}
 unsafe impl Sync for NamedPipe {}
 
 impl NamedPipe {
-
-
-
-
-
-
-
-
-
-
-
-
     pub fn create() -> io::Result<Self> {
         Self::create_at(DEFAULT_PIPE_PATH)
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     pub fn create_at<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let path = path.as_ref().to_path_buf();
-
 
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-
-
 
         let handle = unsafe {
             CreateNamedPipeW(
@@ -97,16 +57,7 @@ impl NamedPipe {
         Ok(NamedPipe { path, handle })
     }
 
-
-
-
-
-
-
-
     pub fn open_read(&self) -> io::Result<PipeReader> {
-
-
         unsafe {
             ConnectNamedPipe(self.handle, None).map_err(io::Error::other)?;
         }
@@ -116,35 +67,19 @@ impl NamedPipe {
         })
     }
 
-
-
-
-
-
     pub fn open_write(&self) -> io::Result<PipeWriter> {
         Ok(PipeWriter {
             handle: self.handle,
         })
     }
 
-
-
-
-
-
-
-
-
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let path = path.as_ref();
-
 
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
-
-
 
         let handle = unsafe {
             CreateFileW(
@@ -171,15 +106,9 @@ impl NamedPipe {
         Ok(PipeWriter { handle })
     }
 
-
-
-
-
-
     pub fn connect_default() -> io::Result<PipeWriter> {
         Self::connect(DEFAULT_PIPE_PATH)
     }
-
 
     pub fn path(&self) -> &Path {
         &self.path
@@ -188,32 +117,23 @@ impl NamedPipe {
 
 impl Drop for NamedPipe {
     fn drop(&mut self) {
-
-
         unsafe {
             let _ = CloseHandle(self.handle);
         }
     }
 }
 
-
 pub struct PipeReader {
     handle: HANDLE,
 }
 
 impl PipeReader {
-
-
-
-
-
     pub fn read_line(&mut self) -> io::Result<String> {
         let mut buffer = Vec::new();
         let mut byte = [0u8; 1];
 
         loop {
             let mut bytes_read = 0u32;
-
 
             let result =
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
@@ -228,7 +148,6 @@ impl PipeReader {
 
             buffer.push(byte[0]);
 
-
             if byte[0] == b'\n' {
                 break;
             }
@@ -238,24 +157,14 @@ impl PipeReader {
     }
 }
 
-
 pub struct PipeWriter {
     handle: HANDLE,
 }
 
 impl PipeWriter {
-
-
-
-
-
-
-
-
     pub fn write_str(&mut self, data: &str) -> io::Result<()> {
         let bytes = data.as_bytes();
         let mut bytes_written = 0u32;
-
 
         let result = unsafe { WriteFile(self.handle, Some(bytes), Some(&mut bytes_written), None) };
 
@@ -270,8 +179,6 @@ impl PipeWriter {
             ));
         }
 
-
-
         unsafe {
             FlushFileBuffers(self.handle).map_err(io::Error::other)?;
         }
@@ -279,18 +186,12 @@ impl PipeWriter {
         Ok(())
     }
 
-
-
-
-
-
     pub fn read_response(&mut self) -> io::Result<String> {
         let mut buffer = Vec::new();
         let mut byte = [0u8; 1];
 
         loop {
             let mut bytes_read = 0u32;
-
 
             let result =
                 unsafe { ReadFile(self.handle, Some(&mut byte), Some(&mut bytes_read), None) };
@@ -305,7 +206,6 @@ impl PipeWriter {
 
             buffer.push(byte[0]);
 
-
             if byte[0] == b'\n' {
                 break;
             }
@@ -317,8 +217,6 @@ impl PipeWriter {
 
 impl Drop for PipeWriter {
     fn drop(&mut self) {
-
-
         unsafe {
             let _ = CloseHandle(self.handle);
         }

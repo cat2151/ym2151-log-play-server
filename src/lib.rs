@@ -1,3 +1,4 @@
+pub mod audio;
 pub mod client;
 pub mod events;
 pub mod ipc;
@@ -7,4 +8,3 @@ pub mod player;
 pub mod resampler;
 pub mod server;
 pub mod wav_writer;
-pub mod audio;
