@@ -4,17 +4,8 @@
 //! listen for commands, and process them correctly.
 
 use ym2151_log_player_rust::server::Server;
-
-#[cfg(unix)]
-use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
-
-#[cfg(windows)]
 use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
-
-#[cfg(any(unix, windows))]
 use ym2151_log_player_rust::ipc::protocol::Command;
-
-#[cfg(any(unix, windows))]
 use std::{thread, time::Duration};
 
 /// Test that server can be created with default state
@@ -65,7 +56,6 @@ fn test_multiple_server_instances() {
     // All instances should be created successfully
 }
 
-#[cfg(any(unix, windows))]
 #[test]
 #[ignore] // This test requires manual verification
 fn test_server_startup_manual() {

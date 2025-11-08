@@ -45,7 +45,7 @@ fn print_usage(program_name: &str) {
     eprintln!("  - YM2151レジスタ操作を再現");
     eprintln!("  - リアルタイム音声再生");
     eprintln!("  - WAVファイル (output.wav) を生成");
-    eprintln!("  - サーバー/クライアントモード (Unix/Linux/Windows)");
+    eprintln!("  - サーバー/クライアントモード (Windows)");
 }
 
 fn main() {

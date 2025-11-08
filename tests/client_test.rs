@@ -117,7 +117,7 @@ mod client_integration_tests {
 mod client_integration_tests {
     use std::thread;
     use std::time::Duration;
-    use ym2151_log_player_rust::ipc::pipe_windows::{NamedPipe, DEFAULT_PIPE_PATH};
+    use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
     use ym2151_log_player_rust::ipc::protocol::Command;
 
     /// Helper to clean up pipe before test
