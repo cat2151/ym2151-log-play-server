@@ -17,7 +17,6 @@ use windows::Win32::System::Pipes::{
     ConnectNamedPipe, CreateNamedPipeW, PIPE_READMODE_BYTE, PIPE_TYPE_BYTE,
     PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
-use windows::Win32::System::IO::OVERLAPPED;
 
 /// Default pipe path for Windows
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151_server";
