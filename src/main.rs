@@ -20,10 +20,6 @@ fn print_usage(program_name: &str) {
         program_name
     );
     eprintln!(
-        "  {} --server --shutdown          # サーバーをシャットダウン",
-        program_name
-    );
-    eprintln!(
         "  {} --client <json_file>         # サーバーに演奏指示",
         program_name
     );
@@ -39,7 +35,6 @@ fn print_usage(program_name: &str) {
     eprintln!("  {} --client test_input.json", program_name);
     eprintln!("  {} --client --stop", program_name);
     eprintln!("  {} --client --shutdown", program_name);
-    eprintln!("  {} --server --shutdown", program_name);
     eprintln!();
     eprintln!("機能:");
     eprintln!("  - JSONイベントログファイルを読み込み");
@@ -54,19 +49,7 @@ fn main() {
 
     if args.len() >= 2 {
         if args[1] == "--server" {
-            if args.len() == 3 && args[2] == "--shutdown" {
-                match client::shutdown_server() {
-                    Ok(_) => {
-                        println!("✅ サーバーシャットダウン要求を送信しました");
-                        std::process::exit(0);
-                    }
-                    Err(e) => {
-                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
-                        eprintln!("   サーバーが起動しているか確認してください");
-                        std::process::exit(1);
-                    }
-                }
-            } else if args.len() == 3 {
+            if args.len() == 3 {
                 let json_path = &args[2];
                 let server = Server::new();
                 match server.run(json_path) {

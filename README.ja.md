@@ -64,7 +64,7 @@ cargo run --release -- --client test_input.json
 cargo run --release -- --client --stop
 
 # サーバーをシャットダウン
-cargo run --release -- --server --shutdown
+cargo run --release -- --client --shutdown
 ```
 
 ### コマンドライン引数一覧
@@ -73,15 +73,15 @@ cargo run --release -- --server --shutdown
 使用方法:
   ym2151-log-play-server <json_log_file>           # スタンドアロンモード
   ym2151-log-play-server --server <json_log_file>  # サーバーモード
-  ym2151-log-play-server --server --shutdown       # サーバーシャットダウン
   ym2151-log-play-server --client <json_log_file>  # 新規JSONを演奏
   ym2151-log-play-server --client --stop           # 演奏停止
+  ym2151-log-play-server --client --shutdown       # サーバーシャットダウン
 
 オプション:
   --server <file>    サーバーとして常駐し、指定されたJSONを演奏
-  --server --shutdown サーバーをシャットダウン
   --client <file>    サーバーに新しいJSONファイルの演奏を指示
   --client --stop    サーバーに演奏停止を指示
+  --client --shutdown サーバーにシャットダウンを指示
 
 例:
   # スタンドアロンで再生
@@ -97,7 +97,7 @@ cargo run --release -- --server --shutdown
   ym2151-log-play-server --client --stop
 
   # 別のターミナルから: サーバー終了
-  ym2151-log-play-server --server --shutdown
+  ym2151-log-play-server --client --shutdown
 ```
 
 ### 使用例シナリオ
@@ -118,7 +118,7 @@ $ cargo run --release -- --client test_input.json
 $ cargo run --release -- --client --stop
 ✅ サーバーに STOP コマンドを送信しました
 
-$ cargo run --release -- --server --shutdown
+$ cargo run --release -- --client --shutdown
 ✅ サーバーに SHUTDOWN コマンドを送信しました
 ```
 
