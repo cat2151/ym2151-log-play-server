@@ -37,9 +37,7 @@ impl Server {
     pub fn run(&self, json_path: &str) -> Result<()> {
         eprintln!("🚀 Starting YM2151 server...");
         eprintln!("   Initial file: {}", json_path);
-
-        let pipe = NamedPipe::create().context("Failed to create named pipe")?;
-        eprintln!("✅ Named pipe created at: {:?}", pipe.path());
+        eprintln!("   Named pipe path: {}", crate::ipc::pipe_windows::DEFAULT_PIPE_PATH);
 
         let mut audio_player: Option<AudioPlayer> = None;
         match Self::load_and_start_playback(json_path) {
@@ -62,20 +60,36 @@ impl Server {
                 break;
             }
 
-            let mut reader = match pipe.open_read() {
-                Ok(r) => r,
+            // 各接続ごとに新しいパイプを作成
+            let connection_pipe = match NamedPipe::create() {
+                Ok(p) => p,
                 Err(e) => {
-                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    eprintln!("⚠️  Warning: Failed to create new pipe for connection: {}", e);
+                    std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
             };
 
+            eprintln!("💬 Waiting for client connection...");
+
+            let mut reader = match connection_pipe.open_read() {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to open pipe for reading: {}", e);
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    continue;
+                }
+            };
+
+            eprintln!("📞 Client connected");
+
+            // 一つのクライアント接続からの複数メッセージを処理
             loop {
                 let line = match reader.read_line() {
                     Ok(l) => l,
                     Err(e) => {
-                        eprintln!("⚠️  Warning: Failed to read from pipe: {}", e);
-                        break;
+                        eprintln!("📞 Client disconnected: {}", e);
+                        break; // 内側のループを抜けて新しい接続を待機
                     }
                 };
 
@@ -125,10 +139,12 @@ impl Server {
                             player.stop();
                         }
                         self.shutdown_flag.store(true, Ordering::Relaxed);
-                        break;
+                        return Ok(()); // 外側のループも抜けて終了
                     }
                 }
             }
+
+            eprintln!("🔄 Ready for next connection...");
         }
 
         eprintln!("👋 Server shutdown complete");
