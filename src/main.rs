@@ -28,7 +28,7 @@ fn print_usage(program_name: &str) {
         program_name
     );
     eprintln!(
-        "  {} --client --stop              # サーバーに停止指示",
+        "  {} --client --shutdown          # サーバーにシャットダウン指示",
         program_name
     );
     eprintln!();
@@ -38,6 +38,7 @@ fn print_usage(program_name: &str) {
     eprintln!("  {} --server sample_events.json", program_name);
     eprintln!("  {} --client test_input.json", program_name);
     eprintln!("  {} --client --stop", program_name);
+    eprintln!("  {} --client --shutdown", program_name);
     eprintln!("  {} --server --shutdown", program_name);
     eprintln!();
     eprintln!("機能:");
@@ -92,6 +93,18 @@ fn main() {
                     }
                     Err(e) => {
                         eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
+                    }
+                }
+            } else if args.len() == 3 && args[2] == "--shutdown" {
+                match client::shutdown_server() {
+                    Ok(_) => {
+                        println!("✅ サーバーシャットダウン要求を送信しました");
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
                         eprintln!("   サーバーが起動しているか確認してください");
                         std::process::exit(1);
                     }

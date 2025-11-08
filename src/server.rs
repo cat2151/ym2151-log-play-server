@@ -1,4 +1,4 @@
-use crate::ipc::protocol::Command;
+use crate::ipc::protocol::{Command, Response};
 use anyhow::Result;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -83,6 +83,15 @@ impl Server {
 
             eprintln!("📞 Client connected");
 
+            // レスポンス送信用のライターも取得
+            let mut writer = match connection_pipe.open_write() {
+                Ok(w) => w,
+                Err(e) => {
+                    eprintln!("⚠️  Warning: Failed to open pipe for writing: {}", e);
+                    continue;
+                }
+            };
+
             // 一つのクライアント接続からの複数メッセージを処理
             loop {
                 let line = match reader.read_line() {
@@ -97,13 +106,14 @@ impl Server {
                     Ok(cmd) => cmd,
                     Err(e) => {
                         eprintln!("⚠️  Warning: Failed to parse command: {}", e);
+                        let _ = writer.write_str(&Response::Error(format!("Parse error: {}", e)).serialize());
                         continue;
                     }
                 };
 
                 eprintln!("📩 Received command: {:?}", command);
 
-                match command {
+                let response = match command {
                     Command::Play(json_path) => {
                         eprintln!("🎵 Loading new audio file: {}", json_path);
 
@@ -118,9 +128,12 @@ impl Server {
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Playing;
+
+                                Response::Ok
                             }
                             Err(e) => {
                                 eprintln!("❌ Failed to start audio playback: {}", e);
+                                Response::Error(format!("Failed to start playback: {}", e))
                             }
                         }
                     }
@@ -132,6 +145,8 @@ impl Server {
 
                         let mut state = self.state.lock().unwrap();
                         *state = ServerState::Stopped;
+
+                        Response::Ok
                     }
                     Command::Shutdown => {
                         eprintln!("🛑 Shutdown requested");
@@ -139,9 +154,20 @@ impl Server {
                             player.stop();
                         }
                         self.shutdown_flag.store(true, Ordering::Relaxed);
+
+                        // シャットダウンレスポンスを送信
+                        let _ = writer.write_str(&Response::Ok.serialize());
                         return Ok(()); // 外側のループも抜けて終了
                     }
+                };
+
+                // レスポンスを送信
+                if let Err(e) = writer.write_str(&response.serialize()) {
+                    eprintln!("⚠️  Warning: Failed to send response: {}", e);
+                    break; // 書き込みに失敗したら接続を閉じる
                 }
+
+                eprintln!("📤 Response sent: {:?}", response);
             }
 
             eprintln!("🔄 Ready for next connection...");

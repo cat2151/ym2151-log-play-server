@@ -143,7 +143,7 @@ cargo build --release
 ./target/release/ym2151-log-play-server output_ym2151.json
 ./target/release/ym2151-log-play-server --server output_ym2151.json
 ./target/release/ym2151-log-play-server --client output_ym2151.json
-./target/release/ym2151-log-play-server --client stop
+./target/release/ym2151-log-play-server --client --stop
 ./target/release/ym2151-log-play-server --client --shutdown
 ```
 
