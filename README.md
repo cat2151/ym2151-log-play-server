@@ -1,26 +1,143 @@
 # ym2151-log-play-server
 
-YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー、を目指して開発中です
+YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー
 
-## 状況
+## 概要
 
-まだコピー元のままです。
+このプロジェクトは、YM2151（OPM）音源チップのレジスタイベントログを再生するプログラムです。
+スタンドアロンモードとサーバー・クライアントモードの両方で動作します。
 
-これから実装します。
+### 主な機能
 
-## 次のタスク
-
-### 機能追加
-- コマンドライン引数 `--server` `--client` `--stop` `--shutdown` を受け取れるようにします
-- `--server sample_events.json` : サーバーとして常駐し、このjsonを演奏開始します。同時に名前付きパイプでクライアントからの接続を待機します
-- `--server --shutdown` : サーバーを演奏stopし、シャットダウンします
-- `--client sample_events.json` : sample_events.json を名前付きパイプでサーバーにわたします。サーバーは演奏stopし、このjsonを演奏します
-- `--client --stop` : サーバーに名前付きパイプで接続して「演奏をstopしてください」というメッセージを送信します
-- ※上記は検証を素早く進めるため、仮です。あとから破壊的変更します
-
-## 移行は古い情報です
+- ✅ JSONイベントログの読み込みと再生
+- ✅ リアルタイム音声出力
+- ✅ WAVファイル出力
+- ✅ サーバー・クライアントモードによるリモート制御
+- ✅ 名前付きパイプ（FIFO）によるプロセス間通信
 
 ## 使い方
+
+### スタンドアロンモード（通常の再生）
+
+JSONファイルを直接再生：
+
+```bash
+# ビルドして実行
+cargo run --release sample_events.json
+
+# または既にビルドされたバイナリを使用
+./target/release/ym2151-log-player-rust sample_events.json
+```
+
+### サーバー・クライアントモード
+
+#### サーバーの起動
+
+サーバーとして常駐し、JSONを演奏開始：
+
+```bash
+# サーバーモードで起動（sample_events.jsonを演奏）
+cargo run --release -- --server sample_events.json
+
+# または
+./target/release/ym2151-log-player-rust --server sample_events.json
+```
+
+サーバーは `/tmp/ym2151_server.pipe` に名前付きパイプを作成し、クライアントからの接続を待機します。
+
+#### クライアントからの操作
+
+別のターミナルから、クライアントモードで操作：
+
+```bash
+# 新しいJSONファイルを再生（演奏を切り替え）
+cargo run --release -- --client test_input.json
+
+# 演奏を停止（無音化）
+cargo run --release -- --client --stop
+
+# サーバーをシャットダウン
+cargo run --release -- --server --shutdown
+```
+
+### コマンドライン引数一覧
+
+```
+使用方法:
+  ym2151-log-player-rust <json_log_file>           # スタンドアロンモード
+  ym2151-log-player-rust --server <json_log_file>  # サーバーモード
+  ym2151-log-player-rust --server --shutdown       # サーバーシャットダウン
+  ym2151-log-player-rust --client <json_log_file>  # 新規JSONを演奏
+  ym2151-log-player-rust --client --stop           # 演奏停止
+
+オプション:
+  --server <file>    サーバーとして常駐し、指定されたJSONを演奏
+  --server --shutdown サーバーをシャットダウン
+  --client <file>    サーバーに新しいJSONファイルの演奏を指示
+  --client --stop    サーバーに演奏停止を指示
+
+例:
+  # スタンドアロンで再生
+  ym2151-log-player-rust sample_events.json
+
+  # サーバー起動
+  ym2151-log-player-rust --server sample_events.json
+
+  # 別のターミナルから: 演奏を切り替え
+  ym2151-log-player-rust --client test_input.json
+
+  # 別のターミナルから: 演奏停止
+  ym2151-log-player-rust --client --stop
+
+  # 別のターミナルから: サーバー終了
+  ym2151-log-player-rust --server --shutdown
+```
+
+### 使用例シナリオ
+
+#### シナリオ1: 基本的な使用
+
+```bash
+# ターミナル1: サーバー起動
+$ cargo run --release -- --server sample_events.json
+サーバーを起動しました: /tmp/ym2151_server.pipe
+sample_events.json (3 イベント) を読み込みました
+演奏を開始しました...
+
+# ターミナル2: クライアントから操作
+$ cargo run --release -- --client test_input.json
+✅ サーバーに PLAY コマンドを送信しました
+
+$ cargo run --release -- --client --stop  
+✅ サーバーに STOP コマンドを送信しました
+
+$ cargo run --release -- --server --shutdown
+✅ サーバーに SHUTDOWN コマンドを送信しました
+```
+
+#### シナリオ2: 連続再生
+
+```bash
+# サーバー起動（ターミナル1）
+$ cargo run --release -- --server music1.json
+
+# 次々と曲を切り替え（ターミナル2）
+$ cargo run --release -- --client music2.json
+$ sleep 5
+$ cargo run --release -- --client music3.json  
+$ sleep 5
+$ cargo run --release -- --client music1.json
+```
+
+### 注意事項
+
+⚠️ **暫定実装について**
+
+サーバー・クライアント機能は検証用の暫定仕様です。将来的に破壊的変更が行われる可能性があります。
+
+- 現在の実装はシンプルさを優先
+- エラーハンドリングは最小限
+- Unix/Linux環境のみサポート（Windowsは未実装）
 
 ### CI/ヘッドレス環境での実行
 
@@ -43,6 +160,68 @@ cargo run --release sample_events.json
 
 この設定により、音声デバイスなしでもプログラムが正常に動作します。
 音声出力は `/tmp/alsa_capture.wav` に保存され、同時に `output.wav` も生成されます。
+
+## トラブルシューティング
+
+### サーバー・クライアント関連
+
+#### クライアントが "Failed to connect to server" エラーを出す
+
+**原因:** サーバーが起動していない、または名前付きパイプが作成されていない
+
+**解決策:**
+1. サーバーが起動しているか確認：`ps aux | grep ym2151`
+2. 名前付きパイプが存在するか確認：`ls -l /tmp/ym2151_server.pipe`
+3. サーバーを起動してから再度クライアントを実行
+
+#### サーバーが応答しない
+
+**原因:** 名前付きパイプがブロックされている、または古いパイプが残っている
+
+**解決策:**
+1. サーバーを終了
+2. 古いパイプを削除：`rm /tmp/ym2151_server.pipe`
+3. サーバーを再起動
+
+#### 複数のサーバーを起動してしまった
+
+**原因:** 既存のサーバーが動作中に新しいサーバーを起動
+
+**解決策:**
+1. 全てのサーバープロセスを確認：`ps aux | grep ym2151`
+2. プロセスを終了：`kill <PID>` または `pkill ym2151`
+3. パイプをクリーンアップ：`rm /tmp/ym2151_server.pipe`
+
+### 音声関連
+
+#### "Unknown PCM default" エラー（ALSA）
+
+**原因:** 音声デバイスが利用できない（CI/ヘッドレス環境など）
+
+**解決策:** 上記の「CI/ヘッドレス環境での実行」を参照
+
+#### 音が出ない
+
+**確認事項:**
+1. 音量設定を確認
+2. `output.wav` ファイルが生成されているか確認
+3. WAVファイルを別のプレイヤーで再生して確認
+4. サーバーモードの場合、演奏が停止状態になっていないか確認
+
+### ビルド関連
+
+#### "alsa-sys was not found" エラー
+
+**原因:** ALSA開発ライブラリがインストールされていない
+
+**解決策:**
+```bash
+# Ubuntu/Debian
+sudo apt-get install libasound2-dev
+
+# Fedora
+sudo dnf install alsa-lib-devel
+```
 
 ### コマンドライン引数
 
