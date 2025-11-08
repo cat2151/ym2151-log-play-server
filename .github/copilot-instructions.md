@@ -47,9 +47,6 @@ cargo test
 # 特定テスト実行（例: サーバー関連テスト）
 cargo test server_basic_test
 cargo test phase7_integration_test
-
-# 音声機能無効ビルド（CI用）
-cargo build --no-default-features
 ```
 
 ## コーディング規約とプロジェクト構造
