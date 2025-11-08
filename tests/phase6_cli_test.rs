@@ -40,14 +40,11 @@ fn test_help_message_displays() {
     assert!(stderr.contains("使用方法"));
     assert!(stderr.contains("スタンドアロン演奏"));
 
-    // Check Unix-specific options are present on Unix platforms
-    #[cfg(unix)]
-    {
-        assert!(stderr.contains("--server"));
-        assert!(stderr.contains("--client"));
-        assert!(stderr.contains("--shutdown"));
-        assert!(stderr.contains("--stop"));
-    }
+    // Check for key options
+    assert!(stderr.contains("--server"));
+    assert!(stderr.contains("--client"));
+    assert!(stderr.contains("--shutdown"));
+    assert!(stderr.contains("--stop"));
 
     // Exit code should be 1 (error - no arguments)
     assert_eq!(output.status.code(), Some(1));
@@ -87,7 +84,6 @@ fn test_too_many_arguments() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-#[cfg(unix)]
 #[test]
 fn test_client_without_server_fails() {
     let binary = get_binary_path();
@@ -106,7 +102,6 @@ fn test_client_without_server_fails() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-#[cfg(unix)]
 #[test]
 fn test_server_shutdown_without_server_fails() {
     let binary = get_binary_path();
@@ -125,7 +120,6 @@ fn test_server_shutdown_without_server_fails() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-#[cfg(unix)]
 #[test]
 fn test_server_option_without_argument_fails() {
     let binary = get_binary_path();
@@ -143,7 +137,6 @@ fn test_server_option_without_argument_fails() {
     assert_eq!(output.status.code(), Some(1));
 }
 
-#[cfg(unix)]
 #[test]
 fn test_client_option_without_argument_fails() {
     let binary = get_binary_path();

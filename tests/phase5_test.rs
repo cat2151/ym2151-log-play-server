@@ -139,11 +139,10 @@ mod realtime_audio_tests {
 }
 
 /// Integration tests for Phase 5: Server with playback control
-#[cfg(unix)]
 mod server_playback_tests {
     use std::thread;
     use std::time::Duration;
-    use ym2151_log_player_rust::ipc::pipe_unix::NamedPipe;
+    use ym2151_log_player_rust::ipc::pipe_windows::NamedPipe;
     use ym2151_log_player_rust::ipc::protocol::Command;
     use ym2151_log_player_rust::server::Server;
 

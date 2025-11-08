@@ -1,10 +1,5 @@
 use crate::ipc::protocol::Command;
 use anyhow::{Context, Result};
-
-#[cfg(unix)]
-use crate::ipc::pipe_unix::NamedPipe;
-
-#[cfg(windows)]
 use crate::ipc::pipe_windows::NamedPipe;
 
 pub fn play_file(json_path: &str) -> Result<()> {
