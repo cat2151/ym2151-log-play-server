@@ -1,38 +1,38 @@
 # ym2151-log-play-server
 
-Server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
+A server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
 
 ## Target Platforms
 
 - Windows only
-- Linux-specific code prohibited
-    - In this project, an increase in hallucinations was observed,
-        - therefore, Linux-specific code is prohibited.
+- Prohibition of Linux-specific code
+    - As an increase in hallucinations was observed in this project,
+        - Linux-specific code is prohibited.
 
 ## Overview
 
-This project is a program that plays YM2151 (OPM) sound chip register event logs.
+This project is a program that plays back register event logs from the YM2151 (OPM) sound chip.
 It operates in both standalone mode and server-client mode.
 
 ### Key Features
 
 - Real-time playback of JSON music data
 - WAV file output
-- Runs as a persistent server, continuing real-time playback in the background
-- Controlled by a client, allowing quick switching to different performances
+- Resides as a server and continues real-time playback in the background
+- Controlled by a client to quickly switch to different performances
 - Utilizes named pipes for server-client communication
 
 ## Usage
 
 ### Standalone Mode (Normal Playback)
 
-Play JSON file directly:
+Play a JSON file directly:
 
 ```bash
 # Build and run
 cargo run --release output_ym2151.json
 
-# Or use the already built binary
+# Or use an already built binary
 ./target/release/ym2151-log-play-server output_ym2151.json
 ```
 
@@ -40,7 +40,7 @@ cargo run --release output_ym2151.json
 
 #### Starting the Server
 
-Run as a persistent server and start playing JSON:
+Reside as a server and start playing JSON:
 
 ```bash
 cargo run --release -- --server output_ym2151.json
@@ -61,7 +61,7 @@ cargo run --release -- --client --stop
 cargo run --release -- --client --shutdown
 ```
 
-### Command-Line Arguments
+### Command Line Arguments List
 
 ```
 Usage:
@@ -69,15 +69,15 @@ Usage:
   ym2151-log-play-server --server <json_log_file>  # Server mode
   ym2151-log-play-server --client <json_log_file>  # Play new JSON
   ym2151-log-play-server --client --stop           # Stop playback
-  ym2151-log-play-server --client --shutdown       # Server shutdown
+  ym2151-log-play-server --client --shutdown       # Shut down server
 
 Options:
-  --server <file>    Run as a persistent server and play the specified JSON
-  --client <file>    Instruct the server to play a new JSON file
-  --client --stop    Instruct the server to stop playback
-  --client --shutdown Instruct the server to shut down
+  --server <file>    Resides as a server and plays the specified JSON
+  --client <file>    Instructs the server to play a new JSON file
+  --client --stop    Instructs the server to stop playback
+  --client --shutdown Instructs the server to shut down
 
-Examples:
+Example:
   # Play in standalone mode
   ym2151-log-play-server output_ym2151.json
 
@@ -94,7 +94,7 @@ Examples:
   ym2151-log-play-server --client --shutdown
 ```
 
-### Example Scenarios
+### Usage Scenarios
 
 #### Scenario 1: Basic Usage
 
@@ -102,10 +102,10 @@ Examples:
 # Terminal 1: Start server
 $ cargo run --release -- --server output_ym2151.json
 Server started: /tmp/ym2151-log-play-server.pipe
-Loaded output_ym2151.json (3 events)
+output_ym2151.json (3 events) loaded
 Playback started...
 
-# Terminal 2: Client operation
+# Terminal 2: Client operations
 $ cargo run --release -- --client test_input.json
 ✅ Sent PLAY command to server
 
@@ -122,7 +122,7 @@ $ cargo run --release -- --client --shutdown
 # Start server (Terminal 1)
 $ cargo run --release -- --server music1.json
 
-# Switch songs successively (Terminal 2)
+# Switch songs one after another (Terminal 2)
 $ cargo run --release -- --client music2.json
 $ sleep 5
 $ cargo run --release -- --client music3.json
@@ -150,45 +150,45 @@ cargo test
 ## Build Requirements
 
 - Rust 1.70 or later
-- zig cc (used as a C compiler)
+- zig cc (used as C compiler)
 
-## Future Outlook
-- Currently, the project is considered stable.
-- Implementation will occur as needs are identified.
+## Future Prospects
+- Currently perceived as stable
+- Implement as needs are identified
 
 ## Project Goals
 - Motivation:
   - Previous challenges:
-    - Unable to input the next command until playback finishes.
+    - Cannot input the next command until playback finishes
   - Solution:
-    - Run as a persistent server, controlled by a client.
+    - Reside as a server and control from a client
   - Use cases:
     - Provide an experience where commands can be input while music is playing, similar to MSX's PLAY statement.
-    - From a timbre editor or phrase editor,
-      - utilize the crate as a client.
-    - Integrate the crate into a player, making it both a server and a client.
-      - On first run, launch a duplicate of itself as a server in the background to start playback, then terminate itself.
-        - *Conception: Unlike explicit server usage, output messages to logs instead of printing, as logs are easier to track.
-      - After the server is launched, act as a client to send JSON to the server, then terminate itself.
-- Simple and minimal. Easy to reference when building larger projects.
-- If sound stops, the priority will be to restore playback as quickly as possible.
+    - From a tone editor, phrase editor:
+      - Utilize the crate as a client
+    - Embed the crate into a player to make it both a server and a client:
+      - For the first run, launch a copy of itself as a server in the background, start playback, and then terminate itself.
+        - *Unlike explicit server usage, the idea is to output messages to logs instead of printing, as logs make it easier to understand.*
+      - After the server is started, it acts as a client to send JSON to the server and then terminates itself.
+- Simple and minimal. Useful as a reference when building larger projects.
+- If it stops playing, the intention is to prioritize actions to make it play again.
 
 ## Out of Scope
 - Advanced features
 - Reproduction of existing songs
 
 ## Development Methodology
-- TDD using an agent on Windows.
-- For this project specifically, Linux is prohibited.
-  - This is because:
-    - Early on, virtually Linux-specific code was generated.
-      - This might have served as a foundation for the Windows version.
-    - Unix/Linux/Windows branching, realtime-audio presence/absence branching, other branches, and a large number of associated comments,
-      - led to code bloat and became a hotbed for hallucinations.
-      - Resulted in low-quality code, with excessive `allow deadcode`, ignored tests, duplicate tests, unnecessary `cfg windows` branching, etc.
-      - Hallucinations became frequent, hindering bug fixes and the implementation of Windows-specific features.
-    - It was found that TDD with an agent on Windows works well for this project.
-      - The aforementioned hallucinations and inefficiencies were resolved through robust refactoring using TDD.
+- TDD with an agent on Windows
+- Linux is prohibited specifically for this project
+  - Because,
+    - In the early stages, effectively Linux-specific code was generated.
+      - It might have served as a foundation for the Windows version.
+    - Unix/Linux/Windows branching, realtime-audio presence branching, other branching, and a large number of associated comments,
+      - Led to code bloat and became a breeding ground for hallucinations.
+      - Resulted in low-quality code with many unnecessary `allow deadcode`, ignored tests, duplicate tests, and redundant `cfg windows` branches.
+      - Hallucinations occurred frequently, making bug fixes and feature implementation for the Windows version impossible.
+    - It was found that TDD with an agent on Windows worked well for this project.
+      - The aforementioned hallucinations and inefficiencies were also resolved through robust refactoring using TDD.
 
 ## License
 
@@ -197,4 +197,4 @@ MIT License
 ## Libraries Used
 
 - Nuked-OPM: LGPL 2.1
-- Other Rust crates: Follow individual crate licenses
+- Other Rust crates: Follow the license of each crate
