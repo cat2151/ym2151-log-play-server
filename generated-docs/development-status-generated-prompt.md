@@ -1,4 +1,4 @@
-Last updated: 2025-11-09
+Last updated: 2025-11-10
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -145,7 +145,6 @@ Last updated: 2025-11-09
 - .github/actions-tmp/.github_automation/project_summary/scripts/overview/ProjectDataCollector.cjs
 - .github/actions-tmp/.github_automation/project_summary/scripts/overview/ProjectDataFormatter.cjs
 - .github/actions-tmp/.github_automation/project_summary/scripts/overview/ProjectOverviewGenerator.cjs
-- .github/actions-tmp/.github_automation/project_summary/scripts/overview/TechStackAnalyzer.cjs
 - .github/actions-tmp/.github_automation/project_summary/scripts/shared/BaseGenerator.cjs
 - .github/actions-tmp/.github_automation/project_summary/scripts/shared/FileSystemUtils.cjs
 - .github/actions-tmp/.github_automation/project_summary/scripts/shared/ProjectFileUtils.cjs
@@ -156,6 +155,7 @@ Last updated: 2025-11-09
 - .github/actions-tmp/LICENSE
 - .github/actions-tmp/README.ja.md
 - .github/actions-tmp/README.md
+- .github/actions-tmp/_config.yml
 - .github/actions-tmp/generated-docs/callgraph.html
 - .github/actions-tmp/generated-docs/callgraph.js
 - .github/actions-tmp/generated-docs/development-status-generated-prompt.md
@@ -182,6 +182,7 @@ Last updated: 2025-11-09
 - .github/actions-tmp/issue-notes/26.md
 - .github/actions-tmp/issue-notes/27.md
 - .github/actions-tmp/issue-notes/28.md
+- .github/actions-tmp/issue-notes/29.md
 - .github/actions-tmp/issue-notes/3.md
 - .github/actions-tmp/issue-notes/4.md
 - .github/actions-tmp/issue-notes/7.md
@@ -203,6 +204,7 @@ Last updated: 2025-11-09
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- issue-notes/34.md
 - opm.c
 - opm.h
 - output_ym2151.json
@@ -244,40 +246,29 @@ Last updated: 2025-11-09
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-9adf5f2 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-5542ac7 誤って src/ 側の不要コメント削除時に巻き込んでしまったので、改めて本家版を取り込み
-7eac00c Auto-translate README.ja.md to README.md [auto]
-8f6be08 github-actionsリポジトリのものを再度持ってきた
-4fef13c READMEに開発方法を追加し、WindowsでのTDDの利点とLinux禁止の理由を説明
-61f0c12 READMEを更新し、サーバー・クライアントの機能を明確にし、プロジェクトの目指すものとスコープ外を追加
-e150501 サーバーとクライアントの表示を読みやすくし、状況を把握しやすくした
-4f40a05 テストの実行を安定させるためのユーティリティを追加し、サーバーおよびオーディオ関連のテストでの競合を防ぐためにロックを導入。テストケースを整理し、不要なテストを削除。新しいエイリアスを追加して、テストの実行を簡素化。
-560a3a7 testがフリーズしないよう修正
-a3defa7 サーバーシャットダウン方法をクライアントからのシャットダウン要求のみにして読みやすくした
+8f9534b Auto-translate README.ja.md to README.md [auto]
+21bdf0d Merge pull request #35 from cat2151/copilot/update-named-pipe-name
+f516901 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
+62041e5 github-actionsリポジトリの共通ワークフローを導入
+56a7b7f Remove accidentally committed test file
+e32f9f9 Task completed: Named pipe name updated to match repository name
+e0deecb Update named pipe name to match repository name
+e13e5f9 Add issue note for #34 [auto]
+2946000 Initial plan
+77bf916 Auto-translate README.ja.md to README.md [auto]
 
 ### 変更されたファイル:
-.cargo/config.toml
+.github/copilot-instructions.md
 .github/workflows/call-daily-project-summary.yml
-.github/workflows/call-issue-note.yml
-.github/workflows/call-translate-readme.yml
-Cargo.lock
-Cargo.toml
+.gitignore
 README.ja.md
 README.md
-opm.c
-opm.h
-src/audio.rs
-src/client.rs
-src/main.rs
-src/server.rs
-src/server_old.rs
-tests/client_test.rs
-tests/phase5_test.rs
-tests/phase7_error_test.rs
-tests/phase7_integration_test.rs
-tests/server_basic_test.rs
-tests/test_utils.rs
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview.md
+issue-notes/34.md
+src/ipc/pipe_windows.rs
 
 
 ---
-Generated at: 2025-11-09 07:01:34 JST
+Generated at: 2025-11-10 07:01:44 JST
