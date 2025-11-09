@@ -29,3 +29,4 @@ target
 output.wav
 output_pass2.json
 test_*.json
+test_syntax
