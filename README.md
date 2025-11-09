@@ -101,7 +101,7 @@ Examples:
 ```bash
 # Terminal 1: Start server
 $ cargo run --release -- --server output_ym2151.json
-Server started: /tmp/ym2151_server.pipe
+Server started: /tmp/ym2151-log-play-server.pipe
 Loaded output_ym2151.json (3 events)
 Playback started...
 

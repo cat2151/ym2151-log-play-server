@@ -94,7 +94,7 @@ cargo test phase7_integration_test
 - フォーマット: 16ビット符号付きステレオ
 
 ### サーバー・クライアント通信
-- **通信方式**: 名前付きパイプ（Unix: `/tmp/ym2151_server.pipe`）
+- **通信方式**: 名前付きパイプ（Unix: `/tmp/ym2151-log-play-server.pipe`）
 - **プロトコル**: テキストベース（改行区切り）
 - **コマンド**: `PLAY <path>`, `STOP`, `SHUTDOWN`
 - **レスポンス**: `OK`, `ERROR <message>`

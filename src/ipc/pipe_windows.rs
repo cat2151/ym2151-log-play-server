@@ -13,7 +13,7 @@ use windows::Win32::System::Pipes::{
     PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
 
-pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151_server";
+pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151-log-play-server";
 
 #[derive(Debug)]
 pub struct NamedPipe {
@@ -231,14 +231,14 @@ mod tests {
 
     #[test]
     fn test_create_pipe() {
-        let test_path = r"\\.\pipe\test_ym2151_create";
+        let test_path = r"\\.\pipe\test_ym2151-log-play-server_create";
         let pipe = NamedPipe::create_at(test_path).unwrap();
         assert_eq!(pipe.path(), Path::new(test_path));
     }
 
     #[test]
     fn test_write_read_pipe() {
-        let test_path = r"\\.\pipe\test_ym2151_rw";
+        let test_path = r"\\.\pipe\test_ym2151-log-play-server_rw";
 
         let pipe = NamedPipe::create_at(test_path).unwrap();
 
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn test_multiple_messages() {
-        let test_path = r"\\.\pipe\test_ym2151_multi";
+        let test_path = r"\\.\pipe\test_ym2151-log-play-server_multi";
 
         let pipe = NamedPipe::create_at(test_path).unwrap();
 
