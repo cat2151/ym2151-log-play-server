@@ -1,28 +1,28 @@
 # ym2151-log-play-server
 
-A server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
+A server and client for receiving YM2151 (OPM) register event logs and playing them in real-time.
 
-## Target Platforms
+## Target Platform
 
 - Windows only
-- Prohibition of Linux-specific code
-    - As an increase in hallucinations was observed in this project,
+- Linux-specific code prohibited
+    - In this project, an increase in hallucinations was observed, therefore
         - Linux-specific code is prohibited.
 
 ## Overview
 
-This project is a program that plays back register event logs from the YM2151 (OPM) sound chip.
-It operates in both standalone mode and server-client mode.
+This project is a program that plays back YM2151 (OPM) sound chip register event logs.
+It operates in both standalone and server-client modes.
 
 ### Key Features
 
 - Real-time playback of JSON music data
 - WAV file output
-- Resides as a server and continues real-time playback in the background
-- Controlled by a client to quickly switch to different performances
+- Runs as a persistent server, continuing real-time playback in the background
+- Controlled by a client for quick switching to different performances
 - Utilizes named pipes for server-client communication
 
-## Usage
+## How to Use
 
 ### Standalone Mode (Normal Playback)
 
@@ -40,7 +40,7 @@ cargo run --release output_ym2151.json
 
 #### Starting the Server
 
-Reside as a server and start playing JSON:
+Run as a persistent server and start playing JSON:
 
 ```bash
 cargo run --release -- --server output_ym2151.json
@@ -48,7 +48,7 @@ cargo run --release -- --server output_ym2151.json
 
 #### Client Operations
 
-Operate from another terminal in client mode:
+From another terminal, operate in client mode:
 
 ```bash
 # Play a new JSON file (switch performance)
@@ -61,7 +61,7 @@ cargo run --release -- --client --stop
 cargo run --release -- --client --shutdown
 ```
 
-### Command Line Arguments List
+### Command Line Argument List
 
 ```
 Usage:
@@ -69,51 +69,51 @@ Usage:
   ym2151-log-play-server --server <json_log_file>  # Server mode
   ym2151-log-play-server --client <json_log_file>  # Play new JSON
   ym2151-log-play-server --client --stop           # Stop playback
-  ym2151-log-play-server --client --shutdown       # Shut down server
+  ym2151-log-play-server --client --shutdown       # Shutdown server
 
 Options:
-  --server <file>    Resides as a server and plays the specified JSON
-  --client <file>    Instructs the server to play a new JSON file
-  --client --stop    Instructs the server to stop playback
-  --client --shutdown Instructs the server to shut down
+  --server <file>    Run as a server and play the specified JSON
+  --client <file>    Instruct the server to play a new JSON file
+  --client --stop    Instruct the server to stop playback
+  --client --shutdown Instruct the server to shut down
 
-Example:
+Examples:
   # Play in standalone mode
   ym2151-log-play-server output_ym2151.json
 
   # Start server
   ym2151-log-play-server --server output_ym2151.json
 
-  # From another terminal: Switch performance
+  # From another terminal: switch performance
   ym2151-log-play-server --client test_input.json
 
-  # From another terminal: Stop playback
+  # From another terminal: stop playback
   ym2151-log-play-server --client --stop
 
-  # From another terminal: Shut down server
+  # From another terminal: terminate server
   ym2151-log-play-server --client --shutdown
 ```
 
-### Usage Scenarios
+### Usage Scenario Examples
 
 #### Scenario 1: Basic Usage
 
 ```bash
 # Terminal 1: Start server
 $ cargo run --release -- --server output_ym2151.json
-Server started: /tmp/ym2151-log-play-server.pipe
-output_ym2151.json (3 events) loaded
-Playback started...
+サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
+output_ym2151.json (3 イベント) を読み込みました
+演奏を開始しました...
 
 # Terminal 2: Client operations
 $ cargo run --release -- --client test_input.json
-✅ Sent PLAY command to server
+✅ サーバーに PLAY コマンドを送信しました
 
 $ cargo run --release -- --client --stop
-✅ Sent STOP command to server
+✅ サーバーに STOP コマンドを送信しました
 
 $ cargo run --release -- --client --shutdown
-✅ Sent SHUTDOWN command to server
+✅ サーバーに SHUTDOWN コマンドを送信しました
 ```
 
 #### Scenario 2: Continuous Playback
@@ -122,7 +122,7 @@ $ cargo run --release -- --client --shutdown
 # Start server (Terminal 1)
 $ cargo run --release -- --server music1.json
 
-# Switch songs one after another (Terminal 2)
+# Switch songs successively (Terminal 2)
 $ cargo run --release -- --client music2.json
 $ sleep 5
 $ cargo run --release -- --client music3.json
@@ -153,48 +153,53 @@ cargo test
 - zig cc (used as C compiler)
 
 ## Future Prospects
-- Currently perceived as stable
-- Implement as needs are identified
+- Currently considered stable.
+- Will implement as needed when new requirements arise.
 
 ## Project Goals
 - Motivation:
-  - Previous challenges:
-    - Cannot input the next command until playback finishes
+  - Previous challenge:
+    - Unable to input the next command until playback finished.
   - Solution:
-    - Reside as a server and control from a client
+    - Run as a persistent server, controlled by a client.
   - Use cases:
-    - Provide an experience where commands can be input while music is playing, similar to MSX's PLAY statement.
-    - From a tone editor, phrase editor:
-      - Utilize the crate as a client
-    - Embed the crate into a player to make it both a server and a client:
-      - For the first run, launch a copy of itself as a server in the background, start playback, and then terminate itself.
-        - *Unlike explicit server usage, the idea is to output messages to logs instead of printing, as logs make it easier to understand.*
-      - After the server is started, it acts as a client to send JSON to the server and then terminates itself.
-- Simple and minimal. Useful as a reference when building larger projects.
-- If it stops playing, the intention is to prioritize actions to make it play again.
+    - Provide an experience similar to MSX's PLAY statement, where commands can be input while music is playing.
+    - Utilize the crate as a client from a sound editor or phrase editor.
+    - Embed the crate into a player, making it both a server and a client.
+      - First, start a clone of itself as a server in the background to begin playback, then the original terminates.
+        - *Instead of `print`, output messages to a `log` in this case, as `log` would make it easier to understand.*
+      - After the server starts, it acts as a client to send JSON to the server, then it terminates.
+- Simple and minimal, to serve as a reference for building larger projects.
+- If it stops producing sound, the intention is to prioritize actions to get it working again.
+
+## Project Intent
+- Why this module split?
+  - To enable GitHub Copilot Coding Agent to perform TDD on layers above this (from MML input to log generation) using GitHub Linux Runner.
+  - This layer (Windows real-time playback and Windows client-server) cannot be TDDed by GitHub Copilot Coding Agent on GitHub Linux Runner. Instead, it requires TDD by a Windows local agent, which has a higher workload.
+  - Therefore, this layer with higher workload is isolated to allow efficient development of other layers.
 
 ## Out of Scope
 - Advanced features
 - Reproduction of existing songs
 
-## Development Methodology
-- TDD with an agent on Windows
-- Linux is prohibited specifically for this project
-  - Because,
-    - In the early stages, effectively Linux-specific code was generated.
+## Development Method
+- TDD with an agent on Windows.
+- Linux is prohibited specifically for this project.
+  - Because:
+    - Early on, essentially Linux-specific code was generated.
       - It might have served as a foundation for the Windows version.
-    - Unix/Linux/Windows branching, realtime-audio presence branching, other branching, and a large number of associated comments,
+    - Unix/Linux/Windows branching, real-time audio presence branching, other branching, and a large number of associated comments,
       - Led to code bloat and became a breeding ground for hallucinations.
-      - Resulted in low-quality code with many unnecessary `allow deadcode`, ignored tests, duplicate tests, and redundant `cfg windows` branches.
-      - Hallucinations occurred frequently, making bug fixes and feature implementation for the Windows version impossible.
+      - Resulted in low-quality code with unnecessary `allow deadcode`, ignored tests, duplicate tests, and useless `cfg windows` branches.
+      - Frequent hallucinations made bug fixing and Windows feature implementation impossible.
     - It was found that TDD with an agent on Windows worked well for this project.
-      - The aforementioned hallucinations and inefficiencies were also resolved through robust refactoring using TDD.
+      - The aforementioned hallucinations and inefficiencies were resolved through robust refactoring using TDD.
 
 ## License
 
 MIT License
 
-## Libraries Used
+## Used Libraries
 
 - Nuked-OPM: LGPL 2.1
-- Other Rust crates: Follow the license of each crate
+- Other Rust crates: According to each crate's license
