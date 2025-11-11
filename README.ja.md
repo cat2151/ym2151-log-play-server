@@ -173,6 +173,12 @@ cargo test
 - シンプルでミニマム。より大規模なものを作るときに参考にしやすい用
 - もし鳴らなくなったら、できるだけ優先して鳴るよう行動するつもり
 
+## プロジェクトの意図
+- なぜこのようなモジュール分割をしたか？
+  - ここより上のレイヤー（MML入力からlog生成まで）を、GitHub Linux RunnerでGitHub Copilot Coding AgentがTDDできるようにするため。
+  - このレイヤー（Windowsリアルタイム演奏と、Windowsクライアント・サーバー）は、GitHub Linux RunnerでGitHub Copilot Coding AgentがTDDできず、かわりにWindows localのagentによるTDDが必要なので、やや作業負荷が高い。
+  - なので、作業負荷の高いこのレイヤーだけを切り分けて、ほかのレイヤーを効率的に開発できるようにするため。
+
 ## スコープ外
 - 高度な機能
 - 既存曲の再現
