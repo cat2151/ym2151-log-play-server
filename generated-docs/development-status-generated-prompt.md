@@ -1,4 +1,4 @@
-Last updated: 2025-11-10
+Last updated: 2025-11-12
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -160,6 +160,7 @@ Last updated: 2025-11-10
 - .github/actions-tmp/generated-docs/callgraph.js
 - .github/actions-tmp/generated-docs/development-status-generated-prompt.md
 - .github/actions-tmp/generated-docs/development-status.md
+- .github/actions-tmp/generated-docs/project-overview-generated-prompt.md
 - .github/actions-tmp/generated-docs/project-overview.md
 - .github/actions-tmp/generated-docs/style.css
 - .github/actions-tmp/issue-notes/10.md
@@ -184,6 +185,7 @@ Last updated: 2025-11-10
 - .github/actions-tmp/issue-notes/28.md
 - .github/actions-tmp/issue-notes/29.md
 - .github/actions-tmp/issue-notes/3.md
+- .github/actions-tmp/issue-notes/30.md
 - .github/actions-tmp/issue-notes/4.md
 - .github/actions-tmp/issue-notes/7.md
 - .github/actions-tmp/issue-notes/8.md
@@ -204,6 +206,7 @@ Last updated: 2025-11-10
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- generated-docs/project-overview-generated-prompt.md
 - issue-notes/34.md
 - opm.c
 - opm.h
@@ -246,16 +249,16 @@ Last updated: 2025-11-10
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+ba159dd Auto-translate README.ja.md to README.md [auto]
+5c6a968 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
+2299285 レイヤー分割の意図を追記
+6a462c4 Update project summaries (overview & development status) [auto]
 8f9534b Auto-translate README.ja.md to README.md [auto]
 21bdf0d Merge pull request #35 from cat2151/copilot/update-named-pipe-name
 f516901 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
 62041e5 github-actionsリポジトリの共通ワークフローを導入
 56a7b7f Remove accidentally committed test file
 e32f9f9 Task completed: Named pipe name updated to match repository name
-e0deecb Update named pipe name to match repository name
-e13e5f9 Add issue note for #34 [auto]
-2946000 Initial plan
-77bf916 Auto-translate README.ja.md to README.md [auto]
 
 ### 変更されたファイル:
 .github/copilot-instructions.md
@@ -265,10 +268,11 @@ README.ja.md
 README.md
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/34.md
 src/ipc/pipe_windows.rs
 
 
 ---
-Generated at: 2025-11-10 07:01:44 JST
+Generated at: 2025-11-12 07:02:01 JST

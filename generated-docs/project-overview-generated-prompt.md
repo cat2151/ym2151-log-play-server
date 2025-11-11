@@ -1,4 +1,4 @@
-Last updated: 2025-11-10
+Last updated: 2025-11-12
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -235,6 +235,12 @@ cargo test
       - サーバ起動したあとは、クライアントとしてサーバにJSONを投げて、自分は終了
 - シンプルでミニマム。より大規模なものを作るときに参考にしやすい用
 - もし鳴らなくなったら、できるだけ優先して鳴るよう行動するつもり
+
+## プロジェクトの意図
+- なぜこのようなモジュール分割をしたか？
+  - ここより上のレイヤー（MML入力からlog生成まで）を、GitHub Linux RunnerでGitHub Copilot Coding AgentがTDDできるようにするため。
+  - このレイヤー（Windowsリアルタイム演奏と、Windowsクライアント・サーバー）は、GitHub Linux RunnerでGitHub Copilot Coding AgentがTDDできず、かわりにWindows localのagentによるTDDが必要なので、やや作業負荷が高い。
+  - なので、作業負荷の高いこのレイヤーだけを切り分けて、ほかのレイヤーを効率的に開発できるようにするため。
 
 ## スコープ外
 - 高度な機能
@@ -1359,7 +1365,6 @@ MIT License
                                               📄 _config.yml
                                               📄 build.rs
                                               📁 generated-docs/
-                                                📖 development-status-generated-prompt.md
                                               📁 issue-notes/
                                                 📖 34.md
                                               📄 opm.c
@@ -1400,7 +1405,6 @@ MIT License
                                             📄 _config.yml
                                             📄 build.rs
                                             📁 generated-docs/
-                                              📖 development-status-generated-prompt.md
                                             📁 issue-notes/
                                               📖 34.md
                                             📄 opm.c
@@ -1441,7 +1445,6 @@ MIT License
                                           📄 _config.yml
                                           📄 build.rs
                                           📁 generated-docs/
-                                            📖 development-status-generated-prompt.md
                                           📁 issue-notes/
                                             📖 34.md
                                           📄 opm.c
@@ -1482,7 +1485,6 @@ MIT License
                                         📄 _config.yml
                                         📄 build.rs
                                         📁 generated-docs/
-                                          📖 development-status-generated-prompt.md
                                         📁 issue-notes/
                                           📖 34.md
                                         📄 opm.c
@@ -1523,7 +1525,6 @@ MIT License
                                       📄 _config.yml
                                       📄 build.rs
                                       📁 generated-docs/
-                                        📖 development-status-generated-prompt.md
                                       📁 issue-notes/
                                         📖 34.md
                                       📄 opm.c
@@ -1564,7 +1565,6 @@ MIT License
                                     📄 _config.yml
                                     📄 build.rs
                                     📁 generated-docs/
-                                      📖 development-status-generated-prompt.md
                                     📁 issue-notes/
                                       📖 34.md
                                     📄 opm.c
@@ -1605,7 +1605,6 @@ MIT License
                                   📄 _config.yml
                                   📄 build.rs
                                   📁 generated-docs/
-                                    📖 development-status-generated-prompt.md
                                   📁 issue-notes/
                                     📖 34.md
                                   📄 opm.c
@@ -1646,7 +1645,6 @@ MIT License
                                 📄 _config.yml
                                 📄 build.rs
                                 📁 generated-docs/
-                                  📖 development-status-generated-prompt.md
                                 📁 issue-notes/
                                   📖 34.md
                                 📄 opm.c
@@ -1687,7 +1685,6 @@ MIT License
                               📄 _config.yml
                               📄 build.rs
                               📁 generated-docs/
-                                📖 development-status-generated-prompt.md
                               📁 issue-notes/
                                 📖 34.md
                               📄 opm.c
@@ -1728,7 +1725,6 @@ MIT License
                             📄 _config.yml
                             📄 build.rs
                             📁 generated-docs/
-                              📖 development-status-generated-prompt.md
                             📁 issue-notes/
                               📖 34.md
                             📄 opm.c
@@ -1769,7 +1765,6 @@ MIT License
                           📄 _config.yml
                           📄 build.rs
                           📁 generated-docs/
-                            📖 development-status-generated-prompt.md
                           📁 issue-notes/
                             📖 34.md
                           📄 opm.c
@@ -1810,7 +1805,6 @@ MIT License
                         📄 _config.yml
                         📄 build.rs
                         📁 generated-docs/
-                          📖 development-status-generated-prompt.md
                         📁 issue-notes/
                           📖 34.md
                         📄 opm.c
@@ -1851,7 +1845,6 @@ MIT License
                       📄 _config.yml
                       📄 build.rs
                       📁 generated-docs/
-                        📖 development-status-generated-prompt.md
                       📁 issue-notes/
                         📖 34.md
                       📄 opm.c
@@ -1892,7 +1885,6 @@ MIT License
                     📄 _config.yml
                     📄 build.rs
                     📁 generated-docs/
-                      📖 development-status-generated-prompt.md
                     📁 issue-notes/
                       📖 34.md
                     📄 opm.c
@@ -1933,7 +1925,6 @@ MIT License
                   📄 _config.yml
                   📄 build.rs
                   📁 generated-docs/
-                    📖 development-status-generated-prompt.md
                   📁 issue-notes/
                     📖 34.md
                   📄 opm.c
@@ -1974,7 +1965,6 @@ MIT License
                 📄 _config.yml
                 📄 build.rs
                 📁 generated-docs/
-                  📖 development-status-generated-prompt.md
                 📁 issue-notes/
                   📖 34.md
                 📄 opm.c
@@ -2015,7 +2005,6 @@ MIT License
               📄 _config.yml
               📄 build.rs
               📁 generated-docs/
-                📖 development-status-generated-prompt.md
               📁 issue-notes/
                 📖 34.md
               📄 opm.c
@@ -2056,7 +2045,6 @@ MIT License
             📄 _config.yml
             📄 build.rs
             📁 generated-docs/
-              📖 development-status-generated-prompt.md
             📁 issue-notes/
               📖 34.md
             📄 opm.c
@@ -2097,7 +2085,6 @@ MIT License
           📄 _config.yml
           📄 build.rs
           📁 generated-docs/
-            📖 development-status-generated-prompt.md
           📁 issue-notes/
             📖 34.md
           📄 opm.c
@@ -2138,7 +2125,6 @@ MIT License
         📄 _config.yml
         📄 build.rs
         📁 generated-docs/
-          📖 development-status-generated-prompt.md
         📁 issue-notes/
           📖 34.md
         📄 opm.c
@@ -2179,7 +2165,6 @@ MIT License
       📄 _config.yml
       📄 build.rs
       📁 generated-docs/
-        📖 development-status-generated-prompt.md
       📁 issue-notes/
         📖 34.md
       📄 opm.c
@@ -2220,7 +2205,6 @@ MIT License
     📄 _config.yml
     📄 build.rs
     📁 generated-docs/
-      📖 development-status-generated-prompt.md
     📁 issue-notes/
       📖 34.md
     📄 opm.c
@@ -2261,7 +2245,6 @@ MIT License
   📄 _config.yml
   📄 build.rs
   📁 generated-docs/
-    📖 development-status-generated-prompt.md
   📁 issue-notes/
     📖 34.md
   📄 opm.c
@@ -2302,7 +2285,6 @@ MIT License
 📄 _config.yml
 📄 build.rs
 📁 generated-docs/
-  📖 development-status-generated-prompt.md
 📁 issue-notes/
   📖 34.md
 📄 opm.c
@@ -2417,4 +2399,4 @@ tests/fixtures/complex.json
 
 
 ---
-Generated at: 2025-11-10 07:01:44 JST
+Generated at: 2025-11-12 07:02:01 JST
