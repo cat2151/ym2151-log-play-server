@@ -101,7 +101,7 @@ cargo run --release -- --client --shutdown
 ```bash
 # ターミナル1: サーバー起動
 $ cargo run --release -- --server output_ym2151.json
-サーバーを起動しました: /tmp/ym2151_server.pipe
+サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
 output_ym2151.json (3 イベント) を読み込みました
 演奏を開始しました...
 
