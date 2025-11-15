@@ -1,4 +1,4 @@
-Last updated: 2025-11-12
+Last updated: 2025-11-16
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -208,6 +208,7 @@ Last updated: 2025-11-12
 - build.rs
 - generated-docs/project-overview-generated-prompt.md
 - issue-notes/34.md
+- issue-notes/36.md
 - opm.c
 - opm.h
 - output_ym2151.json
@@ -249,21 +250,21 @@ Last updated: 2025-11-12
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+eb2702d Merge pull request #37 from cat2151/copilot/handle-json-string-data
+5dbc1e3 Fix doc comment formatting
+48c3088 Add documentation and additional tests for JSON string feature
+e4ee590 Add JSON string support for named pipe data
+118d388 Initial plan
+c1f4e7b Add issue note for #36 [auto]
+0bd1028 Update project summaries (overview & development status) [auto]
 ba159dd Auto-translate README.ja.md to README.md [auto]
 5c6a968 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
 2299285 レイヤー分割の意図を追記
-6a462c4 Update project summaries (overview & development status) [auto]
-8f9534b Auto-translate README.ja.md to README.md [auto]
-21bdf0d Merge pull request #35 from cat2151/copilot/update-named-pipe-name
-f516901 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-62041e5 github-actionsリポジトリの共通ワークフローを導入
-56a7b7f Remove accidentally committed test file
-e32f9f9 Task completed: Named pipe name updated to match repository name
 
 ### 変更されたファイル:
 .github/copilot-instructions.md
-.github/workflows/call-daily-project-summary.yml
 .gitignore
+Cargo.toml
 README.ja.md
 README.md
 generated-docs/development-status-generated-prompt.md
@@ -271,8 +272,15 @@ generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 issue-notes/34.md
+issue-notes/36.md
+src/client.rs
+src/events.rs
+src/ipc/mod.rs
 src/ipc/pipe_windows.rs
+src/ipc/protocol.rs
+src/lib.rs
+src/server.rs
 
 
 ---
-Generated at: 2025-11-12 07:02:01 JST
+Generated at: 2025-11-16 07:01:42 JST
