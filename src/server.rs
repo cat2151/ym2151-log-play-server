@@ -114,7 +114,32 @@ impl Server {
                     }
                 };
 
-                eprintln!("📩 コマンドを受信しました: {:?}", command);
+                // コマンドの内容をログ出力（JSON文字列の場合は末尾要素のみ表示）
+                match &command {
+                    Command::Play(json_data) => {
+                        if Command::is_json_string(json_data) {
+                            // JSON文字列の場合、末尾要素だけを表示
+                            match EventLog::from_json_str(json_data) {
+                                Ok(log) if !log.events.is_empty() => {
+                                    let last_event = &log.events[log.events.len() - 1];
+                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (末尾要素: time:{}, addr:0x{:02X}, data:0x{:02X})",
+                                             last_event.time, last_event.addr, last_event.data);
+                                }
+                                Ok(_) => {
+                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (空のイベント配列)");
+                                }
+                                Err(_) => {
+                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (解析エラー)");
+                                }
+                            }
+                        } else {
+                            eprintln!("📩 コマンドを受信しました: PLAY {}", json_data);
+                        }
+                    }
+                    other => {
+                        eprintln!("📩 コマンドを受信しました: {:?}", other);
+                    }
+                }
 
                 let response = match command {
                     Command::Play(json_data) => {
