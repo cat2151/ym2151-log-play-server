@@ -33,9 +33,35 @@ pub struct EventLog {
 }
 
 impl EventLog {
+    /// Load event log from a file path
     pub fn from_file<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let content = fs::read_to_string(path)?;
         let log: EventLog = serde_json::from_str(&content)?;
+        Ok(log)
+    }
+
+    /// Parse event log directly from a JSON string
+    ///
+    /// This is useful when receiving JSON data via IPC (e.g., named pipes)
+    /// without writing to an intermediate file first.
+    ///
+    /// # Example
+    /// ```
+    /// # use ym2151_log_play_server::events::EventLog;
+    /// let json_str = r#"{
+    ///     "event_count": 2,
+    ///     "events": [
+    ///         {"time": 0, "addr": "0x08", "data": "0x00"},
+    ///         {"time": 2, "addr": "0x20", "data": "0xC7"}
+    ///     ]
+    /// }"#;
+    ///
+    /// let log = EventLog::from_json_str(json_str).unwrap();
+    /// assert_eq!(log.event_count, 2);
+    /// assert!(log.validate());
+    /// ```
+    pub fn from_json_str(json_str: &str) -> anyhow::Result<Self> {
+        let log: EventLog = serde_json::from_str(json_str)?;
         Ok(log)
     }
 
@@ -215,5 +241,70 @@ mod tests {
 
         let log: EventLog = serde_json::from_str(json).unwrap();
         assert_eq!(log.events[1].time, 111862);
+    }
+
+    #[test]
+    fn test_from_json_str() {
+        let json = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        let log = EventLog::from_json_str(json).unwrap();
+        assert_eq!(log.event_count, 2);
+        assert_eq!(log.events.len(), 2);
+        assert_eq!(log.events[0].time, 0);
+        assert_eq!(log.events[1].addr, 0x20);
+    }
+
+    #[test]
+    fn test_from_json_str_validates() {
+        let json = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        let log = EventLog::from_json_str(json).unwrap();
+        assert!(log.validate());
+    }
+
+    #[test]
+    fn test_from_json_str_invalid_json() {
+        let json = r#"{"event_count": 1, "events": [}"#;
+        let result = EventLog::from_json_str(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_json_string_vs_file_workflow() {
+        // This test demonstrates the difference between file-based and string-based loading
+
+        // Scenario 1: JSON string (new feature)
+        let json_string = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 100, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        let log_from_string = EventLog::from_json_str(json_string).unwrap();
+        assert_eq!(log_from_string.event_count, 2);
+        assert!(log_from_string.validate());
+
+        // Scenario 2: Both methods should produce identical results
+        // (We can't test file loading in this test without creating temp files,
+        // but the from_file method internally uses the same serde_json::from_str)
+
+        // Verify the data is correctly parsed
+        assert_eq!(log_from_string.events[0].addr, 0x08);
+        assert_eq!(log_from_string.events[1].addr, 0x20);
+        assert_eq!(log_from_string.events[1].data, 0xC7);
     }
 }

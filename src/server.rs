@@ -66,10 +66,7 @@ impl Server {
             let connection_pipe = match NamedPipe::create() {
                 Ok(p) => p,
                 Err(e) => {
-                    eprintln!(
-                        "⚠️  警告: 接続用の新しいパイプの作成に失敗しました: {}",
-                        e
-                    );
+                    eprintln!("⚠️  警告: 接続用の新しいパイプの作成に失敗しました: {}", e);
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
@@ -120,17 +117,28 @@ impl Server {
                 eprintln!("📩 コマンドを受信しました: {:?}", command);
 
                 let response = match command {
-                    Command::Play(json_path) => {
-                        eprintln!("🎵 新しい音声ファイルを読み込み中: {}", json_path);
+                    Command::Play(json_data) => {
+                        use crate::ipc::protocol::Command;
+
+                        if Command::is_json_string(&json_data) {
+                            eprintln!("🎵 JSON文字列データを読み込み中...");
+                        } else {
+                            eprintln!("🎵 新しい音声ファイルを読み込み中: {}", json_data);
+                        }
 
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
 
-                        match Self::load_and_start_playback(&json_path) {
+                        match Self::load_and_start_playback(&json_data) {
                             Ok(player) => {
                                 audio_player = Some(player);
-                                eprintln!("✅ 音声再生を開始しました: {}", json_path);
+
+                                if Command::is_json_string(&json_data) {
+                                    eprintln!("✅ JSON文字列から音声再生を開始しました");
+                                } else {
+                                    eprintln!("✅ 音声再生を開始しました: {}", json_data);
+                                }
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Playing;
@@ -195,9 +203,18 @@ impl Server {
         self.shutdown_flag.load(Ordering::Relaxed)
     }
 
-    fn load_and_start_playback(json_path: &str) -> Result<AudioPlayer> {
-        let log = EventLog::from_file(json_path)
-            .with_context(|| format!("Failed to load JSON file: {}", json_path))?;
+    fn load_and_start_playback(json_data: &str) -> Result<AudioPlayer> {
+        use crate::ipc::protocol::Command;
+
+        let log = if Command::is_json_string(json_data) {
+            // Parse as JSON string directly
+            EventLog::from_json_str(json_data)
+                .with_context(|| "Failed to parse JSON string data")?
+        } else {
+            // Load from file path
+            EventLog::from_file(json_data)
+                .with_context(|| format!("Failed to load JSON file: {}", json_data))?
+        };
 
         if !log.validate() {
             return Err(anyhow::anyhow!(

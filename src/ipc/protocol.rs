@@ -38,6 +38,22 @@ impl Command {
             Command::Shutdown => "SHUTDOWN\n".to_string(),
         }
     }
+
+    /// Check if a string appears to be JSON data (starts with '{', ends with '}')
+    ///
+    /// This is used to distinguish between file paths and JSON string data
+    /// when processing PLAY commands.
+    ///
+    /// # Example
+    /// ```
+    /// # use ym2151_log_play_server::ipc::protocol::Command;
+    /// assert!(Command::is_json_string(r#"{"key": "value"}"#));
+    /// assert!(!Command::is_json_string("/path/to/file.json"));
+    /// ```
+    pub fn is_json_string(s: &str) -> bool {
+        let trimmed = s.trim();
+        trimmed.starts_with('{') && trimmed.ends_with('}')
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -247,5 +263,59 @@ mod tests {
         let serialized = original.serialize();
         let parsed = Response::parse(serialized.trim()).unwrap();
         assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_is_json_string_valid() {
+        assert!(Command::is_json_string(r#"{"key": "value"}"#));
+        assert!(Command::is_json_string(r#"{ "key": "value" }"#));
+        assert!(Command::is_json_string(
+            r#"{"event_count": 1, "events": []}"#
+        ));
+    }
+
+    #[test]
+    fn test_is_json_string_with_whitespace() {
+        assert!(Command::is_json_string(r#"  {"key": "value"}  "#));
+    }
+
+    #[test]
+    fn test_is_json_string_invalid() {
+        assert!(!Command::is_json_string("/path/to/file.json"));
+        assert!(!Command::is_json_string("file.json"));
+        assert!(!Command::is_json_string("{incomplete"));
+        assert!(!Command::is_json_string("incomplete}"));
+        assert!(!Command::is_json_string("[]"));
+        assert!(!Command::is_json_string(""));
+    }
+
+    #[test]
+    fn test_parse_play_command_with_json_string() {
+        let json = r#"{"event_count": 1, "events": []}"#;
+        let cmd = Command::parse(&format!("PLAY {}", json)).unwrap();
+        if let Command::Play(data) = &cmd {
+            assert!(Command::is_json_string(data));
+        } else {
+            panic!("Expected Play command");
+        }
+    }
+
+    #[test]
+    fn test_json_string_roundtrip() {
+        // Simulate sending a JSON string via PLAY command
+        let json_data = r#"{"event_count": 2, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
+        let cmd = Command::Play(json_data.to_string());
+
+        // Serialize and parse
+        let serialized = cmd.serialize();
+        let parsed = Command::parse(serialized.trim()).unwrap();
+
+        // Verify it's still a Play command with JSON string
+        if let Command::Play(data) = parsed {
+            assert!(Command::is_json_string(&data));
+            assert_eq!(data, json_data);
+        } else {
+            panic!("Expected Play command");
+        }
     }
 }
