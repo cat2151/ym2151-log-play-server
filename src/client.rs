@@ -40,13 +40,11 @@ fn send_command(command: Command) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
 
     match response {
-        Response::Ok => {
-            match &command {
-                Command::Play(path) => eprintln!("✅ 演奏開始: {}", path),
-                Command::Stop => eprintln!("✅ 演奏停止しました"),
-                Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
-            }
-        }
+        Response::Ok => match &command {
+            Command::Play(path) => eprintln!("✅ 演奏開始: {}", path),
+            Command::Stop => eprintln!("✅ 演奏停止しました"),
+            Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+        },
         Response::Error(msg) => {
             eprintln!("❌ サーバーエラー: {}", msg);
             return Err(anyhow::anyhow!("Server returned error: {}", msg));

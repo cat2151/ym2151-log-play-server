@@ -39,6 +39,11 @@ impl EventLog {
         Ok(log)
     }
 
+    pub fn from_json_str(json_str: &str) -> anyhow::Result<Self> {
+        let log: EventLog = serde_json::from_str(json_str)?;
+        Ok(log)
+    }
+
     pub fn validate(&self) -> bool {
         if self.event_count != self.events.len() {
             return false;
@@ -215,5 +220,43 @@ mod tests {
 
         let log: EventLog = serde_json::from_str(json).unwrap();
         assert_eq!(log.events[1].time, 111862);
+    }
+
+    #[test]
+    fn test_from_json_str() {
+        let json = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        let log = EventLog::from_json_str(json).unwrap();
+        assert_eq!(log.event_count, 2);
+        assert_eq!(log.events.len(), 2);
+        assert_eq!(log.events[0].time, 0);
+        assert_eq!(log.events[1].addr, 0x20);
+    }
+
+    #[test]
+    fn test_from_json_str_validates() {
+        let json = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        let log = EventLog::from_json_str(json).unwrap();
+        assert!(log.validate());
+    }
+
+    #[test]
+    fn test_from_json_str_invalid_json() {
+        let json = r#"{"event_count": 1, "events": [}"#;
+        let result = EventLog::from_json_str(json);
+        assert!(result.is_err());
     }
 }
