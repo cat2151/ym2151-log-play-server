@@ -41,10 +41,10 @@ impl EventLog {
     }
 
     /// Parse event log directly from a JSON string
-    /// 
+    ///
     /// This is useful when receiving JSON data via IPC (e.g., named pipes)
     /// without writing to an intermediate file first.
-    /// 
+    ///
     /// # Example
     /// ```
     /// # use ym2151_log_play_server::events::EventLog;
@@ -55,7 +55,7 @@ impl EventLog {
     ///         {"time": 2, "addr": "0x20", "data": "0xC7"}
     ///     ]
     /// }"#;
-    /// 
+    ///
     /// let log = EventLog::from_json_str(json_str).unwrap();
     /// assert_eq!(log.event_count, 2);
     /// assert!(log.validate());

@@ -40,10 +40,10 @@ impl Command {
     }
 
     /// Check if a string appears to be JSON data (starts with '{', ends with '}')
-    /// 
+    ///
     /// This is used to distinguish between file paths and JSON string data
     /// when processing PLAY commands.
-    /// 
+    ///
     /// # Example
     /// ```
     /// # use ym2151_log_play_server::ipc::protocol::Command;
