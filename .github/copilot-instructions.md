@@ -4,7 +4,7 @@
 
 YM2151 (OPM) チップレジスタイベントログのサーバー・クライアントシステム。JSONイベントログを読み込み、Nuked-OPMエミュレータを使用してリアルタイム音声再生とWAVファイル出力を行います。
 
-オリジナルC実装: https://github.com/cat2151/ym2151-log-player
+オリジナル実装（サーバー・クライアント組み込み前）: https://github.com/cat2151/ym2151-log-player-rust
 
 ### 主要機能
 - スタンドアロンモード（従来の単体実行）
@@ -159,7 +159,7 @@ cargo clippy --all-targets -- -D warnings
 
 ## 参考資料
 
-- オリジナル実装: https://github.com/cat2151/ym2151-log-player
+- オリジナル実装: https://github.com/cat2151/ym2151-log-player-rust
 - Nuked-OPM: https://github.com/nukeykt/Nuked-OPM
 - YM2151仕様: Yamaha YM2151データシート
 

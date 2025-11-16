@@ -4,9 +4,9 @@
 
 set -e
 
-echo "=========================================="
-echo "CI Environment Setup for ym2151-log-player"
-echo "=========================================="
+echo "==============================================="
+echo "CI Environment Setup for ym2151-log-play-server"
+echo "==============================================="
 echo ""
 
 # Create ALSA configuration
