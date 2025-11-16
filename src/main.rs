@@ -110,18 +110,16 @@ fn main() {
 
                 // Read JSON file content
                 match std::fs::read_to_string(json_path) {
-                    Ok(json_content) => {
-                        match client::send_json(&json_content) {
-                            Ok(_) => {
-                                std::process::exit(0);
-                            }
-                            Err(e) => {
-                                eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
-                                eprintln!("   サーバーが起動しているか確認してください");
-                                std::process::exit(1);
-                            }
+                    Ok(json_content) => match client::send_json(&json_content) {
+                        Ok(_) => {
+                            std::process::exit(0);
                         }
-                    }
+                        Err(e) => {
+                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
+                            eprintln!("   サーバーが起動しているか確認してください");
+                            std::process::exit(1);
+                        }
+                    },
                     Err(e) => {
                         eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
                         std::process::exit(1);
