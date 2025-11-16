@@ -1,4 +1,4 @@
-Last updated: 2025-11-16
+Last updated: 2025-11-17
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -63,6 +63,11 @@ Last updated: 2025-11-16
 名前: 
 説明: # ym2151-log-play-server
 
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
 YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント
 
 ## 対象プラットフォーム
@@ -71,6 +76,10 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
 - Linux専用codeの禁止
     - 当projectにおいてはハルシネーションの増大が認められたため、
         - Linux専用codeを禁止します
+
+## 状況
+
+ライブラリとして、`cat-play-mml`や`ym2151-tone-editor`に組み込んで使っています。
 
 ## 概要
 
@@ -86,6 +95,39 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
 - サーバー・クライアント通信に名前付きパイプを利用
 
 ## 使い方
+
+### ライブラリとしての使用（プログラマティック制御）
+
+このライブラリをプログラムから使用する場合の推奨パターン：
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // サーバーの準備を確認（必要に応じて自動的にインストールと起動）
+    client::ensure_server_ready("cat-play-mml")?;
+    
+    // JSONデータを送信
+    let json_data = r#"{"event_count": 2, "events": [...]}"#;
+    client::send_json(json_data)?;
+    
+    // 再生制御
+    client::stop_playback()?;
+    
+    // 終了時にシャットダウン
+    client::shutdown_server()?;
+    
+    Ok(())
+}
+```
+
+`ensure_server_ready()` 関数は以下のことを自動的に行い、シームレスな開発体験を提供します：
+1. サーバーが既に起動しているか確認
+2. PATHにサーバーアプリケーションが見つからない場合、cargo経由でインストール
+3. サーバーをバックグラウンドモードで起動
+4. サーバーがコマンドを受け付けられる状態になるまで待機
+
+これにより、ライブラリユーザーがサーバーのライフサイクルを手動で管理する必要がなくなります。
 
 ### スタンドアロンモード（通常の再生）
 
@@ -683,22 +725,38 @@ MIT License
                                                                                 📖 README.md
                                                                                 📄 _config.yml
                                                                                 📄 build.rs
+                                                                                📁 examples/
+                                                                                  📄 test_client_non_verbose.rs
+                                                                                  📄 test_client_verbose.rs
+                                                                                  📄 test_logging_non_verbose.rs
+                                                                                  📄 test_logging_verbose.rs
                                                                                 📁 generated-docs/
                                                                                 📁 issue-notes/
                                                                                   📖 34.md
                                                                                   📖 36.md
+                                                                                  📖 38.md
+                                                                                  📖 40.md
+                                                                                  📖 42.md
+                                                                                  📖 44.md
+                                                                                  📖 46.md
+                                                                                  📖 48.md
+                                                                                  📖 50.md
+                                                                                  📖 52.md
+                                                                                  📖 54.md
                                                                                 📄 opm.c
                                                                                 📄 opm.h
                                                                                 📄 setup_ci_environment.sh
                                                                                 📁 src/
                                                                                   📄 audio.rs
                                                                                   📄 client.rs
+                                                                                  📄 debug_wav.rs
                                                                                   📄 events.rs
                                                                                   📁 ipc/
                                                                                     📄 mod.rs
                                                                                     📄 pipe_windows.rs
                                                                                     📄 protocol.rs
                                                                                   📄 lib.rs
+                                                                                  📄 logging.rs
                                                                                   📄 main.rs
                                                                                   📄 opm.rs
                                                                                   📄 opm_ffi.rs
@@ -707,13 +765,18 @@ MIT License
                                                                                   📄 server.rs
                                                                                   📄 wav_writer.rs
                                                                                 📁 tests/
+                                                                                  📄 client_json_test.rs
                                                                                   📄 client_test.rs
+                                                                                  📄 client_verbose_test.rs
+                                                                                  📄 debug_wav_test.rs
                                                                                   📄 duration_test.rs
+                                                                                  📄 ensure_server_ready_test.rs
                                                                                   📁 fixtures/
                                                                                     📊 complex.json
                                                                                     📊 simple.json
                                                                                   📄 integration_test.rs
                                                                                   📄 ipc_pipe_test.rs
+                                                                                  📄 logging_test.rs
                                                                                   📄 phase3_test.rs
                                                                                   📄 phase4_test.rs
                                                                                   📄 phase5_test.rs
@@ -724,22 +787,38 @@ MIT License
                                                                                   📄 test_utils.rs
                                                                               📄 _config.yml
                                                                               📄 build.rs
+                                                                              📁 examples/
+                                                                                📄 test_client_non_verbose.rs
+                                                                                📄 test_client_verbose.rs
+                                                                                📄 test_logging_non_verbose.rs
+                                                                                📄 test_logging_verbose.rs
                                                                               📁 generated-docs/
                                                                               📁 issue-notes/
                                                                                 📖 34.md
                                                                                 📖 36.md
+                                                                                📖 38.md
+                                                                                📖 40.md
+                                                                                📖 42.md
+                                                                                📖 44.md
+                                                                                📖 46.md
+                                                                                📖 48.md
+                                                                                📖 50.md
+                                                                                📖 52.md
+                                                                                📖 54.md
                                                                               📄 opm.c
                                                                               📄 opm.h
                                                                               📄 setup_ci_environment.sh
                                                                               📁 src/
                                                                                 📄 audio.rs
                                                                                 📄 client.rs
+                                                                                📄 debug_wav.rs
                                                                                 📄 events.rs
                                                                                 📁 ipc/
                                                                                   📄 mod.rs
                                                                                   📄 pipe_windows.rs
                                                                                   📄 protocol.rs
                                                                                 📄 lib.rs
+                                                                                📄 logging.rs
                                                                                 📄 main.rs
                                                                                 📄 opm.rs
                                                                                 📄 opm_ffi.rs
@@ -748,13 +827,18 @@ MIT License
                                                                                 📄 server.rs
                                                                                 📄 wav_writer.rs
                                                                               📁 tests/
+                                                                                📄 client_json_test.rs
                                                                                 📄 client_test.rs
+                                                                                📄 client_verbose_test.rs
+                                                                                📄 debug_wav_test.rs
                                                                                 📄 duration_test.rs
+                                                                                📄 ensure_server_ready_test.rs
                                                                                 📁 fixtures/
                                                                                   📊 complex.json
                                                                                   📊 simple.json
                                                                                 📄 integration_test.rs
                                                                                 📄 ipc_pipe_test.rs
+                                                                                📄 logging_test.rs
                                                                                 📄 phase3_test.rs
                                                                                 📄 phase4_test.rs
                                                                                 📄 phase5_test.rs
@@ -765,22 +849,38 @@ MIT License
                                                                                 📄 test_utils.rs
                                                                             📄 _config.yml
                                                                             📄 build.rs
+                                                                            📁 examples/
+                                                                              📄 test_client_non_verbose.rs
+                                                                              📄 test_client_verbose.rs
+                                                                              📄 test_logging_non_verbose.rs
+                                                                              📄 test_logging_verbose.rs
                                                                             📁 generated-docs/
                                                                             📁 issue-notes/
                                                                               📖 34.md
                                                                               📖 36.md
+                                                                              📖 38.md
+                                                                              📖 40.md
+                                                                              📖 42.md
+                                                                              📖 44.md
+                                                                              📖 46.md
+                                                                              📖 48.md
+                                                                              📖 50.md
+                                                                              📖 52.md
+                                                                              📖 54.md
                                                                             📄 opm.c
                                                                             📄 opm.h
                                                                             📄 setup_ci_environment.sh
                                                                             📁 src/
                                                                               📄 audio.rs
                                                                               📄 client.rs
+                                                                              📄 debug_wav.rs
                                                                               📄 events.rs
                                                                               📁 ipc/
                                                                                 📄 mod.rs
                                                                                 📄 pipe_windows.rs
                                                                                 📄 protocol.rs
                                                                               📄 lib.rs
+                                                                              📄 logging.rs
                                                                               📄 main.rs
                                                                               📄 opm.rs
                                                                               📄 opm_ffi.rs
@@ -789,13 +889,18 @@ MIT License
                                                                               📄 server.rs
                                                                               📄 wav_writer.rs
                                                                             📁 tests/
+                                                                              📄 client_json_test.rs
                                                                               📄 client_test.rs
+                                                                              📄 client_verbose_test.rs
+                                                                              📄 debug_wav_test.rs
                                                                               📄 duration_test.rs
+                                                                              📄 ensure_server_ready_test.rs
                                                                               📁 fixtures/
                                                                                 📊 complex.json
                                                                                 📊 simple.json
                                                                               📄 integration_test.rs
                                                                               📄 ipc_pipe_test.rs
+                                                                              📄 logging_test.rs
                                                                               📄 phase3_test.rs
                                                                               📄 phase4_test.rs
                                                                               📄 phase5_test.rs
@@ -806,22 +911,38 @@ MIT License
                                                                               📄 test_utils.rs
                                                                           📄 _config.yml
                                                                           📄 build.rs
+                                                                          📁 examples/
+                                                                            📄 test_client_non_verbose.rs
+                                                                            📄 test_client_verbose.rs
+                                                                            📄 test_logging_non_verbose.rs
+                                                                            📄 test_logging_verbose.rs
                                                                           📁 generated-docs/
                                                                           📁 issue-notes/
                                                                             📖 34.md
                                                                             📖 36.md
+                                                                            📖 38.md
+                                                                            📖 40.md
+                                                                            📖 42.md
+                                                                            📖 44.md
+                                                                            📖 46.md
+                                                                            📖 48.md
+                                                                            📖 50.md
+                                                                            📖 52.md
+                                                                            📖 54.md
                                                                           📄 opm.c
                                                                           📄 opm.h
                                                                           📄 setup_ci_environment.sh
                                                                           📁 src/
                                                                             📄 audio.rs
                                                                             📄 client.rs
+                                                                            📄 debug_wav.rs
                                                                             📄 events.rs
                                                                             📁 ipc/
                                                                               📄 mod.rs
                                                                               📄 pipe_windows.rs
                                                                               📄 protocol.rs
                                                                             📄 lib.rs
+                                                                            📄 logging.rs
                                                                             📄 main.rs
                                                                             📄 opm.rs
                                                                             📄 opm_ffi.rs
@@ -830,13 +951,18 @@ MIT License
                                                                             📄 server.rs
                                                                             📄 wav_writer.rs
                                                                           📁 tests/
+                                                                            📄 client_json_test.rs
                                                                             📄 client_test.rs
+                                                                            📄 client_verbose_test.rs
+                                                                            📄 debug_wav_test.rs
                                                                             📄 duration_test.rs
+                                                                            📄 ensure_server_ready_test.rs
                                                                             📁 fixtures/
                                                                               📊 complex.json
                                                                               📊 simple.json
                                                                             📄 integration_test.rs
                                                                             📄 ipc_pipe_test.rs
+                                                                            📄 logging_test.rs
                                                                             📄 phase3_test.rs
                                                                             📄 phase4_test.rs
                                                                             📄 phase5_test.rs
@@ -847,22 +973,38 @@ MIT License
                                                                             📄 test_utils.rs
                                                                         📄 _config.yml
                                                                         📄 build.rs
+                                                                        📁 examples/
+                                                                          📄 test_client_non_verbose.rs
+                                                                          📄 test_client_verbose.rs
+                                                                          📄 test_logging_non_verbose.rs
+                                                                          📄 test_logging_verbose.rs
                                                                         📁 generated-docs/
                                                                         📁 issue-notes/
                                                                           📖 34.md
                                                                           📖 36.md
+                                                                          📖 38.md
+                                                                          📖 40.md
+                                                                          📖 42.md
+                                                                          📖 44.md
+                                                                          📖 46.md
+                                                                          📖 48.md
+                                                                          📖 50.md
+                                                                          📖 52.md
+                                                                          📖 54.md
                                                                         📄 opm.c
                                                                         📄 opm.h
                                                                         📄 setup_ci_environment.sh
                                                                         📁 src/
                                                                           📄 audio.rs
                                                                           📄 client.rs
+                                                                          📄 debug_wav.rs
                                                                           📄 events.rs
                                                                           📁 ipc/
                                                                             📄 mod.rs
                                                                             📄 pipe_windows.rs
                                                                             📄 protocol.rs
                                                                           📄 lib.rs
+                                                                          📄 logging.rs
                                                                           📄 main.rs
                                                                           📄 opm.rs
                                                                           📄 opm_ffi.rs
@@ -871,13 +1013,18 @@ MIT License
                                                                           📄 server.rs
                                                                           📄 wav_writer.rs
                                                                         📁 tests/
+                                                                          📄 client_json_test.rs
                                                                           📄 client_test.rs
+                                                                          📄 client_verbose_test.rs
+                                                                          📄 debug_wav_test.rs
                                                                           📄 duration_test.rs
+                                                                          📄 ensure_server_ready_test.rs
                                                                           📁 fixtures/
                                                                             📊 complex.json
                                                                             📊 simple.json
                                                                           📄 integration_test.rs
                                                                           📄 ipc_pipe_test.rs
+                                                                          📄 logging_test.rs
                                                                           📄 phase3_test.rs
                                                                           📄 phase4_test.rs
                                                                           📄 phase5_test.rs
@@ -888,22 +1035,38 @@ MIT License
                                                                           📄 test_utils.rs
                                                                       📄 _config.yml
                                                                       📄 build.rs
+                                                                      📁 examples/
+                                                                        📄 test_client_non_verbose.rs
+                                                                        📄 test_client_verbose.rs
+                                                                        📄 test_logging_non_verbose.rs
+                                                                        📄 test_logging_verbose.rs
                                                                       📁 generated-docs/
                                                                       📁 issue-notes/
                                                                         📖 34.md
                                                                         📖 36.md
+                                                                        📖 38.md
+                                                                        📖 40.md
+                                                                        📖 42.md
+                                                                        📖 44.md
+                                                                        📖 46.md
+                                                                        📖 48.md
+                                                                        📖 50.md
+                                                                        📖 52.md
+                                                                        📖 54.md
                                                                       📄 opm.c
                                                                       📄 opm.h
                                                                       📄 setup_ci_environment.sh
                                                                       📁 src/
                                                                         📄 audio.rs
                                                                         📄 client.rs
+                                                                        📄 debug_wav.rs
                                                                         📄 events.rs
                                                                         📁 ipc/
                                                                           📄 mod.rs
                                                                           📄 pipe_windows.rs
                                                                           📄 protocol.rs
                                                                         📄 lib.rs
+                                                                        📄 logging.rs
                                                                         📄 main.rs
                                                                         📄 opm.rs
                                                                         📄 opm_ffi.rs
@@ -912,13 +1075,18 @@ MIT License
                                                                         📄 server.rs
                                                                         📄 wav_writer.rs
                                                                       📁 tests/
+                                                                        📄 client_json_test.rs
                                                                         📄 client_test.rs
+                                                                        📄 client_verbose_test.rs
+                                                                        📄 debug_wav_test.rs
                                                                         📄 duration_test.rs
+                                                                        📄 ensure_server_ready_test.rs
                                                                         📁 fixtures/
                                                                           📊 complex.json
                                                                           📊 simple.json
                                                                         📄 integration_test.rs
                                                                         📄 ipc_pipe_test.rs
+                                                                        📄 logging_test.rs
                                                                         📄 phase3_test.rs
                                                                         📄 phase4_test.rs
                                                                         📄 phase5_test.rs
@@ -929,22 +1097,38 @@ MIT License
                                                                         📄 test_utils.rs
                                                                     📄 _config.yml
                                                                     📄 build.rs
+                                                                    📁 examples/
+                                                                      📄 test_client_non_verbose.rs
+                                                                      📄 test_client_verbose.rs
+                                                                      📄 test_logging_non_verbose.rs
+                                                                      📄 test_logging_verbose.rs
                                                                     📁 generated-docs/
                                                                     📁 issue-notes/
                                                                       📖 34.md
                                                                       📖 36.md
+                                                                      📖 38.md
+                                                                      📖 40.md
+                                                                      📖 42.md
+                                                                      📖 44.md
+                                                                      📖 46.md
+                                                                      📖 48.md
+                                                                      📖 50.md
+                                                                      📖 52.md
+                                                                      📖 54.md
                                                                     📄 opm.c
                                                                     📄 opm.h
                                                                     📄 setup_ci_environment.sh
                                                                     📁 src/
                                                                       📄 audio.rs
                                                                       📄 client.rs
+                                                                      📄 debug_wav.rs
                                                                       📄 events.rs
                                                                       📁 ipc/
                                                                         📄 mod.rs
                                                                         📄 pipe_windows.rs
                                                                         📄 protocol.rs
                                                                       📄 lib.rs
+                                                                      📄 logging.rs
                                                                       📄 main.rs
                                                                       📄 opm.rs
                                                                       📄 opm_ffi.rs
@@ -953,13 +1137,18 @@ MIT License
                                                                       📄 server.rs
                                                                       📄 wav_writer.rs
                                                                     📁 tests/
+                                                                      📄 client_json_test.rs
                                                                       📄 client_test.rs
+                                                                      📄 client_verbose_test.rs
+                                                                      📄 debug_wav_test.rs
                                                                       📄 duration_test.rs
+                                                                      📄 ensure_server_ready_test.rs
                                                                       📁 fixtures/
                                                                         📊 complex.json
                                                                         📊 simple.json
                                                                       📄 integration_test.rs
                                                                       📄 ipc_pipe_test.rs
+                                                                      📄 logging_test.rs
                                                                       📄 phase3_test.rs
                                                                       📄 phase4_test.rs
                                                                       📄 phase5_test.rs
@@ -970,22 +1159,38 @@ MIT License
                                                                       📄 test_utils.rs
                                                                   📄 _config.yml
                                                                   📄 build.rs
+                                                                  📁 examples/
+                                                                    📄 test_client_non_verbose.rs
+                                                                    📄 test_client_verbose.rs
+                                                                    📄 test_logging_non_verbose.rs
+                                                                    📄 test_logging_verbose.rs
                                                                   📁 generated-docs/
                                                                   📁 issue-notes/
                                                                     📖 34.md
                                                                     📖 36.md
+                                                                    📖 38.md
+                                                                    📖 40.md
+                                                                    📖 42.md
+                                                                    📖 44.md
+                                                                    📖 46.md
+                                                                    📖 48.md
+                                                                    📖 50.md
+                                                                    📖 52.md
+                                                                    📖 54.md
                                                                   📄 opm.c
                                                                   📄 opm.h
                                                                   📄 setup_ci_environment.sh
                                                                   📁 src/
                                                                     📄 audio.rs
                                                                     📄 client.rs
+                                                                    📄 debug_wav.rs
                                                                     📄 events.rs
                                                                     📁 ipc/
                                                                       📄 mod.rs
                                                                       📄 pipe_windows.rs
                                                                       📄 protocol.rs
                                                                     📄 lib.rs
+                                                                    📄 logging.rs
                                                                     📄 main.rs
                                                                     📄 opm.rs
                                                                     📄 opm_ffi.rs
@@ -994,13 +1199,18 @@ MIT License
                                                                     📄 server.rs
                                                                     📄 wav_writer.rs
                                                                   📁 tests/
+                                                                    📄 client_json_test.rs
                                                                     📄 client_test.rs
+                                                                    📄 client_verbose_test.rs
+                                                                    📄 debug_wav_test.rs
                                                                     📄 duration_test.rs
+                                                                    📄 ensure_server_ready_test.rs
                                                                     📁 fixtures/
                                                                       📊 complex.json
                                                                       📊 simple.json
                                                                     📄 integration_test.rs
                                                                     📄 ipc_pipe_test.rs
+                                                                    📄 logging_test.rs
                                                                     📄 phase3_test.rs
                                                                     📄 phase4_test.rs
                                                                     📄 phase5_test.rs
@@ -1011,22 +1221,38 @@ MIT License
                                                                     📄 test_utils.rs
                                                                 📄 _config.yml
                                                                 📄 build.rs
+                                                                📁 examples/
+                                                                  📄 test_client_non_verbose.rs
+                                                                  📄 test_client_verbose.rs
+                                                                  📄 test_logging_non_verbose.rs
+                                                                  📄 test_logging_verbose.rs
                                                                 📁 generated-docs/
                                                                 📁 issue-notes/
                                                                   📖 34.md
                                                                   📖 36.md
+                                                                  📖 38.md
+                                                                  📖 40.md
+                                                                  📖 42.md
+                                                                  📖 44.md
+                                                                  📖 46.md
+                                                                  📖 48.md
+                                                                  📖 50.md
+                                                                  📖 52.md
+                                                                  📖 54.md
                                                                 📄 opm.c
                                                                 📄 opm.h
                                                                 📄 setup_ci_environment.sh
                                                                 📁 src/
                                                                   📄 audio.rs
                                                                   📄 client.rs
+                                                                  📄 debug_wav.rs
                                                                   📄 events.rs
                                                                   📁 ipc/
                                                                     📄 mod.rs
                                                                     📄 pipe_windows.rs
                                                                     📄 protocol.rs
                                                                   📄 lib.rs
+                                                                  📄 logging.rs
                                                                   📄 main.rs
                                                                   📄 opm.rs
                                                                   📄 opm_ffi.rs
@@ -1035,13 +1261,18 @@ MIT License
                                                                   📄 server.rs
                                                                   📄 wav_writer.rs
                                                                 📁 tests/
+                                                                  📄 client_json_test.rs
                                                                   📄 client_test.rs
+                                                                  📄 client_verbose_test.rs
+                                                                  📄 debug_wav_test.rs
                                                                   📄 duration_test.rs
+                                                                  📄 ensure_server_ready_test.rs
                                                                   📁 fixtures/
                                                                     📊 complex.json
                                                                     📊 simple.json
                                                                   📄 integration_test.rs
                                                                   📄 ipc_pipe_test.rs
+                                                                  📄 logging_test.rs
                                                                   📄 phase3_test.rs
                                                                   📄 phase4_test.rs
                                                                   📄 phase5_test.rs
@@ -1052,22 +1283,38 @@ MIT License
                                                                   📄 test_utils.rs
                                                               📄 _config.yml
                                                               📄 build.rs
+                                                              📁 examples/
+                                                                📄 test_client_non_verbose.rs
+                                                                📄 test_client_verbose.rs
+                                                                📄 test_logging_non_verbose.rs
+                                                                📄 test_logging_verbose.rs
                                                               📁 generated-docs/
                                                               📁 issue-notes/
                                                                 📖 34.md
                                                                 📖 36.md
+                                                                📖 38.md
+                                                                📖 40.md
+                                                                📖 42.md
+                                                                📖 44.md
+                                                                📖 46.md
+                                                                📖 48.md
+                                                                📖 50.md
+                                                                📖 52.md
+                                                                📖 54.md
                                                               📄 opm.c
                                                               📄 opm.h
                                                               📄 setup_ci_environment.sh
                                                               📁 src/
                                                                 📄 audio.rs
                                                                 📄 client.rs
+                                                                📄 debug_wav.rs
                                                                 📄 events.rs
                                                                 📁 ipc/
                                                                   📄 mod.rs
                                                                   📄 pipe_windows.rs
                                                                   📄 protocol.rs
                                                                 📄 lib.rs
+                                                                📄 logging.rs
                                                                 📄 main.rs
                                                                 📄 opm.rs
                                                                 📄 opm_ffi.rs
@@ -1076,13 +1323,18 @@ MIT License
                                                                 📄 server.rs
                                                                 📄 wav_writer.rs
                                                               📁 tests/
+                                                                📄 client_json_test.rs
                                                                 📄 client_test.rs
+                                                                📄 client_verbose_test.rs
+                                                                📄 debug_wav_test.rs
                                                                 📄 duration_test.rs
+                                                                📄 ensure_server_ready_test.rs
                                                                 📁 fixtures/
                                                                   📊 complex.json
                                                                   📊 simple.json
                                                                 📄 integration_test.rs
                                                                 📄 ipc_pipe_test.rs
+                                                                📄 logging_test.rs
                                                                 📄 phase3_test.rs
                                                                 📄 phase4_test.rs
                                                                 📄 phase5_test.rs
@@ -1093,22 +1345,38 @@ MIT License
                                                                 📄 test_utils.rs
                                                             📄 _config.yml
                                                             📄 build.rs
+                                                            📁 examples/
+                                                              📄 test_client_non_verbose.rs
+                                                              📄 test_client_verbose.rs
+                                                              📄 test_logging_non_verbose.rs
+                                                              📄 test_logging_verbose.rs
                                                             📁 generated-docs/
                                                             📁 issue-notes/
                                                               📖 34.md
                                                               📖 36.md
+                                                              📖 38.md
+                                                              📖 40.md
+                                                              📖 42.md
+                                                              📖 44.md
+                                                              📖 46.md
+                                                              📖 48.md
+                                                              📖 50.md
+                                                              📖 52.md
+                                                              📖 54.md
                                                             📄 opm.c
                                                             📄 opm.h
                                                             📄 setup_ci_environment.sh
                                                             📁 src/
                                                               📄 audio.rs
                                                               📄 client.rs
+                                                              📄 debug_wav.rs
                                                               📄 events.rs
                                                               📁 ipc/
                                                                 📄 mod.rs
                                                                 📄 pipe_windows.rs
                                                                 📄 protocol.rs
                                                               📄 lib.rs
+                                                              📄 logging.rs
                                                               📄 main.rs
                                                               📄 opm.rs
                                                               📄 opm_ffi.rs
@@ -1117,13 +1385,18 @@ MIT License
                                                               📄 server.rs
                                                               📄 wav_writer.rs
                                                             📁 tests/
+                                                              📄 client_json_test.rs
                                                               📄 client_test.rs
+                                                              📄 client_verbose_test.rs
+                                                              📄 debug_wav_test.rs
                                                               📄 duration_test.rs
+                                                              📄 ensure_server_ready_test.rs
                                                               📁 fixtures/
                                                                 📊 complex.json
                                                                 📊 simple.json
                                                               📄 integration_test.rs
                                                               📄 ipc_pipe_test.rs
+                                                              📄 logging_test.rs
                                                               📄 phase3_test.rs
                                                               📄 phase4_test.rs
                                                               📄 phase5_test.rs
@@ -1134,22 +1407,38 @@ MIT License
                                                               📄 test_utils.rs
                                                           📄 _config.yml
                                                           📄 build.rs
+                                                          📁 examples/
+                                                            📄 test_client_non_verbose.rs
+                                                            📄 test_client_verbose.rs
+                                                            📄 test_logging_non_verbose.rs
+                                                            📄 test_logging_verbose.rs
                                                           📁 generated-docs/
                                                           📁 issue-notes/
                                                             📖 34.md
                                                             📖 36.md
+                                                            📖 38.md
+                                                            📖 40.md
+                                                            📖 42.md
+                                                            📖 44.md
+                                                            📖 46.md
+                                                            📖 48.md
+                                                            📖 50.md
+                                                            📖 52.md
+                                                            📖 54.md
                                                           📄 opm.c
                                                           📄 opm.h
                                                           📄 setup_ci_environment.sh
                                                           📁 src/
                                                             📄 audio.rs
                                                             📄 client.rs
+                                                            📄 debug_wav.rs
                                                             📄 events.rs
                                                             📁 ipc/
                                                               📄 mod.rs
                                                               📄 pipe_windows.rs
                                                               📄 protocol.rs
                                                             📄 lib.rs
+                                                            📄 logging.rs
                                                             📄 main.rs
                                                             📄 opm.rs
                                                             📄 opm_ffi.rs
@@ -1158,13 +1447,18 @@ MIT License
                                                             📄 server.rs
                                                             📄 wav_writer.rs
                                                           📁 tests/
+                                                            📄 client_json_test.rs
                                                             📄 client_test.rs
+                                                            📄 client_verbose_test.rs
+                                                            📄 debug_wav_test.rs
                                                             📄 duration_test.rs
+                                                            📄 ensure_server_ready_test.rs
                                                             📁 fixtures/
                                                               📊 complex.json
                                                               📊 simple.json
                                                             📄 integration_test.rs
                                                             📄 ipc_pipe_test.rs
+                                                            📄 logging_test.rs
                                                             📄 phase3_test.rs
                                                             📄 phase4_test.rs
                                                             📄 phase5_test.rs
@@ -1175,22 +1469,38 @@ MIT License
                                                             📄 test_utils.rs
                                                         📄 _config.yml
                                                         📄 build.rs
+                                                        📁 examples/
+                                                          📄 test_client_non_verbose.rs
+                                                          📄 test_client_verbose.rs
+                                                          📄 test_logging_non_verbose.rs
+                                                          📄 test_logging_verbose.rs
                                                         📁 generated-docs/
                                                         📁 issue-notes/
                                                           📖 34.md
                                                           📖 36.md
+                                                          📖 38.md
+                                                          📖 40.md
+                                                          📖 42.md
+                                                          📖 44.md
+                                                          📖 46.md
+                                                          📖 48.md
+                                                          📖 50.md
+                                                          📖 52.md
+                                                          📖 54.md
                                                         📄 opm.c
                                                         📄 opm.h
                                                         📄 setup_ci_environment.sh
                                                         📁 src/
                                                           📄 audio.rs
                                                           📄 client.rs
+                                                          📄 debug_wav.rs
                                                           📄 events.rs
                                                           📁 ipc/
                                                             📄 mod.rs
                                                             📄 pipe_windows.rs
                                                             📄 protocol.rs
                                                           📄 lib.rs
+                                                          📄 logging.rs
                                                           📄 main.rs
                                                           📄 opm.rs
                                                           📄 opm_ffi.rs
@@ -1199,13 +1509,18 @@ MIT License
                                                           📄 server.rs
                                                           📄 wav_writer.rs
                                                         📁 tests/
+                                                          📄 client_json_test.rs
                                                           📄 client_test.rs
+                                                          📄 client_verbose_test.rs
+                                                          📄 debug_wav_test.rs
                                                           📄 duration_test.rs
+                                                          📄 ensure_server_ready_test.rs
                                                           📁 fixtures/
                                                             📊 complex.json
                                                             📊 simple.json
                                                           📄 integration_test.rs
                                                           📄 ipc_pipe_test.rs
+                                                          📄 logging_test.rs
                                                           📄 phase3_test.rs
                                                           📄 phase4_test.rs
                                                           📄 phase5_test.rs
@@ -1216,22 +1531,38 @@ MIT License
                                                           📄 test_utils.rs
                                                       📄 _config.yml
                                                       📄 build.rs
+                                                      📁 examples/
+                                                        📄 test_client_non_verbose.rs
+                                                        📄 test_client_verbose.rs
+                                                        📄 test_logging_non_verbose.rs
+                                                        📄 test_logging_verbose.rs
                                                       📁 generated-docs/
                                                       📁 issue-notes/
                                                         📖 34.md
                                                         📖 36.md
+                                                        📖 38.md
+                                                        📖 40.md
+                                                        📖 42.md
+                                                        📖 44.md
+                                                        📖 46.md
+                                                        📖 48.md
+                                                        📖 50.md
+                                                        📖 52.md
+                                                        📖 54.md
                                                       📄 opm.c
                                                       📄 opm.h
                                                       📄 setup_ci_environment.sh
                                                       📁 src/
                                                         📄 audio.rs
                                                         📄 client.rs
+                                                        📄 debug_wav.rs
                                                         📄 events.rs
                                                         📁 ipc/
                                                           📄 mod.rs
                                                           📄 pipe_windows.rs
                                                           📄 protocol.rs
                                                         📄 lib.rs
+                                                        📄 logging.rs
                                                         📄 main.rs
                                                         📄 opm.rs
                                                         📄 opm_ffi.rs
@@ -1240,13 +1571,18 @@ MIT License
                                                         📄 server.rs
                                                         📄 wav_writer.rs
                                                       📁 tests/
+                                                        📄 client_json_test.rs
                                                         📄 client_test.rs
+                                                        📄 client_verbose_test.rs
+                                                        📄 debug_wav_test.rs
                                                         📄 duration_test.rs
+                                                        📄 ensure_server_ready_test.rs
                                                         📁 fixtures/
                                                           📊 complex.json
                                                           📊 simple.json
                                                         📄 integration_test.rs
                                                         📄 ipc_pipe_test.rs
+                                                        📄 logging_test.rs
                                                         📄 phase3_test.rs
                                                         📄 phase4_test.rs
                                                         📄 phase5_test.rs
@@ -1257,22 +1593,38 @@ MIT License
                                                         📄 test_utils.rs
                                                     📄 _config.yml
                                                     📄 build.rs
+                                                    📁 examples/
+                                                      📄 test_client_non_verbose.rs
+                                                      📄 test_client_verbose.rs
+                                                      📄 test_logging_non_verbose.rs
+                                                      📄 test_logging_verbose.rs
                                                     📁 generated-docs/
                                                     📁 issue-notes/
                                                       📖 34.md
                                                       📖 36.md
+                                                      📖 38.md
+                                                      📖 40.md
+                                                      📖 42.md
+                                                      📖 44.md
+                                                      📖 46.md
+                                                      📖 48.md
+                                                      📖 50.md
+                                                      📖 52.md
+                                                      📖 54.md
                                                     📄 opm.c
                                                     📄 opm.h
                                                     📄 setup_ci_environment.sh
                                                     📁 src/
                                                       📄 audio.rs
                                                       📄 client.rs
+                                                      📄 debug_wav.rs
                                                       📄 events.rs
                                                       📁 ipc/
                                                         📄 mod.rs
                                                         📄 pipe_windows.rs
                                                         📄 protocol.rs
                                                       📄 lib.rs
+                                                      📄 logging.rs
                                                       📄 main.rs
                                                       📄 opm.rs
                                                       📄 opm_ffi.rs
@@ -1281,13 +1633,18 @@ MIT License
                                                       📄 server.rs
                                                       📄 wav_writer.rs
                                                     📁 tests/
+                                                      📄 client_json_test.rs
                                                       📄 client_test.rs
+                                                      📄 client_verbose_test.rs
+                                                      📄 debug_wav_test.rs
                                                       📄 duration_test.rs
+                                                      📄 ensure_server_ready_test.rs
                                                       📁 fixtures/
                                                         📊 complex.json
                                                         📊 simple.json
                                                       📄 integration_test.rs
                                                       📄 ipc_pipe_test.rs
+                                                      📄 logging_test.rs
                                                       📄 phase3_test.rs
                                                       📄 phase4_test.rs
                                                       📄 phase5_test.rs
@@ -1298,22 +1655,38 @@ MIT License
                                                       📄 test_utils.rs
                                                   📄 _config.yml
                                                   📄 build.rs
+                                                  📁 examples/
+                                                    📄 test_client_non_verbose.rs
+                                                    📄 test_client_verbose.rs
+                                                    📄 test_logging_non_verbose.rs
+                                                    📄 test_logging_verbose.rs
                                                   📁 generated-docs/
                                                   📁 issue-notes/
                                                     📖 34.md
                                                     📖 36.md
+                                                    📖 38.md
+                                                    📖 40.md
+                                                    📖 42.md
+                                                    📖 44.md
+                                                    📖 46.md
+                                                    📖 48.md
+                                                    📖 50.md
+                                                    📖 52.md
+                                                    📖 54.md
                                                   📄 opm.c
                                                   📄 opm.h
                                                   📄 setup_ci_environment.sh
                                                   📁 src/
                                                     📄 audio.rs
                                                     📄 client.rs
+                                                    📄 debug_wav.rs
                                                     📄 events.rs
                                                     📁 ipc/
                                                       📄 mod.rs
                                                       📄 pipe_windows.rs
                                                       📄 protocol.rs
                                                     📄 lib.rs
+                                                    📄 logging.rs
                                                     📄 main.rs
                                                     📄 opm.rs
                                                     📄 opm_ffi.rs
@@ -1322,13 +1695,18 @@ MIT License
                                                     📄 server.rs
                                                     📄 wav_writer.rs
                                                   📁 tests/
+                                                    📄 client_json_test.rs
                                                     📄 client_test.rs
+                                                    📄 client_verbose_test.rs
+                                                    📄 debug_wav_test.rs
                                                     📄 duration_test.rs
+                                                    📄 ensure_server_ready_test.rs
                                                     📁 fixtures/
                                                       📊 complex.json
                                                       📊 simple.json
                                                     📄 integration_test.rs
                                                     📄 ipc_pipe_test.rs
+                                                    📄 logging_test.rs
                                                     📄 phase3_test.rs
                                                     📄 phase4_test.rs
                                                     📄 phase5_test.rs
@@ -1339,22 +1717,38 @@ MIT License
                                                     📄 test_utils.rs
                                                 📄 _config.yml
                                                 📄 build.rs
+                                                📁 examples/
+                                                  📄 test_client_non_verbose.rs
+                                                  📄 test_client_verbose.rs
+                                                  📄 test_logging_non_verbose.rs
+                                                  📄 test_logging_verbose.rs
                                                 📁 generated-docs/
                                                 📁 issue-notes/
                                                   📖 34.md
                                                   📖 36.md
+                                                  📖 38.md
+                                                  📖 40.md
+                                                  📖 42.md
+                                                  📖 44.md
+                                                  📖 46.md
+                                                  📖 48.md
+                                                  📖 50.md
+                                                  📖 52.md
+                                                  📖 54.md
                                                 📄 opm.c
                                                 📄 opm.h
                                                 📄 setup_ci_environment.sh
                                                 📁 src/
                                                   📄 audio.rs
                                                   📄 client.rs
+                                                  📄 debug_wav.rs
                                                   📄 events.rs
                                                   📁 ipc/
                                                     📄 mod.rs
                                                     📄 pipe_windows.rs
                                                     📄 protocol.rs
                                                   📄 lib.rs
+                                                  📄 logging.rs
                                                   📄 main.rs
                                                   📄 opm.rs
                                                   📄 opm_ffi.rs
@@ -1363,13 +1757,18 @@ MIT License
                                                   📄 server.rs
                                                   📄 wav_writer.rs
                                                 📁 tests/
+                                                  📄 client_json_test.rs
                                                   📄 client_test.rs
+                                                  📄 client_verbose_test.rs
+                                                  📄 debug_wav_test.rs
                                                   📄 duration_test.rs
+                                                  📄 ensure_server_ready_test.rs
                                                   📁 fixtures/
                                                     📊 complex.json
                                                     📊 simple.json
                                                   📄 integration_test.rs
                                                   📄 ipc_pipe_test.rs
+                                                  📄 logging_test.rs
                                                   📄 phase3_test.rs
                                                   📄 phase4_test.rs
                                                   📄 phase5_test.rs
@@ -1380,22 +1779,38 @@ MIT License
                                                   📄 test_utils.rs
                                               📄 _config.yml
                                               📄 build.rs
+                                              📁 examples/
+                                                📄 test_client_non_verbose.rs
+                                                📄 test_client_verbose.rs
+                                                📄 test_logging_non_verbose.rs
+                                                📄 test_logging_verbose.rs
                                               📁 generated-docs/
                                               📁 issue-notes/
                                                 📖 34.md
                                                 📖 36.md
+                                                📖 38.md
+                                                📖 40.md
+                                                📖 42.md
+                                                📖 44.md
+                                                📖 46.md
+                                                📖 48.md
+                                                📖 50.md
+                                                📖 52.md
+                                                📖 54.md
                                               📄 opm.c
                                               📄 opm.h
                                               📄 setup_ci_environment.sh
                                               📁 src/
                                                 📄 audio.rs
                                                 📄 client.rs
+                                                📄 debug_wav.rs
                                                 📄 events.rs
                                                 📁 ipc/
                                                   📄 mod.rs
                                                   📄 pipe_windows.rs
                                                   📄 protocol.rs
                                                 📄 lib.rs
+                                                📄 logging.rs
                                                 📄 main.rs
                                                 📄 opm.rs
                                                 📄 opm_ffi.rs
@@ -1404,13 +1819,18 @@ MIT License
                                                 📄 server.rs
                                                 📄 wav_writer.rs
                                               📁 tests/
+                                                📄 client_json_test.rs
                                                 📄 client_test.rs
+                                                📄 client_verbose_test.rs
+                                                📄 debug_wav_test.rs
                                                 📄 duration_test.rs
+                                                📄 ensure_server_ready_test.rs
                                                 📁 fixtures/
                                                   📊 complex.json
                                                   📊 simple.json
                                                 📄 integration_test.rs
                                                 📄 ipc_pipe_test.rs
+                                                📄 logging_test.rs
                                                 📄 phase3_test.rs
                                                 📄 phase4_test.rs
                                                 📄 phase5_test.rs
@@ -1421,22 +1841,38 @@ MIT License
                                                 📄 test_utils.rs
                                             📄 _config.yml
                                             📄 build.rs
+                                            📁 examples/
+                                              📄 test_client_non_verbose.rs
+                                              📄 test_client_verbose.rs
+                                              📄 test_logging_non_verbose.rs
+                                              📄 test_logging_verbose.rs
                                             📁 generated-docs/
                                             📁 issue-notes/
                                               📖 34.md
                                               📖 36.md
+                                              📖 38.md
+                                              📖 40.md
+                                              📖 42.md
+                                              📖 44.md
+                                              📖 46.md
+                                              📖 48.md
+                                              📖 50.md
+                                              📖 52.md
+                                              📖 54.md
                                             📄 opm.c
                                             📄 opm.h
                                             📄 setup_ci_environment.sh
                                             📁 src/
                                               📄 audio.rs
                                               📄 client.rs
+                                              📄 debug_wav.rs
                                               📄 events.rs
                                               📁 ipc/
                                                 📄 mod.rs
                                                 📄 pipe_windows.rs
                                                 📄 protocol.rs
                                               📄 lib.rs
+                                              📄 logging.rs
                                               📄 main.rs
                                               📄 opm.rs
                                               📄 opm_ffi.rs
@@ -1445,13 +1881,18 @@ MIT License
                                               📄 server.rs
                                               📄 wav_writer.rs
                                             📁 tests/
+                                              📄 client_json_test.rs
                                               📄 client_test.rs
+                                              📄 client_verbose_test.rs
+                                              📄 debug_wav_test.rs
                                               📄 duration_test.rs
+                                              📄 ensure_server_ready_test.rs
                                               📁 fixtures/
                                                 📊 complex.json
                                                 📊 simple.json
                                               📄 integration_test.rs
                                               📄 ipc_pipe_test.rs
+                                              📄 logging_test.rs
                                               📄 phase3_test.rs
                                               📄 phase4_test.rs
                                               📄 phase5_test.rs
@@ -1462,22 +1903,38 @@ MIT License
                                               📄 test_utils.rs
                                           📄 _config.yml
                                           📄 build.rs
+                                          📁 examples/
+                                            📄 test_client_non_verbose.rs
+                                            📄 test_client_verbose.rs
+                                            📄 test_logging_non_verbose.rs
+                                            📄 test_logging_verbose.rs
                                           📁 generated-docs/
                                           📁 issue-notes/
                                             📖 34.md
                                             📖 36.md
+                                            📖 38.md
+                                            📖 40.md
+                                            📖 42.md
+                                            📖 44.md
+                                            📖 46.md
+                                            📖 48.md
+                                            📖 50.md
+                                            📖 52.md
+                                            📖 54.md
                                           📄 opm.c
                                           📄 opm.h
                                           📄 setup_ci_environment.sh
                                           📁 src/
                                             📄 audio.rs
                                             📄 client.rs
+                                            📄 debug_wav.rs
                                             📄 events.rs
                                             📁 ipc/
                                               📄 mod.rs
                                               📄 pipe_windows.rs
                                               📄 protocol.rs
                                             📄 lib.rs
+                                            📄 logging.rs
                                             📄 main.rs
                                             📄 opm.rs
                                             📄 opm_ffi.rs
@@ -1486,13 +1943,18 @@ MIT License
                                             📄 server.rs
                                             📄 wav_writer.rs
                                           📁 tests/
+                                            📄 client_json_test.rs
                                             📄 client_test.rs
+                                            📄 client_verbose_test.rs
+                                            📄 debug_wav_test.rs
                                             📄 duration_test.rs
+                                            📄 ensure_server_ready_test.rs
                                             📁 fixtures/
                                               📊 complex.json
                                               📊 simple.json
                                             📄 integration_test.rs
                                             📄 ipc_pipe_test.rs
+                                            📄 logging_test.rs
                                             📄 phase3_test.rs
                                             📄 phase4_test.rs
                                             📄 phase5_test.rs
@@ -1503,22 +1965,38 @@ MIT License
                                             📄 test_utils.rs
                                         📄 _config.yml
                                         📄 build.rs
+                                        📁 examples/
+                                          📄 test_client_non_verbose.rs
+                                          📄 test_client_verbose.rs
+                                          📄 test_logging_non_verbose.rs
+                                          📄 test_logging_verbose.rs
                                         📁 generated-docs/
                                         📁 issue-notes/
                                           📖 34.md
                                           📖 36.md
+                                          📖 38.md
+                                          📖 40.md
+                                          📖 42.md
+                                          📖 44.md
+                                          📖 46.md
+                                          📖 48.md
+                                          📖 50.md
+                                          📖 52.md
+                                          📖 54.md
                                         📄 opm.c
                                         📄 opm.h
                                         📄 setup_ci_environment.sh
                                         📁 src/
                                           📄 audio.rs
                                           📄 client.rs
+                                          📄 debug_wav.rs
                                           📄 events.rs
                                           📁 ipc/
                                             📄 mod.rs
                                             📄 pipe_windows.rs
                                             📄 protocol.rs
                                           📄 lib.rs
+                                          📄 logging.rs
                                           📄 main.rs
                                           📄 opm.rs
                                           📄 opm_ffi.rs
@@ -1527,13 +2005,18 @@ MIT License
                                           📄 server.rs
                                           📄 wav_writer.rs
                                         📁 tests/
+                                          📄 client_json_test.rs
                                           📄 client_test.rs
+                                          📄 client_verbose_test.rs
+                                          📄 debug_wav_test.rs
                                           📄 duration_test.rs
+                                          📄 ensure_server_ready_test.rs
                                           📁 fixtures/
                                             📊 complex.json
                                             📊 simple.json
                                           📄 integration_test.rs
                                           📄 ipc_pipe_test.rs
+                                          📄 logging_test.rs
                                           📄 phase3_test.rs
                                           📄 phase4_test.rs
                                           📄 phase5_test.rs
@@ -1544,22 +2027,38 @@ MIT License
                                           📄 test_utils.rs
                                       📄 _config.yml
                                       📄 build.rs
+                                      📁 examples/
+                                        📄 test_client_non_verbose.rs
+                                        📄 test_client_verbose.rs
+                                        📄 test_logging_non_verbose.rs
+                                        📄 test_logging_verbose.rs
                                       📁 generated-docs/
                                       📁 issue-notes/
                                         📖 34.md
                                         📖 36.md
+                                        📖 38.md
+                                        📖 40.md
+                                        📖 42.md
+                                        📖 44.md
+                                        📖 46.md
+                                        📖 48.md
+                                        📖 50.md
+                                        📖 52.md
+                                        📖 54.md
                                       📄 opm.c
                                       📄 opm.h
                                       📄 setup_ci_environment.sh
                                       📁 src/
                                         📄 audio.rs
                                         📄 client.rs
+                                        📄 debug_wav.rs
                                         📄 events.rs
                                         📁 ipc/
                                           📄 mod.rs
                                           📄 pipe_windows.rs
                                           📄 protocol.rs
                                         📄 lib.rs
+                                        📄 logging.rs
                                         📄 main.rs
                                         📄 opm.rs
                                         📄 opm_ffi.rs
@@ -1568,13 +2067,18 @@ MIT License
                                         📄 server.rs
                                         📄 wav_writer.rs
                                       📁 tests/
+                                        📄 client_json_test.rs
                                         📄 client_test.rs
+                                        📄 client_verbose_test.rs
+                                        📄 debug_wav_test.rs
                                         📄 duration_test.rs
+                                        📄 ensure_server_ready_test.rs
                                         📁 fixtures/
                                           📊 complex.json
                                           📊 simple.json
                                         📄 integration_test.rs
                                         📄 ipc_pipe_test.rs
+                                        📄 logging_test.rs
                                         📄 phase3_test.rs
                                         📄 phase4_test.rs
                                         📄 phase5_test.rs
@@ -1585,22 +2089,38 @@ MIT License
                                         📄 test_utils.rs
                                     📄 _config.yml
                                     📄 build.rs
+                                    📁 examples/
+                                      📄 test_client_non_verbose.rs
+                                      📄 test_client_verbose.rs
+                                      📄 test_logging_non_verbose.rs
+                                      📄 test_logging_verbose.rs
                                     📁 generated-docs/
                                     📁 issue-notes/
                                       📖 34.md
                                       📖 36.md
+                                      📖 38.md
+                                      📖 40.md
+                                      📖 42.md
+                                      📖 44.md
+                                      📖 46.md
+                                      📖 48.md
+                                      📖 50.md
+                                      📖 52.md
+                                      📖 54.md
                                     📄 opm.c
                                     📄 opm.h
                                     📄 setup_ci_environment.sh
                                     📁 src/
                                       📄 audio.rs
                                       📄 client.rs
+                                      📄 debug_wav.rs
                                       📄 events.rs
                                       📁 ipc/
                                         📄 mod.rs
                                         📄 pipe_windows.rs
                                         📄 protocol.rs
                                       📄 lib.rs
+                                      📄 logging.rs
                                       📄 main.rs
                                       📄 opm.rs
                                       📄 opm_ffi.rs
@@ -1609,13 +2129,18 @@ MIT License
                                       📄 server.rs
                                       📄 wav_writer.rs
                                     📁 tests/
+                                      📄 client_json_test.rs
                                       📄 client_test.rs
+                                      📄 client_verbose_test.rs
+                                      📄 debug_wav_test.rs
                                       📄 duration_test.rs
+                                      📄 ensure_server_ready_test.rs
                                       📁 fixtures/
                                         📊 complex.json
                                         📊 simple.json
                                       📄 integration_test.rs
                                       📄 ipc_pipe_test.rs
+                                      📄 logging_test.rs
                                       📄 phase3_test.rs
                                       📄 phase4_test.rs
                                       📄 phase5_test.rs
@@ -1626,22 +2151,38 @@ MIT License
                                       📄 test_utils.rs
                                   📄 _config.yml
                                   📄 build.rs
+                                  📁 examples/
+                                    📄 test_client_non_verbose.rs
+                                    📄 test_client_verbose.rs
+                                    📄 test_logging_non_verbose.rs
+                                    📄 test_logging_verbose.rs
                                   📁 generated-docs/
                                   📁 issue-notes/
                                     📖 34.md
                                     📖 36.md
+                                    📖 38.md
+                                    📖 40.md
+                                    📖 42.md
+                                    📖 44.md
+                                    📖 46.md
+                                    📖 48.md
+                                    📖 50.md
+                                    📖 52.md
+                                    📖 54.md
                                   📄 opm.c
                                   📄 opm.h
                                   📄 setup_ci_environment.sh
                                   📁 src/
                                     📄 audio.rs
                                     📄 client.rs
+                                    📄 debug_wav.rs
                                     📄 events.rs
                                     📁 ipc/
                                       📄 mod.rs
                                       📄 pipe_windows.rs
                                       📄 protocol.rs
                                     📄 lib.rs
+                                    📄 logging.rs
                                     📄 main.rs
                                     📄 opm.rs
                                     📄 opm_ffi.rs
@@ -1650,13 +2191,18 @@ MIT License
                                     📄 server.rs
                                     📄 wav_writer.rs
                                   📁 tests/
+                                    📄 client_json_test.rs
                                     📄 client_test.rs
+                                    📄 client_verbose_test.rs
+                                    📄 debug_wav_test.rs
                                     📄 duration_test.rs
+                                    📄 ensure_server_ready_test.rs
                                     📁 fixtures/
                                       📊 complex.json
                                       📊 simple.json
                                     📄 integration_test.rs
                                     📄 ipc_pipe_test.rs
+                                    📄 logging_test.rs
                                     📄 phase3_test.rs
                                     📄 phase4_test.rs
                                     📄 phase5_test.rs
@@ -1667,22 +2213,38 @@ MIT License
                                     📄 test_utils.rs
                                 📄 _config.yml
                                 📄 build.rs
+                                📁 examples/
+                                  📄 test_client_non_verbose.rs
+                                  📄 test_client_verbose.rs
+                                  📄 test_logging_non_verbose.rs
+                                  📄 test_logging_verbose.rs
                                 📁 generated-docs/
                                 📁 issue-notes/
                                   📖 34.md
                                   📖 36.md
+                                  📖 38.md
+                                  📖 40.md
+                                  📖 42.md
+                                  📖 44.md
+                                  📖 46.md
+                                  📖 48.md
+                                  📖 50.md
+                                  📖 52.md
+                                  📖 54.md
                                 📄 opm.c
                                 📄 opm.h
                                 📄 setup_ci_environment.sh
                                 📁 src/
                                   📄 audio.rs
                                   📄 client.rs
+                                  📄 debug_wav.rs
                                   📄 events.rs
                                   📁 ipc/
                                     📄 mod.rs
                                     📄 pipe_windows.rs
                                     📄 protocol.rs
                                   📄 lib.rs
+                                  📄 logging.rs
                                   📄 main.rs
                                   📄 opm.rs
                                   📄 opm_ffi.rs
@@ -1691,13 +2253,18 @@ MIT License
                                   📄 server.rs
                                   📄 wav_writer.rs
                                 📁 tests/
+                                  📄 client_json_test.rs
                                   📄 client_test.rs
+                                  📄 client_verbose_test.rs
+                                  📄 debug_wav_test.rs
                                   📄 duration_test.rs
+                                  📄 ensure_server_ready_test.rs
                                   📁 fixtures/
                                     📊 complex.json
                                     📊 simple.json
                                   📄 integration_test.rs
                                   📄 ipc_pipe_test.rs
+                                  📄 logging_test.rs
                                   📄 phase3_test.rs
                                   📄 phase4_test.rs
                                   📄 phase5_test.rs
@@ -1708,22 +2275,38 @@ MIT License
                                   📄 test_utils.rs
                               📄 _config.yml
                               📄 build.rs
+                              📁 examples/
+                                📄 test_client_non_verbose.rs
+                                📄 test_client_verbose.rs
+                                📄 test_logging_non_verbose.rs
+                                📄 test_logging_verbose.rs
                               📁 generated-docs/
                               📁 issue-notes/
                                 📖 34.md
                                 📖 36.md
+                                📖 38.md
+                                📖 40.md
+                                📖 42.md
+                                📖 44.md
+                                📖 46.md
+                                📖 48.md
+                                📖 50.md
+                                📖 52.md
+                                📖 54.md
                               📄 opm.c
                               📄 opm.h
                               📄 setup_ci_environment.sh
                               📁 src/
                                 📄 audio.rs
                                 📄 client.rs
+                                📄 debug_wav.rs
                                 📄 events.rs
                                 📁 ipc/
                                   📄 mod.rs
                                   📄 pipe_windows.rs
                                   📄 protocol.rs
                                 📄 lib.rs
+                                📄 logging.rs
                                 📄 main.rs
                                 📄 opm.rs
                                 📄 opm_ffi.rs
@@ -1732,13 +2315,18 @@ MIT License
                                 📄 server.rs
                                 📄 wav_writer.rs
                               📁 tests/
+                                📄 client_json_test.rs
                                 📄 client_test.rs
+                                📄 client_verbose_test.rs
+                                📄 debug_wav_test.rs
                                 📄 duration_test.rs
+                                📄 ensure_server_ready_test.rs
                                 📁 fixtures/
                                   📊 complex.json
                                   📊 simple.json
                                 📄 integration_test.rs
                                 📄 ipc_pipe_test.rs
+                                📄 logging_test.rs
                                 📄 phase3_test.rs
                                 📄 phase4_test.rs
                                 📄 phase5_test.rs
@@ -1749,22 +2337,38 @@ MIT License
                                 📄 test_utils.rs
                             📄 _config.yml
                             📄 build.rs
+                            📁 examples/
+                              📄 test_client_non_verbose.rs
+                              📄 test_client_verbose.rs
+                              📄 test_logging_non_verbose.rs
+                              📄 test_logging_verbose.rs
                             📁 generated-docs/
                             📁 issue-notes/
                               📖 34.md
                               📖 36.md
+                              📖 38.md
+                              📖 40.md
+                              📖 42.md
+                              📖 44.md
+                              📖 46.md
+                              📖 48.md
+                              📖 50.md
+                              📖 52.md
+                              📖 54.md
                             📄 opm.c
                             📄 opm.h
                             📄 setup_ci_environment.sh
                             📁 src/
                               📄 audio.rs
                               📄 client.rs
+                              📄 debug_wav.rs
                               📄 events.rs
                               📁 ipc/
                                 📄 mod.rs
                                 📄 pipe_windows.rs
                                 📄 protocol.rs
                               📄 lib.rs
+                              📄 logging.rs
                               📄 main.rs
                               📄 opm.rs
                               📄 opm_ffi.rs
@@ -1773,13 +2377,18 @@ MIT License
                               📄 server.rs
                               📄 wav_writer.rs
                             📁 tests/
+                              📄 client_json_test.rs
                               📄 client_test.rs
+                              📄 client_verbose_test.rs
+                              📄 debug_wav_test.rs
                               📄 duration_test.rs
+                              📄 ensure_server_ready_test.rs
                               📁 fixtures/
                                 📊 complex.json
                                 📊 simple.json
                               📄 integration_test.rs
                               📄 ipc_pipe_test.rs
+                              📄 logging_test.rs
                               📄 phase3_test.rs
                               📄 phase4_test.rs
                               📄 phase5_test.rs
@@ -1790,22 +2399,38 @@ MIT License
                               📄 test_utils.rs
                           📄 _config.yml
                           📄 build.rs
+                          📁 examples/
+                            📄 test_client_non_verbose.rs
+                            📄 test_client_verbose.rs
+                            📄 test_logging_non_verbose.rs
+                            📄 test_logging_verbose.rs
                           📁 generated-docs/
                           📁 issue-notes/
                             📖 34.md
                             📖 36.md
+                            📖 38.md
+                            📖 40.md
+                            📖 42.md
+                            📖 44.md
+                            📖 46.md
+                            📖 48.md
+                            📖 50.md
+                            📖 52.md
+                            📖 54.md
                           📄 opm.c
                           📄 opm.h
                           📄 setup_ci_environment.sh
                           📁 src/
                             📄 audio.rs
                             📄 client.rs
+                            📄 debug_wav.rs
                             📄 events.rs
                             📁 ipc/
                               📄 mod.rs
                               📄 pipe_windows.rs
                               📄 protocol.rs
                             📄 lib.rs
+                            📄 logging.rs
                             📄 main.rs
                             📄 opm.rs
                             📄 opm_ffi.rs
@@ -1814,13 +2439,18 @@ MIT License
                             📄 server.rs
                             📄 wav_writer.rs
                           📁 tests/
+                            📄 client_json_test.rs
                             📄 client_test.rs
+                            📄 client_verbose_test.rs
+                            📄 debug_wav_test.rs
                             📄 duration_test.rs
+                            📄 ensure_server_ready_test.rs
                             📁 fixtures/
                               📊 complex.json
                               📊 simple.json
                             📄 integration_test.rs
                             📄 ipc_pipe_test.rs
+                            📄 logging_test.rs
                             📄 phase3_test.rs
                             📄 phase4_test.rs
                             📄 phase5_test.rs
@@ -1831,22 +2461,38 @@ MIT License
                             📄 test_utils.rs
                         📄 _config.yml
                         📄 build.rs
+                        📁 examples/
+                          📄 test_client_non_verbose.rs
+                          📄 test_client_verbose.rs
+                          📄 test_logging_non_verbose.rs
+                          📄 test_logging_verbose.rs
                         📁 generated-docs/
                         📁 issue-notes/
                           📖 34.md
                           📖 36.md
+                          📖 38.md
+                          📖 40.md
+                          📖 42.md
+                          📖 44.md
+                          📖 46.md
+                          📖 48.md
+                          📖 50.md
+                          📖 52.md
+                          📖 54.md
                         📄 opm.c
                         📄 opm.h
                         📄 setup_ci_environment.sh
                         📁 src/
                           📄 audio.rs
                           📄 client.rs
+                          📄 debug_wav.rs
                           📄 events.rs
                           📁 ipc/
                             📄 mod.rs
                             📄 pipe_windows.rs
                             📄 protocol.rs
                           📄 lib.rs
+                          📄 logging.rs
                           📄 main.rs
                           📄 opm.rs
                           📄 opm_ffi.rs
@@ -1855,13 +2501,18 @@ MIT License
                           📄 server.rs
                           📄 wav_writer.rs
                         📁 tests/
+                          📄 client_json_test.rs
                           📄 client_test.rs
+                          📄 client_verbose_test.rs
+                          📄 debug_wav_test.rs
                           📄 duration_test.rs
+                          📄 ensure_server_ready_test.rs
                           📁 fixtures/
                             📊 complex.json
                             📊 simple.json
                           📄 integration_test.rs
                           📄 ipc_pipe_test.rs
+                          📄 logging_test.rs
                           📄 phase3_test.rs
                           📄 phase4_test.rs
                           📄 phase5_test.rs
@@ -1872,22 +2523,38 @@ MIT License
                           📄 test_utils.rs
                       📄 _config.yml
                       📄 build.rs
+                      📁 examples/
+                        📄 test_client_non_verbose.rs
+                        📄 test_client_verbose.rs
+                        📄 test_logging_non_verbose.rs
+                        📄 test_logging_verbose.rs
                       📁 generated-docs/
                       📁 issue-notes/
                         📖 34.md
                         📖 36.md
+                        📖 38.md
+                        📖 40.md
+                        📖 42.md
+                        📖 44.md
+                        📖 46.md
+                        📖 48.md
+                        📖 50.md
+                        📖 52.md
+                        📖 54.md
                       📄 opm.c
                       📄 opm.h
                       📄 setup_ci_environment.sh
                       📁 src/
                         📄 audio.rs
                         📄 client.rs
+                        📄 debug_wav.rs
                         📄 events.rs
                         📁 ipc/
                           📄 mod.rs
                           📄 pipe_windows.rs
                           📄 protocol.rs
                         📄 lib.rs
+                        📄 logging.rs
                         📄 main.rs
                         📄 opm.rs
                         📄 opm_ffi.rs
@@ -1896,13 +2563,18 @@ MIT License
                         📄 server.rs
                         📄 wav_writer.rs
                       📁 tests/
+                        📄 client_json_test.rs
                         📄 client_test.rs
+                        📄 client_verbose_test.rs
+                        📄 debug_wav_test.rs
                         📄 duration_test.rs
+                        📄 ensure_server_ready_test.rs
                         📁 fixtures/
                           📊 complex.json
                           📊 simple.json
                         📄 integration_test.rs
                         📄 ipc_pipe_test.rs
+                        📄 logging_test.rs
                         📄 phase3_test.rs
                         📄 phase4_test.rs
                         📄 phase5_test.rs
@@ -1913,22 +2585,38 @@ MIT License
                         📄 test_utils.rs
                     📄 _config.yml
                     📄 build.rs
+                    📁 examples/
+                      📄 test_client_non_verbose.rs
+                      📄 test_client_verbose.rs
+                      📄 test_logging_non_verbose.rs
+                      📄 test_logging_verbose.rs
                     📁 generated-docs/
                     📁 issue-notes/
                       📖 34.md
                       📖 36.md
+                      📖 38.md
+                      📖 40.md
+                      📖 42.md
+                      📖 44.md
+                      📖 46.md
+                      📖 48.md
+                      📖 50.md
+                      📖 52.md
+                      📖 54.md
                     📄 opm.c
                     📄 opm.h
                     📄 setup_ci_environment.sh
                     📁 src/
                       📄 audio.rs
                       📄 client.rs
+                      📄 debug_wav.rs
                       📄 events.rs
                       📁 ipc/
                         📄 mod.rs
                         📄 pipe_windows.rs
                         📄 protocol.rs
                       📄 lib.rs
+                      📄 logging.rs
                       📄 main.rs
                       📄 opm.rs
                       📄 opm_ffi.rs
@@ -1937,13 +2625,18 @@ MIT License
                       📄 server.rs
                       📄 wav_writer.rs
                     📁 tests/
+                      📄 client_json_test.rs
                       📄 client_test.rs
+                      📄 client_verbose_test.rs
+                      📄 debug_wav_test.rs
                       📄 duration_test.rs
+                      📄 ensure_server_ready_test.rs
                       📁 fixtures/
                         📊 complex.json
                         📊 simple.json
                       📄 integration_test.rs
                       📄 ipc_pipe_test.rs
+                      📄 logging_test.rs
                       📄 phase3_test.rs
                       📄 phase4_test.rs
                       📄 phase5_test.rs
@@ -1954,22 +2647,38 @@ MIT License
                       📄 test_utils.rs
                   📄 _config.yml
                   📄 build.rs
+                  📁 examples/
+                    📄 test_client_non_verbose.rs
+                    📄 test_client_verbose.rs
+                    📄 test_logging_non_verbose.rs
+                    📄 test_logging_verbose.rs
                   📁 generated-docs/
                   📁 issue-notes/
                     📖 34.md
                     📖 36.md
+                    📖 38.md
+                    📖 40.md
+                    📖 42.md
+                    📖 44.md
+                    📖 46.md
+                    📖 48.md
+                    📖 50.md
+                    📖 52.md
+                    📖 54.md
                   📄 opm.c
                   📄 opm.h
                   📄 setup_ci_environment.sh
                   📁 src/
                     📄 audio.rs
                     📄 client.rs
+                    📄 debug_wav.rs
                     📄 events.rs
                     📁 ipc/
                       📄 mod.rs
                       📄 pipe_windows.rs
                       📄 protocol.rs
                     📄 lib.rs
+                    📄 logging.rs
                     📄 main.rs
                     📄 opm.rs
                     📄 opm_ffi.rs
@@ -1978,13 +2687,18 @@ MIT License
                     📄 server.rs
                     📄 wav_writer.rs
                   📁 tests/
+                    📄 client_json_test.rs
                     📄 client_test.rs
+                    📄 client_verbose_test.rs
+                    📄 debug_wav_test.rs
                     📄 duration_test.rs
+                    📄 ensure_server_ready_test.rs
                     📁 fixtures/
                       📊 complex.json
                       📊 simple.json
                     📄 integration_test.rs
                     📄 ipc_pipe_test.rs
+                    📄 logging_test.rs
                     📄 phase3_test.rs
                     📄 phase4_test.rs
                     📄 phase5_test.rs
@@ -1995,22 +2709,38 @@ MIT License
                     📄 test_utils.rs
                 📄 _config.yml
                 📄 build.rs
+                📁 examples/
+                  📄 test_client_non_verbose.rs
+                  📄 test_client_verbose.rs
+                  📄 test_logging_non_verbose.rs
+                  📄 test_logging_verbose.rs
                 📁 generated-docs/
                 📁 issue-notes/
                   📖 34.md
                   📖 36.md
+                  📖 38.md
+                  📖 40.md
+                  📖 42.md
+                  📖 44.md
+                  📖 46.md
+                  📖 48.md
+                  📖 50.md
+                  📖 52.md
+                  📖 54.md
                 📄 opm.c
                 📄 opm.h
                 📄 setup_ci_environment.sh
                 📁 src/
                   📄 audio.rs
                   📄 client.rs
+                  📄 debug_wav.rs
                   📄 events.rs
                   📁 ipc/
                     📄 mod.rs
                     📄 pipe_windows.rs
                     📄 protocol.rs
                   📄 lib.rs
+                  📄 logging.rs
                   📄 main.rs
                   📄 opm.rs
                   📄 opm_ffi.rs
@@ -2019,13 +2749,18 @@ MIT License
                   📄 server.rs
                   📄 wav_writer.rs
                 📁 tests/
+                  📄 client_json_test.rs
                   📄 client_test.rs
+                  📄 client_verbose_test.rs
+                  📄 debug_wav_test.rs
                   📄 duration_test.rs
+                  📄 ensure_server_ready_test.rs
                   📁 fixtures/
                     📊 complex.json
                     📊 simple.json
                   📄 integration_test.rs
                   📄 ipc_pipe_test.rs
+                  📄 logging_test.rs
                   📄 phase3_test.rs
                   📄 phase4_test.rs
                   📄 phase5_test.rs
@@ -2036,22 +2771,39 @@ MIT License
                   📄 test_utils.rs
               📄 _config.yml
               📄 build.rs
+              📁 examples/
+                📄 test_client_non_verbose.rs
+                📄 test_client_verbose.rs
+                📄 test_logging_non_verbose.rs
+                📄 test_logging_verbose.rs
               📁 generated-docs/
+                📖 development-status-generated-prompt.md
               📁 issue-notes/
                 📖 34.md
                 📖 36.md
+                📖 38.md
+                📖 40.md
+                📖 42.md
+                📖 44.md
+                📖 46.md
+                📖 48.md
+                📖 50.md
+                📖 52.md
+                📖 54.md
               📄 opm.c
               📄 opm.h
               📄 setup_ci_environment.sh
               📁 src/
                 📄 audio.rs
                 📄 client.rs
+                📄 debug_wav.rs
                 📄 events.rs
                 📁 ipc/
                   📄 mod.rs
                   📄 pipe_windows.rs
                   📄 protocol.rs
                 📄 lib.rs
+                📄 logging.rs
                 📄 main.rs
                 📄 opm.rs
                 📄 opm_ffi.rs
@@ -2060,13 +2812,18 @@ MIT License
                 📄 server.rs
                 📄 wav_writer.rs
               📁 tests/
+                📄 client_json_test.rs
                 📄 client_test.rs
+                📄 client_verbose_test.rs
+                📄 debug_wav_test.rs
                 📄 duration_test.rs
+                📄 ensure_server_ready_test.rs
                 📁 fixtures/
                   📊 complex.json
                   📊 simple.json
                 📄 integration_test.rs
                 📄 ipc_pipe_test.rs
+                📄 logging_test.rs
                 📄 phase3_test.rs
                 📄 phase4_test.rs
                 📄 phase5_test.rs
@@ -2077,22 +2834,39 @@ MIT License
                 📄 test_utils.rs
             📄 _config.yml
             📄 build.rs
+            📁 examples/
+              📄 test_client_non_verbose.rs
+              📄 test_client_verbose.rs
+              📄 test_logging_non_verbose.rs
+              📄 test_logging_verbose.rs
             📁 generated-docs/
+              📖 development-status-generated-prompt.md
             📁 issue-notes/
               📖 34.md
               📖 36.md
+              📖 38.md
+              📖 40.md
+              📖 42.md
+              📖 44.md
+              📖 46.md
+              📖 48.md
+              📖 50.md
+              📖 52.md
+              📖 54.md
             📄 opm.c
             📄 opm.h
             📄 setup_ci_environment.sh
             📁 src/
               📄 audio.rs
               📄 client.rs
+              📄 debug_wav.rs
               📄 events.rs
               📁 ipc/
                 📄 mod.rs
                 📄 pipe_windows.rs
                 📄 protocol.rs
               📄 lib.rs
+              📄 logging.rs
               📄 main.rs
               📄 opm.rs
               📄 opm_ffi.rs
@@ -2101,13 +2875,18 @@ MIT License
               📄 server.rs
               📄 wav_writer.rs
             📁 tests/
+              📄 client_json_test.rs
               📄 client_test.rs
+              📄 client_verbose_test.rs
+              📄 debug_wav_test.rs
               📄 duration_test.rs
+              📄 ensure_server_ready_test.rs
               📁 fixtures/
                 📊 complex.json
                 📊 simple.json
               📄 integration_test.rs
               📄 ipc_pipe_test.rs
+              📄 logging_test.rs
               📄 phase3_test.rs
               📄 phase4_test.rs
               📄 phase5_test.rs
@@ -2118,22 +2897,39 @@ MIT License
               📄 test_utils.rs
           📄 _config.yml
           📄 build.rs
+          📁 examples/
+            📄 test_client_non_verbose.rs
+            📄 test_client_verbose.rs
+            📄 test_logging_non_verbose.rs
+            📄 test_logging_verbose.rs
           📁 generated-docs/
+            📖 development-status-generated-prompt.md
           📁 issue-notes/
             📖 34.md
             📖 36.md
+            📖 38.md
+            📖 40.md
+            📖 42.md
+            📖 44.md
+            📖 46.md
+            📖 48.md
+            📖 50.md
+            📖 52.md
+            📖 54.md
           📄 opm.c
           📄 opm.h
           📄 setup_ci_environment.sh
           📁 src/
             📄 audio.rs
             📄 client.rs
+            📄 debug_wav.rs
             📄 events.rs
             📁 ipc/
               📄 mod.rs
               📄 pipe_windows.rs
               📄 protocol.rs
             📄 lib.rs
+            📄 logging.rs
             📄 main.rs
             📄 opm.rs
             📄 opm_ffi.rs
@@ -2142,13 +2938,18 @@ MIT License
             📄 server.rs
             📄 wav_writer.rs
           📁 tests/
+            📄 client_json_test.rs
             📄 client_test.rs
+            📄 client_verbose_test.rs
+            📄 debug_wav_test.rs
             📄 duration_test.rs
+            📄 ensure_server_ready_test.rs
             📁 fixtures/
               📊 complex.json
               📊 simple.json
             📄 integration_test.rs
             📄 ipc_pipe_test.rs
+            📄 logging_test.rs
             📄 phase3_test.rs
             📄 phase4_test.rs
             📄 phase5_test.rs
@@ -2159,22 +2960,39 @@ MIT License
             📄 test_utils.rs
         📄 _config.yml
         📄 build.rs
+        📁 examples/
+          📄 test_client_non_verbose.rs
+          📄 test_client_verbose.rs
+          📄 test_logging_non_verbose.rs
+          📄 test_logging_verbose.rs
         📁 generated-docs/
+          📖 development-status-generated-prompt.md
         📁 issue-notes/
           📖 34.md
           📖 36.md
+          📖 38.md
+          📖 40.md
+          📖 42.md
+          📖 44.md
+          📖 46.md
+          📖 48.md
+          📖 50.md
+          📖 52.md
+          📖 54.md
         📄 opm.c
         📄 opm.h
         📄 setup_ci_environment.sh
         📁 src/
           📄 audio.rs
           📄 client.rs
+          📄 debug_wav.rs
           📄 events.rs
           📁 ipc/
             📄 mod.rs
             📄 pipe_windows.rs
             📄 protocol.rs
           📄 lib.rs
+          📄 logging.rs
           📄 main.rs
           📄 opm.rs
           📄 opm_ffi.rs
@@ -2183,13 +3001,18 @@ MIT License
           📄 server.rs
           📄 wav_writer.rs
         📁 tests/
+          📄 client_json_test.rs
           📄 client_test.rs
+          📄 client_verbose_test.rs
+          📄 debug_wav_test.rs
           📄 duration_test.rs
+          📄 ensure_server_ready_test.rs
           📁 fixtures/
             📊 complex.json
             📊 simple.json
           📄 integration_test.rs
           📄 ipc_pipe_test.rs
+          📄 logging_test.rs
           📄 phase3_test.rs
           📄 phase4_test.rs
           📄 phase5_test.rs
@@ -2200,22 +3023,39 @@ MIT License
           📄 test_utils.rs
       📄 _config.yml
       📄 build.rs
+      📁 examples/
+        📄 test_client_non_verbose.rs
+        📄 test_client_verbose.rs
+        📄 test_logging_non_verbose.rs
+        📄 test_logging_verbose.rs
       📁 generated-docs/
+        📖 development-status-generated-prompt.md
       📁 issue-notes/
         📖 34.md
         📖 36.md
+        📖 38.md
+        📖 40.md
+        📖 42.md
+        📖 44.md
+        📖 46.md
+        📖 48.md
+        📖 50.md
+        📖 52.md
+        📖 54.md
       📄 opm.c
       📄 opm.h
       📄 setup_ci_environment.sh
       📁 src/
         📄 audio.rs
         📄 client.rs
+        📄 debug_wav.rs
         📄 events.rs
         📁 ipc/
           📄 mod.rs
           📄 pipe_windows.rs
           📄 protocol.rs
         📄 lib.rs
+        📄 logging.rs
         📄 main.rs
         📄 opm.rs
         📄 opm_ffi.rs
@@ -2224,13 +3064,18 @@ MIT License
         📄 server.rs
         📄 wav_writer.rs
       📁 tests/
+        📄 client_json_test.rs
         📄 client_test.rs
+        📄 client_verbose_test.rs
+        📄 debug_wav_test.rs
         📄 duration_test.rs
+        📄 ensure_server_ready_test.rs
         📁 fixtures/
           📊 complex.json
           📊 simple.json
         📄 integration_test.rs
         📄 ipc_pipe_test.rs
+        📄 logging_test.rs
         📄 phase3_test.rs
         📄 phase4_test.rs
         📄 phase5_test.rs
@@ -2241,22 +3086,39 @@ MIT License
         📄 test_utils.rs
     📄 _config.yml
     📄 build.rs
+    📁 examples/
+      📄 test_client_non_verbose.rs
+      📄 test_client_verbose.rs
+      📄 test_logging_non_verbose.rs
+      📄 test_logging_verbose.rs
     📁 generated-docs/
+      📖 development-status-generated-prompt.md
     📁 issue-notes/
       📖 34.md
       📖 36.md
+      📖 38.md
+      📖 40.md
+      📖 42.md
+      📖 44.md
+      📖 46.md
+      📖 48.md
+      📖 50.md
+      📖 52.md
+      📖 54.md
     📄 opm.c
     📄 opm.h
     📄 setup_ci_environment.sh
     📁 src/
       📄 audio.rs
       📄 client.rs
+      📄 debug_wav.rs
       📄 events.rs
       📁 ipc/
         📄 mod.rs
         📄 pipe_windows.rs
         📄 protocol.rs
       📄 lib.rs
+      📄 logging.rs
       📄 main.rs
       📄 opm.rs
       📄 opm_ffi.rs
@@ -2265,13 +3127,18 @@ MIT License
       📄 server.rs
       📄 wav_writer.rs
     📁 tests/
+      📄 client_json_test.rs
       📄 client_test.rs
+      📄 client_verbose_test.rs
+      📄 debug_wav_test.rs
       📄 duration_test.rs
+      📄 ensure_server_ready_test.rs
       📁 fixtures/
         📊 complex.json
         📊 simple.json
       📄 integration_test.rs
       📄 ipc_pipe_test.rs
+      📄 logging_test.rs
       📄 phase3_test.rs
       📄 phase4_test.rs
       📄 phase5_test.rs
@@ -2282,22 +3149,39 @@ MIT License
       📄 test_utils.rs
   📄 _config.yml
   📄 build.rs
+  📁 examples/
+    📄 test_client_non_verbose.rs
+    📄 test_client_verbose.rs
+    📄 test_logging_non_verbose.rs
+    📄 test_logging_verbose.rs
   📁 generated-docs/
+    📖 development-status-generated-prompt.md
   📁 issue-notes/
     📖 34.md
     📖 36.md
+    📖 38.md
+    📖 40.md
+    📖 42.md
+    📖 44.md
+    📖 46.md
+    📖 48.md
+    📖 50.md
+    📖 52.md
+    📖 54.md
   📄 opm.c
   📄 opm.h
   📄 setup_ci_environment.sh
   📁 src/
     📄 audio.rs
     📄 client.rs
+    📄 debug_wav.rs
     📄 events.rs
     📁 ipc/
       📄 mod.rs
       📄 pipe_windows.rs
       📄 protocol.rs
     📄 lib.rs
+    📄 logging.rs
     📄 main.rs
     📄 opm.rs
     📄 opm_ffi.rs
@@ -2306,13 +3190,18 @@ MIT License
     📄 server.rs
     📄 wav_writer.rs
   📁 tests/
+    📄 client_json_test.rs
     📄 client_test.rs
+    📄 client_verbose_test.rs
+    📄 debug_wav_test.rs
     📄 duration_test.rs
+    📄 ensure_server_ready_test.rs
     📁 fixtures/
       📊 complex.json
       📊 simple.json
     📄 integration_test.rs
     📄 ipc_pipe_test.rs
+    📄 logging_test.rs
     📄 phase3_test.rs
     📄 phase4_test.rs
     📄 phase5_test.rs
@@ -2323,22 +3212,39 @@ MIT License
     📄 test_utils.rs
 📄 _config.yml
 📄 build.rs
+📁 examples/
+  📄 test_client_non_verbose.rs
+  📄 test_client_verbose.rs
+  📄 test_logging_non_verbose.rs
+  📄 test_logging_verbose.rs
 📁 generated-docs/
+  📖 development-status-generated-prompt.md
 📁 issue-notes/
   📖 34.md
   📖 36.md
+  📖 38.md
+  📖 40.md
+  📖 42.md
+  📖 44.md
+  📖 46.md
+  📖 48.md
+  📖 50.md
+  📖 52.md
+  📖 54.md
 📄 opm.c
 📄 opm.h
 📄 setup_ci_environment.sh
 📁 src/
   📄 audio.rs
   📄 client.rs
+  📄 debug_wav.rs
   📄 events.rs
   📁 ipc/
     📄 mod.rs
     📄 pipe_windows.rs
     📄 protocol.rs
   📄 lib.rs
+  📄 logging.rs
   📄 main.rs
   📄 opm.rs
   📄 opm_ffi.rs
@@ -2347,13 +3253,18 @@ MIT License
   📄 server.rs
   📄 wav_writer.rs
 📁 tests/
+  📄 client_json_test.rs
   📄 client_test.rs
+  📄 client_verbose_test.rs
+  📄 debug_wav_test.rs
   📄 duration_test.rs
+  📄 ensure_server_ready_test.rs
   📁 fixtures/
     📊 complex.json
     📊 simple.json
   📄 integration_test.rs
   📄 ipc_pipe_test.rs
+  📄 logging_test.rs
   📄 phase3_test.rs
   📄 phase4_test.rs
   📄 phase5_test.rs
@@ -2439,4 +3350,4 @@ tests/fixtures/complex.json
 
 
 ---
-Generated at: 2025-11-16 07:01:42 JST
+Generated at: 2025-11-17 07:01:42 JST

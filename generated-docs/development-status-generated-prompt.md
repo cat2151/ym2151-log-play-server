@@ -1,4 +1,4 @@
-Last updated: 2025-11-16
+Last updated: 2025-11-17
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -206,20 +206,34 @@ Last updated: 2025-11-16
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
-- generated-docs/project-overview-generated-prompt.md
+- examples/test_client_non_verbose.rs
+- examples/test_client_verbose.rs
+- examples/test_logging_non_verbose.rs
+- examples/test_logging_verbose.rs
 - issue-notes/34.md
 - issue-notes/36.md
+- issue-notes/38.md
+- issue-notes/40.md
+- issue-notes/42.md
+- issue-notes/44.md
+- issue-notes/46.md
+- issue-notes/48.md
+- issue-notes/50.md
+- issue-notes/52.md
+- issue-notes/54.md
 - opm.c
 - opm.h
 - output_ym2151.json
 - setup_ci_environment.sh
 - src/audio.rs
 - src/client.rs
+- src/debug_wav.rs
 - src/events.rs
 - src/ipc/mod.rs
 - src/ipc/pipe_windows.rs
 - src/ipc/protocol.rs
 - src/lib.rs
+- src/logging.rs
 - src/main.rs
 - src/opm.rs
 - src/opm_ffi.rs
@@ -227,12 +241,17 @@ Last updated: 2025-11-16
 - src/resampler.rs
 - src/server.rs
 - src/wav_writer.rs
+- tests/client_json_test.rs
 - tests/client_test.rs
+- tests/client_verbose_test.rs
+- tests/debug_wav_test.rs
 - tests/duration_test.rs
+- tests/ensure_server_ready_test.rs
 - tests/fixtures/complex.json
 - tests/fixtures/simple.json
 - tests/integration_test.rs
 - tests/ipc_pipe_test.rs
+- tests/logging_test.rs
 - tests/phase3_test.rs
 - tests/phase4_test.rs
 - tests/phase5_test.rs
@@ -250,37 +269,39 @@ Last updated: 2025-11-16
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-eb2702d Merge pull request #37 from cat2151/copilot/handle-json-string-data
-5dbc1e3 Fix doc comment formatting
-48c3088 Add documentation and additional tests for JSON string feature
-e4ee590 Add JSON string support for named pipe data
-118d388 Initial plan
-c1f4e7b Add issue note for #36 [auto]
-0bd1028 Update project summaries (overview & development status) [auto]
-ba159dd Auto-translate README.ja.md to README.md [auto]
-5c6a968 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-2299285 レイヤー分割の意図を追記
+96d1227 Merge pull request #55 from cat2151/copilot/add-wav-output-functions
+04ced67 Change debug WAV control from environment variable to verbose flag
+fc7517e Add integration tests and fix conditional compilation
+e3b6ee7 Add comprehensive documentation to debug_wav module
+7cce4d0 Add debug WAV output functionality for issue #54
+082c76e Initial plan
+8cd09b0 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
+163084c 元になったprojectとの関連を修正
+4965f26 Auto-translate README.ja.md to README.md [auto]
+fabc1cf Update README.ja.md with situation section
 
 ### 変更されたファイル:
 .github/copilot-instructions.md
-.gitignore
-Cargo.toml
 README.ja.md
 README.md
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/34.md
-issue-notes/36.md
+examples/test_client_non_verbose.rs
+examples/test_client_verbose.rs
+examples/test_logging_non_verbose.rs
+examples/test_logging_verbose.rs
+issue-notes/50.md
+issue-notes/52.md
+issue-notes/54.md
+setup_ci_environment.sh
+src/audio.rs
 src/client.rs
+src/debug_wav.rs
 src/events.rs
-src/ipc/mod.rs
-src/ipc/pipe_windows.rs
-src/ipc/protocol.rs
 src/lib.rs
-src/server.rs
+src/main.rs
+tests/client_test.rs
+tests/client_verbose_test.rs
+tests/debug_wav_test.rs
 
 
 ---
-Generated at: 2025-11-16 07:01:42 JST
+Generated at: 2025-11-17 07:01:42 JST
