@@ -1,6 +1,7 @@
 pub mod audio;
 #[cfg(windows)]
 pub mod client;
+pub mod debug_wav;
 pub mod events;
 pub mod ipc;
 pub mod logging;

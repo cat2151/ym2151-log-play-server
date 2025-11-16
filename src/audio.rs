@@ -20,7 +20,8 @@ pub struct AudioPlayer {
     command_tx: Sender<AudioCommand>,
     generator_handle: Option<std::thread::JoinHandle<()>>,
 
-    wav_buffer: Arc<Mutex<Vec<i16>>>,
+    wav_buffer_55k: Arc<Mutex<Vec<i16>>>,
+    wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
 }
 
 impl AudioPlayer {
@@ -46,8 +47,11 @@ impl AudioPlayer {
             mpsc::sync_channel(8);
         let (command_tx, command_rx) = mpsc::channel();
 
-        let wav_buffer = Arc::new(Mutex::new(Vec::new()));
-        let wav_buffer_clone = wav_buffer.clone();
+        let wav_buffer_55k = Arc::new(Mutex::new(Vec::new()));
+        let wav_buffer_55k_clone = wav_buffer_55k.clone();
+
+        let wav_buffer_48k = Arc::new(Mutex::new(Vec::new()));
+        let wav_buffer_48k_clone = wav_buffer_48k.clone();
 
         let leftover_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
         let leftover_buffer_clone = leftover_buffer.clone();
@@ -105,9 +109,13 @@ impl AudioPlayer {
         stream.play().context("Failed to start audio stream")?;
 
         let generator_handle = std::thread::spawn(move || {
-            if let Err(e) =
-                Self::generate_samples_thread(player, sample_tx, command_rx, wav_buffer_clone)
-            {
+            if let Err(e) = Self::generate_samples_thread(
+                player,
+                sample_tx,
+                command_rx,
+                wav_buffer_55k_clone,
+                wav_buffer_48k_clone,
+            ) {
                 // Sample generation errors should always be logged
                 logging::log_always(&format!("Sample generation error: {}", e));
             }
@@ -117,7 +125,8 @@ impl AudioPlayer {
             stream,
             command_tx,
             generator_handle: Some(generator_handle),
-            wav_buffer,
+            wav_buffer_55k,
+            wav_buffer_48k,
         })
     }
 
@@ -125,7 +134,8 @@ impl AudioPlayer {
         mut player: Player,
         sample_tx: SyncSender<Vec<f32>>,
         command_rx: Receiver<AudioCommand>,
-        wav_buffer: Arc<Mutex<Vec<i16>>>,
+        wav_buffer_55k: Arc<Mutex<Vec<i16>>>,
+        wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
@@ -172,13 +182,17 @@ impl AudioPlayer {
 
             player.generate_samples(&mut generation_buffer);
 
-            if let Ok(mut buffer) = wav_buffer.lock() {
+            if let Ok(mut buffer) = wav_buffer_55k.lock() {
                 buffer.extend_from_slice(&generation_buffer);
             }
 
             let resampled = resampler
                 .resample(&generation_buffer)
                 .context("Failed to resample audio")?;
+
+            if let Ok(mut buffer) = wav_buffer_48k.lock() {
+                buffer.extend_from_slice(&resampled);
+            }
 
             let f32_samples: Vec<f32> = resampled
                 .iter()
@@ -206,8 +220,15 @@ impl AudioPlayer {
         self.wait();
     }
 
-    pub fn get_wav_buffer(&self) -> Vec<i16> {
-        self.wav_buffer
+    pub fn get_wav_buffer_55k(&self) -> Vec<i16> {
+        self.wav_buffer_55k
+            .lock()
+            .expect("Failed to lock WAV buffer - mutex poisoned")
+            .clone()
+    }
+
+    pub fn get_wav_buffer_48k(&self) -> Vec<i16> {
+        self.wav_buffer_48k
             .lock()
             .expect("Failed to lock WAV buffer - mutex poisoned")
             .clone()
