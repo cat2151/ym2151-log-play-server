@@ -5,38 +5,41 @@
 //!
 //! # Usage
 //!
-//! The recommended way to send JSON data is using the [`send_json`] function,
-//! which automatically chooses the optimal transmission method based on data size:
+//! ## Playing JSON Data
+//!
+//! Use [`send_json`] to send JSON data. The function automatically chooses
+//! the optimal transmission method based on data size:
 //!
 //! ```no_run
 //! use ym2151_log_play_server::client;
 //!
-//! // Small JSON (< 4KB) - automatically sent directly via named pipe
-//! let small_json = r#"{"event_count": 2, "events": [...]}"#;
-//! client::send_json(small_json)?;
-//!
-//! // Large JSON (> 4KB) - automatically saved to temp file and sent via file path
-//! let large_json = /* ... large JSON data ... */;
-//! client::send_json(&large_json)?;
-//!
-//! // Control playback
-//! client::stop_playback()?;
-//! client::shutdown_server()?;
+//! // Automatically handles small and large JSON
+//! let json_data = r#"{"event_count": 2, "events": [...]}"#;
+//! client::send_json(json_data)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
-//! # Advanced Usage
+//! ## Playing from File
 //!
-//! For explicit control over transmission method:
+//! Use [`play_file`] to play a JSON file:
 //!
 //! ```no_run
 //! use ym2151_log_play_server::client;
 //!
-//! // Force direct transmission (for small JSON < 4KB)
-//! client::send_json_direct(r#"{"event_count": 1, "events": []}"#)?;
+//! client::play_file("path/to/music.json")?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
 //!
-//! // Force file-based transmission (for any size)
-//! client::send_json_via_file("path/to/file.json")?;
+//! ## Controlling Playback
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Stop playback
+//! client::stop_playback()?;
+//!
+//! // Shutdown server
+//! client::shutdown_server()?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
@@ -86,7 +89,7 @@ pub fn send_json(json_data: &str) -> Result<()> {
             .context("Failed to flush temporary JSON file")?;
 
         // Send the file path
-        let result = send_json_via_file(
+        let result = play_file(
             temp_path
                 .to_str()
                 .ok_or_else(|| anyhow::anyhow!("Invalid temporary file path"))?,
@@ -100,21 +103,27 @@ pub fn send_json(json_data: &str) -> Result<()> {
 }
 
 /// Send JSON data directly via named pipe (max ~4KB)
-/// Use this for small JSON data that fits in pipe buffer
-///
-/// Note: Consider using `send_json()` instead, which automatically
-/// chooses the best method based on data size.
-pub fn send_json_direct(json_data: &str) -> Result<()> {
+/// Internal function used by send_json for small JSON data
+fn send_json_direct(json_data: &str) -> Result<()> {
     send_command(Command::Play(json_data.to_string()))
 }
 
-/// Send JSON data via file path (unlimited size)
-/// Use this for large JSON files that exceed pipe buffer
+/// Play a JSON file by sending its file path to the server
 ///
-/// Note: Consider using `send_json()` instead, which automatically
-/// chooses the best method based on data size.
-pub fn send_json_via_file(json_path: &str) -> Result<()> {
-    send_command(Command::Play(json_path.to_string()))
+/// The server will read and play the JSON file at the specified path.
+/// This is useful when you already have a JSON file on disk.
+///
+/// # Arguments
+/// * `file_path` - Path to the JSON file to play
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// client::play_file("output_ym2151.json")?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn play_file(file_path: &str) -> Result<()> {
+    send_command(Command::Play(file_path.to_string()))
 }
 
 pub fn stop_playback() -> Result<()> {

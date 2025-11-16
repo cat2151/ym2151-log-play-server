@@ -56,8 +56,8 @@ mod client_json_integration_tests {
         // Give server time to start and create the pipe
         thread::sleep(Duration::from_millis(200));
 
-        // Send PLAY command with JSON data directly via pipe
-        let result = ym2151_log_play_server::client::send_json_direct(json_data);
+        // Send PLAY command with JSON data (small, so will be sent directly)
+        let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
         // Wait for server to finish
@@ -98,7 +98,7 @@ mod client_json_integration_tests {
 
         thread::sleep(Duration::from_millis(200));
 
-        let result = ym2151_log_play_server::client::send_json_direct(json_data);
+        let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
         server_handle.join().unwrap();

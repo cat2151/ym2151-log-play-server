@@ -91,7 +91,7 @@ fn main() {
                 }
             } else if args.len() == 3 {
                 let json_path = &args[2];
-                match client::send_json_via_file(json_path) {
+                match client::play_file(json_path) {
                     Ok(_) => {
                         std::process::exit(0);
                     }
