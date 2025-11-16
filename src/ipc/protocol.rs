@@ -6,8 +6,6 @@ pub enum Command {
     PlayFile { path: String },
     PlayJson {
         data: serde_json::Value,
-        #[serde(default)]
-        silent: bool,
     },
     Stop,
     Shutdown,
@@ -126,7 +124,6 @@ mod tests {
         });
         let original = Command::PlayJson {
             data: json_data,
-            silent: false,
         };
         let binary = original.to_binary().unwrap();
         let parsed = Command::from_binary(&binary).unwrap();
@@ -203,14 +200,14 @@ mod tests {
     }
 
     #[test]
-    fn test_binary_play_json_with_silent_true() {
+    fn test_binary_play_json_with_silent_removed() {
+        // Test that PlayJson works without silent field
         let json_data = serde_json::json!({
             "event_count": 1,
             "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
         });
         let original = Command::PlayJson {
             data: json_data,
-            silent: true,
         };
         let binary = original.to_binary().unwrap();
         let parsed = Command::from_binary(&binary).unwrap();
@@ -219,8 +216,8 @@ mod tests {
 
     #[test]
     fn test_binary_play_json_backward_compatibility() {
-        // Test that old JSON without silent field deserializes with silent=false
-        let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]}}"#;
+        // Test that old JSON with silent field still deserializes (field is ignored)
+        let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]},"silent":true}"#;
         let json_bytes = json_str.as_bytes();
         
         let mut binary = Vec::with_capacity(4 + json_bytes.len());
@@ -229,8 +226,8 @@ mod tests {
         
         let parsed = Command::from_binary(&binary).unwrap();
         match parsed {
-            Command::PlayJson { data: _, silent } => {
-                assert_eq!(silent, false, "silent should default to false for backward compatibility");
+            Command::PlayJson { data: _ } => {
+                // Successfully parsed, silent field is ignored
             }
             _ => panic!("Expected PlayJson command"),
         }
