@@ -5,18 +5,22 @@
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-A server-client application that receives YM2151 (OPM) register event logs and performs real-time playback.
+A server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
 
 ## Target Platforms
 
 - Windows-only
 - Prohibition of Linux-specific code
-    - In this project, an increase in hallucinations was observed,
-        - therefore, Linux-specific code is prohibited.
+    - As an increase in hallucinations was observed in this project,
+        - Linux-specific code is prohibited.
+
+## Status
+
+It is used as a library integrated into `cat-play-mml` and `ym2151-tone-editor`.
 
 ## Overview
 
-This project is a program that plays register event logs of the YM2151 (OPM) sound chip.
+This project is a program that plays back YM2151 (OPM) sound chip register event logs.
 It operates in both standalone and server-client modes.
 
 ### Key Features
@@ -24,12 +28,12 @@ It operates in both standalone and server-client modes.
 - Real-time playback of JSON music data
 - WAV file output
 - Resides as a server and continues real-time playback in the background
-- Controlled by a client to quickly switch to another performance
-- Utilizes named pipes for server-client communication
+- Controlled by a client, allowing quick switching to different performances
+- Uses named pipes for server-client communication
 
 ## Usage
 
-### Usage as a Library (Programmatic Control)
+### As a Library (Programmatic Control)
 
 Recommended pattern for using this library programmatically:
 
@@ -37,7 +41,7 @@ Recommended pattern for using this library programmatically:
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // Ensure server is ready (automatically installs and starts if needed)
+    // Ensure the server is ready (automatically installs and starts if necessary)
     client::ensure_server_ready("cat-play-mml")?;
     
     // Send JSON data
@@ -64,7 +68,7 @@ This eliminates the need for library users to manually manage the server's lifec
 
 ### Standalone Mode (Normal Playback)
 
-Play a JSON file directly:
+Plays JSON files directly:
 
 ```bash
 # Build and run
@@ -78,7 +82,7 @@ cargo run --release output_ym2151.json
 
 #### Starting the Server
 
-Start as a resident server in a waiting state:
+Starts as a resident server in a waiting state:
 
 ```bash
 cargo run --release -- --server
@@ -86,7 +90,7 @@ cargo run --release -- --server
 
 #### Client Operations
 
-Operate in client mode from a separate terminal:
+Operate from a separate terminal in client mode:
 
 ```bash
 # Play a new JSON file (switch performance)
@@ -99,7 +103,7 @@ cargo run --release -- --client --stop
 cargo run --release -- --client --shutdown
 ```
 
-### Command Line Argument List
+### Command-Line Argument List
 
 ```
 Usage:
@@ -107,16 +111,16 @@ Usage:
   ym2151-log-play-server --server                  # Server mode
   ym2151-log-play-server --client <json_log_file>  # Play new JSON
   ym2151-log-play-server --client --stop           # Stop playback
-  ym2151-log-play-server --client --shutdown       # Server shutdown
+  ym2151-log-play-server --client --shutdown       # Shut down server
 
 Options:
-  --server           Start as a server in waiting state
-  --client <file>    Instruct the server to play a new JSON file
-  --client --stop    Instruct the server to stop playback
-  --client --shutdown Instruct the server to shut down
+  --server           Start as a server in a waiting state
+  --client <file>    Instruct server to play a new JSON file
+  --client --stop    Instruct server to stop playback
+  --client --shutdown Instruct server to shut down
 
 Examples:
-  # Play in standalone mode
+  # Play standalone
   ym2151-log-play-server output_ym2151.json
 
   # Start server
@@ -159,7 +163,7 @@ $ cargo run --release -- --client --shutdown
 # Start server (Terminal 1)
 $ cargo run --release -- --server
 
-# Switch songs one after another (Terminal 2)
+# Switch songs consecutively (Terminal 2)
 $ cargo run --release -- --client music2.json
 $ sleep 5
 $ cargo run --release -- --client music3.json
@@ -190,8 +194,8 @@ cargo test
 - zig cc (used as C compiler)
 
 ## Future Prospects
-- Current status is considered stable
-- Implement features as needed
+- Currently, the situation is considered stable.
+- Will implement as needed, once requirements are identified.
 
 ## Project Goals
 - Motivation:
@@ -200,38 +204,38 @@ cargo test
   - Solution:
     - Reside as a server and be controlled by a client
   - Use cases:
-    - Provide an experience where commands can be input while music is playing, similar to MSX's PLAY statement
-    - From a tone editor or phrase editor,
-      - use the crate as a client
-    - Embed the crate into a player to make it both a server and a client
-      - On first run, start a duplicate of itself as a server in the background, begin playback, and then terminate itself.
-        - *Note: Unlike explicit server usage, the plan is to output messages to a log instead of printing them; logs make it easier to understand the state.
-      - After the server is launched, send JSON to the server as a client and then terminate itself.
+    - Provide an experience like MSX's PLAY statement, where commands can be input while music is playing.
+    - From a tone editor, phrase editor,
+      - Use the crate as a client
+    - Integrate the crate into a player, making it both a server and a client
+      - First time, start a duplicate of itself as a server in the background, begin playback, and then terminate itself.
+        - *Unlike explicit server usage, the idea is to output messages to a log instead of printing them; logs are easier to follow.*
+      - After the server starts, it sends JSON to the server as a client and then terminates itself.
 - Simple and minimal. Designed to be easy to reference when building larger projects.
-- If it stops playing, the intention is to prioritize making it play again as much as possible.
+- If it stops playing, I intend to prioritize getting it to play again.
 
 ## Project Intent
-- Why was such a module split performed?
-  - To enable the GitHub Copilot Coding Agent to perform TDD on the layers above this one (from MML input to log generation) using GitHub Linux Runner.
-  - This layer (Windows real-time playback and Windows client-server) cannot be TDD-ed by the GitHub Copilot Coding Agent on GitHub Linux Runner, and instead requires TDD by a Windows local agent, which results in a slightly higher workload.
-  - Therefore, this higher-workload layer was isolated to allow for efficient development of other layers.
+- Why was this module split designed this way?
+  - To enable GitHub Copilot Coding Agent to perform TDD on the layers above this (from MML input to log generation) using GitHub Linux Runner.
+  - This layer (Windows real-time playback and Windows client-server) cannot be TDD'd by GitHub Copilot Coding Agent on GitHub Linux Runner; instead, it requires TDD by a local Windows agent, which entails a somewhat higher workload.
+  - Therefore, this high-workload layer was separated to allow more efficient development of other layers.
 
 ## Out of Scope
 - Advanced features
 - Reproduction of existing songs
 
-## Development Approach
-- TDD with an agent on Windows
-- Linux is prohibited specifically for this project
-  - This is because:
-    - Early on, essentially Linux-specific code was generated
-      - which might have served as a foundation for the Windows version
-    - Unix/Linux/Windows branching, real-time audio presence/absence branching, other branching, and the large number of comments associated with them,
-      - led to code bloat and became a breeding ground for hallucinations.
-      - This resulted in low-quality code with excessive `allow(dead_code)`, ignored tests, duplicate tests, and unnecessary `cfg(windows)` branching.
-      - Frequent hallucinations made bug fixing and implementing Windows-specific features impossible.
-    - It was found that TDD with an agent on Windows works well for this project.
-      - The aforementioned hallucinations and redundancies were also resolved through robust refactoring using TDD.
+## Development Method
+- TDD with agent on Windows
+- Linux is prohibited specifically for this project.
+  - Because:
+    - In the early stages, essentially Linux-specific code was generated.
+      - It might have been useful as a foundation for the Windows version.
+    - Unix/Linux/Windows branches, real-time audio presence/absence branches, other branches, and a large number of associated comments,
+      - Led to code bloat and became a breeding ground for hallucinations.
+      - Resulted in low-quality code, with excessive `allow(dead_code)`, ignored tests, duplicate tests, unnecessary `cfg(windows)` branches, etc.
+      - Frequent hallucinations made bug fixing and implementation of Windows-specific features impossible.
+    - It was discovered that TDD with an agent works well on Windows for this project.
+      - The aforementioned hallucinations and inefficiencies were resolved through robust refactoring using TDD.
 
 ## License
 
@@ -240,4 +244,4 @@ MIT License
 ## Used Libraries
 
 - Nuked-OPM: LGPL 2.1
-- Other Rust crates: Follow each crate's license
+- Other Rust crates: According to each crate's license
