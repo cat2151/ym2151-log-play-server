@@ -47,6 +47,10 @@ fn main() -> anyhow::Result<()> {
     let json_data = r#"{"event_count": 2, "events": [...]}"#;
     client::send_json(json_data)?;
     
+    // Send JSON data in silent mode (no server log output)
+    // Useful for library users like ym2151-tone-editor to avoid display corruption
+    client::send_json_with_options(json_data, true)?;
+    
     // Control playback
     client::stop_playback()?;
     
