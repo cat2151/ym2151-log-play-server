@@ -74,10 +74,13 @@ fn test_server_startup_automated() {
     // Give server time to start
     thread::sleep(Duration::from_millis(100));
 
-    // Send shutdown command
+    // Send shutdown command using binary protocol
     let result = NamedPipe::connect_default().and_then(|mut writer| {
         let cmd = Command::Shutdown;
-        writer.write_str(&cmd.serialize())
+        let binary_data = cmd.to_binary().map_err(|e| {
+            std::io::Error::new(std::io::ErrorKind::Other, e)
+        })?;
+        writer.write_binary(&binary_data)
     });
 
     // The connection should succeed

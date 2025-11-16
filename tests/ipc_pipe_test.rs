@@ -7,11 +7,11 @@ use ym2151_log_play_server::ipc::protocol::Command;
 
 #[test]
 fn test_command_parsing() {
-    // Test command parsing without actual pipe I/O
+    // Test legacy command parsing (for backward compatibility)
     let play_cmd = Command::parse("PLAY test.json").unwrap();
     match play_cmd {
-        Command::Play(path) => assert_eq!(path, "test.json"),
-        _ => panic!("Expected Play command"),
+        Command::PlayFile { path } => assert_eq!(path, "test.json"),
+        _ => panic!("Expected PlayFile command"),
     }
 
     let stop_cmd = Command::parse("STOP").unwrap();
@@ -19,6 +19,39 @@ fn test_command_parsing() {
 
     let shutdown_cmd = Command::parse("SHUTDOWN").unwrap();
     assert!(matches!(shutdown_cmd, Command::Shutdown));
+}
+
+#[test]
+fn test_binary_protocol() {
+    // Test PlayFile command binary serialization
+    let play_file_cmd = Command::PlayFile {
+        path: "test.json".to_string(),
+    };
+    let binary = play_file_cmd.to_binary().unwrap();
+    let parsed = Command::from_binary(&binary).unwrap();
+    assert_eq!(play_file_cmd, parsed);
+
+    // Test PlayJson command binary serialization
+    let json_data = serde_json::json!({
+        "event_count": 1,
+        "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
+    });
+    let play_json_cmd = Command::PlayJson { data: json_data };
+    let binary = play_json_cmd.to_binary().unwrap();
+    let parsed = Command::from_binary(&binary).unwrap();
+    assert_eq!(play_json_cmd, parsed);
+
+    // Test Stop command
+    let stop_cmd = Command::Stop;
+    let binary = stop_cmd.to_binary().unwrap();
+    let parsed = Command::from_binary(&binary).unwrap();
+    assert_eq!(stop_cmd, parsed);
+
+    // Test Shutdown command
+    let shutdown_cmd = Command::Shutdown;
+    let binary = shutdown_cmd.to_binary().unwrap();
+    let parsed = Command::from_binary(&binary).unwrap();
+    assert_eq!(shutdown_cmd, parsed);
 }
 
 #[test]
