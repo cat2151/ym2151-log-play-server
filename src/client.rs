@@ -2,7 +2,15 @@ use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
 
-pub fn play_file(json_path: &str) -> Result<()> {
+/// Send JSON data directly via named pipe (max ~4KB)
+/// Use this for small JSON data that fits in pipe buffer
+pub fn send_json_direct(json_data: &str) -> Result<()> {
+    send_command(Command::Play(json_data.to_string()))
+}
+
+/// Send JSON data via file path (unlimited size)
+/// Use this for large JSON files that exceed pipe buffer
+pub fn send_json_via_file(json_path: &str) -> Result<()> {
     send_command(Command::Play(json_path.to_string()))
 }
 
@@ -22,7 +30,13 @@ fn send_command(command: Command) -> Result<()> {
 
     // コマンドの内容を表示
     match &command {
-        Command::Play(path) => eprintln!("⏳ サーバーに演奏要求を送信中: {}", path),
+        Command::Play(data) => {
+            if Command::is_json_string(data) {
+                eprintln!("⏳ サーバーにJSON直接送信中...");
+            } else {
+                eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", data);
+            }
+        }
         Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
         Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
     }
@@ -41,7 +55,13 @@ fn send_command(command: Command) -> Result<()> {
 
     match response {
         Response::Ok => match &command {
-            Command::Play(path) => eprintln!("✅ 演奏開始: {}", path),
+            Command::Play(data) => {
+                if Command::is_json_string(data) {
+                    eprintln!("✅ JSON直接送信で演奏開始しました");
+                } else {
+                    eprintln!("✅ JSONファイル経由で演奏開始: {}", data);
+                }
+            }
             Command::Stop => eprintln!("✅ 演奏停止しました"),
             Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
         },
