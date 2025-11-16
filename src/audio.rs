@@ -30,11 +30,11 @@ impl AudioPlayer {
             .default_output_device()
             .ok_or_else(|| anyhow::anyhow!("No output device available"))?;
 
-        // Device info is always shown (not server-specific)
-        println!(
+        // Device info respects verbose flag to avoid TUI disruption
+        logging::log_verbose(&format!(
             "Using audio device: {}",
             device.name().unwrap_or_else(|_| "Unknown".to_string())
-        );
+        ));
 
         let config = cpal::StreamConfig {
             channels: 2,
