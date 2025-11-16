@@ -148,30 +148,32 @@ impl Server {
                         }
 
                         // Convert JSON value to string for parsing
-                        let json_str = match serde_json::to_string(&data) {
-                            Ok(s) => s,
+                        let json_result = serde_json::to_string(&data);
+
+                        match json_result {
+                            Ok(json_str) => {
+                                match Self::load_and_start_playback(&json_str, true) {
+                                    Ok(player) => {
+                                        audio_player = Some(player);
+                                        eprintln!("✅ JSON データから音声再生を開始しました");
+
+                                        let mut state = self.state.lock().unwrap();
+                                        *state = ServerState::Playing;
+
+                                        Response::Ok
+                                    }
+                                    Err(e) => {
+                                        eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
+                                        Response::Error {
+                                            message: format!("Failed to start playback: {}", e),
+                                        }
+                                    }
+                                }
+                            }
                             Err(e) => {
                                 eprintln!("❌ JSONシリアライズに失敗しました: {}", e);
                                 Response::Error {
                                     message: format!("Failed to serialize JSON: {}", e),
-                                }
-                            }
-                        };
-
-                        match Self::load_and_start_playback(&json_str, true) {
-                            Ok(player) => {
-                                audio_player = Some(player);
-                                eprintln!("✅ JSON データから音声再生を開始しました");
-
-                                let mut state = self.state.lock().unwrap();
-                                *state = ServerState::Playing;
-
-                                Response::Ok
-                            }
-                            Err(e) => {
-                                eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
-                                Response::Error {
-                                    message: format!("Failed to start playback: {}", e),
                                 }
                             }
                         }
