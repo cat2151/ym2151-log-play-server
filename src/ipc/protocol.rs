@@ -1,13 +1,16 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
-    Play(String),
-
+    PlayFile { path: String },
+    PlayJson { data: serde_json::Value },
     Stop,
-
     Shutdown,
 }
 
 impl Command {
+    /// Parse command from legacy text format for backward compatibility
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
 
@@ -22,7 +25,9 @@ impl Command {
                 if parts.len() < 2 {
                     Err("PLAY command requires a path argument".to_string())
                 } else {
-                    Ok(Command::Play(parts[1].to_string()))
+                    Ok(Command::PlayFile {
+                        path: parts[1].to_string(),
+                    })
                 }
             }
             "STOP" => Ok(Command::Stop),
@@ -31,9 +36,51 @@ impl Command {
         }
     }
 
+    /// Parse command from binary (length-prefixed JSON) format
+    pub fn from_binary(data: &[u8]) -> Result<Self, String> {
+        if data.len() < 4 {
+            return Err("Invalid binary data: too short".to_string());
+        }
+
+        let len = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
+
+        if data.len() < 4 + len {
+            return Err(format!(
+                "Invalid binary data: expected {} bytes, got {}",
+                4 + len,
+                data.len()
+            ));
+        }
+
+        let json_bytes = &data[4..4 + len];
+        let json_str = std::str::from_utf8(json_bytes)
+            .map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
+
+        serde_json::from_str(json_str).map_err(|e| format!("Failed to parse JSON: {}", e))
+    }
+
+    /// Serialize command to binary (length-prefixed JSON) format
+    pub fn to_binary(&self) -> Result<Vec<u8>, String> {
+        let json_str =
+            serde_json::to_string(self).map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+
+        let json_bytes = json_str.as_bytes();
+        let len = json_bytes.len() as u32;
+
+        let mut result = Vec::with_capacity(4 + json_bytes.len());
+        result.extend_from_slice(&len.to_le_bytes());
+        result.extend_from_slice(json_bytes);
+
+        Ok(result)
+    }
+
+    /// Serialize command to legacy text format for backward compatibility
     pub fn serialize(&self) -> String {
         match self {
-            Command::Play(path) => format!("PLAY {}\n", path),
+            Command::PlayFile { path } => format!("PLAY {}\n", path),
+            Command::PlayJson { data } => {
+                format!("PLAY {}\n", serde_json::to_string(data).unwrap_or_default())
+            }
             Command::Stop => "STOP\n".to_string(),
             Command::Shutdown => "SHUTDOWN\n".to_string(),
         }
@@ -56,21 +103,23 @@ impl Command {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "status", rename_all = "lowercase")]
 pub enum Response {
     Ok,
-
-    Error(String),
+    Error { message: String },
 }
 
 impl Response {
+    /// Serialize response to legacy text format for backward compatibility
     pub fn serialize(&self) -> String {
         match self {
             Response::Ok => "OK\n".to_string(),
-            Response::Error(msg) => format!("ERROR {}\n", msg),
+            Response::Error { message } => format!("ERROR {}\n", message),
         }
     }
 
+    /// Parse response from legacy text format
     pub fn parse(line: &str) -> Result<Self, String> {
         let line = line.trim();
 
@@ -83,10 +132,50 @@ impl Response {
         }
 
         if let Some(msg) = line.strip_prefix("ERROR ") {
-            return Ok(Response::Error(msg.to_string()));
+            return Ok(Response::Error {
+                message: msg.to_string(),
+            });
         }
 
         Err(format!("Unknown response: {}", line))
+    }
+
+    /// Parse response from binary (length-prefixed JSON) format
+    pub fn from_binary(data: &[u8]) -> Result<Self, String> {
+        if data.len() < 4 {
+            return Err("Invalid binary data: too short".to_string());
+        }
+
+        let len = u32::from_le_bytes([data[0], data[1], data[2], data[3]]) as usize;
+
+        if data.len() < 4 + len {
+            return Err(format!(
+                "Invalid binary data: expected {} bytes, got {}",
+                4 + len,
+                data.len()
+            ));
+        }
+
+        let json_bytes = &data[4..4 + len];
+        let json_str = std::str::from_utf8(json_bytes)
+            .map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
+
+        serde_json::from_str(json_str).map_err(|e| format!("Failed to parse JSON: {}", e))
+    }
+
+    /// Serialize response to binary (length-prefixed JSON) format
+    pub fn to_binary(&self) -> Result<Vec<u8>, String> {
+        let json_str =
+            serde_json::to_string(self).map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+
+        let json_bytes = json_str.as_bytes();
+        let len = json_bytes.len() as u32;
+
+        let mut result = Vec::with_capacity(4 + json_bytes.len());
+        result.extend_from_slice(&len.to_le_bytes());
+        result.extend_from_slice(json_bytes);
+
+        Ok(result)
     }
 }
 
@@ -97,7 +186,12 @@ mod tests {
     #[test]
     fn test_parse_play_command() {
         let cmd = Command::parse("PLAY /path/to/file.json").unwrap();
-        assert_eq!(cmd, Command::Play("/path/to/file.json".to_string()));
+        assert_eq!(
+            cmd,
+            Command::PlayFile {
+                path: "/path/to/file.json".to_string()
+            }
+        );
     }
 
     #[test]
@@ -105,7 +199,9 @@ mod tests {
         let cmd = Command::parse("PLAY /path/with spaces/file.json").unwrap();
         assert_eq!(
             cmd,
-            Command::Play("/path/with spaces/file.json".to_string())
+            Command::PlayFile {
+                path: "/path/with spaces/file.json".to_string()
+            }
         );
     }
 
@@ -150,7 +246,9 @@ mod tests {
 
     #[test]
     fn test_serialize_play_command() {
-        let cmd = Command::Play("/path/to/file.json".to_string());
+        let cmd = Command::PlayFile {
+            path: "/path/to/file.json".to_string(),
+        };
         assert_eq!(cmd.serialize(), "PLAY /path/to/file.json\n");
     }
 
@@ -174,13 +272,17 @@ mod tests {
 
     #[test]
     fn test_serialize_error_response() {
-        let resp = Response::Error("File not found".to_string());
+        let resp = Response::Error {
+            message: "File not found".to_string(),
+        };
         assert_eq!(resp.serialize(), "ERROR File not found\n");
     }
 
     #[test]
     fn test_serialize_error_response_with_special_chars() {
-        let resp = Response::Error("Path: /invalid/path".to_string());
+        let resp = Response::Error {
+            message: "Path: /invalid/path".to_string(),
+        };
         assert_eq!(resp.serialize(), "ERROR Path: /invalid/path\n");
     }
 
@@ -193,7 +295,12 @@ mod tests {
     #[test]
     fn test_parse_error_response() {
         let resp = Response::parse("ERROR File not found").unwrap();
-        assert_eq!(resp, Response::Error("File not found".to_string()));
+        assert_eq!(
+            resp,
+            Response::Error {
+                message: "File not found".to_string()
+            }
+        );
     }
 
     #[test]
@@ -201,7 +308,9 @@ mod tests {
         let resp = Response::parse("ERROR Could not read file: /path/to/file.json").unwrap();
         assert_eq!(
             resp,
-            Response::Error("Could not read file: /path/to/file.json".to_string())
+            Response::Error {
+                message: "Could not read file: /path/to/file.json".to_string()
+            }
         );
     }
 
@@ -227,7 +336,9 @@ mod tests {
 
     #[test]
     fn test_command_roundtrip_play() {
-        let original = Command::Play("/test/path.json".to_string());
+        let original = Command::PlayFile {
+            path: "/test/path.json".to_string(),
+        };
         let serialized = original.serialize();
         let parsed = Command::parse(serialized.trim()).unwrap();
         assert_eq!(original, parsed);
@@ -259,7 +370,9 @@ mod tests {
 
     #[test]
     fn test_response_roundtrip_error() {
-        let original = Response::Error("Test error message".to_string());
+        let original = Response::Error {
+            message: "Test error message".to_string(),
+        };
         let serialized = original.serialize();
         let parsed = Response::parse(serialized.trim()).unwrap();
         assert_eq!(original, parsed);
@@ -289,33 +402,114 @@ mod tests {
         assert!(!Command::is_json_string(""));
     }
 
+    // Binary protocol tests
     #[test]
-    fn test_parse_play_command_with_json_string() {
-        let json = r#"{"event_count": 1, "events": []}"#;
-        let cmd = Command::parse(&format!("PLAY {}", json)).unwrap();
-        if let Command::Play(data) = &cmd {
-            assert!(Command::is_json_string(data));
-        } else {
-            panic!("Expected Play command");
-        }
+    fn test_binary_play_file_roundtrip() {
+        let original = Command::PlayFile {
+            path: "/test/path.json".to_string(),
+        };
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
     }
 
     #[test]
-    fn test_json_string_roundtrip() {
-        // Simulate sending a JSON string via PLAY command
-        let json_data = r#"{"event_count": 2, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
-        let cmd = Command::Play(json_data.to_string());
+    fn test_binary_play_json_roundtrip() {
+        let json_data = serde_json::json!({
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2, "addr": "0x20", "data": "0xC7"}
+            ]
+        });
+        let original = Command::PlayJson { data: json_data };
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
 
-        // Serialize and parse
-        let serialized = cmd.serialize();
-        let parsed = Command::parse(serialized.trim()).unwrap();
+    #[test]
+    fn test_binary_stop_roundtrip() {
+        let original = Command::Stop;
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
 
-        // Verify it's still a Play command with JSON string
-        if let Command::Play(data) = parsed {
-            assert!(Command::is_json_string(&data));
-            assert_eq!(data, json_data);
-        } else {
-            panic!("Expected Play command");
-        }
+    #[test]
+    fn test_binary_shutdown_roundtrip() {
+        let original = Command::Shutdown;
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_response_ok_roundtrip() {
+        let original = Response::Ok;
+        let binary = original.to_binary().unwrap();
+        let parsed = Response::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_response_error_roundtrip() {
+        let original = Response::Error {
+            message: "Test error".to_string(),
+        };
+        let binary = original.to_binary().unwrap();
+        let parsed = Response::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_invalid_too_short() {
+        let data = vec![1, 2]; // Only 2 bytes, need at least 4
+        let result = Command::from_binary(&data);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("too short"));
+    }
+
+    #[test]
+    fn test_binary_invalid_length_mismatch() {
+        let mut data = vec![10, 0, 0, 0]; // Says 10 bytes of JSON
+        data.extend_from_slice(b"short"); // But only 5 bytes
+        let result = Command::from_binary(&data);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("expected"));
+    }
+
+    #[test]
+    fn test_binary_invalid_utf8() {
+        let mut data = vec![3, 0, 0, 0]; // 3 bytes of "JSON"
+        data.extend_from_slice(&[0xFF, 0xFE, 0xFD]); // Invalid UTF-8
+        let result = Command::from_binary(&data);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("UTF-8"));
+    }
+
+    #[test]
+    fn test_binary_invalid_json() {
+        let mut data = vec![8, 0, 0, 0]; // 8 bytes
+        data.extend_from_slice(b"not json"); // Valid UTF-8 but not JSON
+        let result = Command::from_binary(&data);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("parse JSON"));
+    }
+
+    #[test]
+    fn test_binary_length_prefix_format() {
+        let cmd = Command::Stop;
+        let binary = cmd.to_binary().unwrap();
+        
+        // First 4 bytes are the length in little-endian
+        let len = u32::from_le_bytes([binary[0], binary[1], binary[2], binary[3]]) as usize;
+        
+        // The JSON part should match the length
+        assert_eq!(binary.len(), 4 + len);
+        
+        // The JSON part should be valid UTF-8
+        let json_str = std::str::from_utf8(&binary[4..]).unwrap();
+        assert!(json_str.contains("stop"));
     }
 }

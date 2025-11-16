@@ -1,6 +1,7 @@
 //! Integration tests for the client module direct JSON functionality
 //!
-//! These tests verify that the client can send JSON string data directly via named pipe.
+//! These tests verify that the client can send JSON string data directly via named pipe
+//! using the new binary protocol.
 
 mod test_utils;
 
@@ -33,30 +34,30 @@ mod client_json_integration_tests {
             let pipe = NamedPipe::create().unwrap();
             let mut reader = pipe.open_read().unwrap();
 
-            // Read the PLAY command
-            let line = reader.read_line().unwrap();
-            let cmd = Command::parse(&line).unwrap();
+            // Read the binary command
+            let binary_data = reader.read_binary().unwrap();
+            let cmd = Command::from_binary(&binary_data).unwrap();
 
-            // Verify it's a PLAY command with JSON string data
+            // Verify it's a PlayJson command
             match cmd {
-                Command::Play(ref data) => {
-                    assert!(Command::is_json_string(data));
-                    assert!(data.contains("event_count"));
-                    assert!(data.contains("events"));
+                Command::PlayJson { data } => {
+                    assert!(data.get("event_count").is_some());
+                    assert!(data.get("events").is_some());
                 }
-                _ => panic!("Expected PLAY command"),
+                _ => panic!("Expected PlayJson command"),
             }
 
-            // Send OK response
+            // Send OK response in binary format
             let mut writer = pipe.open_write().unwrap();
             let response = Response::Ok;
-            writer.write_str(&response.serialize()).unwrap();
+            let response_binary = response.to_binary().unwrap();
+            writer.write_binary(&response_binary).unwrap();
         });
 
         // Give server time to start and create the pipe
         thread::sleep(Duration::from_millis(200));
 
-        // Send PLAY command with JSON data (small, so will be sent directly)
+        // Send JSON command
         let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
@@ -65,7 +66,7 @@ mod client_json_integration_tests {
     }
 
     #[test]
-    fn test_client_send_json_direct_empty() {
+    fn test_client_send_json_empty() {
         // Acquire lock to prevent parallel execution of server tests
         let _lock = server_test_lock();
 
@@ -77,71 +78,27 @@ mod client_json_integration_tests {
             let pipe = NamedPipe::create().unwrap();
             let mut reader = pipe.open_read().unwrap();
 
-            // Read the PLAY command
-            let line = reader.read_line().unwrap();
-            let cmd = Command::parse(&line).unwrap();
+            // Read the binary command
+            let binary_data = reader.read_binary().unwrap();
+            let cmd = Command::from_binary(&binary_data).unwrap();
 
-            // Verify it's a PLAY command with empty JSON
+            // Verify it's a PlayJson command with empty events
             match cmd {
-                Command::Play(ref data) => {
-                    assert!(Command::is_json_string(data));
-                    assert!(data.contains("\"event_count\": 0"));
+                Command::PlayJson { data } => {
+                    assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(0));
                 }
-                _ => panic!("Expected PLAY command"),
+                _ => panic!("Expected PlayJson command"),
             }
 
             // Send OK response
             let mut writer = pipe.open_write().unwrap();
             let response = Response::Ok;
-            writer.write_str(&response.serialize()).unwrap();
+            let response_binary = response.to_binary().unwrap();
+            writer.write_binary(&response_binary).unwrap();
         });
 
         thread::sleep(Duration::from_millis(200));
 
-        let result = ym2151_log_play_server::client::send_json(json_data);
-        assert!(result.is_ok());
-
-        server_handle.join().unwrap();
-    }
-
-    #[test]
-    fn test_client_send_json_small() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        // Small JSON (< 4KB) should be sent directly
-        let json_data = r#"{"event_count": 2, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
-        assert!(json_data.len() < 4096);
-
-        let server_handle = thread::spawn(move || {
-            let pipe = NamedPipe::create().unwrap();
-            let mut reader = pipe.open_read().unwrap();
-
-            // Read the PLAY command
-            let line = reader.read_line().unwrap();
-            let cmd = Command::parse(&line).unwrap();
-
-            // Verify it's a PLAY command with JSON string data (sent directly)
-            match cmd {
-                Command::Play(ref data) => {
-                    assert!(Command::is_json_string(data));
-                    assert!(data.contains("event_count"));
-                    assert!(data.contains("events"));
-                }
-                _ => panic!("Expected PLAY command"),
-            }
-
-            // Send OK response
-            let mut writer = pipe.open_write().unwrap();
-            let response = Response::Ok;
-            writer.write_str(&response.serialize()).unwrap();
-        });
-
-        thread::sleep(Duration::from_millis(200));
-
-        // Use the new send_json function which should auto-select direct mode
         let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
@@ -155,7 +112,7 @@ mod client_json_integration_tests {
 
         cleanup_pipe();
 
-        // Create large JSON (> 4KB) that should be sent via file
+        // Create large JSON to test binary protocol can handle it
         let mut large_events = String::from(r#"{"event_count": 500, "events": ["#);
         for i in 0..500 {
             if i > 0 {
@@ -167,83 +124,33 @@ mod client_json_integration_tests {
             ));
         }
         large_events.push_str("]}");
-        assert!(large_events.len() > 4096);
 
         let server_handle = thread::spawn(move || {
             let pipe = NamedPipe::create().unwrap();
             let mut reader = pipe.open_read().unwrap();
 
-            // Read the PLAY command
-            let line = reader.read_line().unwrap();
-            let cmd = Command::parse(&line).unwrap();
+            // Read the binary command
+            let binary_data = reader.read_binary().unwrap();
+            let cmd = Command::from_binary(&binary_data).unwrap();
 
-            // Verify it's a PLAY command with a file path (not JSON string)
+            // Verify it's a PlayJson command with large data
             match cmd {
-                Command::Play(ref data) => {
-                    // Should be a file path, not JSON string
-                    assert!(!Command::is_json_string(data));
-                    assert!(data.contains("ym2151_temp.json"));
+                Command::PlayJson { data } => {
+                    assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(500));
                 }
-                _ => panic!("Expected PLAY command"),
+                _ => panic!("Expected PlayJson command"),
             }
 
             // Send OK response
             let mut writer = pipe.open_write().unwrap();
             let response = Response::Ok;
-            writer.write_str(&response.serialize()).unwrap();
+            let response_binary = response.to_binary().unwrap();
+            writer.write_binary(&response_binary).unwrap();
         });
 
         thread::sleep(Duration::from_millis(200));
 
-        // Use the new send_json function which should auto-select file mode
         let result = ym2151_log_play_server::client::send_json(&large_events);
-        assert!(result.is_ok());
-
-        server_handle.join().unwrap();
-    }
-
-    #[test]
-    fn test_client_send_json_boundary() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        // Create JSON exactly at 4096 bytes boundary
-        let base_json =
-            r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
-        let padding_size = 4096 - base_json.len();
-        let boundary_json = format!(
-            r#"{{"event_count": 1, "events": [{{"time": 0, "addr": "0x08", "data": "{}"}}]}}"#,
-            "0".repeat(padding_size)
-        );
-        assert_eq!(boundary_json.len(), 4096);
-
-        let server_handle = thread::spawn(move || {
-            let pipe = NamedPipe::create().unwrap();
-            let mut reader = pipe.open_read().unwrap();
-
-            // Read the PLAY command
-            let line = reader.read_line().unwrap();
-            let cmd = Command::parse(&line).unwrap();
-
-            // At exactly 4096 bytes, should still be sent directly
-            match cmd {
-                Command::Play(ref data) => {
-                    assert!(Command::is_json_string(data));
-                }
-                _ => panic!("Expected PLAY command"),
-            }
-
-            // Send OK response
-            let mut writer = pipe.open_write().unwrap();
-            let response = Response::Ok;
-            writer.write_str(&response.serialize()).unwrap();
-        });
-
-        thread::sleep(Duration::from_millis(200));
-
-        let result = ym2151_log_play_server::client::send_json(&boundary_json);
         assert!(result.is_ok());
 
         server_handle.join().unwrap();

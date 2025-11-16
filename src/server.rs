@@ -86,45 +86,53 @@ impl Server {
 
             // 一つのクライアント接続からの複数メッセージを処理
             loop {
-                let line = match reader.read_line() {
-                    Ok(l) => l,
+                // Read binary command from client
+                let binary_data = match reader.read_binary() {
+                    Ok(data) => data,
                     Err(e) => {
                         eprintln!("📞 クライアントが切断されました: {}", e);
                         break; // 内側のループを抜けて新しい接続を待機
                     }
                 };
 
-                let command = match Command::parse(&line) {
+                let command = match Command::from_binary(&binary_data) {
                     Ok(cmd) => cmd,
                     Err(e) => {
                         eprintln!("⚠️  警告: コマンドの解析に失敗しました: {}", e);
-                        let _ = writer
-                            .write_str(&Response::Error(format!("Parse error: {}", e)).serialize());
+                        let response = Response::Error {
+                            message: format!("Parse error: {}", e),
+                        };
+                        if let Ok(response_binary) = response.to_binary() {
+                            let _ = writer.write_binary(&response_binary);
+                        }
                         continue;
                     }
                 };
 
-                // コマンドの内容をログ出力（JSON文字列の場合は末尾要素のみ表示）
+                // コマンドの内容をログ出力
                 match &command {
-                    Command::Play(json_data) => {
-                        if Command::is_json_string(json_data) {
-                            // JSON文字列の場合、末尾要素だけを表示
-                            match EventLog::from_json_str(json_data) {
+                    Command::PlayJson { data } => {
+                        // JSON データの場合、末尾要素だけを表示
+                        if let Ok(log_str) = serde_json::to_string(data) {
+                            match EventLog::from_json_str(&log_str) {
                                 Ok(log) if !log.events.is_empty() => {
                                     let last_event = &log.events[log.events.len() - 1];
-                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (末尾要素: time:{}, addr:0x{:02X}, data:0x{:02X})",
+                                    eprintln!("📩 コマンドを受信しました: PlayJson (末尾要素: time:{}, addr:0x{:02X}, data:0x{:02X})",
                                              last_event.time, last_event.addr, last_event.data);
                                 }
                                 Ok(_) => {
-                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (空のイベント配列)");
+                                    eprintln!("📩 コマンドを受信しました: PlayJson (空のイベント配列)");
                                 }
                                 Err(_) => {
-                                    eprintln!("📩 コマンドを受信しました: PLAY <JSON文字列データ> (解析エラー)");
+                                    eprintln!("📩 コマンドを受信しました: PlayJson (解析エラー)");
                                 }
                             }
                         } else {
-                            eprintln!("📩 コマンドを受信しました: PLAY {}", json_data);
+                            eprintln!("📩 コマンドを受信しました: PlayJson");
                         }
+                    }
+                    Command::PlayFile { path } => {
+                        eprintln!("📩 コマンドを受信しました: PlayFile({})", path);
                     }
                     other => {
                         eprintln!("📩 コマンドを受信しました: {:?}", other);
@@ -132,28 +140,28 @@ impl Server {
                 }
 
                 let response = match command {
-                    Command::Play(json_data) => {
-                        use crate::ipc::protocol::Command;
-
-                        if Command::is_json_string(&json_data) {
-                            eprintln!("🎵 JSON文字列データを読み込み中...");
-                        } else {
-                            eprintln!("🎵 新しい音声ファイルを読み込み中: {}", json_data);
-                        }
+                    Command::PlayJson { data } => {
+                        eprintln!("🎵 JSON データを読み込み中...");
 
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
 
-                        match Self::load_and_start_playback(&json_data) {
+                        // Convert JSON value to string for parsing
+                        let json_str = match serde_json::to_string(&data) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                eprintln!("❌ JSONシリアライズに失敗しました: {}", e);
+                                Response::Error {
+                                    message: format!("Failed to serialize JSON: {}", e),
+                                }
+                            }
+                        };
+
+                        match Self::load_and_start_playback(&json_str, true) {
                             Ok(player) => {
                                 audio_player = Some(player);
-
-                                if Command::is_json_string(&json_data) {
-                                    eprintln!("✅ JSON文字列から音声再生を開始しました");
-                                } else {
-                                    eprintln!("✅ 音声再生を開始しました: {}", json_data);
-                                }
+                                eprintln!("✅ JSON データから音声再生を開始しました");
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Playing;
@@ -162,7 +170,34 @@ impl Server {
                             }
                             Err(e) => {
                                 eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
-                                Response::Error(format!("Failed to start playback: {}", e))
+                                Response::Error {
+                                    message: format!("Failed to start playback: {}", e),
+                                }
+                            }
+                        }
+                    }
+                    Command::PlayFile { path } => {
+                        eprintln!("🎵 新しい音声ファイルを読み込み中: {}", path);
+
+                        if let Some(mut player) = audio_player.take() {
+                            player.stop();
+                        }
+
+                        match Self::load_and_start_playback(&path, false) {
+                            Ok(player) => {
+                                audio_player = Some(player);
+                                eprintln!("✅ 音声再生を開始しました: {}", path);
+
+                                let mut state = self.state.lock().unwrap();
+                                *state = ServerState::Playing;
+
+                                Response::Ok
+                            }
+                            Err(e) => {
+                                eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
+                                Response::Error {
+                                    message: format!("Failed to start playback: {}", e),
+                                }
                             }
                         }
                     }
@@ -186,16 +221,23 @@ impl Server {
                         self.shutdown_flag.store(true, Ordering::Relaxed);
 
                         // シャットダウンレスポンスを送信
-                        let _ = writer.write_str(&Response::Ok.serialize());
+                        if let Ok(response_binary) = Response::Ok.to_binary() {
+                            let _ = writer.write_binary(&response_binary);
+                        }
                         eprintln!("✅ シャットダウン完了");
                         return Ok(()); // 外側のループも抜けて終了
                     }
                 };
 
                 // レスポンスを送信
-                if let Err(e) = writer.write_str(&response.serialize()) {
-                    eprintln!("⚠️  警告: レスポンス送信に失敗しました: {}", e);
-                    break; // 書き込みに失敗したら接続を閉じる
+                if let Ok(response_binary) = response.to_binary() {
+                    if let Err(e) = writer.write_binary(&response_binary) {
+                        eprintln!("⚠️  警告: レスポンス送信に失敗しました: {}", e);
+                        break; // 書き込みに失敗したら接続を閉じる
+                    }
+                } else {
+                    eprintln!("⚠️  警告: レスポンスのシリアライズに失敗しました");
+                    break;
                 }
 
                 eprintln!("📤 レスポンスを送信しました: {:?}", response);
@@ -218,17 +260,15 @@ impl Server {
         self.shutdown_flag.load(Ordering::Relaxed)
     }
 
-    fn load_and_start_playback(json_data: &str) -> Result<AudioPlayer> {
-        use crate::ipc::protocol::Command;
-
-        let log = if Command::is_json_string(json_data) {
+    fn load_and_start_playback(data: &str, is_json_string: bool) -> Result<AudioPlayer> {
+        let log = if is_json_string {
             // Parse as JSON string directly
-            EventLog::from_json_str(json_data)
+            EventLog::from_json_str(data)
                 .with_context(|| "Failed to parse JSON string data")?
         } else {
             // Load from file path
-            EventLog::from_file(json_data)
-                .with_context(|| format!("Failed to load JSON file: {}", json_data))?
+            EventLog::from_file(data)
+                .with_context(|| format!("Failed to load JSON file: {}", data))?
         };
 
         if !log.validate() {
