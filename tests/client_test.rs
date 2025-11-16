@@ -53,7 +53,7 @@ mod client_integration_tests {
         thread::sleep(Duration::from_millis(200));
 
         // Send PLAY command from client
-        let result = ym2151_log_play_server::client::send_json_via_file("output_ym2151.json");
+        let result = ym2151_log_play_server::client::play_file("output_ym2151.json");
         assert!(result.is_ok());
 
         // Wait for server to finish
