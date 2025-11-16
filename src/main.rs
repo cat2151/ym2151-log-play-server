@@ -1,6 +1,7 @@
 use std::env;
 use ym2151_log_play_server::debug_wav;
 use ym2151_log_play_server::events::EventLog;
+#[cfg(windows)]
 use ym2151_log_play_server::logging;
 use ym2151_log_play_server::player::Player;
 use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
