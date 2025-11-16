@@ -61,23 +61,14 @@
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
-use std::fs;
-use std::io::Write;
 use std::process::Command as ProcessCommand;
 use std::thread;
 use std::time::Duration;
 
-/// Maximum size for direct JSON transmission via named pipe (in bytes)
-/// This corresponds to the Windows named pipe buffer size
-const MAX_DIRECT_JSON_SIZE: usize = 4096;
-
 /// Send JSON data automatically choosing the best method based on size
 ///
-/// This function automatically determines whether to send JSON data directly
-/// via named pipe or through a temporary file based on the data size.
-///
-/// - For JSON strings ≤ 4KB: sends directly via named pipe
-/// - For JSON strings > 4KB: writes to a temporary file and sends the file path
+/// This function sends JSON data directly via the binary protocol.
+/// The protocol uses length-prefixed JSON for robust transmission.
 ///
 /// # Arguments
 /// * `json_data` - JSON string data to send
@@ -89,41 +80,12 @@ const MAX_DIRECT_JSON_SIZE: usize = 4096;
 /// client::send_json(json).unwrap();
 /// ```
 pub fn send_json(json_data: &str) -> Result<()> {
-    let json_bytes = json_data.as_bytes();
-
-    if json_bytes.len() <= MAX_DIRECT_JSON_SIZE {
-        // Small JSON: send directly via named pipe
-        send_json_direct(json_data)
-    } else {
-        // Large JSON: write to temporary file and send file path
-        let temp_path = std::env::temp_dir().join("ym2151_temp.json");
-
-        // Write JSON data to temporary file
-        let mut file =
-            fs::File::create(&temp_path).context("Failed to create temporary JSON file")?;
-        file.write_all(json_bytes)
-            .context("Failed to write JSON data to temporary file")?;
-        file.flush()
-            .context("Failed to flush temporary JSON file")?;
-
-        // Send the file path
-        let result = play_file(
-            temp_path
-                .to_str()
-                .ok_or_else(|| anyhow::anyhow!("Invalid temporary file path"))?,
-        );
-
-        // Clean up temporary file
-        let _ = fs::remove_file(&temp_path);
-
-        result
-    }
-}
-
-/// Send JSON data directly via named pipe (max ~4KB)
-/// Internal function used by send_json for small JSON data
-fn send_json_direct(json_data: &str) -> Result<()> {
-    send_command(Command::Play(json_data.to_string()))
+    // Parse the JSON to validate it
+    let json_value: serde_json::Value = serde_json::from_str(json_data)
+        .context("Failed to parse JSON data")?;
+    
+    let command = Command::PlayJson { data: json_value };
+    send_command(command)
 }
 
 /// Play a JSON file by sending its file path to the server
@@ -141,7 +103,9 @@ fn send_json_direct(json_data: &str) -> Result<()> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn play_file(file_path: &str) -> Result<()> {
-    send_command(Command::Play(file_path.to_string()))
+    send_command(Command::PlayFile {
+        path: file_path.to_string(),
+    })
 }
 
 pub fn stop_playback() -> Result<()> {
@@ -289,48 +253,51 @@ fn send_command(command: Command) -> Result<()> {
     let mut writer = NamedPipe::connect_default()
         .context("Failed to connect to server. Is the server running?")?;
 
-    let message = command.serialize();
+    // Serialize command to binary format
+    let binary_data = command
+        .to_binary()
+        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
 
-    // コマンドの内容を表示
+    // Display command info
     match &command {
-        Command::Play(data) => {
-            if Command::is_json_string(data) {
-                eprintln!("⏳ サーバーにJSON直接送信中...");
-            } else {
-                eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", data);
-            }
+        Command::PlayJson { .. } => {
+            eprintln!("⏳ サーバーにJSON直接送信中...");
+        }
+        Command::PlayFile { path } => {
+            eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", path);
         }
         Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
         Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
     }
 
+    // Send command via binary protocol
     writer
-        .write_str(&message)
+        .write_binary(&binary_data)
         .context("Failed to send command to server")?;
 
-    // サーバーからのレスポンスを読み取り
-    let response_line = writer
-        .read_response()
+    // Read binary response from server
+    let response_data = writer
+        .read_binary_response()
         .context("Failed to read response from server")?;
 
-    let response = Response::parse(response_line.trim())
+    // Parse binary response
+    let response = Response::from_binary(&response_data)
         .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
 
     match response {
         Response::Ok => match &command {
-            Command::Play(data) => {
-                if Command::is_json_string(data) {
-                    eprintln!("✅ JSON直接送信で演奏開始しました");
-                } else {
-                    eprintln!("✅ JSONファイル経由で演奏開始: {}", data);
-                }
+            Command::PlayJson { .. } => {
+                eprintln!("✅ JSON直接送信で演奏開始しました");
+            }
+            Command::PlayFile { path } => {
+                eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
             }
             Command::Stop => eprintln!("✅ 演奏停止しました"),
             Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
         },
-        Response::Error(msg) => {
-            eprintln!("❌ サーバーエラー: {}", msg);
-            return Err(anyhow::anyhow!("Server returned error: {}", msg));
+        Response::Error { message } => {
+            eprintln!("❌ サーバーエラー: {}", message);
+            return Err(anyhow::anyhow!("Server returned error: {}", message));
         }
     }
 
@@ -345,36 +312,6 @@ mod tests {
     fn test_send_command_without_server() {
         let result = send_command(Command::Stop);
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_max_direct_json_size_constant() {
-        // Verify the constant is set correctly
-        assert_eq!(MAX_DIRECT_JSON_SIZE, 4096);
-    }
-
-    #[test]
-    fn test_small_json_size_check() {
-        // Small JSON should be under the threshold
-        let small_json = r#"{"event_count": 1, "events": []}"#;
-        assert!(small_json.as_bytes().len() <= MAX_DIRECT_JSON_SIZE);
-    }
-
-    #[test]
-    fn test_large_json_size_check() {
-        // Generate a large JSON that exceeds the threshold
-        let mut large_json = String::from(r#"{"event_count": 500, "events": ["#);
-        for i in 0..500 {
-            if i > 0 {
-                large_json.push_str(", ");
-            }
-            large_json.push_str(&format!(
-                r#"{{"time": {}, "addr": "0x08", "data": "0x00"}}"#,
-                i
-            ));
-        }
-        large_json.push_str("]}");
-        assert!(large_json.as_bytes().len() > MAX_DIRECT_JSON_SIZE);
     }
 
     #[test]

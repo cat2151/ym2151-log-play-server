@@ -186,15 +186,24 @@ mod server_playback_tests {
 
         eprintln!("Attempting to send PLAY command...");
 
-        // Send PLAY command to play a different file
+        // Send PLAY command to play a file using binary protocol
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
-                eprintln!("Connected to server, sending PLAY command...");
-                let cmd = Command::Play("output_ym2151.json".to_string());
-                if let Err(e) = writer.write_str(&cmd.serialize()) {
-                    eprintln!("Failed to send PLAY: {}", e);
-                } else {
-                    eprintln!("PLAY command sent successfully");
+                eprintln!("Connected to server, sending PlayFile command...");
+                let cmd = Command::PlayFile {
+                    path: "output_ym2151.json".to_string(),
+                };
+                match cmd.to_binary() {
+                    Ok(binary_data) => {
+                        if let Err(e) = writer.write_binary(&binary_data) {
+                            eprintln!("Failed to send PlayFile: {}", e);
+                        } else {
+                            eprintln!("PlayFile command sent successfully");
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to serialize command: {}", e);
+                    }
                 }
             }
             Err(e) => {
@@ -207,14 +216,16 @@ mod server_playback_tests {
 
         eprintln!("Sending shutdown command...");
 
-        // Send shutdown
+        // Send shutdown using binary protocol
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
                 let cmd = Command::Shutdown;
-                if let Err(e) = writer.write_str(&cmd.serialize()) {
-                    eprintln!("Failed to send shutdown: {}", e);
-                } else {
-                    eprintln!("Shutdown command sent successfully");
+                if let Ok(binary_data) = cmd.to_binary() {
+                    if let Err(e) = writer.write_binary(&binary_data) {
+                        eprintln!("Failed to send shutdown: {}", e);
+                    } else {
+                        eprintln!("Shutdown command sent successfully");
+                    }
                 }
             }
             Err(e) => {
@@ -253,15 +264,17 @@ mod server_playback_tests {
 
         eprintln!("Attempting to send STOP command...");
 
-        // Send STOP command
+        // Send STOP command using binary protocol
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
                 eprintln!("Connected to server, sending STOP command...");
                 let cmd = Command::Stop;
-                if let Err(e) = writer.write_str(&cmd.serialize()) {
-                    eprintln!("Failed to send STOP: {}", e);
-                } else {
-                    eprintln!("STOP command sent successfully");
+                if let Ok(binary_data) = cmd.to_binary() {
+                    if let Err(e) = writer.write_binary(&binary_data) {
+                        eprintln!("Failed to send STOP: {}", e);
+                    } else {
+                        eprintln!("STOP command sent successfully");
+                    }
                 }
             }
             Err(e) => {
@@ -274,11 +287,13 @@ mod server_playback_tests {
 
         eprintln!("Sending shutdown command...");
 
-        // Send shutdown
+        // Send shutdown using binary protocol
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
                 let cmd = Command::Shutdown;
-                let _ = writer.write_str(&cmd.serialize());
+                if let Ok(binary_data) = cmd.to_binary() {
+                    let _ = writer.write_binary(&binary_data);
+                }
             }
             Err(e) => {
                 eprintln!("Failed to connect for shutdown: {}", e);
