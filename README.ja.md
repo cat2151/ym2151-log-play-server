@@ -1,5 +1,10 @@
 # ym2151-log-play-server
 
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
 YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント
 
 ## 対象プラットフォーム
