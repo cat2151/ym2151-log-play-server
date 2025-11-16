@@ -31,31 +31,21 @@ impl Server {
         }
     }
 
-    pub fn run(&self, json_path: &str) -> Result<()> {
+    pub fn run(&self) -> Result<()> {
         eprintln!("🚀 YM2151サーバーを起動中...");
-        eprintln!("   初期ファイル: {}", json_path);
         eprintln!(
             "   名前付きパイプ: {}",
             crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
         );
 
         let mut audio_player: Option<AudioPlayer> = None;
-        match Self::load_and_start_playback(json_path) {
-            Ok(player) => {
-                audio_player = Some(player);
-                eprintln!("✅ 初期音声の再生を開始しました");
-            }
-            Err(e) => {
-                eprintln!("⚠️  警告: 初期音声の再生開始に失敗しました: {}", e);
-            }
-        }
 
         {
             let mut state = self.state.lock().unwrap();
-            *state = ServerState::Playing;
+            *state = ServerState::Stopped;
         }
 
-        eprintln!("🎵 音声生成が開始されました。クライアントからの接続を待機中...");
+        eprintln!("🎵 サーバーが起動しました。クライアントからの接続を待機中...");
 
         loop {
             if self.shutdown_flag.load(Ordering::Relaxed) {
