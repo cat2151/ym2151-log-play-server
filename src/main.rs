@@ -1,4 +1,4 @@
-use std::env;
+use clap::{Parser, Subcommand};
 use ym2151_log_play_server::debug_wav;
 use ym2151_log_play_server::events::EventLog;
 #[cfg(windows)]
@@ -12,74 +12,113 @@ use ym2151_log_play_server::client;
 #[cfg(windows)]
 use ym2151_log_play_server::server::Server;
 
-fn print_usage(program_name: &str) {
-    eprintln!("YM2151 Log Player - Rust implementation");
-    eprintln!();
-    eprintln!("使用方法:");
-    eprintln!(
-        "  {} <json_log_file>              # スタンドアロン演奏",
-        program_name
-    );
-    eprintln!(
-        "  {} --server [--verbose]         # サーバーとして起動",
-        program_name
-    );
-    eprintln!(
-        "  {} --client <json_file> [--verbose]  # サーバーに演奏指示",
-        program_name
-    );
-    eprintln!(
-        "  {} --client --shutdown [--verbose]   # サーバーにシャットダウン指示",
-        program_name
-    );
-    eprintln!();
-    eprintln!("例:");
-    eprintln!("  {} events.json", program_name);
-    eprintln!("  {} sample_events.json", program_name);
-    eprintln!("  {} --server", program_name);
-    eprintln!("  {} --server --verbose", program_name);
-    eprintln!("  {} --client test_input.json", program_name);
-    eprintln!("  {} --client test_input.json --verbose", program_name);
-    eprintln!("  {} --client --stop", program_name);
-    eprintln!("  {} --client --shutdown", program_name);
-    eprintln!();
-    eprintln!("機能:");
-    eprintln!("  - JSONイベントログファイルを読み込み");
-    eprintln!("  - YM2151レジスタ操作を再現");
-    eprintln!("  - リアルタイム音声再生");
-    eprintln!("  - WAVファイル (output.wav) を生成");
-    eprintln!("  - サーバー/クライアントモード (Windows)");
-    eprintln!();
-    eprintln!("サーバーオプション:");
-    eprintln!("  --verbose  デバッグ用に詳細なログを出力 (通常時はログファイルのみ)");
-    eprintln!();
-    eprintln!("クライアントオプション:");
-    eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
-    eprintln!("             (デフォルトはサイレント、TUIアプリでは非推奨)");
+/// YM2151 Log Player - Rust implementation
+#[derive(Parser)]
+#[command(name = "ym2151-log-play-server")]
+#[command(version)]
+#[command(about = "YM2151 Log Player - Rust implementation", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
+    /// JSONイベントログファイルを読み込み (スタンドアロン演奏)
+    #[arg(value_name = "JSON_FILE")]
+    json_file: Option<String>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// サーバーとして起動
+    Server {
+        /// デバッグ用に詳細なログを出力 (通常時はログファイルのみ)
+        #[arg(long)]
+        verbose: bool,
+    },
+    /// サーバーに演奏指示
+    Client {
+        /// JSONファイルのパス
+        #[arg(value_name = "JSON_FILE")]
+        json_file: Option<String>,
+
+        /// デバッグ用に詳細な状態メッセージを出力 (デフォルトはサイレント、TUIアプリでは非推奨)
+        #[arg(long)]
+        verbose: bool,
+
+        /// 演奏を停止
+        #[arg(long)]
+        stop: bool,
+
+        /// サーバーをシャットダウン
+        #[arg(long)]
+        shutdown: bool,
+    },
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    #[cfg(windows)]
-    {
-        if args.len() >= 2 {
-            if args[1] == "--server" {
-                // Check for --verbose flag
-                let verbose = args.iter().any(|arg| arg == "--verbose");
-
-                // Validate arguments
-                let valid_args = args
-                    .iter()
-                    .skip(1)
-                    .all(|arg| arg == "--server" || arg == "--verbose");
-                if !valid_args {
-                    eprintln!("❌ エラー: --server に不明なオプションが指定されています");
-                    eprintln!();
-                    print_usage(&args[0]);
-                    std::process::exit(1);
+    // Parse arguments with custom error handling
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(e) => {
+            // Convert clap error to Japanese error message
+            match e.kind() {
+                clap::error::ErrorKind::UnknownArgument => {
+                    // Extract the unknown argument from the error message
+                    let error_msg = e.to_string();
+                    if let Some(arg) = error_msg
+                        .split('\'')
+                        .nth(1)
+                        .or_else(|| error_msg.split('\u{2018}').nth(1))
+                    {
+                        // Check if it looks like a second positional argument (likely too many args)
+                        if !arg.starts_with("--") && !arg.starts_with('-') {
+                            eprintln!("❌ エラー: 引数が多すぎます");
+                            eprintln!();
+                            eprintln!("使用方法: ym2151-log-play-server <JSON_FILE>");
+                            eprintln!("または --help でヘルプを表示");
+                        } else {
+                            eprintln!("❌ エラー: 不明なオプション: {}", arg);
+                            eprintln!();
+                            if arg == "--no-audio" {
+                                eprintln!("ヒント: --no-audio オプションは廃止されました。");
+                                eprintln!(
+                                    "      CI/ヘッドレス環境では、ALSA設定を使用してください。"
+                                );
+                                eprintln!(
+                                    "      詳細は CI_TDD_GUIDE.md または README.md を参照してください。"
+                                );
+                            } else {
+                                eprintln!(
+                                    "ヒント: スタンドアロン演奏モードではオプションは不要です。"
+                                );
+                                eprintln!("      JSONファイルのパスを直接指定してください。");
+                            }
+                        }
+                    } else {
+                        eprintln!("{}", e);
+                    }
                 }
+                clap::error::ErrorKind::TooManyValues => {
+                    eprintln!("❌ エラー: 引数が多すぎます");
+                    eprintln!();
+                    eprintln!("使用方法: ym2151-log-play-server <JSON_FILE>");
+                    eprintln!("または --help でヘルプを表示");
+                }
+                clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                    print!("{}", e);
+                    std::process::exit(0);
+                }
+                _ => {
+                    eprintln!("{}", e);
+                }
+            }
+            std::process::exit(1);
+        }
+    };
 
+    match cli.command {
+        Some(Commands::Server { verbose }) => {
+            #[cfg(windows)]
+            {
                 // Initialize logging with verbose flag
                 logging::init(verbose);
 
@@ -96,13 +135,27 @@ fn main() {
                         std::process::exit(1);
                     }
                 }
-            } else if args[1] == "--client" {
-                // Check for --verbose flag in client mode
-                let verbose = args.iter().any(|arg| arg == "--verbose");
+            }
+            #[cfg(not(windows))]
+            {
+                let _ = verbose;
+                eprintln!("❌ エラー: サーバーモードはWindowsでのみサポートされています");
+                std::process::exit(1);
+            }
+        }
+        Some(Commands::Client {
+            json_file,
+            verbose,
+            stop,
+            shutdown,
+        }) => {
+            #[cfg(windows)]
+            {
+                // Initialize client with verbose flag
                 client::init_client(verbose);
 
                 // Handle different client commands
-                if (args.len() == 3 || args.len() == 4) && args.contains(&"--stop".to_string()) {
+                if stop {
                     match client::stop_playback() {
                         Ok(_) => {
                             std::process::exit(0);
@@ -113,9 +166,7 @@ fn main() {
                             std::process::exit(1);
                         }
                     }
-                } else if (args.len() == 3 || args.len() == 4)
-                    && args.contains(&"--shutdown".to_string())
-                {
+                } else if shutdown {
                     match client::shutdown_server() {
                         Ok(_) => {
                             std::process::exit(0);
@@ -126,16 +177,9 @@ fn main() {
                             std::process::exit(1);
                         }
                     }
-                } else if args.len() == 3 || (args.len() == 4 && verbose) {
-                    // Find the JSON path (it's the arg that's not "--client" or "--verbose")
-                    let json_path = args
-                        .iter()
-                        .skip(1)
-                        .find(|arg| *arg != "--client" && *arg != "--verbose")
-                        .expect("JSON path not found");
-
+                } else if let Some(json_path) = json_file {
                     // Read JSON file content
-                    match std::fs::read_to_string(json_path) {
+                    match std::fs::read_to_string(&json_path) {
                         Ok(json_content) => match client::send_json(&json_content) {
                             Ok(_) => {
                                 std::process::exit(0);
@@ -153,24 +197,67 @@ fn main() {
                     }
                 } else {
                     eprintln!("❌ エラー: --client オプションには引数が必要です");
-                    eprintln!();
-                    print_usage(&args[0]);
+                    eprintln!(
+                        "   --stop または --shutdown を使用するか、JSONファイルを指定してください"
+                    );
                     std::process::exit(1);
                 }
             }
+            #[cfg(not(windows))]
+            {
+                let _ = (json_file, verbose, stop, shutdown);
+                eprintln!("❌ エラー: クライアントモードはWindowsでのみサポートされています");
+                std::process::exit(1);
+            }
+        }
+        None => {
+            // Fall through to standalone mode handling below
         }
     }
 
-    if args.len() != 2 {
-        print_usage(&args[0]);
-        if args.len() > 2 {
-            eprintln!("\n❌ エラー: 引数が多すぎます");
+    // Standalone mode
+    let json_path = match cli.json_file {
+        Some(path) => path,
+        None => {
+            // When no arguments provided, show Japanese help message
+            eprintln!("YM2151 Log Player - Rust implementation");
+            eprintln!();
+            eprintln!("使用方法:");
+            eprintln!("  ym2151-log-play-server <json_log_file>              # スタンドアロン演奏");
+            eprintln!("  ym2151-log-play-server --server [--verbose]         # サーバーとして起動");
+            eprintln!(
+                "  ym2151-log-play-server --client <json_file> [--verbose]  # サーバーに演奏指示"
+            );
+            eprintln!("  ym2151-log-play-server --client --shutdown [--verbose]   # サーバーにシャットダウン指示");
+            eprintln!();
+            eprintln!("例:");
+            eprintln!("  ym2151-log-play-server events.json");
+            eprintln!("  ym2151-log-play-server sample_events.json");
+            eprintln!("  ym2151-log-play-server --server");
+            eprintln!("  ym2151-log-play-server --server --verbose");
+            eprintln!("  ym2151-log-play-server --client test_input.json");
+            eprintln!("  ym2151-log-play-server --client test_input.json --verbose");
+            eprintln!("  ym2151-log-play-server --client --stop");
+            eprintln!("  ym2151-log-play-server --client --shutdown");
+            eprintln!();
+            eprintln!("機能:");
+            eprintln!("  - JSONイベントログファイルを読み込み");
+            eprintln!("  - YM2151レジスタ操作を再現");
+            eprintln!("  - リアルタイム音声再生");
+            eprintln!("  - WAVファイル (output.wav) を生成");
+            eprintln!("  - サーバー/クライアントモード (Windows)");
+            eprintln!();
+            eprintln!("サーバーオプション:");
+            eprintln!("  --verbose  デバッグ用に詳細なログを出力 (通常時はログファイルのみ)");
+            eprintln!();
+            eprintln!("クライアントオプション:");
+            eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
+            eprintln!("             (デフォルトはサイレント、TUIアプリでは非推奨)");
+            std::process::exit(1);
         }
-        std::process::exit(1);
-    }
+    };
 
-    let json_path = &args[1];
-
+    // Check for invalid flags in standalone mode
     if json_path.starts_with("--") {
         eprintln!("❌ エラー: 不明なオプション: {}", json_path);
         eprintln!();
@@ -183,7 +270,6 @@ fn main() {
             eprintln!("      JSONファイルのパスを直接指定してください。");
         }
         eprintln!();
-        print_usage(&args[0]);
         std::process::exit(1);
     }
 
@@ -191,7 +277,7 @@ fn main() {
     println!("=====================================\n");
 
     println!("イベントログを読み込み中: {}...", json_path);
-    let log = match EventLog::from_file(json_path) {
+    let log = match EventLog::from_file(&json_path) {
         Ok(log) => {
             if !log.validate() {
                 eprintln!("❌ エラー: イベントログの検証に失敗しました");

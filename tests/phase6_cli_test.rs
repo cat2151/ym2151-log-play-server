@@ -159,7 +159,7 @@ fn test_client_option_without_argument_fails() {
 fn test_standalone_mode_with_valid_file() {
     let binary = get_binary_path();
     let output = Command::new(&binary)
-        .arg("test_sample_correct.json")
+        .arg("tests/fixtures/simple.json")
         .output()
         .expect("Failed to execute binary");
 
