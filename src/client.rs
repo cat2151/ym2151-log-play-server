@@ -1,3 +1,45 @@
+//! Client module for sending commands to the YM2151 log player server.
+//!
+//! This module provides functions for communicating with a running server instance
+//! to control playback of YM2151 register event logs.
+//!
+//! # Usage
+//!
+//! The recommended way to send JSON data is using the [`send_json`] function,
+//! which automatically chooses the optimal transmission method based on data size:
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Small JSON (< 4KB) - automatically sent directly via named pipe
+//! let small_json = r#"{"event_count": 2, "events": [...]}"#;
+//! client::send_json(small_json)?;
+//!
+//! // Large JSON (> 4KB) - automatically saved to temp file and sent via file path
+//! let large_json = /* ... large JSON data ... */;
+//! client::send_json(&large_json)?;
+//!
+//! // Control playback
+//! client::stop_playback()?;
+//! client::shutdown_server()?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
+//! # Advanced Usage
+//!
+//! For explicit control over transmission method:
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Force direct transmission (for small JSON < 4KB)
+//! client::send_json_direct(r#"{"event_count": 1, "events": []}"#)?;
+//!
+//! // Force file-based transmission (for any size)
+//! client::send_json_via_file("path/to/file.json")?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
