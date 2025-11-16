@@ -25,7 +25,7 @@ pub struct RegisterEvent {
     pub is_data: Option<u8>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct EventLog {
     pub event_count: usize,
 

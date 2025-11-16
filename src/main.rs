@@ -1,11 +1,15 @@
 use std::env;
+use ym2151_log_play_server::debug_wav;
 use ym2151_log_play_server::events::EventLog;
+#[cfg(windows)]
 use ym2151_log_play_server::logging;
 use ym2151_log_play_server::player::Player;
 use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 use ym2151_log_play_server::wav_writer;
 
+#[cfg(windows)]
 use ym2151_log_play_server::client;
+#[cfg(windows)]
 use ym2151_log_play_server::server::Server;
 
 fn print_usage(program_name: &str) {
@@ -57,96 +61,102 @@ fn print_usage(program_name: &str) {
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() >= 2 {
-        if args[1] == "--server" {
-            // Check for --verbose flag
-            let verbose = args.iter().any(|arg| arg == "--verbose");
+    #[cfg(windows)]
+    {
+        if args.len() >= 2 {
+            if args[1] == "--server" {
+                // Check for --verbose flag
+                let verbose = args.iter().any(|arg| arg == "--verbose");
 
-            // Validate arguments
-            let valid_args = args
-                .iter()
-                .skip(1)
-                .all(|arg| arg == "--server" || arg == "--verbose");
-            if !valid_args {
-                eprintln!("❌ エラー: --server に不明なオプションが指定されています");
-                eprintln!();
-                print_usage(&args[0]);
-                std::process::exit(1);
-            }
-
-            // Initialize logging with verbose flag
-            logging::init(verbose);
-
-            let server = Server::new();
-            match server.run() {
-                Ok(_) => {
-                    std::process::exit(0);
-                }
-                Err(e) => {
-                    logging::log_always(&format!("❌ エラー: サーバーの起動に失敗しました: {}", e));
-                    std::process::exit(1);
-                }
-            }
-        } else if args[1] == "--client" {
-            // Check for --verbose flag in client mode
-            let verbose = args.iter().any(|arg| arg == "--verbose");
-            client::init_client(verbose);
-
-            // Handle different client commands
-            if (args.len() == 3 || args.len() == 4) && args.contains(&"--stop".to_string()) {
-                match client::stop_playback() {
-                    Ok(_) => {
-                        std::process::exit(0);
-                    }
-                    Err(e) => {
-                        eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
-                        eprintln!("   サーバーが起動しているか確認してください");
-                        std::process::exit(1);
-                    }
-                }
-            } else if (args.len() == 3 || args.len() == 4)
-                && args.contains(&"--shutdown".to_string())
-            {
-                match client::shutdown_server() {
-                    Ok(_) => {
-                        std::process::exit(0);
-                    }
-                    Err(e) => {
-                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
-                        eprintln!("   サーバーが起動しているか確認してください");
-                        std::process::exit(1);
-                    }
-                }
-            } else if args.len() == 3 || (args.len() == 4 && verbose) {
-                // Find the JSON path (it's the arg that's not "--client" or "--verbose")
-                let json_path = args
+                // Validate arguments
+                let valid_args = args
                     .iter()
                     .skip(1)
-                    .find(|arg| *arg != "--client" && *arg != "--verbose")
-                    .expect("JSON path not found");
+                    .all(|arg| arg == "--server" || arg == "--verbose");
+                if !valid_args {
+                    eprintln!("❌ エラー: --server に不明なオプションが指定されています");
+                    eprintln!();
+                    print_usage(&args[0]);
+                    std::process::exit(1);
+                }
 
-                // Read JSON file content
-                match std::fs::read_to_string(json_path) {
-                    Ok(json_content) => match client::send_json(&json_content) {
+                // Initialize logging with verbose flag
+                logging::init(verbose);
+
+                let server = Server::new();
+                match server.run() {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        logging::log_always(&format!(
+                            "❌ エラー: サーバーの起動に失敗しました: {}",
+                            e
+                        ));
+                        std::process::exit(1);
+                    }
+                }
+            } else if args[1] == "--client" {
+                // Check for --verbose flag in client mode
+                let verbose = args.iter().any(|arg| arg == "--verbose");
+                client::init_client(verbose);
+
+                // Handle different client commands
+                if (args.len() == 3 || args.len() == 4) && args.contains(&"--stop".to_string()) {
+                    match client::stop_playback() {
                         Ok(_) => {
                             std::process::exit(0);
                         }
                         Err(e) => {
-                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
+                            eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
                             eprintln!("   サーバーが起動しているか確認してください");
                             std::process::exit(1);
                         }
-                    },
-                    Err(e) => {
-                        eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
-                        std::process::exit(1);
                     }
+                } else if (args.len() == 3 || args.len() == 4)
+                    && args.contains(&"--shutdown".to_string())
+                {
+                    match client::shutdown_server() {
+                        Ok(_) => {
+                            std::process::exit(0);
+                        }
+                        Err(e) => {
+                            eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
+                            eprintln!("   サーバーが起動しているか確認してください");
+                            std::process::exit(1);
+                        }
+                    }
+                } else if args.len() == 3 || (args.len() == 4 && verbose) {
+                    // Find the JSON path (it's the arg that's not "--client" or "--verbose")
+                    let json_path = args
+                        .iter()
+                        .skip(1)
+                        .find(|arg| *arg != "--client" && *arg != "--verbose")
+                        .expect("JSON path not found");
+
+                    // Read JSON file content
+                    match std::fs::read_to_string(json_path) {
+                        Ok(json_content) => match client::send_json(&json_content) {
+                            Ok(_) => {
+                                std::process::exit(0);
+                            }
+                            Err(e) => {
+                                eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
+                                eprintln!("   サーバーが起動しているか確認してください");
+                                std::process::exit(1);
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                } else {
+                    eprintln!("❌ エラー: --client オプションには引数が必要です");
+                    eprintln!();
+                    print_usage(&args[0]);
+                    std::process::exit(1);
                 }
-            } else {
-                eprintln!("❌ エラー: --client オプションには引数が必要です");
-                eprintln!();
-                print_usage(&args[0]);
-                std::process::exit(1);
             }
         }
     }
@@ -206,7 +216,7 @@ fn main() {
 
     println!("\nオーディオを初期化中...");
 
-    let player = Player::new(log);
+    let player = Player::new(log.clone());
 
     use ym2151_log_play_server::audio::AudioPlayer;
     match AudioPlayer::new(player) {
@@ -216,10 +226,10 @@ fn main() {
             audio_player.wait();
 
             println!("\nWAVファイルを保存中...");
-            let wav_samples = audio_player.get_wav_buffer();
+            let wav_samples_55k = audio_player.get_wav_buffer_55k();
             match wav_writer::write_wav(
                 wav_writer::DEFAULT_OUTPUT_FILENAME,
-                &wav_samples,
+                &wav_samples_55k,
                 Player::sample_rate(),
             ) {
                 Ok(_) => {
@@ -231,6 +241,37 @@ fn main() {
                 Err(e) => {
                     eprintln!("❌ エラー: WAVファイルの保存に失敗しました: {}", e);
                     std::process::exit(1);
+                }
+            }
+
+            // Debug WAV output if enabled
+            if debug_wav::is_debug_wav_enabled() {
+                println!("\nデバッグWAVファイルを生成中...");
+                let realtime_55k = audio_player.get_wav_buffer_55k();
+                let realtime_48k = audio_player.get_wav_buffer_48k();
+
+                match debug_wav::generate_post_playback_buffers(&log) {
+                    Ok((post_55k, post_48k)) => {
+                        match debug_wav::save_debug_wav_files(
+                            &realtime_55k,
+                            &realtime_48k,
+                            &post_55k,
+                            &post_48k,
+                        ) {
+                            Ok(_) => {
+                                println!("✅ デバッグWAVファイルの生成が完了しました");
+                            }
+                            Err(e) => {
+                                eprintln!(
+                                    "⚠️  警告: デバッグWAVファイルの保存に失敗しました: {}",
+                                    e
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("⚠️  警告: デバッグWAVファイルの生成に失敗しました: {}", e);
+                    }
                 }
             }
         }
