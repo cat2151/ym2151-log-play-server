@@ -57,7 +57,10 @@ impl Server {
             let connection_pipe = match NamedPipe::create() {
                 Ok(p) => p,
                 Err(e) => {
-                    logging::log_always(&format!("⚠️  警告: 接続用の新しいパイプの作成に失敗しました: {}", e));
+                    logging::log_always(&format!(
+                        "⚠️  警告: 接続用の新しいパイプの作成に失敗しました: {}",
+                        e
+                    ));
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
@@ -68,7 +71,10 @@ impl Server {
             let mut reader = match connection_pipe.open_read() {
                 Ok(r) => r,
                 Err(e) => {
-                    logging::log_always(&format!("⚠️  警告: パイプの読み取りオープンに失敗しました: {}", e));
+                    logging::log_always(&format!(
+                        "⚠️  警告: パイプの読み取りオープンに失敗しました: {}",
+                        e
+                    ));
                     std::thread::sleep(std::time::Duration::from_millis(100));
                     continue;
                 }
@@ -80,7 +86,10 @@ impl Server {
             let mut writer = match connection_pipe.open_write() {
                 Ok(w) => w,
                 Err(e) => {
-                    logging::log_always(&format!("⚠️  警告: パイプの書き込みオープンに失敗しました: {}", e));
+                    logging::log_always(&format!(
+                        "⚠️  警告: パイプの書き込みオープンに失敗しました: {}",
+                        e
+                    ));
                     continue;
                 }
             };
@@ -99,7 +108,10 @@ impl Server {
                 let command = match Command::from_binary(&binary_data) {
                     Ok(cmd) => cmd,
                     Err(e) => {
-                        logging::log_always(&format!("⚠️  警告: コマンドの解析に失敗しました: {}", e));
+                        logging::log_always(&format!(
+                            "⚠️  警告: コマンドの解析に失敗しました: {}",
+                            e
+                        ));
                         let response = Response::Error {
                             message: format!("Parse error: {}", e),
                         };
@@ -124,10 +136,14 @@ impl Server {
                                     ));
                                 }
                                 Ok(_) => {
-                                    logging::log_verbose("📩 コマンドを受信しました: PlayJson (空のイベント配列)");
+                                    logging::log_verbose(
+                                        "📩 コマンドを受信しました: PlayJson (空のイベント配列)",
+                                    );
                                 }
                                 Err(_) => {
-                                    logging::log_verbose("📩 コマンドを受信しました: PlayJson (解析エラー)");
+                                    logging::log_verbose(
+                                        "📩 コマンドを受信しました: PlayJson (解析エラー)",
+                                    );
                                 }
                             }
                         } else {
@@ -135,7 +151,10 @@ impl Server {
                         }
                     }
                     Command::PlayFile { path } => {
-                        logging::log_verbose(&format!("📩 コマンドを受信しました: PlayFile({})", path));
+                        logging::log_verbose(&format!(
+                            "📩 コマンドを受信しました: PlayFile({})",
+                            path
+                        ));
                     }
                     other => {
                         logging::log_verbose(&format!("📩 コマンドを受信しました: {:?}", other));
@@ -154,27 +173,33 @@ impl Server {
                         let json_result = serde_json::to_string(&data);
 
                         match json_result {
-                            Ok(json_str) => {
-                                match Self::load_and_start_playback(&json_str, true) {
-                                    Ok(player) => {
-                                        audio_player = Some(player);
-                                        logging::log_verbose("✅ JSON データから音声再生を開始しました");
+                            Ok(json_str) => match Self::load_and_start_playback(&json_str, true) {
+                                Ok(player) => {
+                                    audio_player = Some(player);
+                                    logging::log_verbose(
+                                        "✅ JSON データから音声再生を開始しました",
+                                    );
 
-                                        let mut state = self.state.lock().unwrap();
-                                        *state = ServerState::Playing;
+                                    let mut state = self.state.lock().unwrap();
+                                    *state = ServerState::Playing;
 
-                                        Response::Ok
-                                    }
-                                    Err(e) => {
-                                        logging::log_always(&format!("❌ 音声再生の開始に失敗しました: {}", e));
-                                        Response::Error {
-                                            message: format!("Failed to start playback: {}", e),
-                                        }
+                                    Response::Ok
+                                }
+                                Err(e) => {
+                                    logging::log_always(&format!(
+                                        "❌ 音声再生の開始に失敗しました: {}",
+                                        e
+                                    ));
+                                    Response::Error {
+                                        message: format!("Failed to start playback: {}", e),
                                     }
                                 }
-                            }
+                            },
                             Err(e) => {
-                                logging::log_always(&format!("❌ JSONシリアライズに失敗しました: {}", e));
+                                logging::log_always(&format!(
+                                    "❌ JSONシリアライズに失敗しました: {}",
+                                    e
+                                ));
                                 Response::Error {
                                     message: format!("Failed to serialize JSON: {}", e),
                                 }
@@ -182,7 +207,10 @@ impl Server {
                         }
                     }
                     Command::PlayFile { path } => {
-                        logging::log_verbose(&format!("🎵 新しい音声ファイルを読み込み中: {}", path));
+                        logging::log_verbose(&format!(
+                            "🎵 新しい音声ファイルを読み込み中: {}",
+                            path
+                        ));
 
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
@@ -191,7 +219,10 @@ impl Server {
                         match Self::load_and_start_playback(&path, false) {
                             Ok(player) => {
                                 audio_player = Some(player);
-                                logging::log_verbose(&format!("✅ 音声再生を開始しました: {}", path));
+                                logging::log_verbose(&format!(
+                                    "✅ 音声再生を開始しました: {}",
+                                    path
+                                ));
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Playing;
@@ -199,7 +230,10 @@ impl Server {
                                 Response::Ok
                             }
                             Err(e) => {
-                                logging::log_always(&format!("❌ 音声再生の開始に失敗しました: {}", e));
+                                logging::log_always(&format!(
+                                    "❌ 音声再生の開始に失敗しました: {}",
+                                    e
+                                ));
                                 Response::Error {
                                     message: format!("Failed to start playback: {}", e),
                                 }
@@ -237,7 +271,10 @@ impl Server {
                 // レスポンスを送信
                 if let Ok(response_binary) = response.to_binary() {
                     if let Err(e) = writer.write_binary(&response_binary) {
-                        logging::log_always(&format!("⚠️  警告: レスポンス送信に失敗しました: {}", e));
+                        logging::log_always(&format!(
+                            "⚠️  警告: レスポンス送信に失敗しました: {}",
+                            e
+                        ));
                         break; // 書き込みに失敗したら接続を閉じる
                     }
                 } else {
@@ -268,8 +305,7 @@ impl Server {
     fn load_and_start_playback(data: &str, is_json_string: bool) -> Result<AudioPlayer> {
         let log = if is_json_string {
             // Parse as JSON string directly
-            EventLog::from_json_str(data)
-                .with_context(|| "Failed to parse JSON string data")?
+            EventLog::from_json_str(data).with_context(|| "Failed to parse JSON string data")?
         } else {
             // Load from file path
             EventLog::from_file(data)

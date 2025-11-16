@@ -56,19 +56,22 @@ fn main() {
         if args[1] == "--server" {
             // Check for --verbose flag
             let verbose = args.iter().any(|arg| arg == "--verbose");
-            
+
             // Validate arguments
-            let valid_args = args.iter().skip(1).all(|arg| arg == "--server" || arg == "--verbose");
+            let valid_args = args
+                .iter()
+                .skip(1)
+                .all(|arg| arg == "--server" || arg == "--verbose");
             if !valid_args {
                 eprintln!("❌ エラー: --server に不明なオプションが指定されています");
                 eprintln!();
                 print_usage(&args[0]);
                 std::process::exit(1);
             }
-            
+
             // Initialize logging with verbose flag
             logging::init(verbose);
-            
+
             let server = Server::new();
             match server.run() {
                 Ok(_) => {

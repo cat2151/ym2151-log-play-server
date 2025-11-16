@@ -166,7 +166,8 @@ mod client_json_integration_tests {
 
         cleanup_pipe();
 
-        let json_data = r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
+        let json_data =
+            r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
 
         let server_handle = thread::spawn(move || {
             let pipe = NamedPipe::create().unwrap();

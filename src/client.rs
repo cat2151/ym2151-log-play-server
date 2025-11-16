@@ -81,12 +81,10 @@ use std::time::Duration;
 /// ```
 pub fn send_json(json_data: &str) -> Result<()> {
     // Parse the JSON to validate it
-    let json_value: serde_json::Value = serde_json::from_str(json_data)
-        .context("Failed to parse JSON data")?;
-    
-    let command = Command::PlayJson {
-        data: json_value,
-    };
+    let json_value: serde_json::Value =
+        serde_json::from_str(json_data).context("Failed to parse JSON data")?;
+
+    let command = Command::PlayJson { data: json_value };
     send_command(command)
 }
 
@@ -287,18 +285,16 @@ fn send_command(command: Command) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
 
     match response {
-        Response::Ok => {
-            match &command {
-                Command::PlayJson { .. } => {
-                    eprintln!("✅ JSON直接送信で演奏開始しました");
-                }
-                Command::PlayFile { path } => {
-                    eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
-                }
-                Command::Stop => eprintln!("✅ 演奏停止しました"),
-                Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+        Response::Ok => match &command {
+            Command::PlayJson { .. } => {
+                eprintln!("✅ JSON直接送信で演奏開始しました");
             }
-        }
+            Command::PlayFile { path } => {
+                eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
+            }
+            Command::Stop => eprintln!("✅ 演奏停止しました"),
+            Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+        },
         Response::Error { message } => {
             eprintln!("❌ サーバーエラー: {}", message);
             return Err(anyhow::anyhow!("Server returned error: {}", message));

@@ -150,11 +150,17 @@ impl AudioPlayer {
             if !player.should_continue_tail() {
                 let elapsed = playback_start_time.elapsed();
                 logging::log_verbose("■  Playback complete");
-                logging::log_verbose(&format!("  Wall-clock time: {:.2} seconds", elapsed.as_secs_f64()));
+                logging::log_verbose(&format!(
+                    "  Wall-clock time: {:.2} seconds",
+                    elapsed.as_secs_f64()
+                ));
 
                 if let Some((tail_samples, _)) = player.tail_info() {
                     let tail_ms = tail_samples as f64 / OPM_SAMPLE_RATE as f64 * 1000.0;
-                    logging::log_verbose(&format!("  演奏データの余韻{}ms 波形生成 OK", tail_ms as u32));
+                    logging::log_verbose(&format!(
+                        "  演奏データの余韻{}ms 波形生成 OK",
+                        tail_ms as u32
+                    ));
                 }
                 break;
             }

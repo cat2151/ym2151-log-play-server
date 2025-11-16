@@ -35,11 +35,7 @@ pub fn is_verbose() -> bool {
 
 /// Write a message to the log file
 fn write_to_log(message: &str) {
-    if let Ok(mut file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(LOG_FILE)
-    {
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(LOG_FILE) {
         let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
         let _ = writeln!(file, "[{}] {}", timestamp, message);
     }
@@ -54,7 +50,7 @@ fn write_to_log(message: &str) {
 /// - Important state changes
 pub fn log_always(message: &str) {
     write_to_log(message);
-    
+
     if is_verbose() {
         eprintln!("{}", message);
     }
@@ -81,7 +77,7 @@ mod tests {
     fn test_init_verbose() {
         init(true);
         assert!(is_verbose());
-        
+
         init(false);
         assert!(!is_verbose());
     }
