@@ -39,7 +39,7 @@ fn test_help_message_displays() {
 
     // Check that help message contains key phrases (clap's default help)
     assert!(combined_output.contains("YM2151 Log Player") || combined_output.contains("Usage"));
-    
+
     // Check for key commands
     assert!(combined_output.contains("server"));
     assert!(combined_output.contains("client"));

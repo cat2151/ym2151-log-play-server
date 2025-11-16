@@ -21,12 +21,12 @@ It is used as a library integrated into `cat-play-mml` and `ym2151-tone-editor`.
 ## Overview
 
 This project is a program that plays back YM2151 (OPM) sound chip register event logs.
-It operates in both standalone and server-client modes.
+It operates in server-client mode.
 
 ### Key Features
 
 - Real-time playback of JSON music data
-- WAV file output
+- WAV file output (in verbose mode)
 - Resides as a server and continues real-time playback in the background
 - Controlled by a client, allowing quick switching to different performances
 - Uses named pipes for server-client communication
@@ -66,18 +66,6 @@ The `ensure_server_ready()` function automatically performs the following, provi
 
 This eliminates the need for library users to manually manage the server's lifecycle.
 
-### Standalone Mode (Normal Playback)
-
-Plays JSON files directly:
-
-```bash
-# Build and run
-cargo run --release output_ym2151.json
-
-# Or use an already built binary
-./target/release/ym2151-log-play-server output_ym2151.json
-```
-
 ### Server-Client Mode
 
 #### Starting the Server
@@ -85,7 +73,11 @@ cargo run --release output_ym2151.json
 Starts as a resident server in a waiting state:
 
 ```bash
-cargo run --release -- --server
+# Normal mode (log file only)
+cargo run --release -- server
+
+# Verbose mode (detailed logs and WAV output)
+cargo run --release -- server --verbose
 ```
 
 #### Client Operations
@@ -94,40 +86,40 @@ Operate from a separate terminal in client mode:
 
 ```bash
 # Play a new JSON file (switch performance)
-cargo run --release -- --client test_input.json
+cargo run --release -- client test_input.json
 
 # Stop playback (mute)
-cargo run --release -- --client --stop
+cargo run --release -- client --stop
 
 # Shut down the server
-cargo run --release -- --client --shutdown
+cargo run --release -- client --shutdown
 ```
 
 ### Command-Line Argument List
 
 ```
 Usage:
-  ym2151-log-play-server <json_log_file>           # Standalone mode
-  ym2151-log-play-server --server                  # Server mode
-  ym2151-log-play-server --client <json_log_file>  # Play new JSON
-  ym2151-log-play-server --client --stop           # Stop playback
-  ym2151-log-play-server --client --shutdown       # Shut down server
+  ym2151-log-play-server server [--verbose]         # Server mode
+  ym2151-log-play-server client <json_log_file>     # Play new JSON
+  ym2151-log-play-server client --stop              # Stop playback
+  ym2151-log-play-server client --shutdown          # Shut down server
 
 Options:
-  --server           Start as a server in a waiting state
-  --client <file>    Instruct server to play a new JSON file
-  --client --stop    Instruct server to stop playback
-  --client --shutdown Instruct server to shut down
+  server           Start as a server in a waiting state
+  server --verbose Start the server in verbose mode (outputs WAV files)
+  client <file>    Instruct server to play a new JSON file
+  client --stop    Instruct server to stop playback
+  client --shutdown Instruct server to shut down
 
 Examples:
-  # Play standalone
-  ym2151-log-play-server output_ym2151.json
-
   # Start server
-  ym2151-log-play-server --server
+  ym2151-log-play-server server
+
+  # Start server (verbose, with WAV output)
+  ym2151-log-play-server server --verbose
 
   # From another terminal: Switch performance
-  ym2151-log-play-server --client test_input.json
+  ym2151-log-play-server client test_input.json
 
   # From another terminal: Stop playback
   ym2151-log-play-server --client --stop
