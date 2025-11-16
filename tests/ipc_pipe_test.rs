@@ -7,14 +7,6 @@ use ym2151_log_play_server::ipc::protocol::Command;
 
 #[test]
 fn test_binary_protocol() {
-    // Test PlayFile command binary serialization
-    let play_file_cmd = Command::PlayFile {
-        path: "test.json".to_string(),
-    };
-    let binary = play_file_cmd.to_binary().unwrap();
-    let parsed = Command::from_binary(&binary).unwrap();
-    assert_eq!(play_file_cmd, parsed);
-
     // Test PlayJson command binary serialization
     let json_data = serde_json::json!({
         "event_count": 1,

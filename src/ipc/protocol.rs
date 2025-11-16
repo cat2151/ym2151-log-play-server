@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
-    PlayFile { path: String },
     PlayJson { data: serde_json::Value },
     Stop,
     Shutdown,
@@ -101,15 +100,6 @@ mod tests {
     use super::*;
 
     // Binary protocol tests
-    #[test]
-    fn test_binary_play_file_roundtrip() {
-        let original = Command::PlayFile {
-            path: "/test/path.json".to_string(),
-        };
-        let binary = original.to_binary().unwrap();
-        let parsed = Command::from_binary(&binary).unwrap();
-        assert_eq!(original, parsed);
-    }
 
     #[test]
     fn test_binary_play_json_roundtrip() {

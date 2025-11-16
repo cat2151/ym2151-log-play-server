@@ -20,7 +20,7 @@ mod client_integration_tests {
     }
 
     #[test]
-    fn test_client_play_file() {
+    fn test_client_send_json() {
         // Acquire lock to prevent parallel execution of server tests
         let _lock = server_test_lock();
 
@@ -35,12 +35,14 @@ mod client_integration_tests {
             let binary_data = reader.read_binary().unwrap();
             let cmd = Command::from_binary(&binary_data).unwrap();
 
-            // Verify it's a PlayFile command with the correct path
+            // Verify it's a PlayJson command with JSON data
             match cmd {
-                Command::PlayFile { ref path } => {
-                    assert_eq!(path, "output_ym2151.json");
+                Command::PlayJson { data } => {
+                    // Verify the JSON structure
+                    assert!(data.get("event_count").is_some());
+                    assert!(data.get("events").is_some());
                 }
-                _ => panic!("Expected PlayFile command"),
+                _ => panic!("Expected PlayJson command"),
             }
 
             // Send OK response in binary format
@@ -53,8 +55,9 @@ mod client_integration_tests {
         // Give server time to start and create the pipe
         thread::sleep(Duration::from_millis(200));
 
-        // Send PlayFile command from client
-        let result = ym2151_log_play_server::client::play_file("output_ym2151.json");
+        // Send JSON data from client
+        let json_data = r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
+        let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
         // Wait for server to finish

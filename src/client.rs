@@ -7,26 +7,13 @@
 //!
 //! ## Playing JSON Data
 //!
-//! Use [`send_json`] to send JSON data. The function automatically chooses
-//! the optimal transmission method based on data size:
+//! Use [`send_json`] to send JSON data:
 //!
 //! ```no_run
 //! use ym2151_log_play_server::client;
 //!
-//! // Automatically handles small and large JSON
 //! let json_data = r#"{"event_count": 2, "events": [...]}"#;
 //! client::send_json(json_data)?;
-//! # Ok::<(), anyhow::Error>(())
-//! ```
-//!
-//! ## Playing from File
-//!
-//! Use [`play_file`] to play a JSON file:
-//!
-//! ```no_run
-//! use ym2151_log_play_server::client;
-//!
-//! client::play_file("path/to/music.json")?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
@@ -53,8 +40,9 @@
 //! // Ensure server is ready (installs and starts if needed)
 //! client::ensure_server_ready("cat-play-mml")?;
 //!
-//! // Now you can play files
-//! client::play_file("music.json")?;
+//! // Now you can send JSON data
+//! let json_data = r#"{"event_count": 1, "events": [...]}"#;
+//! client::send_json(json_data)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
@@ -65,9 +53,9 @@ use std::process::Command as ProcessCommand;
 use std::thread;
 use std::time::Duration;
 
-/// Send JSON data directly to the server
+/// Send JSON data to the server
 ///
-/// This function sends JSON data directly via the binary protocol.
+/// This function sends JSON data via the binary protocol.
 /// The protocol uses length-prefixed JSON for robust transmission.
 ///
 /// # Arguments
@@ -88,25 +76,7 @@ pub fn send_json(json_data: &str) -> Result<()> {
     send_command(command)
 }
 
-/// Play a JSON file by sending its file path to the server
-///
-/// The server will read and play the JSON file at the specified path.
-/// This is useful when you already have a JSON file on disk.
-///
-/// # Arguments
-/// * `file_path` - Path to the JSON file to play
-///
-/// # Example
-/// ```no_run
-/// # use ym2151_log_play_server::client;
-/// client::play_file("output_ym2151.json")?;
-/// # Ok::<(), anyhow::Error>(())
-/// ```
-pub fn play_file(file_path: &str) -> Result<()> {
-    send_command(Command::PlayFile {
-        path: file_path.to_string(),
-    })
-}
+
 
 pub fn stop_playback() -> Result<()> {
     send_command(Command::Stop)
@@ -135,7 +105,8 @@ pub fn shutdown_server() -> Result<()> {
 /// client::ensure_server_ready("cat-play-mml")?;
 ///
 /// // Now the server is guaranteed to be running and ready
-/// client::play_file("music.json")?;
+/// let json_data = r#"{"event_count": 1, "events": [...]}"#;
+/// client::send_json(json_data)?;
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
@@ -261,10 +232,7 @@ fn send_command(command: Command) -> Result<()> {
     // Display command info
     match &command {
         Command::PlayJson { .. } => {
-            eprintln!("⏳ サーバーにJSON直接送信中...");
-        }
-        Command::PlayFile { path } => {
-            eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", path);
+            eprintln!("⏳ サーバーにJSON送信中...");
         }
         Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
         Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
@@ -287,10 +255,7 @@ fn send_command(command: Command) -> Result<()> {
     match response {
         Response::Ok => match &command {
             Command::PlayJson { .. } => {
-                eprintln!("✅ JSON直接送信で演奏開始しました");
-            }
-            Command::PlayFile { path } => {
-                eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
+                eprintln!("✅ JSON送信で演奏開始しました");
             }
             Command::Stop => eprintln!("✅ 演奏停止しました"),
             Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),

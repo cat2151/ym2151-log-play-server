@@ -150,12 +150,6 @@ impl Server {
                             logging::log_verbose("📩 コマンドを受信しました: PlayJson");
                         }
                     }
-                    Command::PlayFile { path } => {
-                        logging::log_verbose(&format!(
-                            "📩 コマンドを受信しました: PlayFile({})",
-                            path
-                        ));
-                    }
                     other => {
                         logging::log_verbose(&format!("📩 コマンドを受信しました: {:?}", other));
                     }
@@ -202,40 +196,6 @@ impl Server {
                                 ));
                                 Response::Error {
                                     message: format!("Failed to serialize JSON: {}", e),
-                                }
-                            }
-                        }
-                    }
-                    Command::PlayFile { path } => {
-                        logging::log_verbose(&format!(
-                            "🎵 新しい音声ファイルを読み込み中: {}",
-                            path
-                        ));
-
-                        if let Some(mut player) = audio_player.take() {
-                            player.stop();
-                        }
-
-                        match Self::load_and_start_playback(&path, false) {
-                            Ok(player) => {
-                                audio_player = Some(player);
-                                logging::log_verbose(&format!(
-                                    "✅ 音声再生を開始しました: {}",
-                                    path
-                                ));
-
-                                let mut state = self.state.lock().unwrap();
-                                *state = ServerState::Playing;
-
-                                Response::Ok
-                            }
-                            Err(e) => {
-                                logging::log_always(&format!(
-                                    "❌ 音声再生の開始に失敗しました: {}",
-                                    e
-                                ));
-                                Response::Error {
-                                    message: format!("Failed to start playback: {}", e),
                                 }
                             }
                         }

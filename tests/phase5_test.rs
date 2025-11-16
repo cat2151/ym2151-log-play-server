@@ -186,19 +186,35 @@ mod server_playback_tests {
 
         eprintln!("Attempting to send PLAY command...");
 
-        // Send PLAY command to play a file using binary protocol
+        // Send PLAY command to play JSON data using binary protocol
         match NamedPipe::connect_default() {
             Ok(mut writer) => {
-                eprintln!("Connected to server, sending PlayFile command...");
-                let cmd = Command::PlayFile {
-                    path: "output_ym2151.json".to_string(),
+                eprintln!("Connected to server, sending PlayJson command...");
+
+                // Read and send JSON data
+                let json_content = match std::fs::read_to_string("output_ym2151.json") {
+                    Ok(content) => content,
+                    Err(e) => {
+                        eprintln!("Failed to read JSON file: {}", e);
+                        return;
+                    }
                 };
+
+                let json_data: serde_json::Value = match serde_json::from_str(&json_content) {
+                    Ok(data) => data,
+                    Err(e) => {
+                        eprintln!("Failed to parse JSON: {}", e);
+                        return;
+                    }
+                };
+
+                let cmd = Command::PlayJson { data: json_data };
                 match cmd.to_binary() {
                     Ok(binary_data) => {
                         if let Err(e) = writer.write_binary(&binary_data) {
-                            eprintln!("Failed to send PlayFile: {}", e);
+                            eprintln!("Failed to send PlayJson: {}", e);
                         } else {
-                            eprintln!("PlayFile command sent successfully");
+                            eprintln!("PlayJson command sent successfully");
                         }
                     }
                     Err(e) => {
