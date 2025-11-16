@@ -1,3 +1,41 @@
+//! Debug WAV output functionality for audio glitch diagnosis.
+//!
+//! This module provides functionality to generate 4 different WAV files
+//! for debugging audio glitches, particularly with high MUL values.
+//!
+//! # Output Files
+//!
+//! When enabled via the `YM2151_DEBUG_WAV` environment variable, the following
+//! WAV files are generated:
+//!
+//! - `realtime_55k.wav` - 55930Hz buffer captured during real-time playback
+//! - `realtime_48k.wav` - 48000Hz resampled buffer from real-time playback
+//! - `post_55k.wav` - 55930Hz buffer from non-real-time rendering
+//! - `post_48k.wav` - 48000Hz resampled buffer from non-real-time rendering
+//!
+//! # Usage
+//!
+//! Set the `YM2151_DEBUG_WAV` environment variable before running:
+//!
+//! ```bash
+//! # Windows (PowerShell)
+//! $env:YM2151_DEBUG_WAV="1"
+//! .\ym2151-log-play-server.exe sample_events.json
+//!
+//! # Windows (cmd)
+//! set YM2151_DEBUG_WAV=1
+//! .\ym2151-log-play-server.exe sample_events.json
+//! ```
+//!
+//! # Purpose
+//!
+//! The 4 different WAV files allow comparison to diagnose where audio glitches occur:
+//! - Compare realtime vs post-playback to identify real-time processing issues
+//! - Compare 55930Hz vs 48000Hz to identify resampling issues
+//!
+//! This is particularly useful for debugging audio glitches that occur with
+//! high MUL (frequency multiplier) values in tone parameters.
+
 use crate::events::EventLog;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
@@ -7,10 +45,37 @@ use std::env;
 
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
+/// Check if debug WAV output is enabled via environment variable.
+///
+/// Returns true if the `YM2151_DEBUG_WAV` environment variable is set to any value.
 pub fn is_debug_wav_enabled() -> bool {
     env::var("YM2151_DEBUG_WAV").is_ok()
 }
 
+/// Generate post-playback WAV buffers at both 55930Hz and 48000Hz.
+///
+/// This performs non-real-time rendering of the event log, which can be compared
+/// with real-time playback buffers to diagnose timing-related audio issues.
+///
+/// # Arguments
+///
+/// * `log` - The event log to render
+///
+/// # Returns
+///
+/// A tuple containing:
+/// - Vector of i16 samples at 55930Hz (stereo)
+/// - Vector of i16 samples at 48000Hz (stereo, resampled)
+///
+/// # Example
+///
+/// ```no_run
+/// use ym2151_log_play_server::debug_wav;
+/// use ym2151_log_play_server::events::EventLog;
+///
+/// let log = EventLog::from_file("sample_events.json").unwrap();
+/// let (buffer_55k, buffer_48k) = debug_wav::generate_post_playback_buffers(&log).unwrap();
+/// ```
 pub fn generate_post_playback_buffers(log: &EventLog) -> Result<(Vec<i16>, Vec<i16>)> {
     let mut player = Player::new(log.clone());
     let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
@@ -37,6 +102,33 @@ pub fn generate_post_playback_buffers(log: &EventLog) -> Result<(Vec<i16>, Vec<i
     Ok((buffer_55k, buffer_48k))
 }
 
+/// Save all 4 debug WAV files.
+///
+/// Writes the following files to the current directory:
+/// - `realtime_55k.wav` - Real-time playback at 55930Hz
+/// - `realtime_48k.wav` - Real-time playback at 48000Hz  
+/// - `post_55k.wav` - Non-real-time rendering at 55930Hz
+/// - `post_48k.wav` - Non-real-time rendering at 48000Hz
+///
+/// # Arguments
+///
+/// * `realtime_55k` - Buffer from real-time playback at 55930Hz
+/// * `realtime_48k` - Buffer from real-time playback at 48000Hz
+/// * `post_55k` - Buffer from post-playback rendering at 55930Hz
+/// * `post_48k` - Buffer from post-playback rendering at 48000Hz
+///
+/// # Example
+///
+/// ```no_run
+/// use ym2151_log_play_server::debug_wav;
+///
+/// let realtime_55k = vec![0i16; 55930 * 2]; // 1 second stereo
+/// let realtime_48k = vec![0i16; 48000 * 2]; // 1 second stereo
+/// let post_55k = vec![0i16; 55930 * 2];
+/// let post_48k = vec![0i16; 48000 * 2];
+///
+/// debug_wav::save_debug_wav_files(&realtime_55k, &realtime_48k, &post_55k, &post_48k).unwrap();
+/// ```
 pub fn save_debug_wav_files(
     realtime_55k: &[i16],
     realtime_48k: &[i16],
