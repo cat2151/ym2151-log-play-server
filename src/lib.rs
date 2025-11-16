@@ -3,6 +3,7 @@ pub mod audio;
 pub mod client;
 pub mod events;
 pub mod ipc;
+pub mod logging;
 pub mod opm;
 pub mod opm_ffi;
 pub mod player;

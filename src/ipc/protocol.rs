@@ -4,11 +4,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
     PlayFile { path: String },
-    PlayJson {
-        data: serde_json::Value,
-        #[serde(default)]
-        silent: bool,
-    },
+    PlayJson { data: serde_json::Value },
     Stop,
     Shutdown,
 }
@@ -31,8 +27,8 @@ impl Command {
         }
 
         let json_bytes = &data[4..4 + len];
-        let json_str = std::str::from_utf8(json_bytes)
-            .map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
+        let json_str =
+            std::str::from_utf8(json_bytes).map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
 
         serde_json::from_str(json_str).map_err(|e| format!("Failed to parse JSON: {}", e))
     }
@@ -78,8 +74,8 @@ impl Response {
         }
 
         let json_bytes = &data[4..4 + len];
-        let json_str = std::str::from_utf8(json_bytes)
-            .map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
+        let json_str =
+            std::str::from_utf8(json_bytes).map_err(|e| format!("Invalid UTF-8 in JSON: {}", e))?;
 
         serde_json::from_str(json_str).map_err(|e| format!("Failed to parse JSON: {}", e))
     }
@@ -124,10 +120,7 @@ mod tests {
                 {"time": 2, "addr": "0x20", "data": "0xC7"}
             ]
         });
-        let original = Command::PlayJson {
-            data: json_data,
-            silent: false,
-        };
+        let original = Command::PlayJson { data: json_data };
         let binary = original.to_binary().unwrap();
         let parsed = Command::from_binary(&binary).unwrap();
         assert_eq!(original, parsed);
@@ -203,15 +196,13 @@ mod tests {
     }
 
     #[test]
-    fn test_binary_play_json_with_silent_true() {
+    fn test_binary_play_json_with_silent_removed() {
+        // Test that PlayJson works without silent field
         let json_data = serde_json::json!({
             "event_count": 1,
             "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
         });
-        let original = Command::PlayJson {
-            data: json_data,
-            silent: true,
-        };
+        let original = Command::PlayJson { data: json_data };
         let binary = original.to_binary().unwrap();
         let parsed = Command::from_binary(&binary).unwrap();
         assert_eq!(original, parsed);
@@ -219,18 +210,19 @@ mod tests {
 
     #[test]
     fn test_binary_play_json_backward_compatibility() {
-        // Test that old JSON without silent field deserializes with silent=false
-        let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]}}"#;
+        // Test that old JSON with silent field still deserializes (field is ignored)
+        let json_str =
+            r#"{"command":"play_json","data":{"event_count":0,"events":[]},"silent":true}"#;
         let json_bytes = json_str.as_bytes();
-        
+
         let mut binary = Vec::with_capacity(4 + json_bytes.len());
         binary.extend_from_slice(&(json_bytes.len() as u32).to_le_bytes());
         binary.extend_from_slice(json_bytes);
-        
+
         let parsed = Command::from_binary(&binary).unwrap();
         match parsed {
-            Command::PlayJson { data: _, silent } => {
-                assert_eq!(silent, false, "silent should default to false for backward compatibility");
+            Command::PlayJson { data: _ } => {
+                // Successfully parsed, silent field is ignored
             }
             _ => panic!("Expected PlayJson command"),
         }
@@ -240,13 +232,13 @@ mod tests {
     fn test_binary_length_prefix_format() {
         let cmd = Command::Stop;
         let binary = cmd.to_binary().unwrap();
-        
+
         // First 4 bytes are the length in little-endian
         let len = u32::from_le_bytes([binary[0], binary[1], binary[2], binary[3]]) as usize;
-        
+
         // The JSON part should match the length
         assert_eq!(binary.len(), 4 + len);
-        
+
         // The JSON part should be valid UTF-8
         let json_str = std::str::from_utf8(&binary[4..]).unwrap();
         assert!(json_str.contains("stop"));

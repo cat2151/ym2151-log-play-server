@@ -1,5 +1,6 @@
 use std::env;
 use ym2151_log_play_server::events::EventLog;
+use ym2151_log_play_server::logging;
 use ym2151_log_play_server::player::Player;
 use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 use ym2151_log_play_server::wav_writer;
@@ -16,7 +17,7 @@ fn print_usage(program_name: &str) {
         program_name
     );
     eprintln!(
-        "  {} --server                     # サーバーとして起動",
+        "  {} --server [--verbose]         # サーバーとして起動",
         program_name
     );
     eprintln!(
@@ -32,6 +33,7 @@ fn print_usage(program_name: &str) {
     eprintln!("  {} events.json", program_name);
     eprintln!("  {} sample_events.json", program_name);
     eprintln!("  {} --server", program_name);
+    eprintln!("  {} --server --verbose", program_name);
     eprintln!("  {} --client test_input.json", program_name);
     eprintln!("  {} --client --stop", program_name);
     eprintln!("  {} --client --shutdown", program_name);
@@ -42,6 +44,9 @@ fn print_usage(program_name: &str) {
     eprintln!("  - リアルタイム音声再生");
     eprintln!("  - WAVファイル (output.wav) を生成");
     eprintln!("  - サーバー/クライアントモード (Windows)");
+    eprintln!();
+    eprintln!("サーバーオプション:");
+    eprintln!("  --verbose  デバッグ用に詳細なログを出力 (通常時はログファイルのみ)");
 }
 
 fn main() {
@@ -49,22 +54,33 @@ fn main() {
 
     if args.len() >= 2 {
         if args[1] == "--server" {
-            if args.len() == 2 {
-                let server = Server::new();
-                match server.run() {
-                    Ok(_) => {
-                        std::process::exit(0);
-                    }
-                    Err(e) => {
-                        eprintln!("❌ エラー: サーバーの起動に失敗しました: {}", e);
-                        std::process::exit(1);
-                    }
-                }
-            } else {
-                eprintln!("❌ エラー: --server オプションには引数は不要です");
+            // Check for --verbose flag
+            let verbose = args.iter().any(|arg| arg == "--verbose");
+
+            // Validate arguments
+            let valid_args = args
+                .iter()
+                .skip(1)
+                .all(|arg| arg == "--server" || arg == "--verbose");
+            if !valid_args {
+                eprintln!("❌ エラー: --server に不明なオプションが指定されています");
                 eprintln!();
                 print_usage(&args[0]);
                 std::process::exit(1);
+            }
+
+            // Initialize logging with verbose flag
+            logging::init(verbose);
+
+            let server = Server::new();
+            match server.run() {
+                Ok(_) => {
+                    std::process::exit(0);
+                }
+                Err(e) => {
+                    logging::log_always(&format!("❌ エラー: サーバーの起動に失敗しました: {}", e));
+                    std::process::exit(1);
+                }
             }
         } else if args[1] == "--client" {
             if args.len() == 3 && args[2] == "--stop" {

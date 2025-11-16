@@ -161,9 +161,9 @@ impl PipeReader {
         // Read 4-byte length prefix
         let mut len_bytes = [0u8; 4];
         self.read_exact(&mut len_bytes)?;
-        
+
         let len = u32::from_le_bytes(len_bytes) as usize;
-        
+
         // Validate reasonable length (max 10MB to prevent memory issues)
         if len > 10 * 1024 * 1024 {
             return Err(io::Error::new(
@@ -171,50 +171,44 @@ impl PipeReader {
                 format!("Message length too large: {} bytes", len),
             ));
         }
-        
+
         // Read the data
         let mut data = vec![0u8; len];
         self.read_exact(&mut data)?;
-        
+
         // Return length prefix + data
         let mut result = Vec::with_capacity(4 + len);
         result.extend_from_slice(&len_bytes);
         result.extend_from_slice(&data);
-        
+
         Ok(result)
     }
 
     /// Read exact number of bytes
     fn read_exact(&mut self, buffer: &mut [u8]) -> io::Result<()> {
         let mut total_read = 0;
-        
+
         while total_read < buffer.len() {
             let mut bytes_read = 0u32;
             let remaining = &mut buffer[total_read..];
-            
-            let result = unsafe {
-                ReadFile(
-                    self.handle,
-                    Some(remaining),
-                    Some(&mut bytes_read),
-                    None,
-                )
-            };
-            
+
+            let result =
+                unsafe { ReadFile(self.handle, Some(remaining), Some(&mut bytes_read), None) };
+
             if let Err(e) = result {
                 return Err(io::Error::other(e));
             }
-            
+
             if bytes_read == 0 {
                 return Err(io::Error::new(
                     io::ErrorKind::UnexpectedEof,
                     "Pipe closed before reading complete message",
                 ));
             }
-            
+
             total_read += bytes_read as usize;
         }
-        
+
         Ok(())
     }
 }
@@ -305,9 +299,9 @@ impl PipeWriter {
         // Read 4-byte length prefix
         let mut len_bytes = [0u8; 4];
         self.read_exact(&mut len_bytes)?;
-        
+
         let len = u32::from_le_bytes(len_bytes) as usize;
-        
+
         // Validate reasonable length
         if len > 10 * 1024 * 1024 {
             return Err(io::Error::new(
@@ -315,50 +309,44 @@ impl PipeWriter {
                 format!("Response length too large: {} bytes", len),
             ));
         }
-        
+
         // Read the data
         let mut data = vec![0u8; len];
         self.read_exact(&mut data)?;
-        
+
         // Return length prefix + data
         let mut result = Vec::with_capacity(4 + len);
         result.extend_from_slice(&len_bytes);
         result.extend_from_slice(&data);
-        
+
         Ok(result)
     }
 
     /// Read exact number of bytes
     fn read_exact(&mut self, buffer: &mut [u8]) -> io::Result<()> {
         let mut total_read = 0;
-        
+
         while total_read < buffer.len() {
             let mut bytes_read = 0u32;
             let remaining = &mut buffer[total_read..];
-            
-            let result = unsafe {
-                ReadFile(
-                    self.handle,
-                    Some(remaining),
-                    Some(&mut bytes_read),
-                    None,
-                )
-            };
-            
+
+            let result =
+                unsafe { ReadFile(self.handle, Some(remaining), Some(&mut bytes_read), None) };
+
             if let Err(e) = result {
                 return Err(io::Error::other(e));
             }
-            
+
             if bytes_read == 0 {
                 return Err(io::Error::new(
                     io::ErrorKind::UnexpectedEof,
                     "Pipe closed before reading complete response",
                 ));
             }
-            
+
             total_read += bytes_read as usize;
         }
-        
+
         Ok(())
     }
 }
