@@ -3,6 +3,21 @@
 //! This module provides functions for communicating with a running server instance
 //! to control playback of YM2151 register event logs.
 //!
+//! # Verbose Mode
+//!
+//! By default, the client operates in non-verbose mode to prevent disrupting TUI applications.
+//! Use [`init_client`] to enable verbose output:
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Enable verbose mode for debugging
+//! client::init_client(true);
+//!
+//! // Or disable verbose mode for TUI applications (default)
+//! client::init_client(false);
+//! ```
+//!
 //! # Usage
 //!
 //! ## Playing JSON Data
@@ -50,8 +65,53 @@ use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
 use std::process::Command as ProcessCommand;
+use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
+
+/// Global verbose flag for client operations
+static CLIENT_VERBOSE: Mutex<bool> = Mutex::new(false);
+
+/// Initialize client with verbose flag
+///
+/// This function controls whether the client prints status messages to stderr.
+/// By default, the client operates in non-verbose mode to prevent disrupting TUI applications.
+///
+/// # Arguments
+/// * `verbose` - Enable verbose output if true, disable if false
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// // Enable verbose mode for debugging
+/// client::init_client(true);
+///
+/// // Disable verbose mode for TUI applications
+/// client::init_client(false);
+/// ```
+pub fn init_client(verbose: bool) {
+    let mut v = CLIENT_VERBOSE.lock().unwrap();
+    *v = verbose;
+}
+
+/// Check if client verbose mode is enabled
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// client::init_client(true);
+/// assert!(client::is_client_verbose());
+/// ```
+pub fn is_client_verbose() -> bool {
+    *CLIENT_VERBOSE.lock().unwrap()
+}
+
+/// Print a message to stderr only if verbose mode is enabled
+fn log_client(message: &str) {
+    if is_client_verbose() {
+        eprintln!("{}", message);
+    }
+}
 
 /// Send JSON data to the server
 ///
@@ -75,8 +135,6 @@ pub fn send_json(json_data: &str) -> Result<()> {
     let command = Command::PlayJson { data: json_value };
     send_command(command)
 }
-
-
 
 pub fn stop_playback() -> Result<()> {
     send_command(Command::Stop)
@@ -116,39 +174,42 @@ pub fn shutdown_server() -> Result<()> {
 /// - Failed to start the server
 /// - Server doesn't become ready within a reasonable timeout
 pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
-    eprintln!("🔍 サーバーの状態を確認中...");
+    log_client("🔍 サーバーの状態を確認中...");
 
     // Check if server is already running by sending a STOP command
     // This is a lightweight check that doesn't affect playback
     if is_server_running() {
-        eprintln!("✅ サーバーは既に起動しています");
+        log_client("✅ サーバーは既に起動しています");
         return Ok(());
     }
 
-    eprintln!("⚙️  サーバーが起動していません。起動準備中...");
+    log_client("⚙️  サーバーが起動していません。起動準備中...");
 
     // Check if the server application exists in PATH
     if !is_app_in_path(server_app_name) {
-        eprintln!(
+        log_client(&format!(
             "📦 {} が見つかりません。cargo経由でインストール中...",
             server_app_name
-        );
+        ));
         install_app_via_cargo(server_app_name)
             .with_context(|| format!("Failed to install {}", server_app_name))?;
-        eprintln!("✅ {} のインストールが完了しました", server_app_name);
+        log_client(&format!(
+            "✅ {} のインストールが完了しました",
+            server_app_name
+        ));
     }
 
     // Start the server in background mode
-    eprintln!("🚀 サーバーを起動中...");
+    log_client("🚀 サーバーを起動中...");
     start_server(server_app_name)
         .with_context(|| format!("Failed to start server: {}", server_app_name))?;
 
     // Poll the server until it's ready (max 10 seconds)
-    eprintln!("⏳ サーバーの起動完了を待機中...");
+    log_client("⏳ サーバーの起動完了を待機中...");
     wait_for_server_ready(Duration::from_secs(10))
         .context("Server failed to become ready within timeout")?;
 
-    eprintln!("✅ サーバーが起動し、コマンド受付可能になりました");
+    log_client("✅ サーバーが起動し、コマンド受付可能になりました");
     Ok(())
 }
 
@@ -232,10 +293,10 @@ fn send_command(command: Command) -> Result<()> {
     // Display command info
     match &command {
         Command::PlayJson { .. } => {
-            eprintln!("⏳ サーバーにJSON送信中...");
+            log_client("⏳ サーバーにJSON送信中...");
         }
-        Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
-        Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
+        Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
+        Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
     }
 
     // Send command via binary protocol
@@ -255,13 +316,13 @@ fn send_command(command: Command) -> Result<()> {
     match response {
         Response::Ok => match &command {
             Command::PlayJson { .. } => {
-                eprintln!("✅ JSON送信で演奏開始しました");
+                log_client("✅ JSON送信で演奏開始しました");
             }
-            Command::Stop => eprintln!("✅ 演奏停止しました"),
-            Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+            Command::Stop => log_client("✅ 演奏停止しました"),
+            Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
         },
         Response::Error { message } => {
-            eprintln!("❌ サーバーエラー: {}", message);
+            log_client(&format!("❌ サーバーエラー: {}", message));
             return Err(anyhow::anyhow!("Server returned error: {}", message));
         }
     }
@@ -272,6 +333,40 @@ fn send_command(command: Command) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_init_client_verbose() {
+        init_client(true);
+        assert!(is_client_verbose());
+
+        init_client(false);
+        assert!(!is_client_verbose());
+    }
+
+    #[test]
+    fn test_client_verbose_default() {
+        // Test that the verbose flag can be queried without initialization
+        // The default should be false (non-verbose)
+        let _ = is_client_verbose();
+    }
+
+    #[test]
+    fn test_log_client_verbose_mode() {
+        // Enable verbose mode
+        init_client(true);
+
+        // This should not panic in verbose mode
+        log_client("Test message in verbose mode");
+    }
+
+    #[test]
+    fn test_log_client_non_verbose_mode() {
+        // Disable verbose mode
+        init_client(false);
+
+        // This should not panic in non-verbose mode
+        log_client("Test message in non-verbose mode");
+    }
 
     #[test]
     fn test_send_command_without_server() {

@@ -21,11 +21,11 @@ fn print_usage(program_name: &str) {
         program_name
     );
     eprintln!(
-        "  {} --client <json_file>         # サーバーに演奏指示",
+        "  {} --client <json_file> [--verbose]  # サーバーに演奏指示",
         program_name
     );
     eprintln!(
-        "  {} --client --shutdown          # サーバーにシャットダウン指示",
+        "  {} --client --shutdown [--verbose]   # サーバーにシャットダウン指示",
         program_name
     );
     eprintln!();
@@ -35,6 +35,7 @@ fn print_usage(program_name: &str) {
     eprintln!("  {} --server", program_name);
     eprintln!("  {} --server --verbose", program_name);
     eprintln!("  {} --client test_input.json", program_name);
+    eprintln!("  {} --client test_input.json --verbose", program_name);
     eprintln!("  {} --client --stop", program_name);
     eprintln!("  {} --client --shutdown", program_name);
     eprintln!();
@@ -47,6 +48,10 @@ fn print_usage(program_name: &str) {
     eprintln!();
     eprintln!("サーバーオプション:");
     eprintln!("  --verbose  デバッグ用に詳細なログを出力 (通常時はログファイルのみ)");
+    eprintln!();
+    eprintln!("クライアントオプション:");
+    eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
+    eprintln!("             (デフォルトはサイレント、TUIアプリでは非推奨)");
 }
 
 fn main() {
@@ -83,7 +88,12 @@ fn main() {
                 }
             }
         } else if args[1] == "--client" {
-            if args.len() == 3 && args[2] == "--stop" {
+            // Check for --verbose flag in client mode
+            let verbose = args.iter().any(|arg| arg == "--verbose");
+            client::init_client(verbose);
+
+            // Handle different client commands
+            if (args.len() == 3 || args.len() == 4) && args.contains(&"--stop".to_string()) {
                 match client::stop_playback() {
                     Ok(_) => {
                         std::process::exit(0);
@@ -94,7 +104,9 @@ fn main() {
                         std::process::exit(1);
                     }
                 }
-            } else if args.len() == 3 && args[2] == "--shutdown" {
+            } else if (args.len() == 3 || args.len() == 4)
+                && args.contains(&"--shutdown".to_string())
+            {
                 match client::shutdown_server() {
                     Ok(_) => {
                         std::process::exit(0);
@@ -105,23 +117,26 @@ fn main() {
                         std::process::exit(1);
                     }
                 }
-            } else if args.len() == 3 {
-                let json_path = &args[2];
+            } else if args.len() == 3 || (args.len() == 4 && verbose) {
+                // Find the JSON path (it's the arg that's not "--client" or "--verbose")
+                let json_path = args
+                    .iter()
+                    .skip(1)
+                    .find(|arg| *arg != "--client" && *arg != "--verbose")
+                    .expect("JSON path not found");
 
                 // Read JSON file content
                 match std::fs::read_to_string(json_path) {
-                    Ok(json_content) => {
-                        match client::send_json(&json_content) {
-                            Ok(_) => {
-                                std::process::exit(0);
-                            }
-                            Err(e) => {
-                                eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
-                                eprintln!("   サーバーが起動しているか確認してください");
-                                std::process::exit(1);
-                            }
+                    Ok(json_content) => match client::send_json(&json_content) {
+                        Ok(_) => {
+                            std::process::exit(0);
                         }
-                    }
+                        Err(e) => {
+                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
+                            eprintln!("   サーバーが起動しているか確認してください");
+                            std::process::exit(1);
+                        }
+                    },
                     Err(e) => {
                         eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
                         std::process::exit(1);
