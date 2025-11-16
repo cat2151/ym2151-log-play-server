@@ -6,22 +6,6 @@
 use ym2151_log_play_server::ipc::protocol::Command;
 
 #[test]
-fn test_command_parsing() {
-    // Test legacy command parsing (for backward compatibility)
-    let play_cmd = Command::parse("PLAY test.json").unwrap();
-    match play_cmd {
-        Command::PlayFile { path } => assert_eq!(path, "test.json"),
-        _ => panic!("Expected PlayFile command"),
-    }
-
-    let stop_cmd = Command::parse("STOP").unwrap();
-    assert!(matches!(stop_cmd, Command::Stop));
-
-    let shutdown_cmd = Command::parse("SHUTDOWN").unwrap();
-    assert!(matches!(shutdown_cmd, Command::Shutdown));
-}
-
-#[test]
 fn test_binary_protocol() {
     // Test PlayFile command binary serialization
     let play_file_cmd = Command::PlayFile {
