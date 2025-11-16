@@ -4,6 +4,7 @@ use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
+use crate::logging;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 
@@ -29,6 +30,7 @@ impl AudioPlayer {
             .default_output_device()
             .ok_or_else(|| anyhow::anyhow!("No output device available"))?;
 
+        // Device info is always shown (not server-specific)
         println!(
             "Using audio device: {}",
             device.name().unwrap_or_else(|_| "Unknown".to_string())
@@ -92,7 +94,10 @@ impl AudioPlayer {
                         }
                     }
                 },
-                |err| eprintln!("Audio stream error: {}", err),
+                |err| {
+                    // Audio stream errors should always be logged
+                    logging::log_always(&format!("Audio stream error: {}", err));
+                },
                 None,
             )
             .context("Failed to build output stream")?;
@@ -103,7 +108,8 @@ impl AudioPlayer {
             if let Err(e) =
                 Self::generate_samples_thread(player, sample_tx, command_rx, wav_buffer_clone)
             {
-                eprintln!("Sample generation error: {}", e);
+                // Sample generation errors should always be logged
+                logging::log_always(&format!("Sample generation error: {}", e));
             }
         });
 
@@ -127,34 +133,34 @@ impl AudioPlayer {
 
         let playback_start_time = Instant::now();
 
-        println!("▶  Playing sequence...");
-        println!(
+        logging::log_verbose("▶  Playing sequence...");
+        logging::log_verbose(&format!(
             "  Duration: {:.2} seconds",
             total_samples as f64 / OPM_SAMPLE_RATE as f64
-        );
+        ));
 
         let mut tail_reported = false;
 
         loop {
             if let Ok(AudioCommand::Stop) = command_rx.try_recv() {
-                println!("Stopping audio playback...");
+                logging::log_verbose("Stopping audio playback...");
                 break;
             }
 
             if !player.should_continue_tail() {
                 let elapsed = playback_start_time.elapsed();
-                println!("■  Playback complete");
-                println!("  Wall-clock time: {:.2} seconds", elapsed.as_secs_f64());
+                logging::log_verbose("■  Playback complete");
+                logging::log_verbose(&format!("  Wall-clock time: {:.2} seconds", elapsed.as_secs_f64()));
 
                 if let Some((tail_samples, _)) = player.tail_info() {
                     let tail_ms = tail_samples as f64 / OPM_SAMPLE_RATE as f64 * 1000.0;
-                    println!("  演奏データの余韻{}ms 波形生成 OK", tail_ms as u32);
+                    logging::log_verbose(&format!("  演奏データの余韻{}ms 波形生成 OK", tail_ms as u32));
                 }
                 break;
             }
 
             if !tail_reported && player.is_complete() {
-                println!("  演奏データ終了、余韻を生成中...");
+                logging::log_verbose("  演奏データ終了、余韻を生成中...");
                 tail_reported = true;
             }
 
