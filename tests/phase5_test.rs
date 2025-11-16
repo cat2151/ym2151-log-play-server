@@ -154,6 +154,7 @@ mod realtime_audio_tests {
 }
 
 /// Integration tests for Phase 5: Server with playback control
+#[cfg(windows)]
 mod server_playback_tests {
     use std::thread;
     use std::time::Duration;

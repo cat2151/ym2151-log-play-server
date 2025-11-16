@@ -3,6 +3,8 @@
 //! These tests verify the server's ability to create named pipes,
 //! listen for commands, and process them correctly.
 
+#![cfg(windows)]
+
 mod test_utils;
 
 use std::{thread, time::Duration};

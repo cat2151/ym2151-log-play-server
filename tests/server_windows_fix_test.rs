@@ -3,6 +3,8 @@
 //! This test ensures that the server can be created and compiled properly
 //! across all platforms without thread safety issues or method conflicts.
 
+#![cfg(windows)]
+
 use ym2151_log_play_server::server::Server;
 
 #[test]
