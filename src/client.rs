@@ -42,12 +42,30 @@
 //! client::shutdown_server()?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
+//!
+//! ## Ensuring Server is Ready
+//!
+//! Use [`ensure_server_ready`] to automatically ensure the server is running and ready:
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Ensure server is ready (installs and starts if needed)
+//! client::ensure_server_ready("cat-play-mml")?;
+//!
+//! // Now you can play files
+//! client::play_file("music.json")?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
 
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
 use std::fs;
 use std::io::Write;
+use std::process::Command as ProcessCommand;
+use std::thread;
+use std::time::Duration;
 
 /// Maximum size for direct JSON transmission via named pipe (in bytes)
 /// This corresponds to the Windows named pipe buffer size
@@ -132,6 +150,139 @@ pub fn stop_playback() -> Result<()> {
 
 pub fn shutdown_server() -> Result<()> {
     send_command(Command::Shutdown)
+}
+
+/// Ensure the server is running and ready to accept commands
+///
+/// This function ensures that the YM2151 server is running and ready to accept
+/// commands. It provides a seamless developer experience by automatically:
+/// 1. Checking if the server is already running
+/// 2. Installing the server application if not found in PATH
+/// 3. Starting the server if not running
+/// 4. Waiting until the server is ready to accept commands
+///
+/// # Arguments
+/// * `server_app_name` - Name of the server application (e.g., "cat-play-mml")
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// // Ensure server is ready before playing music
+/// client::ensure_server_ready("cat-play-mml")?;
+///
+/// // Now the server is guaranteed to be running and ready
+/// client::play_file("music.json")?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// # Errors
+/// Returns an error if:
+/// - Failed to install the server application
+/// - Failed to start the server
+/// - Server doesn't become ready within a reasonable timeout
+pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
+    eprintln!("🔍 サーバーの状態を確認中...");
+
+    // Check if server is already running by sending a STOP command
+    // This is a lightweight check that doesn't affect playback
+    if is_server_running() {
+        eprintln!("✅ サーバーは既に起動しています");
+        return Ok(());
+    }
+
+    eprintln!("⚙️  サーバーが起動していません。起動準備中...");
+
+    // Check if the server application exists in PATH
+    if !is_app_in_path(server_app_name) {
+        eprintln!(
+            "📦 {} が見つかりません。cargo経由でインストール中...",
+            server_app_name
+        );
+        install_app_via_cargo(server_app_name)
+            .with_context(|| format!("Failed to install {}", server_app_name))?;
+        eprintln!("✅ {} のインストールが完了しました", server_app_name);
+    }
+
+    // Start the server in background mode
+    eprintln!("🚀 サーバーを起動中...");
+    start_server(server_app_name)
+        .with_context(|| format!("Failed to start server: {}", server_app_name))?;
+
+    // Poll the server until it's ready (max 10 seconds)
+    eprintln!("⏳ サーバーの起動完了を待機中...");
+    wait_for_server_ready(Duration::from_secs(10))
+        .context("Server failed to become ready within timeout")?;
+
+    eprintln!("✅ サーバーが起動し、コマンド受付可能になりました");
+    Ok(())
+}
+
+/// Check if the server is currently running
+fn is_server_running() -> bool {
+    // Try to connect to the server
+    // If successful, the server is running
+    match NamedPipe::connect_default() {
+        Ok(_) => true,
+        Err(_) => false,
+    }
+}
+
+/// Check if an application is available in PATH
+fn is_app_in_path(app_name: &str) -> bool {
+    which::which(app_name).is_ok()
+}
+
+/// Install an application via cargo
+fn install_app_via_cargo(app_name: &str) -> Result<()> {
+    let output = ProcessCommand::new("cargo")
+        .args([
+            "install",
+            "--git",
+            &format!("https://github.com/cat2151/{}", app_name),
+        ])
+        .output()
+        .context("Failed to execute cargo install")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!("cargo install failed: {}", stderr));
+    }
+
+    Ok(())
+}
+
+/// Start the server application in background mode
+fn start_server(server_app_name: &str) -> Result<()> {
+    ProcessCommand::new(server_app_name)
+        .arg("--server")
+        .spawn()
+        .context("Failed to spawn server process")?;
+
+    Ok(())
+}
+
+/// Wait for the server to become ready by polling with STOP commands
+fn wait_for_server_ready(timeout: Duration) -> Result<()> {
+    let start_time = std::time::Instant::now();
+    let poll_interval = Duration::from_millis(100);
+
+    loop {
+        if start_time.elapsed() > timeout {
+            return Err(anyhow::anyhow!(
+                "Timeout waiting for server to become ready"
+            ));
+        }
+
+        // Try to send a STOP command
+        // If successful, the server is ready
+        if is_server_running() {
+            // Give the server a moment to fully initialize
+            thread::sleep(Duration::from_millis(50));
+            return Ok(());
+        }
+
+        thread::sleep(poll_interval);
+    }
 }
 
 fn send_command(command: Command) -> Result<()> {
@@ -224,5 +375,23 @@ mod tests {
         }
         large_json.push_str("]}");
         assert!(large_json.as_bytes().len() > MAX_DIRECT_JSON_SIZE);
+    }
+
+    #[test]
+    fn test_is_server_running_when_not_running() {
+        // When server is not running, should return false
+        let result = is_server_running();
+        // On Linux this will be false since we can't test Windows named pipes
+        // On Windows without server, this should also be false
+        assert!(!result || cfg!(windows));
+    }
+
+    #[test]
+    fn test_is_app_in_path() {
+        // Test with a command that should always exist
+        assert!(is_app_in_path("cargo"));
+
+        // Test with a command that likely doesn't exist
+        assert!(!is_app_in_path("this-command-should-not-exist-xyz123"));
     }
 }

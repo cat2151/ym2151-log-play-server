@@ -29,6 +29,42 @@ It operates in both standalone and server-client modes.
 
 ## Usage
 
+### Library Usage (Programmatic Control)
+
+For applications that want to use this library programmatically, the recommended pattern is:
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // Ensure server is ready (automatically installs and starts if needed)
+    client::ensure_server_ready("cat-play-mml")?;
+    
+    // Now you can play music files
+    client::play_file("music.json")?;
+    
+    // Or send JSON data directly
+    let json_data = r#"{"event_count": 2, "events": [...]}"#;
+    client::send_json(json_data)?;
+    
+    // Control playback
+    client::stop_playback()?;
+    
+    // Shutdown when done
+    client::shutdown_server()?;
+    
+    Ok(())
+}
+```
+
+The `ensure_server_ready()` function provides a seamless developer experience by:
+1. Checking if the server is already running
+2. Installing the server application via cargo if not found in PATH
+3. Starting the server in background mode
+4. Waiting until the server is ready to accept commands
+
+This eliminates the need for library users to manually manage server lifecycle.
+
 ### Standalone Mode (Normal Playback)
 
 Play a JSON file directly:

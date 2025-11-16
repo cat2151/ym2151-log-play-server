@@ -29,6 +29,42 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
 
 ## 使い方
 
+### ライブラリとしての使用（プログラマティック制御）
+
+このライブラリをプログラムから使用する場合の推奨パターン：
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // サーバーの準備を確認（必要に応じて自動的にインストールと起動）
+    client::ensure_server_ready("cat-play-mml")?;
+    
+    // 音楽ファイルを再生
+    client::play_file("music.json")?;
+    
+    // または、JSONデータを直接送信
+    let json_data = r#"{"event_count": 2, "events": [...]}"#;
+    client::send_json(json_data)?;
+    
+    // 再生制御
+    client::stop_playback()?;
+    
+    // 終了時にシャットダウン
+    client::shutdown_server()?;
+    
+    Ok(())
+}
+```
+
+`ensure_server_ready()` 関数は以下のことを自動的に行い、シームレスな開発体験を提供します：
+1. サーバーが既に起動しているか確認
+2. PATHにサーバーアプリケーションが見つからない場合、cargo経由でインストール
+3. サーバーをバックグラウンドモードで起動
+4. サーバーがコマンドを受け付けられる状態になるまで待機
+
+これにより、ライブラリユーザーがサーバーのライフサイクルを手動で管理する必要がなくなります。
+
 ### スタンドアロンモード（通常の再生）
 
 JSONファイルを直接再生：
