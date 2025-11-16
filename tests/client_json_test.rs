@@ -194,7 +194,7 @@ mod client_json_integration_tests {
 
         thread::sleep(Duration::from_millis(200));
 
-        let result = ym2151_log_play_server::client::send_json_with_options(json_data, true);
+        let result = ym2151_log_play_server::client::send_json_silent(json_data);
         assert!(result.is_ok());
 
         server_handle.join().unwrap();

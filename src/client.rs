@@ -80,27 +80,31 @@ use std::time::Duration;
 /// client::send_json(json).unwrap();
 /// ```
 pub fn send_json(json_data: &str) -> Result<()> {
-    send_json_with_options(json_data, false)
+    send_json_internal(json_data, false)
 }
 
-/// Send JSON data with silent option
+/// Send JSON data in silent mode (no server log output)
 ///
-/// This function sends JSON data directly via the binary protocol.
-/// When `silent` is true, the server will suppress log messages to avoid
-/// display corruption in library users like ym2151-tone-editor.
+/// This function sends JSON data directly via the binary protocol
+/// without producing any server log output. This prevents display
+/// corruption in library users like ym2151-tone-editor.
 ///
 /// # Arguments
 /// * `json_data` - JSON string data to send
-/// * `silent` - If true, server will suppress log messages
 ///
 /// # Example
 /// ```no_run
 /// # use ym2151_log_play_server::client;
 /// let json = r#"{"event_count": 1, "events": []}"#;
 /// // Silent mode - no server log output
-/// client::send_json_with_options(json, true).unwrap();
+/// client::send_json_silent(json).unwrap();
 /// ```
-pub fn send_json_with_options(json_data: &str, silent: bool) -> Result<()> {
+pub fn send_json_silent(json_data: &str) -> Result<()> {
+    send_json_internal(json_data, true)
+}
+
+/// Internal function for sending JSON with optional silent mode
+fn send_json_internal(json_data: &str, silent: bool) -> Result<()> {
     // Parse the JSON to validate it
     let json_value: serde_json::Value = serde_json::from_str(json_data)
         .context("Failed to parse JSON data")?;

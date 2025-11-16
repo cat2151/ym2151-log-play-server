@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
     
     // サイレントモードでJSONデータを送信（サーバーのログ出力なし）
     // ym2151-tone-editorなどのライブラリユーザーが表示崩れを防ぐために使用
-    client::send_json_with_options(json_data, true)?;
+    client::send_json_silent(json_data)?;
     
     // 再生制御
     client::stop_playback()?;

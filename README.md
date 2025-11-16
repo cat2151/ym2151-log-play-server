@@ -49,7 +49,7 @@ fn main() -> anyhow::Result<()> {
     
     // Send JSON data in silent mode (no server log output)
     // Useful for library users like ym2151-tone-editor to avoid display corruption
-    client::send_json_with_options(json_data, true)?;
+    client::send_json_silent(json_data)?;
     
     // Control playback
     client::stop_playback()?;
