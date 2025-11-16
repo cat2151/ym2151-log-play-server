@@ -164,7 +164,7 @@ mod server_playback_tests {
     // Import test utilities from the parent module
     use super::test_utils::server_test_lock;
 
-    /// Test server can start with initial playback and accept PLAY command
+    /// Test server can start in idle state and accept PLAY command
     #[test]
     fn test_server_play_command() {
         // Acquire lock to prevent parallel execution of server tests
@@ -176,7 +176,7 @@ mod server_playback_tests {
         // Start server in a separate thread
         let server_handle = thread::spawn(move || {
             eprintln!("Server thread starting...");
-            let result = server.run("output_ym2151.json");
+            let result = server.run();
             eprintln!("Server thread finished with result: {:?}", result);
             result
         });
@@ -245,7 +245,7 @@ mod server_playback_tests {
         // Start server
         let server_handle = thread::spawn(move || {
             eprintln!("Server thread starting...");
-            server.run("output_ym2151.json")
+            server.run()
         });
 
         // Give server time to start

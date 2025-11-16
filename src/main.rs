@@ -16,7 +16,7 @@ fn print_usage(program_name: &str) {
         program_name
     );
     eprintln!(
-        "  {} --server <json_file>         # サーバーとして起動",
+        "  {} --server                     # サーバーとして起動",
         program_name
     );
     eprintln!(
@@ -31,7 +31,7 @@ fn print_usage(program_name: &str) {
     eprintln!("例:");
     eprintln!("  {} events.json", program_name);
     eprintln!("  {} sample_events.json", program_name);
-    eprintln!("  {} --server sample_events.json", program_name);
+    eprintln!("  {} --server", program_name);
     eprintln!("  {} --client test_input.json", program_name);
     eprintln!("  {} --client --stop", program_name);
     eprintln!("  {} --client --shutdown", program_name);
@@ -49,10 +49,9 @@ fn main() {
 
     if args.len() >= 2 {
         if args[1] == "--server" {
-            if args.len() == 3 {
-                let json_path = &args[2];
+            if args.len() == 2 {
                 let server = Server::new();
-                match server.run(json_path) {
+                match server.run() {
                     Ok(_) => {
                         std::process::exit(0);
                     }
@@ -62,7 +61,7 @@ fn main() {
                     }
                 }
             } else {
-                eprintln!("❌ エラー: --server オプションには引数が必要です");
+                eprintln!("❌ エラー: --server オプションには引数は不要です");
                 eprintln!();
                 print_usage(&args[0]);
                 std::process::exit(1);
