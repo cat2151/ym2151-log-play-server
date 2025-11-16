@@ -1,19 +1,20 @@
-use std::env;
 use ym2151_log_play_server::debug_wav;
 use ym2151_log_play_server::events::{EventLog, RegisterEvent};
+use ym2151_log_play_server::logging;
 
 #[test]
 fn test_debug_wav_enabled_flag() {
-    // Clean state
-    env::remove_var("YM2151_DEBUG_WAV");
+    // Reset verbose to off first
+    logging::init(false);
     assert!(!debug_wav::is_debug_wav_enabled());
 
-    // Set flag
-    env::set_var("YM2151_DEBUG_WAV", "1");
+    // Enable verbose
+    logging::init(true);
     assert!(debug_wav::is_debug_wav_enabled());
 
-    // Clean up
-    env::remove_var("YM2151_DEBUG_WAV");
+    // Disable verbose
+    logging::init(false);
+    assert!(!debug_wav::is_debug_wav_enabled());
 }
 
 #[test]
@@ -65,10 +66,10 @@ fn test_post_playback_buffer_generation() {
 #[test]
 fn test_debug_wav_file_creation() {
     let temp_dir = std::env::temp_dir();
-    let original_dir = env::current_dir().unwrap();
+    let original_dir = std::env::current_dir().unwrap();
 
     // Change to temp directory
-    env::set_current_dir(&temp_dir).unwrap();
+    std::env::set_current_dir(&temp_dir).unwrap();
 
     // Create simple test buffers
     let samples_55k = vec![0i16; 55930 * 2]; // 1 second stereo
@@ -106,7 +107,7 @@ fn test_debug_wav_file_creation() {
     let _ = std::fs::remove_file(temp_dir.join("post_55k.wav"));
     let _ = std::fs::remove_file(temp_dir.join("post_48k.wav"));
 
-    env::set_current_dir(original_dir).unwrap();
+    std::env::set_current_dir(original_dir).unwrap();
 }
 
 #[test]
@@ -130,12 +131,11 @@ fn test_complete_debug_workflow() {
         ],
     };
 
-    // Step 1: Check if debug is enabled
-    env::remove_var("YM2151_DEBUG_WAV");
+    // Step 1: Check if debug is enabled (default is off)
     assert!(!debug_wav::is_debug_wav_enabled());
 
-    // Step 2: Enable debug
-    env::set_var("YM2151_DEBUG_WAV", "1");
+    // Step 2: Enable debug via verbose mode
+    logging::init(true);
     assert!(debug_wav::is_debug_wav_enabled());
 
     // Step 3: Generate post-playback buffers (simulating what happens after realtime playback)
@@ -151,5 +151,5 @@ fn test_complete_debug_workflow() {
     assert_eq!(post_48k.len() % 2, 0);
 
     // Clean up
-    env::remove_var("YM2151_DEBUG_WAV");
+    logging::init(false);
 }

@@ -5,8 +5,7 @@
 //!
 //! # Output Files
 //!
-//! When enabled via the `YM2151_DEBUG_WAV` environment variable, the following
-//! WAV files are generated:
+//! When verbose mode is enabled, the following WAV files are generated:
 //!
 //! - `realtime_55k.wav` - 55930Hz buffer captured during real-time playback
 //! - `realtime_48k.wav` - 48000Hz resampled buffer from real-time playback
@@ -15,16 +14,14 @@
 //!
 //! # Usage
 //!
-//! Set the `YM2151_DEBUG_WAV` environment variable before running:
+//! Enable verbose mode when running:
 //!
 //! ```bash
-//! # Windows (PowerShell)
-//! $env:YM2151_DEBUG_WAV="1"
-//! .\ym2151-log-play-server.exe sample_events.json
+//! # Server mode (Windows)
+//! .\ym2151-log-play-server.exe --server --verbose
 //!
-//! # Windows (cmd)
-//! set YM2151_DEBUG_WAV=1
-//! .\ym2151-log-play-server.exe sample_events.json
+//! # Client mode (Windows)
+//! .\ym2151-log-play-server.exe --client test.json --verbose
 //! ```
 //!
 //! # Purpose
@@ -37,19 +34,19 @@
 //! high MUL (frequency multiplier) values in tone parameters.
 
 use crate::events::EventLog;
+use crate::logging;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 use crate::wav_writer;
 use anyhow::{Context, Result};
-use std::env;
 
 const GENERATION_BUFFER_SIZE: usize = 2048;
 
-/// Check if debug WAV output is enabled via environment variable.
+/// Check if debug WAV output is enabled via verbose mode.
 ///
-/// Returns true if the `YM2151_DEBUG_WAV` environment variable is set to any value.
+/// Returns true if verbose logging is enabled.
 pub fn is_debug_wav_enabled() -> bool {
-    env::var("YM2151_DEBUG_WAV").is_ok()
+    logging::is_verbose()
 }
 
 /// Generate post-playback WAV buffers at both 55930Hz and 48000Hz.
@@ -163,15 +160,15 @@ mod tests {
 
     #[test]
     fn test_is_debug_wav_enabled_false() {
-        env::remove_var("YM2151_DEBUG_WAV");
+        // Verbose is off by default
         assert!(!is_debug_wav_enabled());
     }
 
     #[test]
     fn test_is_debug_wav_enabled_true() {
-        env::set_var("YM2151_DEBUG_WAV", "1");
+        logging::init(true);
         assert!(is_debug_wav_enabled());
-        env::remove_var("YM2151_DEBUG_WAV");
+        logging::init(false);
     }
 
     #[test]
@@ -207,8 +204,8 @@ mod tests {
     #[test]
     fn test_save_debug_wav_files() {
         let temp_dir = std::env::temp_dir();
-        let original_dir = env::current_dir().unwrap();
-        env::set_current_dir(&temp_dir).unwrap();
+        let original_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(&temp_dir).unwrap();
 
         let samples_55k = vec![0i16; 55930 * 2]; // 1 second
         let samples_48k = vec![0i16; 48000 * 2]; // 1 second
@@ -222,6 +219,6 @@ mod tests {
         let _ = std::fs::remove_file(temp_dir.join("post_55k.wav"));
         let _ = std::fs::remove_file(temp_dir.join("post_48k.wav"));
 
-        env::set_current_dir(original_dir).unwrap();
+        std::env::set_current_dir(original_dir).unwrap();
     }
 }
