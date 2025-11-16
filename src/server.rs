@@ -111,24 +111,26 @@ impl Server {
 
                 // コマンドの内容をログ出力
                 match &command {
-                    Command::PlayJson { data } => {
-                        // JSON データの場合、末尾要素だけを表示
-                        if let Ok(log_str) = serde_json::to_string(data) {
-                            match EventLog::from_json_str(&log_str) {
-                                Ok(log) if !log.events.is_empty() => {
-                                    let last_event = &log.events[log.events.len() - 1];
-                                    eprintln!("📩 コマンドを受信しました: PlayJson (末尾要素: time:{}, addr:0x{:02X}, data:0x{:02X})",
-                                             last_event.time, last_event.addr, last_event.data);
+                    Command::PlayJson { data, silent } => {
+                        if !silent {
+                            // JSON データの場合、末尾要素だけを表示
+                            if let Ok(log_str) = serde_json::to_string(data) {
+                                match EventLog::from_json_str(&log_str) {
+                                    Ok(log) if !log.events.is_empty() => {
+                                        let last_event = &log.events[log.events.len() - 1];
+                                        eprintln!("📩 コマンドを受信しました: PlayJson (末尾要素: time:{}, addr:0x{:02X}, data:0x{:02X})",
+                                                 last_event.time, last_event.addr, last_event.data);
+                                    }
+                                    Ok(_) => {
+                                        eprintln!("📩 コマンドを受信しました: PlayJson (空のイベント配列)");
+                                    }
+                                    Err(_) => {
+                                        eprintln!("📩 コマンドを受信しました: PlayJson (解析エラー)");
+                                    }
                                 }
-                                Ok(_) => {
-                                    eprintln!("📩 コマンドを受信しました: PlayJson (空のイベント配列)");
-                                }
-                                Err(_) => {
-                                    eprintln!("📩 コマンドを受信しました: PlayJson (解析エラー)");
-                                }
+                            } else {
+                                eprintln!("📩 コマンドを受信しました: PlayJson");
                             }
-                        } else {
-                            eprintln!("📩 コマンドを受信しました: PlayJson");
                         }
                     }
                     Command::PlayFile { path } => {
@@ -140,8 +142,10 @@ impl Server {
                 }
 
                 let response = match command {
-                    Command::PlayJson { data } => {
-                        eprintln!("🎵 JSON データを読み込み中...");
+                    Command::PlayJson { data, silent } => {
+                        if !silent {
+                            eprintln!("🎵 JSON データを読み込み中...");
+                        }
 
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
@@ -155,7 +159,9 @@ impl Server {
                                 match Self::load_and_start_playback(&json_str, true) {
                                     Ok(player) => {
                                         audio_player = Some(player);
-                                        eprintln!("✅ JSON データから音声再生を開始しました");
+                                        if !silent {
+                                            eprintln!("✅ JSON データから音声再生を開始しました");
+                                        }
 
                                         let mut state = self.state.lock().unwrap();
                                         *state = ServerState::Playing;
@@ -163,7 +169,9 @@ impl Server {
                                         Response::Ok
                                     }
                                     Err(e) => {
-                                        eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
+                                        if !silent {
+                                            eprintln!("❌ 音声再生の開始に失敗しました: {}", e);
+                                        }
                                         Response::Error {
                                             message: format!("Failed to start playback: {}", e),
                                         }
@@ -171,7 +179,9 @@ impl Server {
                                 }
                             }
                             Err(e) => {
-                                eprintln!("❌ JSONシリアライズに失敗しました: {}", e);
+                                if !silent {
+                                    eprintln!("❌ JSONシリアライズに失敗しました: {}", e);
+                                }
                                 Response::Error {
                                     message: format!("Failed to serialize JSON: {}", e),
                                 }

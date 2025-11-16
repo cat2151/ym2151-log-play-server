@@ -47,6 +47,10 @@ fn main() -> anyhow::Result<()> {
     let json_data = r#"{"event_count": 2, "events": [...]}"#;
     client::send_json(json_data)?;
     
+    // サイレントモードでJSONデータを送信（サーバーのログ出力なし）
+    // ym2151-tone-editorなどのライブラリユーザーが表示崩れを防ぐために使用
+    client::send_json_silent(json_data)?;
+    
     // 再生制御
     client::stop_playback()?;
     

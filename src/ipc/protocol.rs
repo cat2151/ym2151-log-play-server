@@ -4,7 +4,11 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
     PlayFile { path: String },
-    PlayJson { data: serde_json::Value },
+    PlayJson {
+        data: serde_json::Value,
+        #[serde(default)]
+        silent: bool,
+    },
     Stop,
     Shutdown,
 }
@@ -120,7 +124,10 @@ mod tests {
                 {"time": 2, "addr": "0x20", "data": "0xC7"}
             ]
         });
-        let original = Command::PlayJson { data: json_data };
+        let original = Command::PlayJson {
+            data: json_data,
+            silent: false,
+        };
         let binary = original.to_binary().unwrap();
         let parsed = Command::from_binary(&binary).unwrap();
         assert_eq!(original, parsed);
@@ -193,6 +200,40 @@ mod tests {
         let result = Command::from_binary(&data);
         assert!(result.is_err());
         assert!(result.unwrap_err().contains("parse JSON"));
+    }
+
+    #[test]
+    fn test_binary_play_json_with_silent_true() {
+        let json_data = serde_json::json!({
+            "event_count": 1,
+            "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
+        });
+        let original = Command::PlayJson {
+            data: json_data,
+            silent: true,
+        };
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_play_json_backward_compatibility() {
+        // Test that old JSON without silent field deserializes with silent=false
+        let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]}}"#;
+        let json_bytes = json_str.as_bytes();
+        
+        let mut binary = Vec::with_capacity(4 + json_bytes.len());
+        binary.extend_from_slice(&(json_bytes.len() as u32).to_le_bytes());
+        binary.extend_from_slice(json_bytes);
+        
+        let parsed = Command::from_binary(&binary).unwrap();
+        match parsed {
+            Command::PlayJson { data: _, silent } => {
+                assert_eq!(silent, false, "silent should default to false for backward compatibility");
+            }
+            _ => panic!("Expected PlayJson command"),
+        }
     }
 
     #[test]
