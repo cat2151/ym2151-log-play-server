@@ -121,17 +121,18 @@ fn test_server_shutdown_without_server_fails() {
 }
 
 #[test]
-fn test_server_option_without_argument_fails() {
+fn test_server_option_with_argument_fails() {
     let binary = get_binary_path();
     let output = Command::new(&binary)
         .arg("--server")
+        .arg("test.json")
         .output()
         .expect("Failed to execute binary");
 
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    // Should report missing argument
-    assert!(stderr.contains("引数が必要") || stderr.contains("エラー"));
+    // Should report that argument is not needed
+    assert!(stderr.contains("引数は不要") || stderr.contains("エラー"));
 
     // Exit code should be 1 (error)
     assert_eq!(output.status.code(), Some(1));

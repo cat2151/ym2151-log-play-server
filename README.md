@@ -40,10 +40,10 @@ cargo run --release output_ym2151.json
 
 #### Starting the Server
 
-Run as a persistent server and start playing JSON:
+Run as a persistent server in idle state:
 
 ```bash
-cargo run --release -- --server output_ym2151.json
+cargo run --release -- --server
 ```
 
 #### Client Operations
@@ -66,13 +66,13 @@ cargo run --release -- --client --shutdown
 ```
 Usage:
   ym2151-log-play-server <json_log_file>           # Standalone mode
-  ym2151-log-play-server --server <json_log_file>  # Server mode
+  ym2151-log-play-server --server                  # Server mode
   ym2151-log-play-server --client <json_log_file>  # Play new JSON
   ym2151-log-play-server --client --stop           # Stop playback
   ym2151-log-play-server --client --shutdown       # Shutdown server
 
 Options:
-  --server <file>    Run as a server and play the specified JSON
+  --server           Run as a server in idle state
   --client <file>    Instruct the server to play a new JSON file
   --client --stop    Instruct the server to stop playback
   --client --shutdown Instruct the server to shut down
@@ -82,7 +82,7 @@ Examples:
   ym2151-log-play-server output_ym2151.json
 
   # Start server
-  ym2151-log-play-server --server output_ym2151.json
+  ym2151-log-play-server --server
 
   # From another terminal: switch performance
   ym2151-log-play-server --client test_input.json
@@ -100,10 +100,9 @@ Examples:
 
 ```bash
 # Terminal 1: Start server
-$ cargo run --release -- --server output_ym2151.json
+$ cargo run --release -- --server
 サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
-output_ym2151.json (3 イベント) を読み込みました
-演奏を開始しました...
+サーバーが起動しました。クライアントからの接続を待機中...
 
 # Terminal 2: Client operations
 $ cargo run --release -- --client test_input.json
@@ -120,7 +119,7 @@ $ cargo run --release -- --client --shutdown
 
 ```bash
 # Start server (Terminal 1)
-$ cargo run --release -- --server music1.json
+$ cargo run --release -- --server
 
 # Switch songs successively (Terminal 2)
 $ cargo run --release -- --client music2.json
@@ -135,7 +134,7 @@ $ cargo run --release -- --client music1.json
 ```bash
 cargo build --release
 ./target/release/ym2151-log-play-server output_ym2151.json
-./target/release/ym2151-log-play-server --server output_ym2151.json
+./target/release/ym2151-log-play-server --server
 ./target/release/ym2151-log-play-server --client output_ym2151.json
 ./target/release/ym2151-log-play-server --client --stop
 ./target/release/ym2151-log-play-server --client --shutdown

@@ -67,10 +67,9 @@ fn test_server_startup_automated() {
     // automatically without requiring manual verification
 
     let server = Server::new();
-    let test_json = "test_sample.json";
 
     // Start server in a separate thread
-    let server_handle = thread::spawn(move || server.run(test_json));
+    let server_handle = thread::spawn(move || server.run());
 
     // Give server time to start
     thread::sleep(Duration::from_millis(100));

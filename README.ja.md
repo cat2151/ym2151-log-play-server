@@ -40,10 +40,10 @@ cargo run --release output_ym2151.json
 
 #### サーバーの起動
 
-サーバーとして常駐し、JSONを演奏開始：
+サーバーとして常駐し、待機状態で起動：
 
 ```bash
-cargo run --release -- --server output_ym2151.json
+cargo run --release -- --server
 ```
 
 #### クライアントからの操作
@@ -66,13 +66,13 @@ cargo run --release -- --client --shutdown
 ```
 使用方法:
   ym2151-log-play-server <json_log_file>           # スタンドアロンモード
-  ym2151-log-play-server --server <json_log_file>  # サーバーモード
+  ym2151-log-play-server --server                  # サーバーモード
   ym2151-log-play-server --client <json_log_file>  # 新規JSONを演奏
   ym2151-log-play-server --client --stop           # 演奏停止
   ym2151-log-play-server --client --shutdown       # サーバーシャットダウン
 
 オプション:
-  --server <file>    サーバーとして常駐し、指定されたJSONを演奏
+  --server           サーバーとして待機状態で起動
   --client <file>    サーバーに新しいJSONファイルの演奏を指示
   --client --stop    サーバーに演奏停止を指示
   --client --shutdown サーバーにシャットダウンを指示
@@ -82,7 +82,7 @@ cargo run --release -- --client --shutdown
   ym2151-log-play-server output_ym2151.json
 
   # サーバー起動
-  ym2151-log-play-server --server output_ym2151.json
+  ym2151-log-play-server --server
 
   # 別のターミナルから: 演奏を切り替え
   ym2151-log-play-server --client test_input.json
@@ -100,10 +100,9 @@ cargo run --release -- --client --shutdown
 
 ```bash
 # ターミナル1: サーバー起動
-$ cargo run --release -- --server output_ym2151.json
+$ cargo run --release -- --server
 サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
-output_ym2151.json (3 イベント) を読み込みました
-演奏を開始しました...
+サーバーが起動しました。クライアントからの接続を待機中...
 
 # ターミナル2: クライアントから操作
 $ cargo run --release -- --client test_input.json
@@ -120,7 +119,7 @@ $ cargo run --release -- --client --shutdown
 
 ```bash
 # サーバー起動（ターミナル1）
-$ cargo run --release -- --server music1.json
+$ cargo run --release -- --server
 
 # 次々と曲を切り替え（ターミナル2）
 $ cargo run --release -- --client music2.json
@@ -135,7 +134,7 @@ $ cargo run --release -- --client music1.json
 ```bash
 cargo build --release
 ./target/release/ym2151-log-play-server output_ym2151.json
-./target/release/ym2151-log-play-server --server output_ym2151.json
+./target/release/ym2151-log-play-server --server
 ./target/release/ym2151-log-play-server --client output_ym2151.json
 ./target/release/ym2151-log-play-server --client --stop
 ./target/release/ym2151-log-play-server --client --shutdown
