@@ -80,11 +80,35 @@ use std::time::Duration;
 /// client::send_json(json).unwrap();
 /// ```
 pub fn send_json(json_data: &str) -> Result<()> {
+    send_json_with_options(json_data, false)
+}
+
+/// Send JSON data with silent option
+///
+/// This function sends JSON data directly via the binary protocol.
+/// When `silent` is true, the server will suppress log messages to avoid
+/// display corruption in library users like ym2151-tone-editor.
+///
+/// # Arguments
+/// * `json_data` - JSON string data to send
+/// * `silent` - If true, server will suppress log messages
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// let json = r#"{"event_count": 1, "events": []}"#;
+/// // Silent mode - no server log output
+/// client::send_json_with_options(json, true).unwrap();
+/// ```
+pub fn send_json_with_options(json_data: &str, silent: bool) -> Result<()> {
     // Parse the JSON to validate it
     let json_value: serde_json::Value = serde_json::from_str(json_data)
         .context("Failed to parse JSON data")?;
     
-    let command = Command::PlayJson { data: json_value };
+    let command = Command::PlayJson {
+        data: json_value,
+        silent,
+    };
     send_command(command)
 }
 
@@ -258,16 +282,20 @@ fn send_command(command: Command) -> Result<()> {
         .to_binary()
         .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
 
-    // Display command info
-    match &command {
-        Command::PlayJson { .. } => {
-            eprintln!("⏳ サーバーにJSON直接送信中...");
+    // Display command info (unless it's a silent PlayJson)
+    let is_silent = matches!(&command, Command::PlayJson { silent: true, .. });
+    
+    if !is_silent {
+        match &command {
+            Command::PlayJson { .. } => {
+                eprintln!("⏳ サーバーにJSON直接送信中...");
+            }
+            Command::PlayFile { path } => {
+                eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", path);
+            }
+            Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
+            Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
         }
-        Command::PlayFile { path } => {
-            eprintln!("⏳ サーバーにJSONファイル経由送信中: {}", path);
-        }
-        Command::Stop => eprintln!("⏳ サーバーに停止要求を送信中..."),
-        Command::Shutdown => eprintln!("⏳ サーバーにシャットダウン要求を送信中..."),
     }
 
     // Send command via binary protocol
@@ -285,18 +313,24 @@ fn send_command(command: Command) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
 
     match response {
-        Response::Ok => match &command {
-            Command::PlayJson { .. } => {
-                eprintln!("✅ JSON直接送信で演奏開始しました");
+        Response::Ok => {
+            if !is_silent {
+                match &command {
+                    Command::PlayJson { .. } => {
+                        eprintln!("✅ JSON直接送信で演奏開始しました");
+                    }
+                    Command::PlayFile { path } => {
+                        eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
+                    }
+                    Command::Stop => eprintln!("✅ 演奏停止しました"),
+                    Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
+                }
             }
-            Command::PlayFile { path } => {
-                eprintln!("✅ JSONファイル経由で演奏開始: {}", path);
-            }
-            Command::Stop => eprintln!("✅ 演奏停止しました"),
-            Command::Shutdown => eprintln!("✅ サーバーをシャットダウンしました"),
-        },
+        }
         Response::Error { message } => {
-            eprintln!("❌ サーバーエラー: {}", message);
+            if !is_silent {
+                eprintln!("❌ サーバーエラー: {}", message);
+            }
             return Err(anyhow::anyhow!("Server returned error: {}", message));
         }
     }

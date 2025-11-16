@@ -40,9 +40,10 @@ mod client_json_integration_tests {
 
             // Verify it's a PlayJson command
             match cmd {
-                Command::PlayJson { data } => {
+                Command::PlayJson { data, silent } => {
                     assert!(data.get("event_count").is_some());
                     assert!(data.get("events").is_some());
+                    assert_eq!(silent, false, "Default should be non-silent");
                 }
                 _ => panic!("Expected PlayJson command"),
             }
@@ -84,8 +85,9 @@ mod client_json_integration_tests {
 
             // Verify it's a PlayJson command with empty events
             match cmd {
-                Command::PlayJson { data } => {
+                Command::PlayJson { data, silent } => {
                     assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(0));
+                    assert_eq!(silent, false, "Default should be non-silent");
                 }
                 _ => panic!("Expected PlayJson command"),
             }
@@ -135,8 +137,9 @@ mod client_json_integration_tests {
 
             // Verify it's a PlayJson command with large data
             match cmd {
-                Command::PlayJson { data } => {
+                Command::PlayJson { data, silent } => {
                     assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(500));
+                    assert_eq!(silent, false, "Default should be non-silent");
                 }
                 _ => panic!("Expected PlayJson command"),
             }
@@ -151,6 +154,47 @@ mod client_json_integration_tests {
         thread::sleep(Duration::from_millis(200));
 
         let result = ym2151_log_play_server::client::send_json(&large_events);
+        assert!(result.is_ok());
+
+        server_handle.join().unwrap();
+    }
+
+    #[test]
+    fn test_client_send_json_silent() {
+        // Acquire lock to prevent parallel execution of server tests
+        let _lock = server_test_lock();
+
+        cleanup_pipe();
+
+        let json_data = r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
+
+        let server_handle = thread::spawn(move || {
+            let pipe = NamedPipe::create().unwrap();
+            let mut reader = pipe.open_read().unwrap();
+
+            // Read the binary command
+            let binary_data = reader.read_binary().unwrap();
+            let cmd = Command::from_binary(&binary_data).unwrap();
+
+            // Verify it's a PlayJson command with silent=true
+            match cmd {
+                Command::PlayJson { data, silent } => {
+                    assert!(data.get("event_count").is_some());
+                    assert_eq!(silent, true, "Should be silent mode");
+                }
+                _ => panic!("Expected PlayJson command"),
+            }
+
+            // Send OK response
+            let mut writer = pipe.open_write().unwrap();
+            let response = Response::Ok;
+            let response_binary = response.to_binary().unwrap();
+            writer.write_binary(&response_binary).unwrap();
+        });
+
+        thread::sleep(Duration::from_millis(200));
+
+        let result = ym2151_log_play_server::client::send_json_with_options(json_data, true);
         assert!(result.is_ok());
 
         server_handle.join().unwrap();
