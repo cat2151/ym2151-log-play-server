@@ -5,35 +5,33 @@
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-A server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
+Server/client that receives YM2151 (OPM) register event logs and performs real-time playback.
 
-## Target Platforms
+## Supported Platforms
 
-- Windows-only
+- Windows Only
 - Prohibition of Linux-specific code
-    - As an increase in hallucinations was observed in this project,
-        - Linux-specific code is prohibited.
+  - To mitigate an observed increase in AI code generation "hallucinations" (incorrect or irrelevant code) within this project, Linux-specific code is prohibited.
 
 ## Status
 
-It is used as a library integrated into `cat-play-mml` and `ym2151-tone-editor`.
+It is integrated and used as a library in projects like `cat-play-mml` and `ym2151-tone-editor`.
 
 ## Overview
 
-This project is a program that plays back YM2151 (OPM) sound chip register event logs.
-It operates in server-client mode.
+This project is a program for playing back YM2151 (OPM) sound chip register event logs. It operates in server-client mode.
 
 ### Key Features
 
 - Real-time playback of JSON music data
-- WAV file output (in verbose mode)
-- Resides as a server and continues real-time playback in the background
-- Controlled by a client, allowing quick switching to different performances
-- Uses named pipes for server-client communication
+- WAV file output (when in verbose mode)
+- Runs as a resident server, continuing real-time playback in the background
+- Controlled by clients to quickly switch to different performances
+- Utilizes named pipes for server-client communication
 
 ## Usage
 
-### As a Library (Programmatic Control)
+### Using as a Library (Programmatic Control)
 
 Recommended pattern for using this library programmatically:
 
@@ -41,7 +39,7 @@ Recommended pattern for using this library programmatically:
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // Ensure the server is ready (automatically installs and starts if necessary)
+    // Ensure the server is ready (automatically installs and starts if needed)
     client::ensure_server_ready("cat-play-mml")?;
     
     // Send JSON data
@@ -51,14 +49,14 @@ fn main() -> anyhow::Result<()> {
     // Playback control
     client::stop_playback()?;
     
-    // Shut down on exit
+    // Shut down at termination
     client::shutdown_server()?;
     
     Ok(())
 }
 ```
 
-The `ensure_server_ready()` function automatically performs the following, providing a seamless development experience:
+The `ensure_server_ready()` function automatically performs the following actions to provide a seamless development experience:
 1. Checks if the server is already running
 2. Installs the server application via cargo if not found in PATH
 3. Starts the server in background mode
@@ -82,7 +80,7 @@ cargo run --release -- server --verbose
 
 #### Client Operations
 
-Operate from a separate terminal in client mode:
+Operate from another terminal in client mode:
 
 ```bash
 # Play a new JSON file (switch performance)
@@ -95,18 +93,18 @@ cargo run --release -- client --stop
 cargo run --release -- client --shutdown
 ```
 
-### Command-Line Argument List
+### Command Line Argument Reference
 
 ```
 Usage:
   ym2151-log-play-server server [--verbose]         # Server mode
-  ym2151-log-play-server client <json_log_file>     # Play new JSON
+  ym2151-log-play-server client <json_log_file>     # Play a new JSON
   ym2151-log-play-server client --stop              # Stop playback
   ym2151-log-play-server client --shutdown          # Shut down server
 
 Options:
-  server           Start as a server in a waiting state
-  server --verbose Start the server in verbose mode (outputs WAV files)
+  server           Start as a resident server in a waiting state
+  server --verbose Start server in verbose log mode (outputs WAV files)
   client <file>    Instruct server to play a new JSON file
   client --stop    Instruct server to stop playback
   client --shutdown Instruct server to shut down
@@ -122,7 +120,7 @@ Examples:
   ym2151-log-play-server client test_input.json
 
   # From another terminal: Stop playback
-  ym2151-log-play-server --client --stop
+  ym2151-log-play-server client --stop
 
   # From another terminal: Shut down server
   ym2151-log-play-server --client --shutdown
@@ -136,7 +134,7 @@ Examples:
 # Terminal 1: Start server
 $ cargo run --release -- --server
 Server started: /tmp/ym2151-log-play-server.pipe
-Server is running. Waiting for client connections...
+Server started. Waiting for client connections...
 
 # Terminal 2: Client operations
 $ cargo run --release -- --client test_input.json
@@ -155,7 +153,7 @@ $ cargo run --release -- --client --shutdown
 # Start server (Terminal 1)
 $ cargo run --release -- --server
 
-# Switch songs consecutively (Terminal 2)
+# Switch songs continuously (Terminal 2)
 $ cargo run --release -- --client music2.json
 $ sleep 5
 $ cargo run --release -- --client music3.json
@@ -183,34 +181,34 @@ cargo test
 ## Build Requirements
 
 - Rust 1.70 or later
-- zig cc (used as C compiler)
+- zig cc (used as a C compiler)
 
 ## Future Prospects
-- Currently, the situation is considered stable.
-- Will implement as needed, once requirements are identified.
+- Currently, the project is considered stable.
+- Implement features as needed.
 
 ## Project Goals
 - Motivation:
-  - Previous challenges:
-    - Unable to input the next command until playback finishes
+  - Past Challenges:
+    - Unable to input the next command until playback finished
   - Solution:
-    - Reside as a server and be controlled by a client
-  - Use cases:
-    - Provide an experience like MSX's PLAY statement, where commands can be input while music is playing.
-    - From a tone editor, phrase editor,
-      - Use the crate as a client
-    - Integrate the crate into a player, making it both a server and a client
-      - First time, start a duplicate of itself as a server in the background, begin playback, and then terminate itself.
-        - *Unlike explicit server usage, the idea is to output messages to a log instead of printing them; logs are easier to follow.*
-      - After the server starts, it sends JSON to the server as a client and then terminates itself.
+    - Run as a resident server, controlled by clients
+  - Use Cases:
+    - Provide an experience similar to MSX's PLAY statement, allowing command input during playback
+    - From tone editors and phrase editors:
+      - Utilize the crate as a client
+    - Integrate the crate into a player to make it both server and client
+      - On first run, start a duplicate of itself as a background server to begin playback, then the original process exits.
+        - *Note: Unlike explicit server usage, this envisions outputting messages to a log instead of print, as logs are easier to track.
+      - After the server starts, act as a client to send JSON to the server, then the client process exits.
 - Simple and minimal. Designed to be easy to reference when building larger projects.
-- If it stops playing, I intend to prioritize getting it to play again.
+- If it stops playing sound, the intention is to prioritize actions to restore playback as quickly as possible.
 
-## Project Intent
-- Why was this module split designed this way?
-  - To enable GitHub Copilot Coding Agent to perform TDD on the layers above this (from MML input to log generation) using GitHub Linux Runner.
-  - This layer (Windows real-time playback and Windows client-server) cannot be TDD'd by GitHub Copilot Coding Agent on GitHub Linux Runner; instead, it requires TDD by a local Windows agent, which entails a somewhat higher workload.
-  - Therefore, this high-workload layer was separated to allow more efficient development of other layers.
+## Project Rationale
+- Why was this module division chosen?
+  - To enable the GitHub Copilot Coding Agent to perform TDD on the layers above this one (from MML input to log generation) using GitHub Linux Runner.
+  - This specific layer (Windows real-time playback and Windows client-server) cannot be TDD'd by the GitHub Copilot Coding Agent on GitHub Linux Runner. Instead, TDD by a local Windows agent is required, which results in a slightly higher workload.
+  - Therefore, this higher-workload layer was separated to allow for more efficient development of other layers.
 
 ## Out of Scope
 - Advanced features
@@ -220,20 +218,20 @@ cargo test
 - TDD with agent on Windows
 - Linux is prohibited specifically for this project.
   - Because:
-    - In the early stages, essentially Linux-specific code was generated.
-      - It might have been useful as a foundation for the Windows version.
-    - Unix/Linux/Windows branches, real-time audio presence/absence branches, other branches, and a large number of associated comments,
-      - Led to code bloat and became a breeding ground for hallucinations.
-      - Resulted in low-quality code, with excessive `allow(dead_code)`, ignored tests, duplicate tests, unnecessary `cfg(windows)` branches, etc.
-      - Frequent hallucinations made bug fixing and implementation of Windows-specific features impossible.
-    - It was discovered that TDD with an agent works well on Windows for this project.
+    - In the initial stages, essentially Linux-specific code was generated.
+      - It might have served as a foundation for the Windows version.
+    - Unix/Linux/Windows branching, branching based on the presence of real-time audio, other branching, and the large amount of associated comments,
+      - led to code bloat and became a breeding ground for hallucinations.
+      - This resulted in low-quality code, with excessive `allow(dead_code)`, ignored tests, duplicate tests, unnecessary `cfg(windows)` branching, etc.
+      - Hallucinations became frequent, making bug fixing and Windows-specific feature implementation difficult.
+    - It was found that TDD with an agent works well on Windows for this project.
       - The aforementioned hallucinations and inefficiencies were resolved through robust refactoring using TDD.
 
 ## License
 
 MIT License
 
-## Used Libraries
+## Libraries Used
 
 - Nuked-OPM: LGPL 2.1
 - Other Rust crates: According to each crate's license
