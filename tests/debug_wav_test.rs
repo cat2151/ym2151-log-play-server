@@ -1,6 +1,7 @@
 use ym2151_log_play_server::debug_wav;
 use ym2151_log_play_server::events::{EventLog, RegisterEvent};
 use ym2151_log_play_server::logging;
+use ym2151_log_play_server::resampler::ResamplingQuality;
 
 #[test]
 fn test_debug_wav_enabled_flag() {
@@ -43,7 +44,7 @@ fn test_post_playback_buffer_generation() {
         ],
     };
 
-    let result = debug_wav::generate_post_playback_buffers(&log);
+    let result = debug_wav::generate_post_playback_buffers(&log, ResamplingQuality::Linear);
     assert!(result.is_ok(), "Failed to generate post playback buffers");
 
     let (buffer_55k, buffer_48k) = result.unwrap();
@@ -139,7 +140,7 @@ fn test_complete_debug_workflow() {
     assert!(debug_wav::is_debug_wav_enabled());
 
     // Step 3: Generate post-playback buffers (simulating what happens after realtime playback)
-    let result = debug_wav::generate_post_playback_buffers(&log);
+    let result = debug_wav::generate_post_playback_buffers(&log, ResamplingQuality::Linear);
     assert!(result.is_ok());
 
     let (post_55k, post_48k) = result.unwrap();

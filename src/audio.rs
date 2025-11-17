@@ -210,7 +210,7 @@ impl AudioPlayer {
                         let realtime_48k = wav_buffer_48k.lock().unwrap().clone();
 
                         // Generate post-playback buffers
-                        match debug_wav::generate_post_playback_buffers(&log) {
+                        match debug_wav::generate_post_playback_buffers(&log, resampling_quality) {
                             Ok((post_55k, post_48k)) => {
                                 // Save all 4 WAV files
                                 if let Err(e) = debug_wav::save_debug_wav_files(

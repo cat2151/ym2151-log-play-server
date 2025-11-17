@@ -36,7 +36,7 @@
 use crate::events::EventLog;
 use crate::logging;
 use crate::player::Player;
-use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
+use crate::resampler::{AudioResampler, ResamplingQuality, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 use crate::wav_writer;
 use anyhow::{Context, Result};
 
@@ -57,6 +57,7 @@ pub fn is_debug_wav_enabled() -> bool {
 /// # Arguments
 ///
 /// * `log` - The event log to render
+/// * `resampling_quality` - Quality setting for resampling (Linear or HighQuality)
 ///
 /// # Returns
 ///
@@ -69,13 +70,18 @@ pub fn is_debug_wav_enabled() -> bool {
 /// ```no_run
 /// use ym2151_log_play_server::debug_wav;
 /// use ym2151_log_play_server::events::EventLog;
+/// use ym2151_log_play_server::resampler::ResamplingQuality;
 ///
 /// let log = EventLog::from_file("sample_events.json").unwrap();
-/// let (buffer_55k, buffer_48k) = debug_wav::generate_post_playback_buffers(&log).unwrap();
+/// let (buffer_55k, buffer_48k) = debug_wav::generate_post_playback_buffers(&log, ResamplingQuality::Linear).unwrap();
 /// ```
-pub fn generate_post_playback_buffers(log: &EventLog) -> Result<(Vec<i16>, Vec<i16>)> {
+pub fn generate_post_playback_buffers(
+    log: &EventLog,
+    resampling_quality: ResamplingQuality,
+) -> Result<(Vec<i16>, Vec<i16>)> {
     let mut player = Player::new(log.clone());
-    let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
+    let mut resampler = AudioResampler::with_quality(resampling_quality)
+        .context("Failed to initialize resampler")?;
 
     let mut buffer_55k = Vec::new();
     let mut buffer_48k = Vec::new();
@@ -191,7 +197,38 @@ mod tests {
             ],
         };
 
-        let result = generate_post_playback_buffers(&log);
+        let result = generate_post_playback_buffers(&log, ResamplingQuality::Linear);
+        assert!(result.is_ok());
+
+        let (buffer_55k, buffer_48k) = result.unwrap();
+        assert!(!buffer_55k.is_empty());
+        assert!(!buffer_48k.is_empty());
+        assert_eq!(buffer_55k.len() % 2, 0); // Stereo
+        assert_eq!(buffer_48k.len() % 2, 0); // Stereo
+    }
+
+    #[test]
+    fn test_generate_post_playback_buffers_high_quality() {
+        // Test that high-quality resampling can be used in post-playback generation
+        let log = EventLog {
+            event_count: 2,
+            events: vec![
+                RegisterEvent {
+                    time: 0,
+                    addr: 0x08,
+                    data: 0x00,
+                    is_data: None,
+                },
+                RegisterEvent {
+                    time: 100,
+                    addr: 0x20,
+                    data: 0xC7,
+                    is_data: None,
+                },
+            ],
+        };
+
+        let result = generate_post_playback_buffers(&log, ResamplingQuality::HighQuality);
         assert!(result.is_ok());
 
         let (buffer_55k, buffer_48k) = result.unwrap();
