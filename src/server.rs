@@ -7,7 +7,6 @@ use std::sync::{Arc, Mutex};
 use anyhow::Context;
 use std::sync::atomic::Ordering;
 
-use crate::debug_wav;
 use crate::events::EventLog;
 use crate::player::Player;
 
