@@ -31,11 +31,11 @@ impl Server {
         Self::new_with_resampling_quality(false)
     }
 
-    pub fn new_with_resampling_quality(high_quality: bool) -> Self {
-        let quality = if high_quality {
-            ResamplingQuality::HighQuality
-        } else {
+    pub fn new_with_resampling_quality(low_quality: bool) -> Self {
+        let quality = if low_quality {
             ResamplingQuality::Linear
+        } else {
+            ResamplingQuality::HighQuality
         };
 
         logging::log_always(&format!(

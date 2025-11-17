@@ -25,9 +25,9 @@ enum Commands {
         #[arg(long)]
         verbose: bool,
 
-        /// 高品位リサンプリングを使用 (Rubato FFTベース、折り返しノイズを低減)
+        /// 低品位リサンプリングを使用 (線形補間、比較用)
         #[arg(long)]
-        high_quality_resampling: bool,
+        low_quality_resampling: bool,
     },
     /// サーバーに演奏指示
     Client {
@@ -84,7 +84,7 @@ fn main() {
                     eprintln!();
                     eprintln!("使用方法:");
                     eprintln!(
-                        "  ym2151-log-play-server server [--verbose] [--high-quality-resampling]         # サーバーとして起動"
+                        "  ym2151-log-play-server server [--verbose] [--low-quality-resampling]         # サーバーとして起動"
                     );
                     eprintln!(
                         "  ym2151-log-play-server client <json_file> [--verbose]  # サーバーに演奏指示"
@@ -97,10 +97,8 @@ fn main() {
                     eprintln!("例:");
                     eprintln!("  ym2151-log-play-server server");
                     eprintln!("  ym2151-log-play-server server --verbose");
-                    eprintln!("  ym2151-log-play-server server --high-quality-resampling");
-                    eprintln!(
-                        "  ym2151-log-play-server server --verbose --high-quality-resampling"
-                    );
+                    eprintln!("  ym2151-log-play-server server --low-quality-resampling");
+                    eprintln!("  ym2151-log-play-server server --verbose --low-quality-resampling");
                     eprintln!("  ym2151-log-play-server client test_input.json");
                     eprintln!("  ym2151-log-play-server client test_input.json --verbose");
                     eprintln!("  ym2151-log-play-server client --stop");
@@ -119,7 +117,10 @@ fn main() {
                     );
                     eprintln!("                            verbose時にWAVファイルを出力します");
                     eprintln!(
-                        "  --high-quality-resampling 高品位リサンプリングを使用 (Rubato FFTベース、折り返しノイズを低減)"
+                        "  --low-quality-resampling  低品位リサンプリングを使用 (線形補間、比較用)"
+                    );
+                    eprintln!(
+                        "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
                     );
                     eprintln!();
                     eprintln!("クライアントオプション:");
@@ -137,14 +138,14 @@ fn main() {
     match cli.command {
         Commands::Server {
             verbose,
-            high_quality_resampling,
+            low_quality_resampling,
         } => {
             #[cfg(windows)]
             {
                 // Initialize logging with verbose flag
                 logging::init(verbose);
 
-                let server = Server::new_with_resampling_quality(high_quality_resampling);
+                let server = Server::new_with_resampling_quality(low_quality_resampling);
                 match server.run() {
                     Ok(_) => {
                         std::process::exit(0);
@@ -160,7 +161,7 @@ fn main() {
             }
             #[cfg(not(windows))]
             {
-                let _ = (verbose, high_quality_resampling);
+                let _ = (verbose, low_quality_resampling);
                 eprintln!("❌ エラー: サーバーモードはWindowsでのみサポートされています");
                 std::process::exit(1);
             }

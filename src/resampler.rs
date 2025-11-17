@@ -40,7 +40,7 @@ pub struct AudioResampler {
 
 impl AudioResampler {
     pub fn new() -> Result<Self> {
-        Self::with_quality(ResamplingQuality::Linear)
+        Self::with_quality(ResamplingQuality::HighQuality)
     }
 
     pub fn with_quality(quality: ResamplingQuality) -> Result<Self> {
@@ -48,7 +48,7 @@ impl AudioResampler {
     }
 
     pub fn with_rates(input_rate: u32, output_rate: u32) -> Result<Self> {
-        Self::with_rates_and_quality(input_rate, output_rate, ResamplingQuality::Linear)
+        Self::with_rates_and_quality(input_rate, output_rate, ResamplingQuality::HighQuality)
     }
 
     pub fn with_rates_and_quality(
@@ -353,16 +353,22 @@ mod tests {
     fn test_resample_multiple_chunks() {
         let mut resampler = AudioResampler::new().unwrap();
 
-        let chunk_size = 256;
+        let chunk_size = 1024; // Larger chunk size for high-quality resampler
+        let mut total_output = 0;
         for _ in 0..5 {
             let input = vec![1000i16; chunk_size * 2];
             let result = resampler.resample(&input);
             assert!(result.is_ok());
 
             let output = result.unwrap();
-            assert!(!output.is_empty());
+            total_output += output.len();
             assert_eq!(output.len() % 2, 0);
         }
+        // Check that we got some output overall
+        assert!(
+            total_output > 0,
+            "Should produce output across multiple chunks"
+        );
     }
 
     #[test]
