@@ -1,5 +1,6 @@
 use crate::ipc::protocol::{Command, Response};
 use crate::logging;
+use crate::resampler::ResamplingQuality;
 use anyhow::Result;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -22,13 +23,33 @@ enum ServerState {
 pub struct Server {
     state: Arc<Mutex<ServerState>>,
     shutdown_flag: Arc<AtomicBool>,
+    resampling_quality: ResamplingQuality,
 }
 
 impl Server {
     pub fn new() -> Self {
+        Self::new_with_resampling_quality(false)
+    }
+
+    pub fn new_with_resampling_quality(high_quality: bool) -> Self {
+        let quality = if high_quality {
+            ResamplingQuality::Cubic
+        } else {
+            ResamplingQuality::Linear
+        };
+
+        logging::log_always(&format!(
+            "🎵 リサンプリング品質: {}",
+            match quality {
+                ResamplingQuality::Linear => "標準 (線形補間)",
+                ResamplingQuality::Cubic => "高品質 (Cubic補間)",
+            }
+        ));
+
         Server {
             state: Arc::new(Mutex::new(ServerState::Stopped)),
             shutdown_flag: Arc::new(AtomicBool::new(false)),
+            resampling_quality: quality,
         }
     }
 
@@ -286,7 +307,8 @@ impl Server {
         } else {
             None
         };
-        AudioPlayer::new_with_log(player, event_log).context("Failed to create audio player")
+        AudioPlayer::new_with_quality(player, event_log, self.resampling_quality)
+            .context("Failed to create audio player")
     }
 }
 
