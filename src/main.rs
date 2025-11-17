@@ -25,7 +25,7 @@ enum Commands {
         #[arg(long)]
         verbose: bool,
 
-        /// 高品位リサンプリングを使用 (Cubic補間、折り返しノイズを低減)
+        /// 高品位リサンプリングを使用 (Rubato FFTベース、折り返しノイズを低減)
         #[arg(long)]
         high_quality_resampling: bool,
     },
@@ -119,7 +119,7 @@ fn main() {
                     );
                     eprintln!("                            verbose時にWAVファイルを出力します");
                     eprintln!(
-                        "  --high-quality-resampling 高品位リサンプリングを使用 (Cubic補間、折り返しノイズを低減)"
+                        "  --high-quality-resampling 高品位リサンプリングを使用 (Rubato FFTベース、折り返しノイズを低減)"
                     );
                     eprintln!();
                     eprintln!("クライアントオプション:");
