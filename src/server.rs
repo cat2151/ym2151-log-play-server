@@ -33,7 +33,7 @@ impl Server {
 
     pub fn new_with_resampling_quality(high_quality: bool) -> Self {
         let quality = if high_quality {
-            ResamplingQuality::Cubic
+            ResamplingQuality::HighQuality
         } else {
             ResamplingQuality::Linear
         };
@@ -42,7 +42,7 @@ impl Server {
             "🎵 リサンプリング品質: {}",
             match quality {
                 ResamplingQuality::Linear => "標準 (線形補間)",
-                ResamplingQuality::Cubic => "高品質 (Cubic補間)",
+                ResamplingQuality::HighQuality => "高品質 (Rubato FFTベース)",
             }
         ));
 
