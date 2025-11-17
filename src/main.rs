@@ -24,6 +24,10 @@ enum Commands {
         /// デバッグ用に詳細なログを出力 (通常時はログファイルのみ)
         #[arg(long)]
         verbose: bool,
+
+        /// 高品位リサンプリングを使用 (Cubic補間、折り返しノイズを低減)
+        #[arg(long)]
+        high_quality_resampling: bool,
     },
     /// サーバーに演奏指示
     Client {
@@ -80,7 +84,7 @@ fn main() {
                     eprintln!();
                     eprintln!("使用方法:");
                     eprintln!(
-                        "  ym2151-log-play-server server [--verbose]         # サーバーとして起動"
+                        "  ym2151-log-play-server server [--verbose] [--high-quality-resampling]         # サーバーとして起動"
                     );
                     eprintln!(
                         "  ym2151-log-play-server client <json_file> [--verbose]  # サーバーに演奏指示"
@@ -93,6 +97,10 @@ fn main() {
                     eprintln!("例:");
                     eprintln!("  ym2151-log-play-server server");
                     eprintln!("  ym2151-log-play-server server --verbose");
+                    eprintln!("  ym2151-log-play-server server --high-quality-resampling");
+                    eprintln!(
+                        "  ym2151-log-play-server server --verbose --high-quality-resampling"
+                    );
                     eprintln!("  ym2151-log-play-server client test_input.json");
                     eprintln!("  ym2151-log-play-server client test_input.json --verbose");
                     eprintln!("  ym2151-log-play-server client --stop");
@@ -107,9 +115,12 @@ fn main() {
                     eprintln!();
                     eprintln!("サーバーオプション:");
                     eprintln!(
-                        "  --verbose  デバッグ用に詳細なログを出力 (通常時はログファイルのみ)"
+                        "  --verbose                 デバッグ用に詳細なログを出力 (通常時はログファイルのみ)"
                     );
-                    eprintln!("             verbose時にWAVファイルを出力します");
+                    eprintln!("                            verbose時にWAVファイルを出力します");
+                    eprintln!(
+                        "  --high-quality-resampling 高品位リサンプリングを使用 (Cubic補間、折り返しノイズを低減)"
+                    );
                     eprintln!();
                     eprintln!("クライアントオプション:");
                     eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
@@ -124,13 +135,16 @@ fn main() {
     };
 
     match cli.command {
-        Commands::Server { verbose } => {
+        Commands::Server {
+            verbose,
+            high_quality_resampling,
+        } => {
             #[cfg(windows)]
             {
                 // Initialize logging with verbose flag
                 logging::init(verbose);
 
-                let server = Server::new();
+                let server = Server::new_with_resampling_quality(high_quality_resampling);
                 match server.run() {
                     Ok(_) => {
                         std::process::exit(0);
@@ -146,7 +160,7 @@ fn main() {
             }
             #[cfg(not(windows))]
             {
-                let _ = verbose;
+                let _ = (verbose, high_quality_resampling);
                 eprintln!("❌ エラー: サーバーモードはWindowsでのみサポートされています");
                 std::process::exit(1);
             }

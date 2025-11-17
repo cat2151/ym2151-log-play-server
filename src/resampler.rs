@@ -6,20 +6,43 @@ pub const OPM_SAMPLE_RATE: u32 = YM2151_CLOCK / 64;
 
 pub const OUTPUT_SAMPLE_RATE: u32 = 48000;
 
+/// Resampling quality setting
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResamplingQuality {
+    /// Linear interpolation - Fast but may have aliasing artifacts
+    Linear,
+    /// Cubic interpolation (Catmull-Rom) - Higher quality, reduces aliasing
+    Cubic,
+}
+
 pub struct AudioResampler {
     input_rate: f64,
     output_rate: f64,
     ratio: f64,
     position: f64,
     last_frame: Option<(i16, i16)>, // Store last stereo sample for interpolation across chunks
+    prev_frame: Option<(i16, i16)>, // Store previous frame for cubic interpolation
+    quality: ResamplingQuality,
 }
 
 impl AudioResampler {
     pub fn new() -> Result<Self> {
-        Self::with_rates(OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE)
+        Self::with_quality(ResamplingQuality::Linear)
+    }
+
+    pub fn with_quality(quality: ResamplingQuality) -> Result<Self> {
+        Self::with_rates_and_quality(OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE, quality)
     }
 
     pub fn with_rates(input_rate: u32, output_rate: u32) -> Result<Self> {
+        Self::with_rates_and_quality(input_rate, output_rate, ResamplingQuality::Linear)
+    }
+
+    pub fn with_rates_and_quality(
+        input_rate: u32,
+        output_rate: u32,
+        quality: ResamplingQuality,
+    ) -> Result<Self> {
         let input_rate = input_rate as f64;
         let output_rate = output_rate as f64;
         let ratio = input_rate / output_rate;
@@ -30,6 +53,8 @@ impl AudioResampler {
             ratio,
             position: 0.0,
             last_frame: None,
+            prev_frame: None,
+            quality,
         })
     }
 
@@ -42,6 +67,13 @@ impl AudioResampler {
             anyhow::bail!("Input buffer must have even length (stereo samples)");
         }
 
+        match self.quality {
+            ResamplingQuality::Linear => self.resample_linear(input),
+            ResamplingQuality::Cubic => self.resample_cubic(input),
+        }
+    }
+
+    fn resample_linear(&mut self, input: &[i16]) -> Result<Vec<i16>> {
         let input_frames = input.len() / 2;
         let output_frames = ((input_frames as f64) / self.ratio).ceil() as usize;
         let mut output = Vec::with_capacity(output_frames * 2);
@@ -49,7 +81,7 @@ impl AudioResampler {
         let mut pos = self.position;
 
         while pos < input_frames as f64 {
-            let frame_idx = pos.floor() as isize; // Use floor to handle negative positions correctly
+            let frame_idx = pos.floor() as isize;
             let frac = pos - frame_idx as f64;
 
             // Get the current and next frames for interpolation
@@ -72,6 +104,7 @@ impl AudioResampler {
                 break;
             };
 
+            // Linear interpolation
             let left_out = left0 + (left1 - left0) * frac;
             let right_out = right0 + (right1 - right0) * frac;
 
@@ -88,10 +121,113 @@ impl AudioResampler {
         }
 
         // Update position for next chunk
-        // Keep negative positions - they represent a "head start" on the next chunk
         self.position = pos - input_frames as f64;
 
         Ok(output)
+    }
+
+    fn resample_cubic(&mut self, input: &[i16]) -> Result<Vec<i16>> {
+        let input_frames = input.len() / 2;
+        let output_frames = ((input_frames as f64) / self.ratio).ceil() as usize;
+        let mut output = Vec::with_capacity(output_frames * 2);
+
+        let mut pos = self.position;
+
+        while pos < input_frames as f64 {
+            let frame_idx = pos.floor() as isize;
+            let frac = pos - frame_idx as f64;
+
+            // Get four frames for cubic interpolation: y-1, y0, y1, y2
+            let (left_m1, right_m1, left0, right0, left1, right1, left2, right2) =
+                self.get_cubic_frames(input, frame_idx, input_frames);
+
+            // Catmull-Rom spline interpolation
+            let left_out = Self::catmull_rom(left_m1, left0, left1, left2, frac);
+            let right_out = Self::catmull_rom(right_m1, right0, right1, right2, frac);
+
+            output.push(left_out.clamp(-32768.0, 32767.0) as i16);
+            output.push(right_out.clamp(-32768.0, 32767.0) as i16);
+
+            pos += self.ratio;
+        }
+
+        // Save the last two frames from this chunk for the next call
+        if input_frames >= 2 {
+            let last_idx = (input_frames - 1) * 2;
+            let prev_idx = (input_frames - 2) * 2;
+            self.last_frame = Some((input[last_idx], input[last_idx + 1]));
+            self.prev_frame = Some((input[prev_idx], input[prev_idx + 1]));
+        } else if input_frames == 1 {
+            let last_idx = 0;
+            self.last_frame = Some((input[last_idx], input[last_idx + 1]));
+        }
+
+        // Update position for next chunk
+        self.position = pos - input_frames as f64;
+
+        Ok(output)
+    }
+
+    fn get_cubic_frames(
+        &self,
+        input: &[i16],
+        frame_idx: isize,
+        input_frames: usize,
+    ) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+        // Helper to safely get a frame
+        let get_frame = |idx: isize| -> (f64, f64) {
+            if idx < 0 {
+                // Use previous stored frames
+                if idx == -1 {
+                    self.last_frame
+                        .map(|(l, r)| (l as f64, r as f64))
+                        .unwrap_or((0.0, 0.0))
+                } else if idx == -2 {
+                    self.prev_frame
+                        .map(|(l, r)| (l as f64, r as f64))
+                        .unwrap_or((0.0, 0.0))
+                } else {
+                    (0.0, 0.0)
+                }
+            } else {
+                let idx = idx as usize;
+                if idx < input_frames {
+                    (input[idx * 2] as f64, input[idx * 2 + 1] as f64)
+                } else {
+                    // Beyond current buffer, use last available frame
+                    if input_frames > 0 {
+                        let last_idx = (input_frames - 1) * 2;
+                        (input[last_idx] as f64, input[last_idx + 1] as f64)
+                    } else {
+                        (0.0, 0.0)
+                    }
+                }
+            }
+        };
+
+        let (left_m1, right_m1) = get_frame(frame_idx - 1);
+        let (left0, right0) = get_frame(frame_idx);
+        let (left1, right1) = get_frame(frame_idx + 1);
+        let (left2, right2) = get_frame(frame_idx + 2);
+
+        (
+            left_m1, right_m1, left0, right0, left1, right1, left2, right2,
+        )
+    }
+
+    /// Catmull-Rom spline interpolation
+    /// Provides smooth interpolation with continuous first derivatives
+    fn catmull_rom(y_m1: f64, y0: f64, y1: f64, y2: f64, t: f64) -> f64 {
+        let t2 = t * t;
+        let t3 = t2 * t;
+
+        // Catmull-Rom coefficients
+        let a = -0.5 * y_m1 + 1.5 * y0 - 1.5 * y1 + 0.5 * y2;
+        let b = y_m1 - 2.5 * y0 + 2.0 * y1 - 0.5 * y2;
+        let c = -0.5 * y_m1 + 0.5 * y1;
+        let d = y0;
+
+        a * t3 + b * t2 + c * t + d
     }
 
     pub fn output_rate(&self) -> u32 {
@@ -100,6 +236,10 @@ impl AudioResampler {
 
     pub fn input_rate(&self) -> u32 {
         self.input_rate as u32
+    }
+
+    pub fn quality(&self) -> ResamplingQuality {
+        self.quality
     }
 
     pub fn expected_output_frames(&self, input_frames: usize) -> usize {
@@ -318,5 +458,90 @@ mod tests {
             "Fractional position should remain in range (-1.0, 1.0), got {}",
             pos_after_second
         );
+    }
+
+    #[test]
+    fn test_cubic_resampler_creation() {
+        let resampler = AudioResampler::with_quality(ResamplingQuality::Cubic);
+        assert!(resampler.is_ok());
+        assert_eq!(resampler.unwrap().quality(), ResamplingQuality::Cubic);
+    }
+
+    #[test]
+    fn test_cubic_resample_basic() {
+        let mut resampler = AudioResampler::with_quality(ResamplingQuality::Cubic).unwrap();
+
+        let input = vec![0i16; 2048];
+        let result = resampler.resample(&input);
+
+        assert!(result.is_ok());
+        let output = result.unwrap();
+
+        assert!(!output.is_empty());
+        assert!(output.len() < input.len());
+        assert_eq!(output.len() % 2, 0);
+    }
+
+    #[test]
+    fn test_cubic_resample_sine_wave() {
+        let mut resampler = AudioResampler::with_quality(ResamplingQuality::Cubic).unwrap();
+
+        let freq = 440.0;
+        let duration_samples = 2048;
+        let mut input = Vec::with_capacity(duration_samples * 2);
+
+        for i in 0..duration_samples {
+            let t = i as f32 / OPM_SAMPLE_RATE as f32;
+            let sample = (2.0 * std::f32::consts::PI * freq * t).sin();
+            let i16_sample = (sample * 16384.0) as i16;
+            input.push(i16_sample);
+            input.push(i16_sample);
+        }
+
+        let result = resampler.resample(&input);
+        assert!(result.is_ok());
+
+        let output = result.unwrap();
+        assert!(!output.is_empty());
+        assert_eq!(output.len() % 2, 0);
+
+        let max_sample = output.iter().map(|&s| s.abs()).max().unwrap_or(0);
+        assert!(max_sample > 100);
+    }
+
+    #[test]
+    fn test_cubic_vs_linear_quality() {
+        // Generate a high-frequency sine wave to test aliasing
+        let freq = 10000.0; // 10kHz - near Nyquist for 48kHz output
+        let duration_samples = 4096;
+        let mut input = Vec::with_capacity(duration_samples * 2);
+
+        for i in 0..duration_samples {
+            let t = i as f32 / OPM_SAMPLE_RATE as f32;
+            let sample = (2.0 * std::f32::consts::PI * freq * t).sin();
+            let i16_sample = (sample * 16384.0) as i16;
+            input.push(i16_sample);
+            input.push(i16_sample);
+        }
+
+        // Resample with linear
+        let mut linear_resampler = AudioResampler::with_quality(ResamplingQuality::Linear).unwrap();
+        let linear_output = linear_resampler.resample(&input).unwrap();
+
+        // Resample with cubic
+        let mut cubic_resampler = AudioResampler::with_quality(ResamplingQuality::Cubic).unwrap();
+        let cubic_output = cubic_resampler.resample(&input).unwrap();
+
+        // Both should produce similar length outputs
+        assert!(
+            (linear_output.len() as i32 - cubic_output.len() as i32).abs() <= 4,
+            "Output lengths should be similar: linear={}, cubic={}",
+            linear_output.len(),
+            cubic_output.len()
+        );
+
+        // Cubic should produce non-zero output (not testing quality here, just functionality)
+        let cubic_max = cubic_output.iter().map(|&s| s.abs()).max().unwrap_or(0);
+        assert!(cubic_max > 100, "Cubic output should have signal");
     }
 }

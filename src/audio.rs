@@ -30,10 +30,22 @@ pub struct AudioPlayer {
 
 impl AudioPlayer {
     pub fn new(player: Player) -> Result<Self> {
-        Self::new_with_log(player, None)
+        Self::new_with_quality(player, None, crate::resampler::ResamplingQuality::Linear)
     }
 
     pub fn new_with_log(player: Player, event_log: Option<EventLog>) -> Result<Self> {
+        Self::new_with_quality(
+            player,
+            event_log,
+            crate::resampler::ResamplingQuality::Linear,
+        )
+    }
+
+    pub fn new_with_quality(
+        player: Player,
+        event_log: Option<EventLog>,
+        resampling_quality: crate::resampler::ResamplingQuality,
+    ) -> Result<Self> {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
@@ -125,6 +137,7 @@ impl AudioPlayer {
                 wav_buffer_55k_clone,
                 wav_buffer_48k_clone,
                 event_log_for_thread,
+                resampling_quality,
             ) {
                 // Sample generation errors should always be logged
                 logging::log_always(&format!("Sample generation error: {}", e));
@@ -148,8 +161,10 @@ impl AudioPlayer {
         wav_buffer_55k: Arc<Mutex<Vec<i16>>>,
         wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
         event_log: Option<EventLog>,
+        resampling_quality: crate::resampler::ResamplingQuality,
     ) -> Result<()> {
-        let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
+        let mut resampler = AudioResampler::with_quality(resampling_quality)
+            .context("Failed to initialize resampler")?;
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
         let total_samples = player.total_samples();
 
