@@ -7,12 +7,12 @@ use std::sync::{Arc, Mutex};
 use anyhow::Context;
 use std::sync::atomic::Ordering;
 
+use crate::debug_wav;
 use crate::events::EventLog;
 use crate::player::Player;
 
 use crate::audio::AudioPlayer;
 use crate::ipc::pipe_windows::NamedPipe;
-use crate::wav_writer;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum ServerState {
@@ -160,6 +160,7 @@ impl Server {
                     Command::PlayJson { data } => {
                         logging::log_verbose("🎵 JSON データを読み込み中...");
 
+                        // Stop any existing playback
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
@@ -204,10 +205,6 @@ impl Server {
                     Command::Stop => {
                         logging::log_verbose("⏹️  音声再生を停止中...");
                         if let Some(mut player) = audio_player.take() {
-                            // Save WAV file in verbose mode before stopping
-                            if logging::is_verbose() {
-                                Self::save_wav_file(&player);
-                            }
                             player.stop();
                         }
 
@@ -220,10 +217,6 @@ impl Server {
                     Command::Shutdown => {
                         logging::log_always("🛑 シャットダウン要求を受信しました");
                         if let Some(mut player) = audio_player.take() {
-                            // Save WAV file in verbose mode before stopping
-                            if logging::is_verbose() {
-                                Self::save_wav_file(&player);
-                            }
                             player.stop();
                         }
                         self.shutdown_flag.store(true, Ordering::Relaxed);
@@ -287,31 +280,14 @@ impl Server {
             ));
         }
 
-        let player = Player::new(log);
-        AudioPlayer::new(player).context("Failed to create audio player")
-    }
-
-    fn save_wav_file(audio_player: &AudioPlayer) {
-        logging::log_verbose("\nWAVファイルを保存中...");
-        let wav_samples_55k = audio_player.get_wav_buffer_55k();
-        match wav_writer::write_wav(
-            wav_writer::DEFAULT_OUTPUT_FILENAME,
-            &wav_samples_55k,
-            Player::sample_rate(),
-        ) {
-            Ok(_) => {
-                logging::log_verbose(&format!(
-                    "✅ WAVファイルを作成しました: {}",
-                    wav_writer::DEFAULT_OUTPUT_FILENAME
-                ));
-            }
-            Err(e) => {
-                logging::log_always(&format!(
-                    "❌ エラー: WAVファイルの保存に失敗しました: {}",
-                    e
-                ));
-            }
-        }
+        let player = Player::new(log.clone());
+        // Pass the event log to AudioPlayer if in verbose mode
+        let event_log = if logging::is_verbose() {
+            Some(log)
+        } else {
+            None
+        };
+        AudioPlayer::new_with_log(player, event_log).context("Failed to create audio player")
     }
 }
 

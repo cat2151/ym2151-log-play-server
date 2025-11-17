@@ -4,6 +4,8 @@ use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
+use crate::debug_wav;
+use crate::events::EventLog;
 use crate::logging;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
@@ -22,10 +24,16 @@ pub struct AudioPlayer {
 
     wav_buffer_55k: Arc<Mutex<Vec<i16>>>,
     wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
+    #[allow(dead_code)] // Event log stored for potential future use
+    event_log: Option<EventLog>,
 }
 
 impl AudioPlayer {
     pub fn new(player: Player) -> Result<Self> {
+        Self::new_with_log(player, None)
+    }
+
+    pub fn new_with_log(player: Player, event_log: Option<EventLog>) -> Result<Self> {
         let host = cpal::default_host();
         let device = host
             .default_output_device()
@@ -108,6 +116,7 @@ impl AudioPlayer {
 
         stream.play().context("Failed to start audio stream")?;
 
+        let event_log_for_thread = event_log.clone();
         let generator_handle = std::thread::spawn(move || {
             if let Err(e) = Self::generate_samples_thread(
                 player,
@@ -115,6 +124,7 @@ impl AudioPlayer {
                 command_rx,
                 wav_buffer_55k_clone,
                 wav_buffer_48k_clone,
+                event_log_for_thread,
             ) {
                 // Sample generation errors should always be logged
                 logging::log_always(&format!("Sample generation error: {}", e));
@@ -127,6 +137,7 @@ impl AudioPlayer {
             generator_handle: Some(generator_handle),
             wav_buffer_55k,
             wav_buffer_48k,
+            event_log,
         })
     }
 
@@ -136,6 +147,7 @@ impl AudioPlayer {
         command_rx: Receiver<AudioCommand>,
         wav_buffer_55k: Arc<Mutex<Vec<i16>>>,
         wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
+        event_log: Option<EventLog>,
     ) -> Result<()> {
         let mut resampler = AudioResampler::new().context("Failed to initialize resampler")?;
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];
@@ -172,6 +184,44 @@ impl AudioPlayer {
                         tail_ms as u32
                     ));
                 }
+
+                // Save 4 WAV files if verbose mode and event_log is available
+                if logging::is_verbose() {
+                    if let Some(log) = event_log {
+                        logging::log_verbose("\n4つのWAVファイルを保存中...");
+
+                        // Get realtime buffers
+                        let realtime_55k = wav_buffer_55k.lock().unwrap().clone();
+                        let realtime_48k = wav_buffer_48k.lock().unwrap().clone();
+
+                        // Generate post-playback buffers
+                        match debug_wav::generate_post_playback_buffers(&log) {
+                            Ok((post_55k, post_48k)) => {
+                                // Save all 4 WAV files
+                                if let Err(e) = debug_wav::save_debug_wav_files(
+                                    &realtime_55k,
+                                    &realtime_48k,
+                                    &post_55k,
+                                    &post_48k,
+                                ) {
+                                    logging::log_always(&format!(
+                                        "⚠️  警告: WAVファイルの保存に失敗しました: {}",
+                                        e
+                                    ));
+                                } else {
+                                    logging::log_verbose("✅ 4つのWAVファイルの保存が完了しました");
+                                }
+                            }
+                            Err(e) => {
+                                logging::log_always(&format!(
+                                    "⚠️  警告: post-playbackバッファの生成に失敗しました: {}",
+                                    e
+                                ));
+                            }
+                        }
+                    }
+                }
+
                 break;
             }
 
