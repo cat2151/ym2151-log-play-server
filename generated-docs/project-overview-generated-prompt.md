@@ -1,4 +1,4 @@
-Last updated: 2025-11-17
+Last updated: 2025-11-18
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -84,12 +84,12 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
 ## 概要
 
 このプロジェクトは、YM2151（OPM）音源チップのレジスタイベントログを再生するプログラムです。
-スタンドアロンモードとサーバー・クライアントモードの両方で動作します。
+サーバー・クライアントモードで動作します。
 
 ### 主な機能
 
 - JSON音楽データをリアルタイム演奏
-- WAVファイル出力
+- WAVファイル出力（verbose時）
 - サーバーとして常駐し、バックグラウンドでリアルタイム演奏を続ける
 - クライアントから制御し、素早く別の演奏に切り替え
 - サーバー・クライアント通信に名前付きパイプを利用
@@ -129,18 +129,6 @@ fn main() -> anyhow::Result<()> {
 
 これにより、ライブラリユーザーがサーバーのライフサイクルを手動で管理する必要がなくなります。
 
-### スタンドアロンモード（通常の再生）
-
-JSONファイルを直接再生：
-
-```bash
-# ビルドして実行
-cargo run --release output_ym2151.json
-
-# または既にビルドされたバイナリを使用
-./target/release/ym2151-log-play-server output_ym2151.json
-```
-
 ### サーバー・クライアントモード
 
 #### サーバーの起動
@@ -148,7 +136,11 @@ cargo run --release output_ym2151.json
 サーバーとして常駐し、待機状態で起動：
 
 ```bash
-cargo run --release -- --server
+# 通常モード（ログファイルのみ）
+cargo run --release -- server
+
+# verbose モード（詳細ログとWAV出力）
+cargo run --release -- server --verbose
 ```
 
 #### クライアントからの操作
@@ -157,43 +149,43 @@ cargo run --release -- --server
 
 ```bash
 # 新しいJSONファイルを再生（演奏を切り替え）
-cargo run --release -- --client test_input.json
+cargo run --release -- client test_input.json
 
 # 演奏を停止（無音化）
-cargo run --release -- --client --stop
+cargo run --release -- client --stop
 
 # サーバーをシャットダウン
-cargo run --release -- --client --shutdown
+cargo run --release -- client --shutdown
 ```
 
 ### コマンドライン引数一覧
 
 ```
 使用方法:
-  ym2151-log-play-server <json_log_file>           # スタンドアロンモード
-  ym2151-log-play-server --server                  # サーバーモード
-  ym2151-log-play-server --client <json_log_file>  # 新規JSONを演奏
-  ym2151-log-play-server --client --stop           # 演奏停止
-  ym2151-log-play-server --client --shutdown       # サーバーシャットダウン
+  ym2151-log-play-server server [--verbose]         # サーバーモード
+  ym2151-log-play-server client <json_log_file>     # 新規JSONを演奏
+  ym2151-log-play-server client --stop              # 演奏停止
+  ym2151-log-play-server client --shutdown          # サーバーシャットダウン
 
 オプション:
-  --server           サーバーとして待機状態で起動
-  --client <file>    サーバーに新しいJSONファイルの演奏を指示
-  --client --stop    サーバーに演奏停止を指示
-  --client --shutdown サーバーにシャットダウンを指示
+  server           サーバーとして待機状態で起動
+  server --verbose サーバーを詳細ログモードで起動（WAVファイルを出力）
+  client <file>    サーバーに新しいJSONファイルの演奏を指示
+  client --stop    サーバーに演奏停止を指示
+  client --shutdown サーバーにシャットダウンを指示
 
 例:
-  # スタンドアロンで再生
-  ym2151-log-play-server output_ym2151.json
-
   # サーバー起動
-  ym2151-log-play-server --server
+  ym2151-log-play-server server
+
+  # サーバー起動（verbose、WAV出力あり）
+  ym2151-log-play-server server --verbose
 
   # 別のターミナルから: 演奏を切り替え
-  ym2151-log-play-server --client test_input.json
+  ym2151-log-play-server client test_input.json
 
   # 別のターミナルから: 演奏停止
-  ym2151-log-play-server --client --stop
+  ym2151-log-play-server client --stop
 
   # 別のターミナルから: サーバー終了
   ym2151-log-play-server --client --shutdown
@@ -743,6 +735,14 @@ MIT License
                                                                                   📖 50.md
                                                                                   📖 52.md
                                                                                   📖 54.md
+                                                                                  📖 56.md
+                                                                                  📖 58.md
+                                                                                  📖 60.md
+                                                                                  📖 62.md
+                                                                                  📖 64.md
+                                                                                  📖 66.md
+                                                                                  📖 68.md
+                                                                                  📖 70.md
                                                                                 📄 opm.c
                                                                                 📄 opm.h
                                                                                 📄 setup_ci_environment.sh
@@ -805,6 +805,14 @@ MIT License
                                                                                 📖 50.md
                                                                                 📖 52.md
                                                                                 📖 54.md
+                                                                                📖 56.md
+                                                                                📖 58.md
+                                                                                📖 60.md
+                                                                                📖 62.md
+                                                                                📖 64.md
+                                                                                📖 66.md
+                                                                                📖 68.md
+                                                                                📖 70.md
                                                                               📄 opm.c
                                                                               📄 opm.h
                                                                               📄 setup_ci_environment.sh
@@ -867,6 +875,14 @@ MIT License
                                                                               📖 50.md
                                                                               📖 52.md
                                                                               📖 54.md
+                                                                              📖 56.md
+                                                                              📖 58.md
+                                                                              📖 60.md
+                                                                              📖 62.md
+                                                                              📖 64.md
+                                                                              📖 66.md
+                                                                              📖 68.md
+                                                                              📖 70.md
                                                                             📄 opm.c
                                                                             📄 opm.h
                                                                             📄 setup_ci_environment.sh
@@ -929,6 +945,14 @@ MIT License
                                                                             📖 50.md
                                                                             📖 52.md
                                                                             📖 54.md
+                                                                            📖 56.md
+                                                                            📖 58.md
+                                                                            📖 60.md
+                                                                            📖 62.md
+                                                                            📖 64.md
+                                                                            📖 66.md
+                                                                            📖 68.md
+                                                                            📖 70.md
                                                                           📄 opm.c
                                                                           📄 opm.h
                                                                           📄 setup_ci_environment.sh
@@ -991,6 +1015,14 @@ MIT License
                                                                           📖 50.md
                                                                           📖 52.md
                                                                           📖 54.md
+                                                                          📖 56.md
+                                                                          📖 58.md
+                                                                          📖 60.md
+                                                                          📖 62.md
+                                                                          📖 64.md
+                                                                          📖 66.md
+                                                                          📖 68.md
+                                                                          📖 70.md
                                                                         📄 opm.c
                                                                         📄 opm.h
                                                                         📄 setup_ci_environment.sh
@@ -1053,6 +1085,14 @@ MIT License
                                                                         📖 50.md
                                                                         📖 52.md
                                                                         📖 54.md
+                                                                        📖 56.md
+                                                                        📖 58.md
+                                                                        📖 60.md
+                                                                        📖 62.md
+                                                                        📖 64.md
+                                                                        📖 66.md
+                                                                        📖 68.md
+                                                                        📖 70.md
                                                                       📄 opm.c
                                                                       📄 opm.h
                                                                       📄 setup_ci_environment.sh
@@ -1115,6 +1155,14 @@ MIT License
                                                                       📖 50.md
                                                                       📖 52.md
                                                                       📖 54.md
+                                                                      📖 56.md
+                                                                      📖 58.md
+                                                                      📖 60.md
+                                                                      📖 62.md
+                                                                      📖 64.md
+                                                                      📖 66.md
+                                                                      📖 68.md
+                                                                      📖 70.md
                                                                     📄 opm.c
                                                                     📄 opm.h
                                                                     📄 setup_ci_environment.sh
@@ -1177,6 +1225,14 @@ MIT License
                                                                     📖 50.md
                                                                     📖 52.md
                                                                     📖 54.md
+                                                                    📖 56.md
+                                                                    📖 58.md
+                                                                    📖 60.md
+                                                                    📖 62.md
+                                                                    📖 64.md
+                                                                    📖 66.md
+                                                                    📖 68.md
+                                                                    📖 70.md
                                                                   📄 opm.c
                                                                   📄 opm.h
                                                                   📄 setup_ci_environment.sh
@@ -1239,6 +1295,14 @@ MIT License
                                                                   📖 50.md
                                                                   📖 52.md
                                                                   📖 54.md
+                                                                  📖 56.md
+                                                                  📖 58.md
+                                                                  📖 60.md
+                                                                  📖 62.md
+                                                                  📖 64.md
+                                                                  📖 66.md
+                                                                  📖 68.md
+                                                                  📖 70.md
                                                                 📄 opm.c
                                                                 📄 opm.h
                                                                 📄 setup_ci_environment.sh
@@ -1301,6 +1365,14 @@ MIT License
                                                                 📖 50.md
                                                                 📖 52.md
                                                                 📖 54.md
+                                                                📖 56.md
+                                                                📖 58.md
+                                                                📖 60.md
+                                                                📖 62.md
+                                                                📖 64.md
+                                                                📖 66.md
+                                                                📖 68.md
+                                                                📖 70.md
                                                               📄 opm.c
                                                               📄 opm.h
                                                               📄 setup_ci_environment.sh
@@ -1363,6 +1435,14 @@ MIT License
                                                               📖 50.md
                                                               📖 52.md
                                                               📖 54.md
+                                                              📖 56.md
+                                                              📖 58.md
+                                                              📖 60.md
+                                                              📖 62.md
+                                                              📖 64.md
+                                                              📖 66.md
+                                                              📖 68.md
+                                                              📖 70.md
                                                             📄 opm.c
                                                             📄 opm.h
                                                             📄 setup_ci_environment.sh
@@ -1425,6 +1505,14 @@ MIT License
                                                             📖 50.md
                                                             📖 52.md
                                                             📖 54.md
+                                                            📖 56.md
+                                                            📖 58.md
+                                                            📖 60.md
+                                                            📖 62.md
+                                                            📖 64.md
+                                                            📖 66.md
+                                                            📖 68.md
+                                                            📖 70.md
                                                           📄 opm.c
                                                           📄 opm.h
                                                           📄 setup_ci_environment.sh
@@ -1487,6 +1575,14 @@ MIT License
                                                           📖 50.md
                                                           📖 52.md
                                                           📖 54.md
+                                                          📖 56.md
+                                                          📖 58.md
+                                                          📖 60.md
+                                                          📖 62.md
+                                                          📖 64.md
+                                                          📖 66.md
+                                                          📖 68.md
+                                                          📖 70.md
                                                         📄 opm.c
                                                         📄 opm.h
                                                         📄 setup_ci_environment.sh
@@ -1549,6 +1645,14 @@ MIT License
                                                         📖 50.md
                                                         📖 52.md
                                                         📖 54.md
+                                                        📖 56.md
+                                                        📖 58.md
+                                                        📖 60.md
+                                                        📖 62.md
+                                                        📖 64.md
+                                                        📖 66.md
+                                                        📖 68.md
+                                                        📖 70.md
                                                       📄 opm.c
                                                       📄 opm.h
                                                       📄 setup_ci_environment.sh
@@ -1611,6 +1715,14 @@ MIT License
                                                       📖 50.md
                                                       📖 52.md
                                                       📖 54.md
+                                                      📖 56.md
+                                                      📖 58.md
+                                                      📖 60.md
+                                                      📖 62.md
+                                                      📖 64.md
+                                                      📖 66.md
+                                                      📖 68.md
+                                                      📖 70.md
                                                     📄 opm.c
                                                     📄 opm.h
                                                     📄 setup_ci_environment.sh
@@ -1673,6 +1785,14 @@ MIT License
                                                     📖 50.md
                                                     📖 52.md
                                                     📖 54.md
+                                                    📖 56.md
+                                                    📖 58.md
+                                                    📖 60.md
+                                                    📖 62.md
+                                                    📖 64.md
+                                                    📖 66.md
+                                                    📖 68.md
+                                                    📖 70.md
                                                   📄 opm.c
                                                   📄 opm.h
                                                   📄 setup_ci_environment.sh
@@ -1735,6 +1855,14 @@ MIT License
                                                   📖 50.md
                                                   📖 52.md
                                                   📖 54.md
+                                                  📖 56.md
+                                                  📖 58.md
+                                                  📖 60.md
+                                                  📖 62.md
+                                                  📖 64.md
+                                                  📖 66.md
+                                                  📖 68.md
+                                                  📖 70.md
                                                 📄 opm.c
                                                 📄 opm.h
                                                 📄 setup_ci_environment.sh
@@ -1797,6 +1925,14 @@ MIT License
                                                 📖 50.md
                                                 📖 52.md
                                                 📖 54.md
+                                                📖 56.md
+                                                📖 58.md
+                                                📖 60.md
+                                                📖 62.md
+                                                📖 64.md
+                                                📖 66.md
+                                                📖 68.md
+                                                📖 70.md
                                               📄 opm.c
                                               📄 opm.h
                                               📄 setup_ci_environment.sh
@@ -1847,6 +1983,7 @@ MIT License
                                               📄 test_logging_non_verbose.rs
                                               📄 test_logging_verbose.rs
                                             📁 generated-docs/
+                                              📖 development-status-generated-prompt.md
                                             📁 issue-notes/
                                               📖 34.md
                                               📖 36.md
@@ -1859,6 +1996,14 @@ MIT License
                                               📖 50.md
                                               📖 52.md
                                               📖 54.md
+                                              📖 56.md
+                                              📖 58.md
+                                              📖 60.md
+                                              📖 62.md
+                                              📖 64.md
+                                              📖 66.md
+                                              📖 68.md
+                                              📖 70.md
                                             📄 opm.c
                                             📄 opm.h
                                             📄 setup_ci_environment.sh
@@ -1909,6 +2054,7 @@ MIT License
                                             📄 test_logging_non_verbose.rs
                                             📄 test_logging_verbose.rs
                                           📁 generated-docs/
+                                            📖 development-status-generated-prompt.md
                                           📁 issue-notes/
                                             📖 34.md
                                             📖 36.md
@@ -1921,6 +2067,14 @@ MIT License
                                             📖 50.md
                                             📖 52.md
                                             📖 54.md
+                                            📖 56.md
+                                            📖 58.md
+                                            📖 60.md
+                                            📖 62.md
+                                            📖 64.md
+                                            📖 66.md
+                                            📖 68.md
+                                            📖 70.md
                                           📄 opm.c
                                           📄 opm.h
                                           📄 setup_ci_environment.sh
@@ -1971,6 +2125,7 @@ MIT License
                                           📄 test_logging_non_verbose.rs
                                           📄 test_logging_verbose.rs
                                         📁 generated-docs/
+                                          📖 development-status-generated-prompt.md
                                         📁 issue-notes/
                                           📖 34.md
                                           📖 36.md
@@ -1983,6 +2138,14 @@ MIT License
                                           📖 50.md
                                           📖 52.md
                                           📖 54.md
+                                          📖 56.md
+                                          📖 58.md
+                                          📖 60.md
+                                          📖 62.md
+                                          📖 64.md
+                                          📖 66.md
+                                          📖 68.md
+                                          📖 70.md
                                         📄 opm.c
                                         📄 opm.h
                                         📄 setup_ci_environment.sh
@@ -2033,6 +2196,7 @@ MIT License
                                         📄 test_logging_non_verbose.rs
                                         📄 test_logging_verbose.rs
                                       📁 generated-docs/
+                                        📖 development-status-generated-prompt.md
                                       📁 issue-notes/
                                         📖 34.md
                                         📖 36.md
@@ -2045,6 +2209,14 @@ MIT License
                                         📖 50.md
                                         📖 52.md
                                         📖 54.md
+                                        📖 56.md
+                                        📖 58.md
+                                        📖 60.md
+                                        📖 62.md
+                                        📖 64.md
+                                        📖 66.md
+                                        📖 68.md
+                                        📖 70.md
                                       📄 opm.c
                                       📄 opm.h
                                       📄 setup_ci_environment.sh
@@ -2095,6 +2267,7 @@ MIT License
                                       📄 test_logging_non_verbose.rs
                                       📄 test_logging_verbose.rs
                                     📁 generated-docs/
+                                      📖 development-status-generated-prompt.md
                                     📁 issue-notes/
                                       📖 34.md
                                       📖 36.md
@@ -2107,6 +2280,14 @@ MIT License
                                       📖 50.md
                                       📖 52.md
                                       📖 54.md
+                                      📖 56.md
+                                      📖 58.md
+                                      📖 60.md
+                                      📖 62.md
+                                      📖 64.md
+                                      📖 66.md
+                                      📖 68.md
+                                      📖 70.md
                                     📄 opm.c
                                     📄 opm.h
                                     📄 setup_ci_environment.sh
@@ -2157,6 +2338,7 @@ MIT License
                                     📄 test_logging_non_verbose.rs
                                     📄 test_logging_verbose.rs
                                   📁 generated-docs/
+                                    📖 development-status-generated-prompt.md
                                   📁 issue-notes/
                                     📖 34.md
                                     📖 36.md
@@ -2169,6 +2351,14 @@ MIT License
                                     📖 50.md
                                     📖 52.md
                                     📖 54.md
+                                    📖 56.md
+                                    📖 58.md
+                                    📖 60.md
+                                    📖 62.md
+                                    📖 64.md
+                                    📖 66.md
+                                    📖 68.md
+                                    📖 70.md
                                   📄 opm.c
                                   📄 opm.h
                                   📄 setup_ci_environment.sh
@@ -2219,6 +2409,7 @@ MIT License
                                   📄 test_logging_non_verbose.rs
                                   📄 test_logging_verbose.rs
                                 📁 generated-docs/
+                                  📖 development-status-generated-prompt.md
                                 📁 issue-notes/
                                   📖 34.md
                                   📖 36.md
@@ -2231,6 +2422,14 @@ MIT License
                                   📖 50.md
                                   📖 52.md
                                   📖 54.md
+                                  📖 56.md
+                                  📖 58.md
+                                  📖 60.md
+                                  📖 62.md
+                                  📖 64.md
+                                  📖 66.md
+                                  📖 68.md
+                                  📖 70.md
                                 📄 opm.c
                                 📄 opm.h
                                 📄 setup_ci_environment.sh
@@ -2281,6 +2480,7 @@ MIT License
                                 📄 test_logging_non_verbose.rs
                                 📄 test_logging_verbose.rs
                               📁 generated-docs/
+                                📖 development-status-generated-prompt.md
                               📁 issue-notes/
                                 📖 34.md
                                 📖 36.md
@@ -2293,6 +2493,14 @@ MIT License
                                 📖 50.md
                                 📖 52.md
                                 📖 54.md
+                                📖 56.md
+                                📖 58.md
+                                📖 60.md
+                                📖 62.md
+                                📖 64.md
+                                📖 66.md
+                                📖 68.md
+                                📖 70.md
                               📄 opm.c
                               📄 opm.h
                               📄 setup_ci_environment.sh
@@ -2343,6 +2551,7 @@ MIT License
                               📄 test_logging_non_verbose.rs
                               📄 test_logging_verbose.rs
                             📁 generated-docs/
+                              📖 development-status-generated-prompt.md
                             📁 issue-notes/
                               📖 34.md
                               📖 36.md
@@ -2355,6 +2564,14 @@ MIT License
                               📖 50.md
                               📖 52.md
                               📖 54.md
+                              📖 56.md
+                              📖 58.md
+                              📖 60.md
+                              📖 62.md
+                              📖 64.md
+                              📖 66.md
+                              📖 68.md
+                              📖 70.md
                             📄 opm.c
                             📄 opm.h
                             📄 setup_ci_environment.sh
@@ -2405,6 +2622,7 @@ MIT License
                             📄 test_logging_non_verbose.rs
                             📄 test_logging_verbose.rs
                           📁 generated-docs/
+                            📖 development-status-generated-prompt.md
                           📁 issue-notes/
                             📖 34.md
                             📖 36.md
@@ -2417,6 +2635,14 @@ MIT License
                             📖 50.md
                             📖 52.md
                             📖 54.md
+                            📖 56.md
+                            📖 58.md
+                            📖 60.md
+                            📖 62.md
+                            📖 64.md
+                            📖 66.md
+                            📖 68.md
+                            📖 70.md
                           📄 opm.c
                           📄 opm.h
                           📄 setup_ci_environment.sh
@@ -2467,6 +2693,7 @@ MIT License
                           📄 test_logging_non_verbose.rs
                           📄 test_logging_verbose.rs
                         📁 generated-docs/
+                          📖 development-status-generated-prompt.md
                         📁 issue-notes/
                           📖 34.md
                           📖 36.md
@@ -2479,6 +2706,14 @@ MIT License
                           📖 50.md
                           📖 52.md
                           📖 54.md
+                          📖 56.md
+                          📖 58.md
+                          📖 60.md
+                          📖 62.md
+                          📖 64.md
+                          📖 66.md
+                          📖 68.md
+                          📖 70.md
                         📄 opm.c
                         📄 opm.h
                         📄 setup_ci_environment.sh
@@ -2529,6 +2764,7 @@ MIT License
                         📄 test_logging_non_verbose.rs
                         📄 test_logging_verbose.rs
                       📁 generated-docs/
+                        📖 development-status-generated-prompt.md
                       📁 issue-notes/
                         📖 34.md
                         📖 36.md
@@ -2541,6 +2777,14 @@ MIT License
                         📖 50.md
                         📖 52.md
                         📖 54.md
+                        📖 56.md
+                        📖 58.md
+                        📖 60.md
+                        📖 62.md
+                        📖 64.md
+                        📖 66.md
+                        📖 68.md
+                        📖 70.md
                       📄 opm.c
                       📄 opm.h
                       📄 setup_ci_environment.sh
@@ -2591,6 +2835,7 @@ MIT License
                       📄 test_logging_non_verbose.rs
                       📄 test_logging_verbose.rs
                     📁 generated-docs/
+                      📖 development-status-generated-prompt.md
                     📁 issue-notes/
                       📖 34.md
                       📖 36.md
@@ -2603,6 +2848,14 @@ MIT License
                       📖 50.md
                       📖 52.md
                       📖 54.md
+                      📖 56.md
+                      📖 58.md
+                      📖 60.md
+                      📖 62.md
+                      📖 64.md
+                      📖 66.md
+                      📖 68.md
+                      📖 70.md
                     📄 opm.c
                     📄 opm.h
                     📄 setup_ci_environment.sh
@@ -2653,6 +2906,7 @@ MIT License
                     📄 test_logging_non_verbose.rs
                     📄 test_logging_verbose.rs
                   📁 generated-docs/
+                    📖 development-status-generated-prompt.md
                   📁 issue-notes/
                     📖 34.md
                     📖 36.md
@@ -2665,6 +2919,14 @@ MIT License
                     📖 50.md
                     📖 52.md
                     📖 54.md
+                    📖 56.md
+                    📖 58.md
+                    📖 60.md
+                    📖 62.md
+                    📖 64.md
+                    📖 66.md
+                    📖 68.md
+                    📖 70.md
                   📄 opm.c
                   📄 opm.h
                   📄 setup_ci_environment.sh
@@ -2715,6 +2977,7 @@ MIT License
                   📄 test_logging_non_verbose.rs
                   📄 test_logging_verbose.rs
                 📁 generated-docs/
+                  📖 development-status-generated-prompt.md
                 📁 issue-notes/
                   📖 34.md
                   📖 36.md
@@ -2727,6 +2990,14 @@ MIT License
                   📖 50.md
                   📖 52.md
                   📖 54.md
+                  📖 56.md
+                  📖 58.md
+                  📖 60.md
+                  📖 62.md
+                  📖 64.md
+                  📖 66.md
+                  📖 68.md
+                  📖 70.md
                 📄 opm.c
                 📄 opm.h
                 📄 setup_ci_environment.sh
@@ -2790,6 +3061,14 @@ MIT License
                 📖 50.md
                 📖 52.md
                 📖 54.md
+                📖 56.md
+                📖 58.md
+                📖 60.md
+                📖 62.md
+                📖 64.md
+                📖 66.md
+                📖 68.md
+                📖 70.md
               📄 opm.c
               📄 opm.h
               📄 setup_ci_environment.sh
@@ -2853,6 +3132,14 @@ MIT License
               📖 50.md
               📖 52.md
               📖 54.md
+              📖 56.md
+              📖 58.md
+              📖 60.md
+              📖 62.md
+              📖 64.md
+              📖 66.md
+              📖 68.md
+              📖 70.md
             📄 opm.c
             📄 opm.h
             📄 setup_ci_environment.sh
@@ -2916,6 +3203,14 @@ MIT License
             📖 50.md
             📖 52.md
             📖 54.md
+            📖 56.md
+            📖 58.md
+            📖 60.md
+            📖 62.md
+            📖 64.md
+            📖 66.md
+            📖 68.md
+            📖 70.md
           📄 opm.c
           📄 opm.h
           📄 setup_ci_environment.sh
@@ -2979,6 +3274,14 @@ MIT License
           📖 50.md
           📖 52.md
           📖 54.md
+          📖 56.md
+          📖 58.md
+          📖 60.md
+          📖 62.md
+          📖 64.md
+          📖 66.md
+          📖 68.md
+          📖 70.md
         📄 opm.c
         📄 opm.h
         📄 setup_ci_environment.sh
@@ -3042,6 +3345,14 @@ MIT License
         📖 50.md
         📖 52.md
         📖 54.md
+        📖 56.md
+        📖 58.md
+        📖 60.md
+        📖 62.md
+        📖 64.md
+        📖 66.md
+        📖 68.md
+        📖 70.md
       📄 opm.c
       📄 opm.h
       📄 setup_ci_environment.sh
@@ -3105,6 +3416,14 @@ MIT License
       📖 50.md
       📖 52.md
       📖 54.md
+      📖 56.md
+      📖 58.md
+      📖 60.md
+      📖 62.md
+      📖 64.md
+      📖 66.md
+      📖 68.md
+      📖 70.md
     📄 opm.c
     📄 opm.h
     📄 setup_ci_environment.sh
@@ -3168,6 +3487,14 @@ MIT License
     📖 50.md
     📖 52.md
     📖 54.md
+    📖 56.md
+    📖 58.md
+    📖 60.md
+    📖 62.md
+    📖 64.md
+    📖 66.md
+    📖 68.md
+    📖 70.md
   📄 opm.c
   📄 opm.h
   📄 setup_ci_environment.sh
@@ -3231,6 +3558,14 @@ MIT License
   📖 50.md
   📖 52.md
   📖 54.md
+  📖 56.md
+  📖 58.md
+  📖 60.md
+  📖 62.md
+  📖 64.md
+  📖 66.md
+  📖 68.md
+  📖 70.md
 📄 opm.c
 📄 opm.h
 📄 setup_ci_environment.sh
@@ -3350,4 +3685,4 @@ tests/fixtures/complex.json
 
 
 ---
-Generated at: 2025-11-17 07:01:42 JST
+Generated at: 2025-11-18 07:01:38 JST

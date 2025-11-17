@@ -1,4 +1,4 @@
-Last updated: 2025-11-17
+Last updated: 2025-11-18
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -221,6 +221,14 @@ Last updated: 2025-11-17
 - issue-notes/50.md
 - issue-notes/52.md
 - issue-notes/54.md
+- issue-notes/56.md
+- issue-notes/58.md
+- issue-notes/60.md
+- issue-notes/62.md
+- issue-notes/64.md
+- issue-notes/66.md
+- issue-notes/68.md
+- issue-notes/70.md
 - opm.c
 - opm.h
 - output_ym2151.json
@@ -269,39 +277,30 @@ Last updated: 2025-11-17
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-96d1227 Merge pull request #55 from cat2151/copilot/add-wav-output-functions
-04ced67 Change debug WAV control from environment variable to verbose flag
-fc7517e Add integration tests and fix conditional compilation
-e3b6ee7 Add comprehensive documentation to debug_wav module
-7cce4d0 Add debug WAV output functionality for issue #54
-082c76e Initial plan
-8cd09b0 Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-163084c 元になったprojectとの関連を修正
-4965f26 Auto-translate README.ja.md to README.md [auto]
-fabc1cf Update README.ja.md with situation section
+87e4897 Merge pull request #71 from cat2151/copilot/change-default-resampling-method
+6bfabd6 Update error message to include --low-quality-resampling flag
+28ae7a4 Change default resampling to high-quality, add --low-quality-resampling flag
+713a425 Initial plan
+0b93935 Add issue note for #70 [auto]
+3033182 Merge pull request #69 from cat2151/copilot/apply-high-quality-resampling
+5c0db1e Apply high-quality resampling to post-playback WAV generation
+74cda81 Initial plan
+2b89280 Add issue note for #68 [auto]
+a4314de Merge branches 'main' and 'main' of github.com:cat2151/ym2151-log-play-server into main
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
-README.ja.md
-README.md
-examples/test_client_non_verbose.rs
-examples/test_client_verbose.rs
-examples/test_logging_non_verbose.rs
-examples/test_logging_verbose.rs
-issue-notes/50.md
-issue-notes/52.md
-issue-notes/54.md
-setup_ci_environment.sh
+Cargo.lock
+Cargo.toml
+issue-notes/66.md
+issue-notes/68.md
+issue-notes/70.md
 src/audio.rs
-src/client.rs
 src/debug_wav.rs
-src/events.rs
-src/lib.rs
 src/main.rs
-tests/client_test.rs
-tests/client_verbose_test.rs
+src/resampler.rs
+src/server.rs
 tests/debug_wav_test.rs
 
 
 ---
-Generated at: 2025-11-17 07:01:42 JST
+Generated at: 2025-11-18 07:01:38 JST
