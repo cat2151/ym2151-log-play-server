@@ -11,6 +11,7 @@ pub struct AudioResampler {
     output_rate: f64,
     ratio: f64,
     position: f64,
+    last_frame: Option<(i16, i16)>, // Store last stereo sample for interpolation across chunks
 }
 
 impl AudioResampler {
@@ -28,6 +29,7 @@ impl AudioResampler {
             output_rate,
             ratio,
             position: 0.0,
+            last_frame: None,
         })
     }
 
@@ -46,20 +48,31 @@ impl AudioResampler {
 
         let mut pos = self.position;
 
-        while (pos as usize + 1) * 2 < input.len() {
-            let frame_idx = pos as usize;
+        while pos < input_frames as f64 {
+            let frame_idx = pos.floor() as isize; // Use floor to handle negative positions correctly
             let frac = pos - frame_idx as f64;
 
-            if frame_idx + 1 >= input_frames {
+            // Get the current and next frames for interpolation
+            let (left0, right0, left1, right1) = if frame_idx < 0 && self.last_frame.is_some() {
+                // Negative position means we need the last frame from the previous chunk
+                let (last_left, last_right) = self.last_frame.unwrap();
+                let curr_left = input[0] as f64;
+                let curr_right = input[1] as f64;
+                (last_left as f64, last_right as f64, curr_left, curr_right)
+            } else if frame_idx >= 0 && (frame_idx as usize) + 1 < input_frames {
+                // Normal case: interpolate between two frames in the current chunk
+                let idx = frame_idx as usize;
+                let left0 = input[idx * 2] as f64;
+                let right0 = input[idx * 2 + 1] as f64;
+                let left1 = input[(idx + 1) * 2] as f64;
+                let right1 = input[(idx + 1) * 2 + 1] as f64;
+                (left0, right0, left1, right1)
+            } else {
+                // We've reached the end of the chunk
                 break;
-            }
+            };
 
-            let left0 = input[frame_idx * 2] as f64;
-            let left1 = input[(frame_idx + 1) * 2] as f64;
             let left_out = left0 + (left1 - left0) * frac;
-
-            let right0 = input[frame_idx * 2 + 1] as f64;
-            let right1 = input[(frame_idx + 1) * 2 + 1] as f64;
             let right_out = right0 + (right1 - right0) * frac;
 
             output.push(left_out.clamp(-32768.0, 32767.0) as i16);
@@ -68,10 +81,15 @@ impl AudioResampler {
             pos += self.ratio;
         }
 
-        self.position = pos - input_frames as f64;
-        if self.position < 0.0 {
-            self.position = 0.0;
+        // Save the last frame from this chunk for the next call
+        if input_frames > 0 {
+            let last_idx = (input_frames - 1) * 2;
+            self.last_frame = Some((input[last_idx], input[last_idx + 1]));
         }
+
+        // Update position for next chunk
+        // Keep negative positions - they represent a "head start" on the next chunk
+        self.position = pos - input_frames as f64;
 
         Ok(output)
     }
@@ -281,27 +299,24 @@ mod tests {
         let input1 = vec![100i16; 100 * 2]; // 100 stereo frames
         let _output1 = resampler.resample(&input1).unwrap();
 
-        // Position should be non-zero after processing
+        // Position should be preserved after processing
         let pos_after_first = resampler.position;
-        assert!(pos_after_first >= 0.0, "Position should be non-negative");
         assert!(
-            pos_after_first < 1.0,
-            "Fractional position should be less than 1.0"
+            pos_after_first > -1.0 && pos_after_first < 1.0,
+            "Fractional position should be in range (-1.0, 1.0), got {}",
+            pos_after_first
         );
 
         // Process second chunk
         let input2 = vec![200i16; 100 * 2];
         let _output2 = resampler.resample(&input2).unwrap();
 
-        // Position state should continue to evolve
+        // Position state should continue to evolve and remain in valid range
         let pos_after_second = resampler.position;
         assert!(
-            pos_after_second >= 0.0,
-            "Position should remain non-negative"
-        );
-        assert!(
-            pos_after_second < 1.0,
-            "Fractional position should remain less than 1.0"
+            pos_after_second > -1.0 && pos_after_second < 1.0,
+            "Fractional position should remain in range (-1.0, 1.0), got {}",
+            pos_after_second
         );
     }
 }
