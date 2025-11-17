@@ -189,7 +189,7 @@ impl Server {
                         let json_result = serde_json::to_string(&data);
 
                         match json_result {
-                            Ok(json_str) => match Self::load_and_start_playback(&json_str, true) {
+                            Ok(json_str) => match self.load_and_start_playback(&json_str, true) {
                                 Ok(player) => {
                                     audio_player = Some(player);
                                     logging::log_verbose(
@@ -284,7 +284,7 @@ impl Server {
         self.shutdown_flag.load(Ordering::Relaxed)
     }
 
-    fn load_and_start_playback(data: &str, is_json_string: bool) -> Result<AudioPlayer> {
+    fn load_and_start_playback(&self, data: &str, is_json_string: bool) -> Result<AudioPlayer> {
         let log = if is_json_string {
             // Parse as JSON string directly
             EventLog::from_json_str(data).with_context(|| "Failed to parse JSON string data")?
