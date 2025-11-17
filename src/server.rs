@@ -7,6 +7,7 @@ use std::sync::{Arc, Mutex};
 use anyhow::Context;
 use std::sync::atomic::Ordering;
 
+use crate::debug_wav;
 use crate::events::EventLog;
 use crate::player::Player;
 
@@ -159,6 +160,7 @@ impl Server {
                     Command::PlayJson { data } => {
                         logging::log_verbose("🎵 JSON データを読み込み中...");
 
+                        // Stop any existing playback
                         if let Some(mut player) = audio_player.take() {
                             player.stop();
                         }
@@ -278,8 +280,14 @@ impl Server {
             ));
         }
 
-        let player = Player::new(log);
-        AudioPlayer::new(player).context("Failed to create audio player")
+        let player = Player::new(log.clone());
+        // Pass the event log to AudioPlayer if in verbose mode
+        let event_log = if logging::is_verbose() {
+            Some(log)
+        } else {
+            None
+        };
+        AudioPlayer::new_with_log(player, event_log).context("Failed to create audio player")
     }
 }
 

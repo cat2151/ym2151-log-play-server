@@ -2,6 +2,8 @@
 //!
 //! These tests verify that the client can send commands to a mock server using the binary protocol.
 
+#![cfg(windows)]
+
 mod test_utils;
 
 mod client_integration_tests {

@@ -3,6 +3,8 @@
 //! These tests verify that the client can send JSON string data directly via named pipe
 //! using the new binary protocol.
 
+#![cfg(windows)]
+
 mod test_utils;
 
 mod client_json_integration_tests {
