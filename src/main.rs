@@ -67,7 +67,9 @@ fn main() {
                         eprintln!("❌ エラー: 不明なオプション: {}", arg);
                         eprintln!();
                         eprintln!("使用方法:");
-                        eprintln!("  ym2151-log-play-server server [--verbose]");
+                        eprintln!(
+                            "  ym2151-log-play-server server [--verbose] [--low-quality-resampling]"
+                        );
                         eprintln!("  ym2151-log-play-server client <JSON_FILE> [--verbose]");
                         eprintln!("  ym2151-log-play-server client --stop [--verbose]");
                         eprintln!("  ym2151-log-play-server client --shutdown [--verbose]");
