@@ -1,6 +1,8 @@
 use crate::events::{EventLog, RegisterEvent};
 use crate::opm::OpmChip;
 use crate::resampler::OPM_SAMPLE_RATE;
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 
 const OPM_ADDRESS_REGISTER: u8 = 0;
 const OPM_DATA_REGISTER: u8 = 1;
@@ -11,20 +13,24 @@ const SILENCE_DURATION_MS: u32 = 100;
 const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 
 #[derive(Debug, Clone)]
-struct ProcessedEvent {
-    time: u32,
+pub struct ProcessedEvent {
+    pub time: u32,
 
-    port: u8,
+    pub port: u8,
 
-    value: u8,
+    pub value: u8,
 }
 
 pub struct Player {
     chip: OpmChip,
 
+    // Static event playback (original mode)
     events: Vec<ProcessedEvent>,
-
     next_event_idx: usize,
+
+    // Interactive mode support
+    interactive_mode: bool,
+    scheduled_events: Arc<Mutex<VecDeque<ProcessedEvent>>>,
 
     samples_played: u32,
 
@@ -38,9 +44,71 @@ impl Player {
             chip: OpmChip::new(),
             events,
             next_event_idx: 0,
+            interactive_mode: false,
+            scheduled_events: Arc::new(Mutex::new(VecDeque::new())),
             samples_played: 0,
             consecutive_silent_samples: 0,
         }
+    }
+
+    /// Create a new Player in interactive mode
+    pub fn new_interactive() -> Self {
+        Self {
+            chip: OpmChip::new(),
+            events: Vec::new(),
+            next_event_idx: 0,
+            interactive_mode: true,
+            scheduled_events: Arc::new(Mutex::new(VecDeque::new())),
+            samples_played: 0,
+            consecutive_silent_samples: 0,
+        }
+    }
+
+    /// Get a handle to the scheduled events queue for interactive mode
+    pub fn get_event_queue(&self) -> Arc<Mutex<VecDeque<ProcessedEvent>>> {
+        self.scheduled_events.clone()
+    }
+
+    /// Add a register write to the interactive event queue
+    pub fn schedule_register_write(&self, scheduled_time: u32, addr: u8, data: u8) {
+        if !self.interactive_mode {
+            return;
+        }
+
+        let mut queue = self.scheduled_events.lock().unwrap();
+
+        // Add address write
+        queue.push_back(ProcessedEvent {
+            time: scheduled_time,
+            port: OPM_ADDRESS_REGISTER,
+            value: addr,
+        });
+
+        // Add data write with delay
+        queue.push_back(ProcessedEvent {
+            time: scheduled_time + DELAY_SAMPLES,
+            port: OPM_DATA_REGISTER,
+            value: data,
+        });
+
+        // Keep queue sorted by time (simple insertion sort for small additions)
+        // In practice, events are typically added in order, so this is efficient
+        let len = queue.len();
+        if len >= 2 {
+            let last_idx = len - 1;
+            let second_last_idx = len - 2;
+            if queue[last_idx].time < queue[second_last_idx].time {
+                // Need to sort - convert to vec, sort, and rebuild
+                let mut vec: Vec<_> = queue.drain(..).collect();
+                vec.sort_by_key(|e| e.time);
+                queue.extend(vec);
+            }
+        }
+    }
+
+    /// Check if running in interactive mode
+    pub fn is_interactive(&self) -> bool {
+        self.interactive_mode
     }
 
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
@@ -76,14 +144,29 @@ impl Player {
         let num_samples = buffer.len() / 2;
 
         for i in 0..num_samples {
-            while self.next_event_idx < self.events.len() {
-                let event = &self.events[self.next_event_idx];
+            // Process events from the appropriate source
+            if self.interactive_mode {
+                // Interactive mode: process from VecDeque
+                let mut queue = self.scheduled_events.lock().unwrap();
+                while let Some(event) = queue.front() {
+                    if event.time <= self.samples_played {
+                        let event = queue.pop_front().unwrap();
+                        self.chip.write(event.port, event.value);
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                // Static mode: process from Vec
+                while self.next_event_idx < self.events.len() {
+                    let event = &self.events[self.next_event_idx];
 
-                if event.time <= self.samples_played {
-                    self.chip.write(event.port, event.value);
-                    self.next_event_idx += 1;
-                } else {
-                    break;
+                    if event.time <= self.samples_played {
+                        self.chip.write(event.port, event.value);
+                        self.next_event_idx += 1;
+                    } else {
+                        break;
+                    }
                 }
             }
 
@@ -101,7 +184,13 @@ impl Player {
             self.samples_played += 1;
         }
 
-        self.next_event_idx < self.events.len()
+        // In interactive mode, always return true (continuous streaming)
+        // In static mode, return whether there are more events
+        if self.interactive_mode {
+            true
+        } else {
+            self.next_event_idx < self.events.len()
+        }
     }
 
     pub fn total_samples(&self) -> u32 {
@@ -121,6 +210,10 @@ impl Player {
     }
 
     pub fn is_complete(&self) -> bool {
+        // Interactive mode never completes
+        if self.interactive_mode {
+            return false;
+        }
         self.next_event_idx >= self.events.len()
     }
 

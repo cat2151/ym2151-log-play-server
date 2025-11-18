@@ -64,6 +64,46 @@ The `ensure_server_ready()` function automatically performs the following action
 
 This eliminates the need for library users to manually manage the server's lifecycle.
 
+### Interactive Mode (for Real-Time Register Streaming)
+
+Interactive mode enables continuous audio streaming with real-time register writes, ideal for applications like tone editors that need immediate audio feedback without playback gaps.
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // Ensure server is ready
+    client::ensure_server_ready("ym2151-log-play-server")?;
+    
+    // Start interactive mode
+    client::start_interactive()?;
+    
+    // Send register writes with timing
+    client::write_register(0, 0x08, 0x00)?;     // Immediate: Key off all channels
+    client::write_register(50, 0x28, 0x48)?;    // +50ms: Set note frequency
+    client::write_register(50, 0x08, 0x78)?;    // +50ms: Key on channel 0
+    client::write_register(500, 0x08, 0x00)?;   // +500ms: Key off
+    
+    // Stop interactive mode
+    client::stop_interactive()?;
+    
+    Ok(())
+}
+```
+
+**Key Features:**
+- **Continuous Streaming**: Audio never stops, eliminating silence gaps during parameter changes
+- **Latency Compensation**: 50ms buffer for jitter compensation (Web Audio-style scheduling)
+- **Time Scheduling**: Register writes scheduled with millisecond precision
+- **No WAV Output**: Optimized for real-time use without file I/O overhead
+
+**Benefits:**
+- Instant audio feedback for tone editors (e.g., ym2151-tone-editor)
+- Smooth parameter changes without playback interruption
+- Reduced latency compared to static event log playback
+
+See `examples/interactive_demo.rs` for a complete example.
+
 ### Server-Client Mode
 
 #### Starting the Server
