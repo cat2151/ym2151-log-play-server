@@ -166,24 +166,18 @@ impl AudioPlayer {
     }
 
     /// Schedule a register write in interactive mode
-    pub fn schedule_register_write(&self, time_offset_ms: u32, addr: u8, data: u8) {
+    pub fn schedule_register_write(&self, scheduled_samples: u32, addr: u8, data: u8) {
         if let Some(ref queue) = self.player_event_queue {
-            use crate::scheduler;
-
-            // Get current sample time (we need to track this somehow)
-            // For now, use scheduler to convert time offset to scheduled time
-            let scheduled_time = scheduler::schedule_event(0, time_offset_ms);
-
             // Lock the queue and add events
             let mut q = queue.lock().unwrap();
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_time,
+                time: scheduled_samples,
                 port: 0, // OPM_ADDRESS_REGISTER
                 value: addr,
             });
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_time + 2, // DELAY_SAMPLES
-                port: 1,                  // OPM_DATA_REGISTER
+                time: scheduled_samples + 2, // DELAY_SAMPLES
+                port: 1,                      // OPM_DATA_REGISTER
                 value: data,
             });
         }
