@@ -17,15 +17,16 @@ mod windows_tests {
             ]
         }"#;
 
-        // This will fail to connect to server, but should successfully parse JSON first
+        // This will fail when trying to write registers (no server running)
+        // but should successfully parse JSON first
         let result = client::play_json_interactive(json_data);
 
         // Should fail because server is not running, but not because of JSON parsing
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        // Error should be about server connection, not JSON parsing
+        // Error should be about register write/server connection, not JSON parsing
         assert!(
-            error_msg.contains("Failed to start interactive mode")
+            error_msg.contains("Failed to write register")
                 || error_msg.contains("Failed to connect"),
             "Unexpected error: {}",
             error_msg
@@ -94,17 +95,11 @@ mod windows_tests {
             "events": []
         }"#;
 
-        // Empty events should be valid but will fail at server connection
+        // Empty events should be valid and succeed (no register writes to send)
         let result = client::play_json_interactive(json_data);
-        assert!(result.is_err());
-        let error_msg = result.unwrap_err().to_string();
-        // Should fail on server connection, not validation
-        assert!(
-            error_msg.contains("Failed to start interactive mode")
-                || error_msg.contains("Failed to connect"),
-            "Expected server connection error, got: {}",
-            error_msg
-        );
+
+        // Should succeed since there are no events to process
+        assert!(result.is_ok());
     }
 
     #[test]
@@ -121,9 +116,9 @@ mod windows_tests {
         let result = client::play_json_interactive(json_data);
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        // Should parse hex correctly and fail on server connection
+        // Should parse hex correctly and fail on register write/server connection
         assert!(
-            error_msg.contains("Failed to start interactive mode")
+            error_msg.contains("Failed to write register")
                 || error_msg.contains("Failed to connect"),
             "Expected server connection error (hex parsing should succeed), got: {}",
             error_msg
@@ -164,9 +159,9 @@ mod windows_tests {
         let result = client::play_json_interactive(json_data);
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        // Should handle large values and fail on server connection
+        // Should handle large values and fail on register write/server connection
         assert!(
-            error_msg.contains("Failed to start interactive mode")
+            error_msg.contains("Failed to write register")
                 || error_msg.contains("Failed to connect"),
             "Expected server connection error (large values should be valid), got: {}",
             error_msg

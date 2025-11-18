@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
 
 #### JSONデータを使用したインタラクティブモード（便利関数）
 
-すでにym2151log形式のJSONデータを持つクライアントアプリケーションのために、`play_json_interactive()` 便利関数は変換やタイミングロジックを手動で実装する必要性を排除します：
+すでにym2151log形式のJSONデータを持つクライアントアプリケーションのために、`play_json_interactive()` 便利関数は変換やタイミングロジックを手動で実装する必要性を排除します。この関数はJSONの解析とレジスタ書き込みのみを行い、インタラクティブモードのライフサイクルはユーザーが制御します：
 
 ```rust
 use ym2151_log_play_server::client;
@@ -110,27 +110,31 @@ fn main() -> anyhow::Result<()> {
     // サーバー準備確認
     client::ensure_server_ready("ym2151-log-play-server")?;
     
-    // インタラクティブモードでJSONデータを直接再生
-    let json_data = r#"{
-        "event_count": 3,
+    // インタラクティブモードを一度開始
+    client::start_interactive()?;
+    
+    // 複数のJSONを停止せずに送信 - 音の途切れなし！
+    let json1 = r#"{
+        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2797, "addr": "0x28", "data": "0x48"},
+            {"time": 2797, "addr": "0x28", "data": "0x48"}
+        ]
+    }"#;
+    client::play_json_interactive(json1)?;
+    
+    let json2 = r#"{
+        "event_count": 1,
+        "events": [
             {"time": 5594, "addr": "0x08", "data": "0x78"}
         ]
     }"#;
-    
-    // この関数一つで以下を処理：
-    // - JSONの解析と検証
-    // - インタラクティブモードの開始
-    // - 時間変換（サンプル→秒）
-    // - 全レジスタ書き込みの送信
-    client::play_json_interactive(json_data)?;
+    client::play_json_interactive(json2)?;
     
     // 再生完了待機
     std::thread::sleep(std::time::Duration::from_secs(2));
     
-    // インタラクティブモード停止
+    // 完了時にインタラクティブモード停止
     client::stop_interactive()?;
     
     Ok(())
@@ -143,14 +147,15 @@ fn main() -> anyhow::Result<()> {
 - **サンプル精度のタイミング**: Float64秒（Web Audio API互換）で1/55930秒（1サンプル）までの精度を提供
 - **サーバー時刻同期**: `get_server_time()` でサーバーの時間座標系を取得し、精密なスケジューリングが可能
 - **WAV出力なし**: ファイルI/Oオーバーヘッドなしでリアルタイム用に最適化
-- **便利関数**: `play_json_interactive()` が一般的な処理タスクを自動化し、コードの重複を削減
+- **便利関数**: `play_json_interactive()` がインタラクティブモードのライフサイクル管理なしでJSONの解析と時間変換を処理
 
 **メリット：**
 - トーンエディタ（例：ym2151-tone-editor）で即座の音声フィードバック
 - 再生中断なしでのスムーズなパラメータ変更
+- 音の途切れなく複数のJSONを連続送信可能
 - 静的イベントログ再生と比較して低レイテンシ
 - クロスプラットフォームの一貫性のためWeb Audio互換の時間表現
-- 便利関数によるシンプルなクライアントコード
+- クライアントがインタラクティブモードの開始/停止を制御
 
 完全な例は `examples/interactive_demo.rs` と `examples/play_json_interactive_demo.rs` を参照してください。
 

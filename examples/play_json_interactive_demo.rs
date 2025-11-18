@@ -1,8 +1,9 @@
 //! Example demonstrating the play_json_interactive convenience function
 //!
-//! This example shows how to use the high-level play_json_interactive function
-//! to play ym2151log format JSON data in interactive mode without manually
-//! handling the conversion and timing logic.
+//! This example shows how to use the play_json_interactive function to send
+//! ym2151log format JSON data to interactive mode. The function handles JSON
+//! parsing and time conversion, allowing you to send multiple JSONs continuously
+//! without audio gaps.
 //!
 //! To run this example:
 //! 1. Start the server: cargo run --release -- server
@@ -23,38 +24,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Ensuring server is ready...");
     client::ensure_server_ready("ym2151-log-play-server")?;
 
-    println!("\n✅ Using play_json_interactive convenience function...\n");
+    println!("\n✅ Starting interactive mode...\n");
 
-    // Create a simple melody in ym2151log format
-    // Time values are in YM2151 sample units (at 55930 Hz)
-    // 55930 samples = 1 second
-    // 2797 samples = ~50ms
-    // 5593 samples = ~100ms
-    let json_data = r#"{
-        "event_count": 10,
+    // Start interactive mode once
+    client::start_interactive()?;
+
+    // Send multiple JSONs without stopping - no audio gaps!
+    println!("📝 Sending first melody via play_json_interactive...\n");
+
+    // First melody
+    let json1 = r#"{
+        "event_count": 5,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 2797, "addr": "0x28", "data": "0x48"},
             {"time": 2797, "addr": "0x30", "data": "0x00"},
             {"time": 2797, "addr": "0x08", "data": "0x78"},
-            {"time": 30762, "addr": "0x08", "data": "0x00"},
+            {"time": 30762, "addr": "0x08", "data": "0x00"}
+        ]
+    }"#;
+    client::play_json_interactive(json1)?;
+
+    println!("📝 Sending second melody (seamlessly continues)...\n");
+
+    // Second melody - continues seamlessly without audio gap
+    let json2 = r#"{
+        "event_count": 3,
+        "events": [
             {"time": 33559, "addr": "0x28", "data": "0x4A"},
             {"time": 33559, "addr": "0x08", "data": "0x78"},
-            {"time": 61524, "addr": "0x08", "data": "0x00"},
+            {"time": 61524, "addr": "0x08", "data": "0x00"}
+        ]
+    }"#;
+    client::play_json_interactive(json2)?;
+
+    println!("📝 Sending third melody (seamlessly continues)...\n");
+
+    // Third melody - continues seamlessly
+    let json3 = r#"{
+        "event_count": 2,
+        "events": [
             {"time": 67117, "addr": "0x28", "data": "0x4C"},
             {"time": 67117, "addr": "0x08", "data": "0x78"}
         ]
     }"#;
-
-    println!("📝 Sending JSON data to server via play_json_interactive...\n");
-
-    // This single function call:
-    // 1. Parses the JSON
-    // 2. Validates the event log
-    // 3. Starts interactive mode
-    // 4. Converts time stamps to time offsets
-    // 5. Sends all register writes with proper timing
-    client::play_json_interactive(json_data)?;
+    client::play_json_interactive(json3)?;
 
     println!("\n⏳ Waiting for playback to finish...");
     std::thread::sleep(std::time::Duration::from_millis(2500));
@@ -64,11 +78,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n✅ Demo complete!");
     println!("\nKey benefits of play_json_interactive:");
-    println!("  • Single function call instead of multiple steps");
+    println!("  • No start/stop of interactive mode between JSONs");
+    println!("  • Continuous playback without audio gaps");
     println!("  • Automatic JSON parsing and validation");
     println!("  • Automatic time conversion (samples → seconds)");
-    println!("  • No need to manually handle event iteration");
-    println!("  • Reduces code duplication across client applications");
+    println!("  • Client controls interactive mode lifecycle");
+    println!("  • Perfect for dynamic music generation and tone editing");
 
     Ok(())
 }

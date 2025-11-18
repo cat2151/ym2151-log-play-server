@@ -101,7 +101,7 @@ fn main() -> anyhow::Result<()> {
 
 #### Interactive Mode with JSON Data (Convenience Function)
 
-For client applications that already have ym2151log format JSON data, the `play_json_interactive()` convenience function eliminates the need to manually implement conversion and timing logic:
+For client applications that already have ym2151log format JSON data, the `play_json_interactive()` convenience function eliminates the need to manually implement conversion and timing logic. The function only handles JSON parsing and register writes - you control the interactive mode lifecycle:
 
 ```rust
 use ym2151_log_play_server::client;
@@ -110,27 +110,31 @@ fn main() -> anyhow::Result<()> {
     // Ensure the server is ready
     client::ensure_server_ready("ym2151-log-play-server")?;
     
-    // Play JSON data directly in interactive mode
-    let json_data = r#"{
-        "event_count": 3,
+    // Start interactive mode once
+    client::start_interactive()?;
+    
+    // Send multiple JSONs without stopping - no audio gaps!
+    let json1 = r#"{
+        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2797, "addr": "0x28", "data": "0x48"},
+            {"time": 2797, "addr": "0x28", "data": "0x48"}
+        ]
+    }"#;
+    client::play_json_interactive(json1)?;
+    
+    let json2 = r#"{
+        "event_count": 1,
+        "events": [
             {"time": 5594, "addr": "0x08", "data": "0x78"}
         ]
     }"#;
-    
-    // This single function handles:
-    // - JSON parsing and validation
-    // - Starting interactive mode
-    // - Time conversion (samples → seconds)
-    // - Sending all register writes
-    client::play_json_interactive(json_data)?;
+    client::play_json_interactive(json2)?;
     
     // Wait for playback
     std::thread::sleep(std::time::Duration::from_secs(2));
     
-    // Stop interactive mode
+    // Stop interactive mode when done
     client::stop_interactive()?;
     
     Ok(())
@@ -143,14 +147,15 @@ fn main() -> anyhow::Result<()> {
 - **Sample-Accurate Timing**: Provides accuracy up to 1/55930 seconds (1 sample) using Float64 seconds (Web Audio API compatible).
 - **Server Time Synchronization**: `get_server_time()` allows retrieving the server's time coordinate system for precise scheduling.
 - **No WAV Output**: Optimized for real-time use with no file I/O overhead.
-- **Convenience Function**: `play_json_interactive()` automates common processing tasks, reducing code duplication.
+- **Convenience Function**: `play_json_interactive()` handles JSON parsing and time conversion without managing interactive mode lifecycle.
 
 **Benefits:**
 - Immediate audio feedback in tone editors (e.g., ym2151-tone-editor).
 - Smooth parameter changes without playback interruption.
+- Send multiple JSONs continuously without audio gaps.
 - Lower latency compared to static event log playback.
 - Web Audio compatible time representation for cross-platform consistency.
-- Simplified client code with the convenience function.
+- Client controls when to start/stop interactive mode.
 
 See `examples/interactive_demo.rs` and `examples/play_json_interactive_demo.rs` for complete examples.
 

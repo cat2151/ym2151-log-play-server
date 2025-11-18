@@ -34,17 +34,30 @@
 //!
 //! ## Interactive Mode with JSON Data
 //!
-//! Use [`play_json_interactive`] to play ym2151log format JSON data in interactive mode.
-//! This convenience function handles all the necessary processing:
+//! Use [`play_json_interactive`] to send ym2151log format JSON data to interactive mode.
+//! This convenience function handles JSON parsing and register writes without managing
+//! the interactive mode lifecycle, allowing continuous playback without audio gaps:
 //!
 //! ```no_run
 //! use ym2151_log_play_server::client;
 //!
-//! let json_data = r#"{"event_count": 2, "events": [
+//! // Start interactive mode once
+//! client::start_interactive()?;
+//!
+//! // Send multiple JSONs without stopping - no audio gaps!
+//! let json1 = r#"{"event_count": 2, "events": [
 //!     {"time": 0, "addr": "0x08", "data": "0x00"},
 //!     {"time": 100, "addr": "0x20", "data": "0xC7"}
 //! ]}"#;
-//! client::play_json_interactive(json_data)?;
+//! client::play_json_interactive(json1)?;
+//!
+//! let json2 = r#"{"event_count": 1, "events": [
+//!     {"time": 200, "addr": "0x28", "data": "0x3E"}
+//! ]}"#;
+//! client::play_json_interactive(json2)?;
+//!
+//! // Stop when done
+//! client::stop_interactive()?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
@@ -267,14 +280,18 @@ pub fn stop_interactive() -> Result<()> {
     send_command(Command::StopInteractive)
 }
 
-/// Play ym2151log format JSON data in interactive mode
+/// Send ym2151log format JSON data to interactive mode
 ///
 /// This is a convenience function that accepts ym2151log format JSON data
-/// and plays it in interactive mode. It handles all the necessary processing:
+/// and sends the register writes to the server in interactive mode. It handles:
 /// - Parsing the JSON data
-/// - Starting interactive mode
 /// - Converting event timestamps to time offsets
 /// - Sending register writes with proper timing
+///
+/// This function does NOT start or stop interactive mode - the client must
+/// manage the interactive mode lifecycle using `start_interactive()` and
+/// `stop_interactive()`. This allows sending multiple JSONs continuously
+/// without audio gaps.
 ///
 /// This eliminates the need for client applications to implement similar
 /// processing logic repeatedly.
@@ -285,23 +302,31 @@ pub fn stop_interactive() -> Result<()> {
 /// # Example
 /// ```no_run
 /// # use ym2151_log_play_server::client;
-/// let json_data = r#"{
-///     "event_count": 3,
-///     "events": [
-///         {"time": 0, "addr": "0x08", "data": "0x00"},
-///         {"time": 2797, "addr": "0x20", "data": "0xC7"},
-///         {"time": 5594, "addr": "0x28", "data": "0x3E"}
-///     ]
-/// }"#;
-/// client::play_json_interactive(json_data)?;
+/// // Start interactive mode once
+/// client::start_interactive()?;
+///
+/// // Send multiple JSONs without stopping - no audio gaps!
+/// let json1 = r#"{"event_count": 2, "events": [
+///     {"time": 0, "addr": "0x08", "data": "0x00"},
+///     {"time": 2797, "addr": "0x20", "data": "0xC7"}
+/// ]}"#;
+/// client::play_json_interactive(json1)?;
+///
+/// let json2 = r#"{"event_count": 1, "events": [
+///     {"time": 5594, "addr": "0x28", "data": "0x3E"}
+/// ]}"#;
+/// client::play_json_interactive(json2)?;
+///
+/// // Stop interactive mode when done
+/// client::stop_interactive()?;
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// # Notes
 /// - Events are scheduled with their original timing preserved
 /// - Time values in the JSON are in YM2151 sample units (55930 Hz)
-/// - The function starts interactive mode automatically
-/// - Interactive mode must be stopped manually with `stop_interactive()` when done
+/// - Interactive mode must be started before calling this function
+/// - Interactive mode must be stopped manually when done
 pub fn play_json_interactive(json_data: &str) -> Result<()> {
     use crate::events::EventLog;
     use crate::resampler::OPM_SAMPLE_RATE;
@@ -318,11 +343,6 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
         "📝 JSONから{}個のイベントを読み込みました",
         event_log.event_count
     ));
-
-    // Start interactive mode
-    start_interactive().context("Failed to start interactive mode")?;
-
-    log_client("🎵 インタラクティブモードで演奏を開始します...");
 
     // Convert events to time offsets and send them
     for event in &event_log.events {
@@ -608,15 +628,16 @@ mod tests {
             ]
         }"#;
 
-        // This will fail to connect to server, but it should successfully parse JSON first
+        // This will fail to connect to server when writing registers,
+        // but it should successfully parse JSON first
         let result = play_json_interactive(json_data);
 
         // Should fail because server is not running, but not because of JSON parsing
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
-        // Error should be about server connection, not JSON parsing
+        // Error should be about register write/server connection, not JSON parsing
         assert!(
-            error_msg.contains("Failed to start interactive mode")
+            error_msg.contains("Failed to write register")
                 || error_msg.contains("Failed to connect")
         );
     }
@@ -654,14 +675,11 @@ mod tests {
             "events": []
         }"#;
 
-        // Empty events should be valid but will fail at server connection
+        // Empty events should be valid and succeed (no register writes to send)
+        // Since the function doesn't start/stop interactive mode, it should just do nothing
         let result = play_json_interactive(json_data);
-        assert!(result.is_err());
-        // Should fail on server connection, not validation
-        let error_msg = result.unwrap_err().to_string();
-        assert!(
-            error_msg.contains("Failed to start interactive mode")
-                || error_msg.contains("Failed to connect")
-        );
+
+        // Should succeed since there are no events to process
+        assert!(result.is_ok());
     }
 }
