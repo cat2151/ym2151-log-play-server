@@ -17,7 +17,7 @@ fn test_interactive_player_creation() {
 fn test_schedule_register_write() {
     let player = Player::new_interactive();
 
-    // Schedule a register write
+    // Schedule a register write at sample 100
     player.schedule_register_write(100, 0x08, 0x78);
 
     // Verify the event was added to the queue
@@ -62,7 +62,7 @@ fn test_multiple_register_writes() {
 fn test_interactive_generate_samples() {
     let mut player = Player::new_interactive();
 
-    // Schedule a write
+    // Schedule a write at sample 0
     player.schedule_register_write(0, 0x08, 0x00);
 
     // Generate some samples
@@ -82,24 +82,28 @@ fn test_interactive_generate_samples() {
 }
 
 #[test]
-fn test_scheduler_ms_to_samples() {
-    // At 55930 Hz, 1000ms = 55930 samples
-    assert_eq!(scheduler::ms_to_samples(1000), 55930);
+fn test_scheduler_sec_to_samples() {
+    // At 55930 Hz, 1.0 sec = 55930 samples
+    assert_eq!(scheduler::sec_to_samples(1.0), 55930);
 
-    // 50ms latency buffer = 2796.5 ≈ 2796 samples
-    assert_eq!(scheduler::ms_to_samples(50), 2796);
+    // 0.05 sec (50ms) = 2796.5 ≈ 2797 samples
+    assert_eq!(scheduler::sec_to_samples(0.050), 2797);
+
+    // Sample-accurate precision test
+    let one_sample_sec = 1.0 / 55930.0;
+    assert_eq!(scheduler::sec_to_samples(one_sample_sec), 1);
 }
 
 #[test]
 fn test_scheduler_schedule_event() {
-    // Current time at 1000 samples, offset 0ms
-    // Should add 50ms latency buffer
-    let scheduled = scheduler::schedule_event(1000, 0);
-    assert_eq!(scheduled, 1000 + 2796);
+    // Current time at 1000 samples, offset 0 sec
+    // Should add 50ms (0.05 sec) latency buffer = 2797 samples
+    let scheduled = scheduler::schedule_event(1000, 0.0);
+    assert_eq!(scheduled, 1000 + 2797);
 
-    // With 100ms offset
-    let scheduled = scheduler::schedule_event(1000, 100);
-    let expected = 1000 + 2796 + 5593; // 50ms latency + 100ms offset
+    // With 0.1 sec (100ms) offset
+    let scheduled = scheduler::schedule_event(1000, 0.1);
+    let expected = 1000 + 2797 + 5593; // 50ms latency + 100ms offset
     assert_eq!(scheduled, expected);
 }
 
@@ -114,9 +118,9 @@ fn test_protocol_interactive_commands() {
     let parsed = Command::from_binary(&binary).unwrap();
     assert_eq!(cmd, parsed);
 
-    // Test WriteRegister command serialization
+    // Test WriteRegister command serialization with f64 seconds
     let cmd = Command::WriteRegister {
-        time_offset_ms: 50,
+        time_offset_sec: 0.050,
         addr: 0x08,
         data: 0x78,
     };
@@ -126,6 +130,12 @@ fn test_protocol_interactive_commands() {
 
     // Test StopInteractive command serialization
     let cmd = Command::StopInteractive;
+    let binary = cmd.to_binary().unwrap();
+    let parsed = Command::from_binary(&binary).unwrap();
+    assert_eq!(cmd, parsed);
+
+    // Test GetServerTime command serialization
+    let cmd = Command::GetServerTime;
     let binary = cmd.to_binary().unwrap();
     let parsed = Command::from_binary(&binary).unwrap();
     assert_eq!(cmd, parsed);

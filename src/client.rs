@@ -165,7 +165,7 @@ pub fn start_interactive() -> Result<()> {
 /// The server applies a 50ms latency buffer for jitter compensation.
 ///
 /// # Arguments
-/// * `time_offset_ms` - Time offset in milliseconds from now
+/// * `time_offset_sec` - Time offset in seconds (f64) from now, providing sample-accurate precision
 /// * `addr` - YM2151 register address (0x00-0xFF)
 /// * `data` - Data value to write (0x00-0xFF)
 ///
@@ -173,18 +173,68 @@ pub fn start_interactive() -> Result<()> {
 /// ```no_run
 /// # use ym2151_log_play_server::client;
 /// // Write to register 0x08 immediately
-/// client::write_register(0, 0x08, 0x78)?;
+/// client::write_register(0.0, 0x08, 0x78)?;
 ///
-/// // Write to register 0x28 after 100ms
-/// client::write_register(100, 0x28, 0x3E)?;
+/// // Write to register 0x28 after 100ms (0.1 seconds)
+/// client::write_register(0.1, 0x28, 0x3E)?;
 /// # Ok::<(), anyhow::Error>(())
 /// ```
-pub fn write_register(time_offset_ms: u32, addr: u8, data: u8) -> Result<()> {
+pub fn write_register(time_offset_sec: f64, addr: u8, data: u8) -> Result<()> {
     send_command(Command::WriteRegister {
-        time_offset_ms,
+        time_offset_sec,
         addr,
         data,
     })
+}
+
+/// Get the current server time in seconds
+///
+/// Returns the current time in the server's time coordinate system (f64 seconds).
+/// Clients can use this to synchronize with the server's timeline for precise scheduling.
+/// This is equivalent to Web Audio's `currentTime` property.
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// let server_time = client::get_server_time()?;
+/// println!("Server time: {:.6} seconds", server_time);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn get_server_time() -> Result<f64> {
+    let mut writer = NamedPipe::connect_default()
+        .context("Failed to connect to server. Is the server running?")?;
+
+    let command = Command::GetServerTime;
+    let binary_data = command
+        .to_binary()
+        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+    log_client("⏳ サーバー時刻を取得中...");
+
+    writer
+        .write_binary(&binary_data)
+        .context("Failed to send command to server")?;
+
+    let response_data = writer
+        .read_binary_response()
+        .context("Failed to read response from server")?;
+
+    let response = Response::from_binary(&response_data)
+        .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
+
+    match response {
+        Response::ServerTime { time_sec } => {
+            log_client(&format!("✅ サーバー時刻: {:.6} 秒", time_sec));
+            Ok(time_sec)
+        }
+        Response::Error { message } => {
+            log_client(&format!("❌ サーバーエラー: {}", message));
+            Err(anyhow::anyhow!("Server returned error: {}", message))
+        }
+        _ => Err(anyhow::anyhow!(
+            "Unexpected response type for GetServerTime"
+        )),
+    }
 }
 
 /// Stop interactive mode

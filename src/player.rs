@@ -70,7 +70,7 @@ impl Player {
     }
 
     /// Add a register write to the interactive event queue
-    pub fn schedule_register_write(&self, scheduled_time: u32, addr: u8, data: u8) {
+    pub fn schedule_register_write(&self, scheduled_time_samples: u32, addr: u8, data: u8) {
         if !self.interactive_mode {
             return;
         }
@@ -79,14 +79,14 @@ impl Player {
 
         // Add address write
         queue.push_back(ProcessedEvent {
-            time: scheduled_time,
+            time: scheduled_time_samples,
             port: OPM_ADDRESS_REGISTER,
             value: addr,
         });
 
         // Add data write with delay
         queue.push_back(ProcessedEvent {
-            time: scheduled_time + DELAY_SAMPLES,
+            time: scheduled_time_samples + DELAY_SAMPLES,
             port: OPM_DATA_REGISTER,
             value: data,
         });

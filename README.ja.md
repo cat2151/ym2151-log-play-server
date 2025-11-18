@@ -80,11 +80,15 @@ fn main() -> anyhow::Result<()> {
     // インタラクティブモード開始
     client::start_interactive()?;
     
-    // タイミング指定してレジスタ書き込み
-    client::write_register(0, 0x08, 0x00)?;     // 即座: 全チャンネルキーオフ
-    client::write_register(50, 0x28, 0x48)?;    // +50ms: 音程設定
-    client::write_register(50, 0x08, 0x78)?;    // +50ms: チャンネル0キーオン
-    client::write_register(500, 0x08, 0x00)?;   // +500ms: キーオフ
+    // タイミング指定してレジスタ書き込み（秒単位、f64）
+    client::write_register(0.0, 0x08, 0x00)?;     // 即座: 全チャンネルキーオフ
+    client::write_register(0.050, 0x28, 0x48)?;   // +50ms: 音程設定
+    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: チャンネル0キーオン
+    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: キーオフ
+    
+    // 精密な同期のためサーバー時刻を取得
+    let server_time = client::get_server_time()?;
+    println!("サーバー時刻: {:.6} 秒", server_time);
     
     // インタラクティブモード停止
     client::stop_interactive()?;
@@ -96,13 +100,15 @@ fn main() -> anyhow::Result<()> {
 **主な特徴：**
 - **連続ストリーミング**: 音声が途切れず、パラメータ変更時の無音時間を排除
 - **レイテンシ補正**: ジッタ補正のための50msバッファ（Web Audioスタイルのスケジューリング）
-- **時間スケジューリング**: ミリ秒精度でのレジスタ書き込みスケジューリング
+- **サンプル精度のタイミング**: Float64秒（Web Audio API互換）で1/55930秒（1サンプル）までの精度を提供
+- **サーバー時刻同期**: `get_server_time()` でサーバーの時間座標系を取得し、精密なスケジューリングが可能
 - **WAV出力なし**: ファイルI/Oオーバーヘッドなしでリアルタイム用に最適化
 
 **メリット：**
 - トーンエディタ（例：ym2151-tone-editor）で即座の音声フィードバック
 - 再生中断なしでのスムーズなパラメータ変更
 - 静的イベントログ再生と比較して低レイテンシ
+- クロスプラットフォームの一貫性のためWeb Audio互換の時間表現
 
 完全な例は `examples/interactive_demo.rs` を参照してください。
 

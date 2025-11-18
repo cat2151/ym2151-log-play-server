@@ -80,11 +80,15 @@ fn main() -> anyhow::Result<()> {
     // Start interactive mode
     client::start_interactive()?;
     
-    // Write registers with specified timing
-    client::write_register(0, 0x08, 0x00)?;     // Immediate: All channels key off
-    client::write_register(50, 0x28, 0x48)?;    // +50ms: Set pitch
-    client::write_register(50, 0x08, 0x78)?;    // +50ms: Channel 0 key on
-    client::write_register(500, 0x08, 0x00)?;   // +500ms: Key off
+    // Write registers with specified timing (in seconds, f64)
+    client::write_register(0.0, 0x08, 0x00)?;     // Immediate: All channels key off
+    client::write_register(0.050, 0x28, 0x48)?;   // +50ms: Set pitch
+    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: Channel 0 key on
+    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: Key off
+    
+    // Get server time for precise synchronization
+    let server_time = client::get_server_time()?;
+    println!("Server time: {:.6} seconds", server_time);
     
     // Stop interactive mode
     client::stop_interactive()?;
@@ -96,13 +100,15 @@ fn main() -> anyhow::Result<()> {
 **Key Features:**
 - **Continuous Streaming**: Uninterrupted audio, eliminating silent gaps during parameter changes
 - **Latency Compensation**: 50ms buffer for jitter correction (Web Audio-style scheduling)
-- **Time Scheduling**: Millisecond-precision register write scheduling
+- **Sample-Accurate Timing**: Float64 seconds (Web Audio API compatible) providing precision down to 1/55930 sec per sample
+- **Server Time Synchronization**: `get_server_time()` returns server's time coordinate system for precise scheduling
 - **No WAV Output**: Optimized for real-time operation without file I/O overhead
 
 **Benefits:**
 - Immediate audio feedback in tone editors (e.g., ym2151-tone-editor)
 - Smooth parameter changes without playback interruption
 - Lower latency compared to static event log playback
+- Web Audio-compatible time representation for cross-platform consistency
 
 See `examples/interactive_demo.rs` for a complete example.
 

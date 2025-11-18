@@ -1,6 +1,7 @@
 use crate::ipc::protocol::{Command, Response};
 use crate::logging;
 use crate::resampler::ResamplingQuality;
+use crate::scheduler::TimeTracker;
 use anyhow::Result;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
@@ -25,6 +26,7 @@ pub struct Server {
     state: Arc<Mutex<ServerState>>,
     shutdown_flag: Arc<AtomicBool>,
     resampling_quality: ResamplingQuality,
+    time_tracker: Arc<Mutex<TimeTracker>>,
 }
 
 impl Server {
@@ -51,6 +53,7 @@ impl Server {
             state: Arc::new(Mutex::new(ServerState::Stopped)),
             shutdown_flag: Arc::new(AtomicBool::new(false)),
             resampling_quality: quality,
+            time_tracker: Arc::new(Mutex::new(TimeTracker::new())),
         }
     }
 
@@ -243,6 +246,12 @@ impl Server {
                             player.stop();
                         }
 
+                        // Reset time tracker for new interactive session
+                        {
+                            let mut tracker = self.time_tracker.lock().unwrap();
+                            tracker.reset();
+                        }
+
                         // Start interactive mode
                         match self.start_interactive_mode() {
                             Ok(player) => {
@@ -266,7 +275,7 @@ impl Server {
                         }
                     }
                     Command::WriteRegister {
-                        time_offset_ms,
+                        time_offset_sec,
                         addr,
                         data,
                     } => {
@@ -279,11 +288,27 @@ impl Server {
                             drop(state); // Release lock before potentially slow operation
 
                             if let Some(ref player_ref) = audio_player {
+                                // Get current server time
+                                let current_time_sec = {
+                                    let tracker = self.time_tracker.lock().unwrap();
+                                    tracker.elapsed_sec()
+                                };
+
+                                // Convert time offset to scheduled sample time
+                                let scheduled_samples = crate::scheduler::sec_to_samples(
+                                    current_time_sec + time_offset_sec,
+                                );
+
                                 // Schedule the register write
-                                player_ref.schedule_register_write(time_offset_ms, addr, data);
+                                player_ref.schedule_register_write(scheduled_samples, addr, data);
+
                                 logging::log_verbose(&format!(
-                                    "📝 レジスタ書き込みをスケジュール: +{}ms, addr:0x{:02X}, data:0x{:02X}",
-                                    time_offset_ms, addr, data
+                                    "📝 レジスタ書き込みをスケジュール: server_time={:.6}秒, offset={:.6}秒, scheduled_time={:.6}秒, addr:0x{:02X}, data:0x{:02X}",
+                                    current_time_sec,
+                                    time_offset_sec,
+                                    current_time_sec + time_offset_sec,
+                                    addr,
+                                    data
                                 ));
                                 Response::Ok
                             } else {
@@ -292,6 +317,12 @@ impl Server {
                                 }
                             }
                         }
+                    }
+                    Command::GetServerTime => {
+                        let tracker = self.time_tracker.lock().unwrap();
+                        let time_sec = tracker.elapsed_sec();
+                        logging::log_verbose(&format!("⏰ サーバー時刻を取得: {:.6} 秒", time_sec));
+                        Response::ServerTime { time_sec }
                     }
                     Command::StopInteractive => {
                         logging::log_verbose("⏹️  インタラクティブモードを停止中...");
