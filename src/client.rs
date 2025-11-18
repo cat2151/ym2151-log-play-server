@@ -144,6 +144,63 @@ pub fn shutdown_server() -> Result<()> {
     send_command(Command::Shutdown)
 }
 
+/// Start interactive mode on the server
+///
+/// In interactive mode, the server continuously streams audio and accepts
+/// register write commands in real-time without stopping playback.
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// client::start_interactive()?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn start_interactive() -> Result<()> {
+    send_command(Command::StartInteractive)
+}
+
+/// Write a register value in interactive mode
+///
+/// Schedules a YM2151 register write at the specified time offset.
+/// The server applies a 50ms latency buffer for jitter compensation.
+///
+/// # Arguments
+/// * `time_offset_ms` - Time offset in milliseconds from now
+/// * `addr` - YM2151 register address (0x00-0xFF)
+/// * `data` - Data value to write (0x00-0xFF)
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// // Write to register 0x08 immediately
+/// client::write_register(0, 0x08, 0x78)?;
+///
+/// // Write to register 0x28 after 100ms
+/// client::write_register(100, 0x28, 0x3E)?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn write_register(time_offset_ms: u32, addr: u8, data: u8) -> Result<()> {
+    send_command(Command::WriteRegister {
+        time_offset_ms,
+        addr,
+        data,
+    })
+}
+
+/// Stop interactive mode
+///
+/// Stops the continuous audio streaming in interactive mode.
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// client::stop_interactive()?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn stop_interactive() -> Result<()> {
+    send_command(Command::StopInteractive)
+}
+
 /// Ensure the server is running and ready to accept commands
 ///
 /// This function ensures that the YM2151 server is running and ready to accept
