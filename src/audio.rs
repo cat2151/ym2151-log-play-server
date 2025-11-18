@@ -26,6 +26,9 @@ pub struct AudioPlayer {
     wav_buffer_48k: Arc<Mutex<Vec<i16>>>,
     #[allow(dead_code)] // Event log stored for potential future use
     event_log: Option<EventLog>,
+
+    // For interactive mode: shared reference to player's event queue
+    player_event_queue: Option<Arc<Mutex<std::collections::VecDeque<crate::player::ProcessedEvent>>>>,
 }
 
 impl AudioPlayer {
@@ -128,6 +131,12 @@ impl AudioPlayer {
 
         stream.play().context("Failed to start audio stream")?;
 
+        let player_event_queue = if player.is_interactive() {
+            Some(player.get_event_queue())
+        } else {
+            None
+        };
+
         let event_log_for_thread = event_log.clone();
         let generator_handle = std::thread::spawn(move || {
             if let Err(e) = Self::generate_samples_thread(
@@ -151,7 +160,32 @@ impl AudioPlayer {
             wav_buffer_55k,
             wav_buffer_48k,
             event_log,
+            player_event_queue,
         })
+    }
+
+    /// Schedule a register write in interactive mode
+    pub fn schedule_register_write(&self, time_offset_ms: u32, addr: u8, data: u8) {
+        if let Some(ref queue) = self.player_event_queue {
+            use crate::scheduler;
+            
+            // Get current sample time (we need to track this somehow)
+            // For now, use scheduler to convert time offset to scheduled time
+            let scheduled_time = scheduler::schedule_event(0, time_offset_ms);
+            
+            // Lock the queue and add events
+            let mut q = queue.lock().unwrap();
+            q.push_back(crate::player::ProcessedEvent {
+                time: scheduled_time,
+                port: 0, // OPM_ADDRESS_REGISTER
+                value: addr,
+            });
+            q.push_back(crate::player::ProcessedEvent {
+                time: scheduled_time + 2, // DELAY_SAMPLES
+                port: 1, // OPM_DATA_REGISTER
+                value: data,
+            });
+        }
     }
 
     fn generate_samples_thread(

@@ -18,6 +18,7 @@ use crate::ipc::pipe_windows::NamedPipe;
 enum ServerState {
     Playing,
     Stopped,
+    Interactive,
 }
 
 pub struct Server {
@@ -234,6 +235,76 @@ impl Server {
                         logging::log_verbose("✅ 音声再生を停止しました");
                         Response::Ok
                     }
+                    Command::StartInteractive => {
+                        logging::log_verbose("🎮 インタラクティブモードを開始中...");
+
+                        // Stop any existing playback
+                        if let Some(mut player) = audio_player.take() {
+                            player.stop();
+                        }
+
+                        // Start interactive mode
+                        match self.start_interactive_mode() {
+                            Ok(player) => {
+                                audio_player = Some(player);
+                                logging::log_verbose("✅ インタラクティブモードを開始しました");
+
+                                let mut state = self.state.lock().unwrap();
+                                *state = ServerState::Interactive;
+
+                                Response::Ok
+                            }
+                            Err(e) => {
+                                logging::log_always(&format!(
+                                    "❌ インタラクティブモードの開始に失敗しました: {}",
+                                    e
+                                ));
+                                Response::Error {
+                                    message: format!("Failed to start interactive mode: {}", e),
+                                }
+                            }
+                        }
+                    }
+                    Command::WriteRegister {
+                        time_offset_ms,
+                        addr,
+                        data,
+                    } => {
+                        let state = self.state.lock().unwrap();
+                        if *state != ServerState::Interactive {
+                            Response::Error {
+                                message: "Not in interactive mode".to_string(),
+                            }
+                        } else {
+                            drop(state); // Release lock before potentially slow operation
+
+                            if let Some(ref player_ref) = audio_player {
+                                // Schedule the register write
+                                player_ref.schedule_register_write(time_offset_ms, addr, data);
+                                logging::log_verbose(&format!(
+                                    "📝 レジスタ書き込みをスケジュール: +{}ms, addr:0x{:02X}, data:0x{:02X}",
+                                    time_offset_ms, addr, data
+                                ));
+                                Response::Ok
+                            } else {
+                                Response::Error {
+                                    message: "No active audio player".to_string(),
+                                }
+                            }
+                        }
+                    }
+                    Command::StopInteractive => {
+                        logging::log_verbose("⏹️  インタラクティブモードを停止中...");
+                        if let Some(mut player) = audio_player.take() {
+                            player.stop();
+                        }
+
+                        let mut state = self.state.lock().unwrap();
+                        *state = ServerState::Stopped;
+
+                        logging::log_verbose("✅ インタラクティブモードを停止しました");
+                        Response::Ok
+                    }
                     Command::Shutdown => {
                         logging::log_always("🛑 シャットダウン要求を受信しました");
                         if let Some(mut player) = audio_player.take() {
@@ -309,6 +380,13 @@ impl Server {
         };
         AudioPlayer::new_with_quality(player, event_log, self.resampling_quality)
             .context("Failed to create audio player")
+    }
+
+    fn start_interactive_mode(&self) -> Result<AudioPlayer> {
+        let player = Player::new_interactive();
+        // No event log in interactive mode, and no WAV output
+        AudioPlayer::new_with_quality(player, None, self.resampling_quality)
+            .context("Failed to create interactive audio player")
     }
 }
 

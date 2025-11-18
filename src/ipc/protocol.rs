@@ -6,6 +6,13 @@ pub enum Command {
     PlayJson { data: serde_json::Value },
     Stop,
     Shutdown,
+    StartInteractive,
+    WriteRegister {
+        time_offset_ms: u32,
+        addr: u8,
+        data: u8,
+    },
+    StopInteractive,
 }
 
 impl Command {
@@ -232,5 +239,33 @@ mod tests {
         // The JSON part should be valid UTF-8
         let json_str = std::str::from_utf8(&binary[4..]).unwrap();
         assert!(json_str.contains("stop"));
+    }
+
+    #[test]
+    fn test_binary_start_interactive_roundtrip() {
+        let original = Command::StartInteractive;
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_write_register_roundtrip() {
+        let original = Command::WriteRegister {
+            time_offset_ms: 50,
+            addr: 0x08,
+            data: 0x78,
+        };
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_stop_interactive_roundtrip() {
+        let original = Command::StopInteractive;
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
     }
 }
