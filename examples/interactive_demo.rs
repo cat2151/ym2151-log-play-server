@@ -34,16 +34,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Simple melody: play a few notes with timing (using f64 seconds)
     let notes = vec![
-        (0.0, 0x28, 0x48),     // Note C4, channel 0
-        (0.100, 0x30, 0x00),   // Octave and note on at 100ms
-        (0.100, 0x08, 0x78),   // Key on channel 0
-        (0.500, 0x08, 0x00),   // Key off at 500ms
-        (0.600, 0x28, 0x4A),   // Note D4 at 600ms
-        (0.600, 0x08, 0x78),   // Key on
-        (1.100, 0x08, 0x00),   // Key off at 1100ms
-        (1.200, 0x28, 0x4C),   // Note E4 at 1200ms
-        (1.200, 0x08, 0x78),   // Key on
-        (1.700, 0x08, 0x00),   // Key off at 1700ms
+        (0.0, 0x28, 0x48),   // Note C4, channel 0
+        (0.100, 0x30, 0x00), // Octave and note on at 100ms
+        (0.100, 0x08, 0x78), // Key on channel 0
+        (0.500, 0x08, 0x00), // Key off at 500ms
+        (0.600, 0x28, 0x4A), // Note D4 at 600ms
+        (0.600, 0x08, 0x78), // Key on
+        (1.100, 0x08, 0x00), // Key off at 1100ms
+        (1.200, 0x28, 0x4C), // Note E4 at 1200ms
+        (1.200, 0x08, 0x78), // Key on
+        (1.700, 0x08, 0x00), // Key off at 1700ms
     ];
 
     for (time_sec, addr, data) in notes {

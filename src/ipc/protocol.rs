@@ -66,9 +66,13 @@ impl Command {
 #[serde(tag = "status", rename_all = "lowercase")]
 pub enum Response {
     Ok,
-    Error { message: String },
+    Error {
+        message: String,
+    },
     /// Server time response containing current time in seconds (f64)
-    ServerTime { time_sec: f64 },
+    ServerTime {
+        time_sec: f64,
+    },
 }
 
 impl Response {

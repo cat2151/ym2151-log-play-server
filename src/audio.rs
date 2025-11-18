@@ -177,7 +177,7 @@ impl AudioPlayer {
             });
             q.push_back(crate::player::ProcessedEvent {
                 time: scheduled_samples + 2, // DELAY_SAMPLES
-                port: 1,                      // OPM_DATA_REGISTER
+                port: 1,                     // OPM_DATA_REGISTER
                 value: data,
             });
         }

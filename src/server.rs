@@ -295,8 +295,9 @@ impl Server {
                                 };
 
                                 // Convert time offset to scheduled sample time
-                                let scheduled_samples =
-                                    crate::scheduler::sec_to_samples(current_time_sec + time_offset_sec);
+                                let scheduled_samples = crate::scheduler::sec_to_samples(
+                                    current_time_sec + time_offset_sec,
+                                );
 
                                 // Schedule the register write
                                 player_ref.schedule_register_write(scheduled_samples, addr, data);
