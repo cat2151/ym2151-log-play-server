@@ -1,4 +1,4 @@
-Last updated: 2025-11-18
+Last updated: 2025-11-19
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -206,6 +206,7 @@ Last updated: 2025-11-18
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- examples/interactive_demo.rs
 - examples/test_client_non_verbose.rs
 - examples/test_client_verbose.rs
 - examples/test_logging_non_verbose.rs
@@ -229,6 +230,8 @@ Last updated: 2025-11-18
 - issue-notes/66.md
 - issue-notes/68.md
 - issue-notes/70.md
+- issue-notes/72.md
+- issue-notes/74.md
 - opm.c
 - opm.h
 - output_ym2151.json
@@ -247,6 +250,7 @@ Last updated: 2025-11-18
 - src/opm_ffi.rs
 - src/player.rs
 - src/resampler.rs
+- src/scheduler.rs
 - src/server.rs
 - src/wav_writer.rs
 - tests/client_json_test.rs
@@ -258,6 +262,7 @@ Last updated: 2025-11-18
 - tests/fixtures/complex.json
 - tests/fixtures/simple.json
 - tests/integration_test.rs
+- tests/interactive_mode_test.rs
 - tests/ipc_pipe_test.rs
 - tests/logging_test.rs
 - tests/phase3_test.rs
@@ -277,30 +282,39 @@ Last updated: 2025-11-18
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+ff454bb Auto-translate README.ja.md to README.md [auto]
+4ff833d Merge pull request #75 from cat2151/copilot/add-interactive-server-mode
+a9266fa Add documentation and example for interactive mode
+086db08 Add client helper methods and comprehensive tests for interactive mode
+fca5a4f Add interactive server mode core infrastructure
+6981be4 Initial plan
+d3f72d8 Add issue note for #74 [auto]
+535302d Add issue note for #72 [auto]
+054b881 Update project summaries (overview & development status) [auto]
 87e4897 Merge pull request #71 from cat2151/copilot/change-default-resampling-method
-6bfabd6 Update error message to include --low-quality-resampling flag
-28ae7a4 Change default resampling to high-quality, add --low-quality-resampling flag
-713a425 Initial plan
-0b93935 Add issue note for #70 [auto]
-3033182 Merge pull request #69 from cat2151/copilot/apply-high-quality-resampling
-5c0db1e Apply high-quality resampling to post-playback WAV generation
-74cda81 Initial plan
-2b89280 Add issue note for #68 [auto]
-a4314de Merge branches 'main' and 'main' of github.com:cat2151/ym2151-log-play-server into main
 
 ### 変更されたファイル:
-Cargo.lock
-Cargo.toml
-issue-notes/66.md
-issue-notes/68.md
+README.ja.md
+README.md
+examples/interactive_demo.rs
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 issue-notes/70.md
+issue-notes/72.md
+issue-notes/74.md
 src/audio.rs
-src/debug_wav.rs
+src/client.rs
+src/ipc/protocol.rs
+src/lib.rs
 src/main.rs
+src/player.rs
 src/resampler.rs
+src/scheduler.rs
 src/server.rs
-tests/debug_wav_test.rs
+tests/interactive_mode_test.rs
 
 
 ---
-Generated at: 2025-11-18 07:01:38 JST
+Generated at: 2025-11-19 07:01:39 JST
