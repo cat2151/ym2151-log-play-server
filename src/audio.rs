@@ -28,7 +28,8 @@ pub struct AudioPlayer {
     event_log: Option<EventLog>,
 
     // For interactive mode: shared reference to player's event queue
-    player_event_queue: Option<Arc<Mutex<std::collections::VecDeque<crate::player::ProcessedEvent>>>>,
+    player_event_queue:
+        Option<Arc<Mutex<std::collections::VecDeque<crate::player::ProcessedEvent>>>>,
 }
 
 impl AudioPlayer {
@@ -168,11 +169,11 @@ impl AudioPlayer {
     pub fn schedule_register_write(&self, time_offset_ms: u32, addr: u8, data: u8) {
         if let Some(ref queue) = self.player_event_queue {
             use crate::scheduler;
-            
+
             // Get current sample time (we need to track this somehow)
             // For now, use scheduler to convert time offset to scheduled time
             let scheduled_time = scheduler::schedule_event(0, time_offset_ms);
-            
+
             // Lock the queue and add events
             let mut q = queue.lock().unwrap();
             q.push_back(crate::player::ProcessedEvent {
@@ -182,7 +183,7 @@ impl AudioPlayer {
             });
             q.push_back(crate::player::ProcessedEvent {
                 time: scheduled_time + 2, // DELAY_SAMPLES
-                port: 1, // OPM_DATA_REGISTER
+                port: 1,                  // OPM_DATA_REGISTER
                 value: data,
             });
         }

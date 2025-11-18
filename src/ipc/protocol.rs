@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case")]
 pub enum Command {
-    PlayJson { data: serde_json::Value },
+    PlayJson {
+        data: serde_json::Value,
+    },
     Stop,
     Shutdown,
     StartInteractive,
