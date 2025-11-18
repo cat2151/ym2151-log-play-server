@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }"#;
 
     println!("📝 Sending JSON data to server via play_json_interactive...\n");
-    
+
     // This single function call:
     // 1. Parses the JSON
     // 2. Validates the event log

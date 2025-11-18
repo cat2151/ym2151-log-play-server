@@ -307,19 +307,20 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
     use crate::resampler::OPM_SAMPLE_RATE;
 
     // Parse the JSON data
-    let event_log = EventLog::from_json_str(json_data)
-        .context("Failed to parse JSON data")?;
+    let event_log = EventLog::from_json_str(json_data).context("Failed to parse JSON data")?;
 
     // Validate the event log
     if !event_log.validate() {
         return Err(anyhow::anyhow!("Invalid event log: validation failed"));
     }
 
-    log_client(&format!("📝 JSONから{}個のイベントを読み込みました", event_log.event_count));
+    log_client(&format!(
+        "📝 JSONから{}個のイベントを読み込みました",
+        event_log.event_count
+    ));
 
     // Start interactive mode
-    start_interactive()
-        .context("Failed to start interactive mode")?;
+    start_interactive().context("Failed to start interactive mode")?;
 
     log_client("🎵 インタラクティブモードで演奏を開始します...");
 
@@ -330,14 +331,18 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
         let time_offset_sec = event.time as f64 / OPM_SAMPLE_RATE as f64;
 
         // Send register write
-        write_register(time_offset_sec, event.addr, event.data)
-            .with_context(|| format!(
+        write_register(time_offset_sec, event.addr, event.data).with_context(|| {
+            format!(
                 "Failed to write register 0x{:02X} = 0x{:02X} at {:.6}s",
                 event.addr, event.data, time_offset_sec
-            ))?;
+            )
+        })?;
     }
 
-    log_client(&format!("✅ {}個のレジスタ書き込みを送信しました", event_log.event_count));
+    log_client(&format!(
+        "✅ {}個のレジスタ書き込みを送信しました",
+        event_log.event_count
+    ));
 
     Ok(())
 }
@@ -605,19 +610,21 @@ mod tests {
 
         // This will fail to connect to server, but it should successfully parse JSON first
         let result = play_json_interactive(json_data);
-        
+
         // Should fail because server is not running, but not because of JSON parsing
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         // Error should be about server connection, not JSON parsing
-        assert!(error_msg.contains("Failed to start interactive mode") || 
-                error_msg.contains("Failed to connect"));
+        assert!(
+            error_msg.contains("Failed to start interactive mode")
+                || error_msg.contains("Failed to connect")
+        );
     }
 
     #[test]
     fn test_play_json_interactive_rejects_invalid_json() {
         let invalid_json = r#"{"event_count": 1, "events": [}"#;
-        
+
         let result = play_json_interactive(invalid_json);
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
@@ -652,7 +659,9 @@ mod tests {
         assert!(result.is_err());
         // Should fail on server connection, not validation
         let error_msg = result.unwrap_err().to_string();
-        assert!(error_msg.contains("Failed to start interactive mode") || 
-                error_msg.contains("Failed to connect"));
+        assert!(
+            error_msg.contains("Failed to start interactive mode")
+                || error_msg.contains("Failed to connect")
+        );
     }
 }
