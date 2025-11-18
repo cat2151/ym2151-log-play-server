@@ -70,6 +70,8 @@ fn main() -> anyhow::Result<()> {
 
 インタラクティブモードは、リアルタイムレジスタ書き込みによる連続的な音声ストリーミングを可能にします。トーンエディタなど、即座の音声フィードバックが必要で、再生の空白時間を避けたいアプリケーションに最適です。
 
+#### 基本的なインタラクティブモード
+
 ```rust
 use ym2151_log_play_server::client;
 
@@ -97,20 +99,60 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
+#### JSONデータを使用したインタラクティブモード（便利関数）
+
+すでにym2151log形式のJSONデータを持つクライアントアプリケーションのために、`play_json_interactive()` 便利関数は変換やタイミングロジックを手動で実装する必要性を排除します：
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // サーバー準備確認
+    client::ensure_server_ready("ym2151-log-play-server")?;
+    
+    // インタラクティブモードでJSONデータを直接再生
+    let json_data = r#"{
+        "event_count": 3,
+        "events": [
+            {"time": 0, "addr": "0x08", "data": "0x00"},
+            {"time": 2797, "addr": "0x28", "data": "0x48"},
+            {"time": 5594, "addr": "0x08", "data": "0x78"}
+        ]
+    }"#;
+    
+    // この関数一つで以下を処理：
+    // - JSONの解析と検証
+    // - インタラクティブモードの開始
+    // - 時間変換（サンプル→秒）
+    // - 全レジスタ書き込みの送信
+    client::play_json_interactive(json_data)?;
+    
+    // 再生完了待機
+    std::thread::sleep(std::time::Duration::from_secs(2));
+    
+    // インタラクティブモード停止
+    client::stop_interactive()?;
+    
+    Ok(())
+}
+```
+
 **主な特徴：**
 - **連続ストリーミング**: 音声が途切れず、パラメータ変更時の無音時間を排除
 - **レイテンシ補正**: ジッタ補正のための50msバッファ（Web Audioスタイルのスケジューリング）
 - **サンプル精度のタイミング**: Float64秒（Web Audio API互換）で1/55930秒（1サンプル）までの精度を提供
 - **サーバー時刻同期**: `get_server_time()` でサーバーの時間座標系を取得し、精密なスケジューリングが可能
 - **WAV出力なし**: ファイルI/Oオーバーヘッドなしでリアルタイム用に最適化
+- **便利関数**: `play_json_interactive()` が一般的な処理タスクを自動化し、コードの重複を削減
 
 **メリット：**
 - トーンエディタ（例：ym2151-tone-editor）で即座の音声フィードバック
 - 再生中断なしでのスムーズなパラメータ変更
 - 静的イベントログ再生と比較して低レイテンシ
 - クロスプラットフォームの一貫性のためWeb Audio互換の時間表現
+- 便利関数によるシンプルなクライアントコード
 
-完全な例は `examples/interactive_demo.rs` を参照してください。
+完全な例は `examples/interactive_demo.rs` と `examples/play_json_interactive_demo.rs` を参照してください。
 
 ### サーバー・クライアントモード
 
