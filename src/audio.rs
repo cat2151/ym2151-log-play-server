@@ -183,6 +183,15 @@ impl AudioPlayer {
         }
     }
 
+    /// Clear all scheduled events in interactive mode
+    /// This allows seamless phrase transitions without audio gaps
+    pub fn clear_schedule(&self) {
+        if let Some(ref queue) = self.player_event_queue {
+            let mut q = queue.lock().unwrap();
+            q.clear();
+        }
+    }
+
     fn generate_samples_thread(
         mut player: Player,
         sample_tx: SyncSender<Vec<f32>>,

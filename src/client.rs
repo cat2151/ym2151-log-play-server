@@ -280,6 +280,37 @@ pub fn stop_interactive() -> Result<()> {
     send_command(Command::StopInteractive)
 }
 
+/// Clear all scheduled events in interactive mode
+///
+/// Removes all pending register write events from the server's schedule queue.
+/// This allows seamless phrase transitions without audio gaps - you can cancel
+/// phrase 1's scheduled events and immediately start phrase 2.
+///
+/// Note: Events that have already been processed (played) cannot be cleared.
+/// Only future scheduled events are removed.
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// // Start interactive mode
+/// client::start_interactive()?;
+///
+/// // Schedule some events for phrase 1
+/// client::write_register(0.1, 0x08, 0x78)?;
+/// client::write_register(0.2, 0x20, 0xC7)?;
+///
+/// // Cancel phrase 1 and switch to phrase 2 without audio gap
+/// client::clear_schedule()?;
+/// client::write_register(0.1, 0x28, 0x3E)?;
+///
+/// // Stop interactive mode when done
+/// client::stop_interactive()?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn clear_schedule() -> Result<()> {
+    send_command(Command::ClearSchedule)
+}
+
 /// Send ym2151log format JSON data to interactive mode
 ///
 /// This is a convenience function that accepts ym2151log format JSON data
@@ -520,6 +551,8 @@ fn send_command(command: Command) -> Result<()> {
         }
         Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
         Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
+        Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
+        _ => {} // Other commands don't have custom logging
     }
 
     // Send command via binary protocol
@@ -543,11 +576,14 @@ fn send_command(command: Command) -> Result<()> {
             }
             Command::Stop => log_client("✅ 演奏停止しました"),
             Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
+            Command::ClearSchedule => log_client("✅ スケジュールをクリアしました"),
+            _ => {} // Other commands don't have custom success logging
         },
         Response::Error { message } => {
             log_client(&format!("❌ サーバーエラー: {}", message));
             return Err(anyhow::anyhow!("Server returned error: {}", message));
         }
+        _ => {} // Handle other response types (like ServerTime) without error
     }
 
     Ok(())

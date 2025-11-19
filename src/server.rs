@@ -336,6 +336,28 @@ impl Server {
                         logging::log_verbose("✅ インタラクティブモードを停止しました");
                         Response::Ok
                     }
+                    Command::ClearSchedule => {
+                        let state = self.state.lock().unwrap();
+                        if *state != ServerState::Interactive {
+                            Response::Error {
+                                message: "Not in interactive mode".to_string(),
+                            }
+                        } else {
+                            drop(state); // Release lock before clearing
+
+                            if let Some(ref player_ref) = audio_player {
+                                player_ref.clear_schedule();
+                                logging::log_verbose(
+                                    "🗑️  スケジュール済みイベントをクリアしました",
+                                );
+                                Response::Ok
+                            } else {
+                                Response::Error {
+                                    message: "No active audio player".to_string(),
+                                }
+                            }
+                        }
+                    }
                     Command::Shutdown => {
                         logging::log_always("🛑 シャットダウン要求を受信しました");
                         if let Some(mut player) = audio_player.take() {

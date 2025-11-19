@@ -91,13 +91,15 @@ impl Player {
             value: data,
         });
 
-        // Keep queue sorted by time (simple insertion sort for small additions)
-        // In practice, events are typically added in order, so this is efficient
+        // Keep queue sorted by time
+        // Check if we need to sort (new events might be out of order)
         let len = queue.len();
-        if len >= 2 {
-            let last_idx = len - 1;
-            let second_last_idx = len - 2;
-            if queue[last_idx].time < queue[second_last_idx].time {
+        if len >= 3 {
+            // Check if the newly added events are out of order with existing events
+            let needs_sort = queue[len - 2].time < queue[len - 3].time
+                || queue[len - 1].time < queue[len - 2].time;
+
+            if needs_sort {
                 // Need to sort - convert to vec, sort, and rebuild
                 let mut vec: Vec<_> = queue.drain(..).collect();
                 vec.sort_by_key(|e| e.time);
@@ -109,6 +111,17 @@ impl Player {
     /// Check if running in interactive mode
     pub fn is_interactive(&self) -> bool {
         self.interactive_mode
+    }
+
+    /// Clear all scheduled events in interactive mode
+    /// This allows seamless phrase transitions without audio gaps
+    pub fn clear_schedule(&self) {
+        if !self.interactive_mode {
+            return;
+        }
+
+        let mut queue = self.scheduled_events.lock().unwrap();
+        queue.clear();
     }
 
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
@@ -514,5 +527,97 @@ mod tests {
     #[test]
     fn test_sample_rate() {
         assert_eq!(Player::sample_rate(), 55930);
+    }
+
+    #[test]
+    fn test_interactive_mode_creation() {
+        let player = Player::new_interactive();
+        assert!(player.is_interactive());
+        assert_eq!(player.total_events(), 0);
+        assert!(!player.is_complete()); // Interactive mode never completes
+    }
+
+    #[test]
+    fn test_schedule_register_write() {
+        let player = Player::new_interactive();
+
+        // Schedule a register write
+        player.schedule_register_write(100, 0x08, 0x78);
+
+        // Check that events were added to the queue
+        let queue = player.get_event_queue();
+        let q = queue.lock().unwrap();
+        assert_eq!(q.len(), 2); // Address write + data write
+
+        // Check address write
+        assert_eq!(q[0].time, 100);
+        assert_eq!(q[0].port, OPM_ADDRESS_REGISTER);
+        assert_eq!(q[0].value, 0x08);
+
+        // Check data write with delay
+        assert_eq!(q[1].time, 102); // 100 + DELAY_SAMPLES
+        assert_eq!(q[1].port, OPM_DATA_REGISTER);
+        assert_eq!(q[1].value, 0x78);
+    }
+
+    #[test]
+    fn test_clear_schedule() {
+        let player = Player::new_interactive();
+
+        // Schedule some events
+        player.schedule_register_write(100, 0x08, 0x78);
+        player.schedule_register_write(200, 0x20, 0xC7);
+
+        // Verify events were added
+        {
+            let queue = player.get_event_queue();
+            let q = queue.lock().unwrap();
+            assert_eq!(q.len(), 4); // 2 register writes = 4 events
+        }
+
+        // Clear the schedule
+        player.clear_schedule();
+
+        // Verify queue is empty
+        {
+            let queue = player.get_event_queue();
+            let q = queue.lock().unwrap();
+            assert_eq!(q.len(), 0);
+        }
+    }
+
+    #[test]
+    fn test_clear_schedule_non_interactive_mode() {
+        let log = EventLog {
+            event_count: 0,
+            events: vec![],
+        };
+        let player = Player::new(log);
+
+        // clear_schedule should do nothing in non-interactive mode
+        player.clear_schedule(); // Should not panic
+        assert!(!player.is_interactive());
+    }
+
+    #[test]
+    fn test_schedule_events_are_sorted() {
+        let player = Player::new_interactive();
+
+        // Schedule events out of order
+        player.schedule_register_write(200, 0x20, 0xC7);
+        player.schedule_register_write(100, 0x08, 0x78);
+        player.schedule_register_write(150, 0x28, 0x3E);
+
+        // Check that events are sorted by time
+        let queue = player.get_event_queue();
+        let q = queue.lock().unwrap();
+
+        // Should have 6 events (3 register writes × 2)
+        assert_eq!(q.len(), 6);
+
+        // Verify they are in time order
+        for i in 1..q.len() {
+            assert!(q[i].time >= q[i - 1].time);
+        }
     }
 }
