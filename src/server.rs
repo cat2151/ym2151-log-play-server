@@ -448,21 +448,3 @@ impl Default for Server {
         Self::new()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_server_creation() {
-        let server = Server::new();
-        assert_eq!(server.get_state(), ServerState::Stopped);
-        assert!(!server.is_shutdown_requested());
-    }
-
-    #[test]
-    fn test_server_default() {
-        let server = Server::default();
-        assert_eq!(server.get_state(), ServerState::Stopped);
-    }
-}

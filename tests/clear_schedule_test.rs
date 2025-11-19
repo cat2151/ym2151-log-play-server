@@ -40,7 +40,7 @@ fn test_clear_schedule_removes_all_events() {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
         assert_eq!(q.len(), 4); // 2 writes × 2 events each
-        
+
         // Verify first event is from phrase 2
         assert_eq!(q[0].value, 0x30); // First address from phrase 2
     }
