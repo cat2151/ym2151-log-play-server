@@ -32,6 +32,9 @@ impl NamedPipe {
     pub fn create_at<P: AsRef<Path>>(path: P) -> io::Result<Self> {
         let path = path.as_ref().to_path_buf();
 
+        #[cfg(feature = "verbose_pipe_debug")]
+        eprintln!("🔧 [PIPE DEBUG] Creating named pipe at: {:?}", path);
+
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
@@ -51,8 +54,14 @@ impl NamedPipe {
         };
 
         if handle.is_invalid() || handle == INVALID_HANDLE_VALUE {
-            return Err(io::Error::last_os_error());
+            let err = io::Error::last_os_error();
+            #[cfg(feature = "verbose_pipe_debug")]
+            eprintln!("❌ [PIPE DEBUG] Failed to create pipe: {:?}", err);
+            return Err(err);
         }
+
+        #[cfg(feature = "verbose_pipe_debug")]
+        eprintln!("✅ [PIPE DEBUG] Pipe created successfully");
 
         Ok(NamedPipe { path, handle })
     }
@@ -76,6 +85,9 @@ impl NamedPipe {
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let path = path.as_ref();
 
+        #[cfg(feature = "verbose_pipe_debug")]
+        eprintln!("🔌 [PIPE DEBUG] Attempting to connect to pipe: {:?}", path);
+
         let wide_path: Vec<u16> = OsStr::new(path.as_os_str())
             .encode_wide()
             .chain(std::iter::once(0))
@@ -95,13 +107,21 @@ impl NamedPipe {
         };
 
         if let Err(e) = handle {
+            #[cfg(feature = "verbose_pipe_debug")]
+            eprintln!("❌ [PIPE DEBUG] CreateFileW failed: {:?}", e);
             return Err(io::Error::other(e));
         }
 
         let handle = handle.unwrap();
         if handle.is_invalid() || handle == INVALID_HANDLE_VALUE {
-            return Err(io::Error::last_os_error());
+            let err = io::Error::last_os_error();
+            #[cfg(feature = "verbose_pipe_debug")]
+            eprintln!("❌ [PIPE DEBUG] Invalid handle returned: {:?}", err);
+            return Err(err);
         }
+
+        #[cfg(feature = "verbose_pipe_debug")]
+        eprintln!("✅ [PIPE DEBUG] Successfully connected to pipe");
 
         Ok(PipeWriter { handle })
     }

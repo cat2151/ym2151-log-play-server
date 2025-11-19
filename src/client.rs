@@ -185,7 +185,18 @@ pub fn shutdown_server() -> Result<()> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn start_interactive() -> Result<()> {
-    send_command(Command::StartInteractive)
+    log_client("🎮 [インタラクティブモード] 開始要求を送信中...");
+    log_client(&format!(
+        "🔌 [デバッグ] パイプパス: {}",
+        crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
+    ));
+    let result = send_command(Command::StartInteractive);
+    if result.is_ok() {
+        log_client("✅ [インタラクティブモード] 正常に開始しました");
+    } else {
+        log_client("❌ [インタラクティブモード] 開始に失敗しました");
+    }
+    result
 }
 
 /// Write a register value in interactive mode
@@ -209,6 +220,10 @@ pub fn start_interactive() -> Result<()> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn write_register(time_offset_sec: f64, addr: u8, data: u8) -> Result<()> {
+    log_client(&format!(
+        "📝 [レジスタ書き込み] offset={:.6}s, addr=0x{:02X}, data=0x{:02X}",
+        time_offset_sec, addr, data
+    ));
     send_command(Command::WriteRegister {
         time_offset_sec,
         addr,
@@ -277,7 +292,12 @@ pub fn get_server_time() -> Result<f64> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn stop_interactive() -> Result<()> {
-    send_command(Command::StopInteractive)
+    log_client("⏹️  [インタラクティブモード] 停止要求を送信中...");
+    let result = send_command(Command::StopInteractive);
+    if result.is_ok() {
+        log_client("✅ [インタラクティブモード] 正常に停止しました");
+    }
+    result
 }
 
 /// Clear all scheduled events in interactive mode
@@ -536,13 +556,31 @@ fn wait_for_server_ready(timeout: Duration) -> Result<()> {
 }
 
 pub fn send_command(command: Command) -> Result<()> {
-    let mut writer = NamedPipe::connect_default()
-        .context("Failed to connect to server. Is the server running?")?;
+    log_client(&format!(
+        "🔌 [デバッグ] パイプ接続を試行中: {}",
+        crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
+    ));
+
+    let mut writer = NamedPipe::connect_default().context(
+        "Failed to connect to server. Is the server running? \
+         サーバーが起動していることを確認してください。\
+         \n💡 ヒント: 以下を確認してください:\
+         \n  1. サーバーが起動しているか (ym2151-log-play-server server)\
+         \n  2. パイプパスが正しいか (\\\\.\\\pipe\\ym2151-log-play-server)\
+         \n  3. 他のプロセスがパイプを使用していないか",
+    )?;
+
+    log_client("✅ [デバッグ] パイプ接続成功");
 
     // Serialize command to binary format
     let binary_data = command
         .to_binary()
         .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+    log_client(&format!(
+        "📤 [デバッグ] コマンドをバイナリ化しました ({}バイト)",
+        binary_data.len()
+    ));
 
     // Display command info
     match &command {
@@ -552,7 +590,17 @@ pub fn send_command(command: Command) -> Result<()> {
         Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
         Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
         Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
-        _ => {} // Other commands don't have custom logging
+        Command::StartInteractive => log_client("⏳ インタラクティブモード開始要求を送信中..."),
+        Command::StopInteractive => log_client("⏳ インタラクティブモード停止要求を送信中..."),
+        Command::WriteRegister {
+            time_offset_sec,
+            addr,
+            data,
+        } => log_client(&format!(
+            "⏳ レジスタ書き込み要求を送信中: offset={:.6}s, addr=0x{:02X}, data=0x{:02X}",
+            time_offset_sec, addr, data
+        )),
+        _ => {}
     }
 
     // Send command via binary protocol
@@ -560,10 +608,18 @@ pub fn send_command(command: Command) -> Result<()> {
         .write_binary(&binary_data)
         .context("Failed to send command to server")?;
 
+    log_client("✅ [デバッグ] コマンド送信完了");
+    log_client("⏳ [デバッグ] サーバーからのレスポンス待機中...");
+
     // Read binary response from server
     let response_data = writer
         .read_binary_response()
         .context("Failed to read response from server")?;
+
+    log_client(&format!(
+        "✅ [デバッグ] レスポンス受信完了 ({}バイト)",
+        response_data.len()
+    ));
 
     // Parse binary response
     let response = Response::from_binary(&response_data)
