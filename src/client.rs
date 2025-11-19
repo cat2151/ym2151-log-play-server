@@ -504,7 +504,7 @@ fn install_app_via_cargo(app_name: &str) -> Result<()> {
 /// Start the server application in background mode
 fn start_server(server_app_name: &str) -> Result<()> {
     ProcessCommand::new(server_app_name)
-        .arg("--server")
+        .arg("server")
         .spawn()
         .context("Failed to spawn server process")?;
 

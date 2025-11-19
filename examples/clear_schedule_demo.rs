@@ -4,7 +4,7 @@
 //! and seamlessly transition between musical phrases without audio gaps.
 //!
 //! To run this example:
-//! 1. Start the server: cargo run --release -- --server
+//! 1. Start the server: cargo run --release -- server
 //! 2. In another terminal: cargo run --example clear_schedule_demo
 
 #[cfg(windows)]

@@ -18,10 +18,10 @@
 //!
 //! ```bash
 //! # Server mode (Windows)
-//! .\ym2151-log-play-server.exe --server --verbose
+//! .\ym2151-log-play-server.exe server --verbose
 //!
 //! # Client mode (Windows)
-//! .\ym2151-log-play-server.exe --client test.json --verbose
+//! .\ym2151-log-play-server.exe client test.json --verbose
 //! ```
 //!
 //! # Purpose
@@ -109,7 +109,7 @@ pub fn generate_post_playback_buffers(
 ///
 /// Writes the following files to the current directory:
 /// - `realtime_55k.wav` - Real-time playback at 55930Hz
-/// - `realtime_48k.wav` - Real-time playback at 48000Hz  
+/// - `realtime_48k.wav` - Real-time playback at 48000Hz
 /// - `post_55k.wav` - Non-real-time rendering at 55930Hz
 /// - `post_48k.wav` - Non-real-time rendering at 48000Hz
 ///

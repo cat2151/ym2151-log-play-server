@@ -33,13 +33,13 @@ cargo build --release
 cargo run --release -- sample_events.json
 
 # サーバーモード起動
-cargo run --release -- --server sample_events.json
+cargo run --release -- server
 
 # クライアントからファイル再生
-cargo run --release -- --client test_input.json
+cargo run --release -- client test_input.json
 
 # サーバーシャットダウン
-cargo run --release -- --server --shutdown
+cargo run --release -- client --shutdown
 
 # 全テスト実行
 cargo test

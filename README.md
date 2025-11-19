@@ -218,7 +218,7 @@ Examples:
   ym2151-log-play-server client --stop
 
   # From another terminal: Shut down server
-  ym2151-log-play-server --client --shutdown
+  ym2151-log-play-server client --shutdown
 ```
 
 ### Usage Example Scenarios
@@ -227,18 +227,18 @@ Examples:
 
 ```bash
 # Terminal 1: Start Server
-$ cargo run --release -- --server
+$ cargo run --release -- server
 Server started: /tmp/ym2151-log-play-server.pipe
 Server is running. Waiting for client connections...
 
 # Terminal 2: Client Operations
-$ cargo run --release -- --client test_input.json
+$ cargo run --release -- client test_input.json
 ✅ Sent PLAY command to server
 
-$ cargo run --release -- --client --stop
+$ cargo run --release -- client --stop
 ✅ Sent STOP command to server
 
-$ cargo run --release -- --client --shutdown
+$ cargo run --release -- client --shutdown
 ✅ Sent SHUTDOWN command to server
 ```
 
@@ -246,14 +246,14 @@ $ cargo run --release -- --client --shutdown
 
 ```bash
 # Start server (Terminal 1)
-$ cargo run --release -- --server
+$ cargo run --release -- server
 
 # Switch songs consecutively (Terminal 2)
-$ cargo run --release -- --client music2.json
+$ cargo run --release -- client music2.json
 $ sleep 5
-$ cargo run --release -- --client music3.json
+$ cargo run --release -- client music3.json
 $ sleep 5
-$ cargo run --release -- --client music1.json
+$ cargo run --release -- client music1.json
 ```
 
 ### Release Build
@@ -261,10 +261,10 @@ $ cargo run --release -- --client music1.json
 ```bash
 cargo build --release
 ./target/release/ym2151-log-play-server output_ym2151.json
-./target/release/ym2151-log-play-server --server
-./target/release/ym2151-log-play-server --client output_ym2151.json
-./target/release/ym2151-log-play-server --client --stop
-./target/release/ym2151-log-play-server --client --shutdown
+./target/release/ym2151-log-play-server server
+./target/release/ym2151-log-play-server client output_ym2151.json
+./target/release/ym2151-log-play-server client --stop
+./target/release/ym2151-log-play-server client --shutdown
 ```
 
 ### Running Tests

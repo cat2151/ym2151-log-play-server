@@ -14,7 +14,7 @@ mod ensure_server_ready_tests {
     fn test_ensure_server_ready_with_running_server() {
         // This test demonstrates the usage pattern when server is already running
         // Start a server manually before running this test:
-        // cargo run --release -- --server
+        // cargo run --release -- server
 
         let result = client::ensure_server_ready("ym2151-log-play-server");
         assert!(result.is_ok(), "Should succeed when server is running");
