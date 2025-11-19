@@ -185,10 +185,10 @@ cargo run --release -- server --verbose --low-quality-resampling
 
 ```bash
 # 新しいJSONファイルを再生（演奏を切り替え）
-cargo run --release -- client test_input.json
+cargo run --release -- client output_ym2151.json
 
 # 詳細モードで新しいJSONファイルを再生
-cargo run --release -- client test_input.json --verbose
+cargo run --release -- client output_ym2151.json --verbose
 
 # 演奏を停止（無音化）
 cargo run --release -- client --stop
@@ -228,10 +228,10 @@ cargo run --release -- client --shutdown
   ym2151-log-play-server server --low-quality-resampling
 
   # 別のターミナルから: 演奏を切り替え
-  ym2151-log-play-server client test_input.json
+  ym2151-log-play-server client output_ym2151.json
 
   # 別のターミナルから: 詳細モードで演奏
-  ym2151-log-play-server client test_input.json --verbose
+  ym2151-log-play-server client output_ym2151.json --verbose
 
   # 別のターミナルから: 演奏停止
   ym2151-log-play-server client --stop
@@ -247,18 +247,13 @@ cargo run --release -- client --shutdown
 ```bash
 # ターミナル1: サーバー起動
 $ cargo run --release -- server
-サーバーを起動しました: \pipe\ym2151-log-play-server.pipe
-サーバーが起動しました。クライアントからの接続を待機中...
 
 # ターミナル2: クライアントから操作
-$ cargo run --release -- client test_input.json
-✅ サーバーに演奏コマンドを送信しました
+$ cargo run --release -- client output_ym2151.json
 
 $ cargo run --release -- client --stop
-✅ サーバーに停止コマンドを送信しました
 
 $ cargo run --release -- client --shutdown
-✅ サーバーにシャットダウンコマンドを送信しました
 ```
 
 #### シナリオ2: 連続再生
