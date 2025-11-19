@@ -1,6 +1,6 @@
-use ym2151_log_play_server::audio::AudioPlayer;
-use ym2151_log_play_server::events::{EventLog, RegisterEvent};
-use ym2151_log_play_server::player::Player;
+use crate::audio::AudioPlayer;
+use crate::events::{EventLog, RegisterEvent};
+use crate::player::Player;
 
 #[test]
 fn test_audio_player_creation() {

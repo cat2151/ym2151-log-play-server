@@ -1,4 +1,4 @@
-use ym2151_log_play_server::resampler::{AudioResampler, ResamplingQuality, OPM_SAMPLE_RATE};
+use crate::resampler::{AudioResampler, ResamplingQuality, OPM_SAMPLE_RATE};
 
 #[test]
 fn test_resampler_creation() {

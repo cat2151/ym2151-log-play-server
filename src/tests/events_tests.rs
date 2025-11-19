@@ -1,4 +1,4 @@
-use ym2151_log_play_server::events::EventLog;
+use crate::events::EventLog;
 
 #[test]
 fn test_parse_simple_json() {

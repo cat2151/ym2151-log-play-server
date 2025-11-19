@@ -1,5 +1,5 @@
-use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
-use ym2151_log_play_server::scheduler::*;
+use crate::resampler::OPM_SAMPLE_RATE;
+use crate::scheduler::*;
 
 #[test]
 fn test_sec_to_samples() {
