@@ -44,8 +44,8 @@ impl Server {
         logging::log_always(&format!(
             "🎵 リサンプリング品質: {}",
             match quality {
-                ResamplingQuality::Linear => "標準 (線形補間)",
-                ResamplingQuality::HighQuality => "高品質 (Rubato FFTベース)",
+                ResamplingQuality::Linear => "低品質 (線形補間)",
+                ResamplingQuality::HighQuality => "標準 (Rubato FFTベース)",
             }
         ));
 
