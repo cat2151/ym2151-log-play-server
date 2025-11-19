@@ -423,9 +423,18 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
 /// This function ensures that the YM2151 server is running and ready to accept
 /// commands. It provides a seamless developer experience by automatically:
 /// 1. Checking if the server is already running
-/// 2. Installing the server application if not found in PATH
+/// 2. Locating the server executable (test binary in test builds, PATH, or install via cargo)
 /// 3. Starting the server if not running
 /// 4. Waiting until the server is ready to accept commands
+///
+/// # Test Context Support (Windows only, cfg(test) builds)
+/// When compiled with cfg(test) (e.g., `cargo test`), this function automatically
+/// detects and uses the test-built binary from `target/debug` or `target/debug/deps`
+/// instead of requiring the binary to be in PATH. This enables seamless integration
+/// testing without manual setup.
+///
+/// In non-test builds (e.g., `cargo build`, `cargo run`), this function uses the
+/// standard PATH search or cargo install, ensuring predictable behavior in production.
 ///
 /// # Arguments
 /// * `server_app_name` - Name of the server application (e.g., "cat-play-mml")
@@ -459,23 +468,75 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
 
     log_client("⚙️  サーバーが起動していません。起動準備中...");
 
-    // Check if the server application exists in PATH
-    if !is_app_in_path(server_app_name) {
-        log_client(&format!(
-            "📦 {} が見つかりません。cargo経由でインストール中...",
-            server_app_name
-        ));
-        install_app_via_cargo(server_app_name)
-            .with_context(|| format!("Failed to install {}", server_app_name))?;
-        log_client(&format!(
-            "✅ {} のインストールが完了しました",
-            server_app_name
-        ));
-    }
+    // Determine the server path based on context
+    #[cfg(all(windows, test))]
+    let server_path = {
+        // In test builds, try to find the binary in test context first
+        if let Some(test_binary) = get_test_binary_path(server_app_name) {
+            log_client(&format!("🧪 テストコンテキストを検出: {:?}", test_binary));
+            test_binary.to_string_lossy().to_string()
+        } else if is_app_in_path(server_app_name) {
+            // Use the app from PATH
+            server_app_name.to_string()
+        } else {
+            // Not in test context and not in PATH, install it
+            log_client(&format!(
+                "📦 {} が見つかりません。cargo経由でインストール中...",
+                server_app_name
+            ));
+            install_app_via_cargo(server_app_name)
+                .with_context(|| format!("Failed to install {}", server_app_name))?;
+            log_client(&format!(
+                "✅ {} のインストールが完了しました",
+                server_app_name
+            ));
+            server_app_name.to_string()
+        }
+    };
+
+    #[cfg(all(windows, not(test)))]
+    let server_path = {
+        // In non-test builds, use PATH or install
+        if is_app_in_path(server_app_name) {
+            // Use the app from PATH
+            server_app_name.to_string()
+        } else {
+            // Not in PATH, install it
+            log_client(&format!(
+                "📦 {} が見つかりません。cargo経由でインストール中...",
+                server_app_name
+            ));
+            install_app_via_cargo(server_app_name)
+                .with_context(|| format!("Failed to install {}", server_app_name))?;
+            log_client(&format!(
+                "✅ {} のインストールが完了しました",
+                server_app_name
+            ));
+            server_app_name.to_string()
+        }
+    };
+
+    #[cfg(not(windows))]
+    let server_path = {
+        // On non-Windows platforms, use the original logic
+        if !is_app_in_path(server_app_name) {
+            log_client(&format!(
+                "📦 {} が見つかりません。cargo経由でインストール中...",
+                server_app_name
+            ));
+            install_app_via_cargo(server_app_name)
+                .with_context(|| format!("Failed to install {}", server_app_name))?;
+            log_client(&format!(
+                "✅ {} のインストールが完了しました",
+                server_app_name
+            ));
+        }
+        server_app_name.to_string()
+    };
 
     // Start the server in background mode
     log_client("🚀 サーバーを起動中...");
-    start_server(server_app_name)
+    start_server(&server_path)
         .with_context(|| format!("Failed to start server: {}", server_app_name))?;
 
     // Poll the server until it's ready (max 10 seconds)
@@ -495,6 +556,60 @@ pub fn is_server_running() -> bool {
         Ok(_) => true,
         Err(_) => false,
     }
+}
+
+/// Get the binary path when running in test context
+///
+/// During testing, the binary is located in target/debug or target/debug/deps,
+/// not in PATH. This function locates the binary in the test build directory.
+///
+/// This function is only available when compiled with cfg(test), ensuring
+/// predictable behavior - it only searches for test binaries in test builds.
+///
+/// # Arguments
+/// * `binary_name` - Name of the binary to find (e.g., "ym2151-log-play-server")
+///
+/// # Returns
+/// * `Some(PathBuf)` - Path to the binary if found in test context
+/// * `None` - Not in test context or binary not found
+#[cfg(all(windows, test))]
+fn get_test_binary_path(binary_name: &str) -> Option<std::path::PathBuf> {
+    use std::path::PathBuf;
+
+    // Try to get current exe path (works in test context)
+    let current_exe = std::env::current_exe().ok()?;
+
+    // Get the directory containing the test executable
+    let mut path = current_exe.parent()?.to_path_buf();
+
+    // In debug/test mode, we might be in deps directory
+    if path.ends_with("deps") {
+        path = path.parent()?.to_path_buf();
+    }
+
+    // Try with .exe extension (Windows)
+    let exe_name = format!("{}.exe", binary_name);
+    path.push(&exe_name);
+
+    // Check if the binary exists
+    if path.exists() {
+        log_client(&format!("🔍 テストバイナリを検出: {:?}", path));
+        return Some(path);
+    }
+
+    // Try without .exe extension
+    path.pop();
+    path.push(binary_name);
+    if path.exists() {
+        log_client(&format!("🔍 テストバイナリを検出: {:?}", path));
+        return Some(path);
+    }
+
+    log_client(&format!(
+        "⚠️  テストバイナリが見つかりません: {} (検索場所: {:?})",
+        binary_name, path
+    ));
+    None
 }
 
 /// Check if an application is available in PATH
@@ -522,8 +637,11 @@ fn install_app_via_cargo(app_name: &str) -> Result<()> {
 }
 
 /// Start the server application in background mode
-fn start_server(server_app_name: &str) -> Result<()> {
-    ProcessCommand::new(server_app_name)
+///
+/// # Arguments
+/// * `server_path` - Path to the server executable (can be name in PATH or full path)
+fn start_server(server_path: &str) -> Result<()> {
+    ProcessCommand::new(server_path)
         .arg("server")
         .spawn()
         .context("Failed to spawn server process")?;
@@ -562,11 +680,11 @@ pub fn send_command(command: Command) -> Result<()> {
     ));
 
     let mut writer = NamedPipe::connect_default().context(
-        "Failed to connect to server. Is the server running? \
+        r"Failed to connect to server. Is the server running? \
          サーバーが起動していることを確認してください。\
          \n💡 ヒント: 以下を確認してください:\
          \n  1. サーバーが起動しているか (ym2151-log-play-server server)\
-         \n  2. パイプパスが正しいか (\\\\.\\\pipe\\ym2151-log-play-server)\
+         \n  2. パイプパスが正しいか (\\.\pipe\ym2151-log-play-server)\
          \n  3. 他のプロセスがパイプを使用していないか",
     )?;
 
@@ -643,4 +761,15 @@ pub fn send_command(command: Command) -> Result<()> {
     }
 
     Ok(())
+}
+
+// Test-only helper functions
+#[cfg(all(test, windows))]
+pub mod test_helpers {
+    use super::*;
+
+    /// Expose get_test_binary_path for testing
+    pub fn get_test_binary_path_helper(binary_name: &str) -> Option<std::path::PathBuf> {
+        super::get_test_binary_path(binary_name)
+    }
 }

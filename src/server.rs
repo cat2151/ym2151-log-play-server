@@ -255,11 +255,15 @@ impl Server {
                         {
                             let mut tracker = self.time_tracker.lock().unwrap();
                             tracker.reset();
-                            logging::log_verbose("🕐 [デバッグ] タイムトラッカーをリセットしました");
+                            logging::log_verbose(
+                                "🕐 [デバッグ] タイムトラッカーをリセットしました",
+                            );
                         }
 
                         // Start interactive mode
-                        logging::log_verbose("🎵 [デバッグ] インタラクティブオーディオプレーヤーを作成中...");
+                        logging::log_verbose(
+                            "🎵 [デバッグ] インタラクティブオーディオプレーヤーを作成中...",
+                        );
                         match self.start_interactive_mode() {
                             Ok(player) => {
                                 audio_player = Some(player);
@@ -282,7 +286,9 @@ impl Server {
                                 ));
                                 logging::log_always("💡 [デバッグ情報] 以下を確認してください:");
                                 logging::log_always("   1. 音声デバイスが利用可能か");
-                                logging::log_always("   2. 他のアプリケーションが音声デバイスを使用していないか");
+                                logging::log_always(
+                                    "   2. 他のアプリケーションが音声デバイスを使用していないか",
+                                );
                                 logging::log_always("   3. システムの音量設定");
                                 Response::Error {
                                     message: format!("Failed to start interactive mode: {}", e),
@@ -369,7 +375,9 @@ impl Server {
                             player.stop();
                             logging::log_verbose("✅ [デバッグ] オーディオプレーヤー停止完了");
                         } else {
-                            logging::log_verbose("⚠️  [デバッグ] 停止するオーディオプレーヤーがありません");
+                            logging::log_verbose(
+                                "⚠️  [デバッグ] 停止するオーディオプレーヤーがありません",
+                            );
                         }
 
                         let mut state = self.state.lock().unwrap();
