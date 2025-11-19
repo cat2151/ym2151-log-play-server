@@ -1,4 +1,4 @@
-use ym2151_log_play_server::ipc::protocol::{Command, Response};
+use crate::ipc::protocol::{Command, Response};
 
 // Binary protocol tests
 

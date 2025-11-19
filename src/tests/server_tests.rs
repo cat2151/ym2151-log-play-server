@@ -1,5 +1,5 @@
 #[cfg(windows)]
-use ym2151_log_play_server::server::{Server, ServerState};
+use crate::server::{Server, ServerState};
 
 #[cfg(windows)]
 #[test]

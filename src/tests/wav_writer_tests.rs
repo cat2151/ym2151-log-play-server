@@ -1,7 +1,7 @@
+use crate::events::{EventLog, RegisterEvent};
+use crate::player::Player;
+use crate::wav_writer::{generate_wav, write_wav, DEFAULT_OUTPUT_FILENAME};
 use std::path::Path;
-use ym2151_log_play_server::events::{EventLog, RegisterEvent};
-use ym2151_log_play_server::player::Player;
-use ym2151_log_play_server::wav_writer::{generate_wav, write_wav, DEFAULT_OUTPUT_FILENAME};
 
 #[test]
 fn test_write_wav_basic() {

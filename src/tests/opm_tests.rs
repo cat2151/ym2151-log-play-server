@@ -1,4 +1,4 @@
-use ym2151_log_play_server::opm::OpmChip;
+use crate::opm::OpmChip;
 
 #[test]
 fn test_chip_creation() {

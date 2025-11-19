@@ -1,4 +1,4 @@
-use ym2151_log_play_server::logging::*;
+use crate::logging::*;
 
 #[test]
 fn test_init_verbose() {

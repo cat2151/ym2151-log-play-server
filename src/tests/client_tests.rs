@@ -1,7 +1,7 @@
 #[cfg(windows)]
-use ym2151_log_play_server::client::*;
+use crate::client::*;
 #[cfg(windows)]
-use ym2151_log_play_server::ipc::protocol::Command;
+use crate::ipc::protocol::Command;
 
 #[cfg(windows)]
 #[test]
@@ -71,7 +71,7 @@ fn test_is_app_in_path() {
 #[cfg(windows)]
 #[test]
 fn test_play_json_interactive_parses_valid_json() {
-    use ym2151_log_play_server::events::EventLog;
+    use crate::events::EventLog;
 
     // Test that the function can parse valid JSON
     let json_data = r#"{

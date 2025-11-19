@@ -13,3 +13,6 @@ pub mod scheduler;
 #[cfg(windows)]
 pub mod server;
 pub mod wav_writer;
+
+#[cfg(test)]
+mod tests;
