@@ -38,7 +38,7 @@ fn test_resampler_sine_wave_preservation() {
     let mut resampler = AudioResampler::new().expect("Failed to create resampler");
 
     let freq = 440.0;
-    let duration_frames = 1000;
+    let duration_frames = 2048; // Increase to ensure chunk size is exceeded
     let mut input = Vec::with_capacity(duration_frames * 2);
 
     for i in 0..duration_frames {

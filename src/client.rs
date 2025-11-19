@@ -136,7 +136,7 @@ pub fn is_client_verbose() -> bool {
 }
 
 /// Print a message to stderr only if verbose mode is enabled
-fn log_client(message: &str) {
+pub fn log_client(message: &str) {
     if is_client_verbose() {
         eprintln!("{}", message);
     }
@@ -468,7 +468,7 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
 }
 
 /// Check if the server is currently running
-fn is_server_running() -> bool {
+pub fn is_server_running() -> bool {
     // Try to connect to the server
     // If successful, the server is running
     match NamedPipe::connect_default() {
@@ -478,7 +478,7 @@ fn is_server_running() -> bool {
 }
 
 /// Check if an application is available in PATH
-fn is_app_in_path(app_name: &str) -> bool {
+pub fn is_app_in_path(app_name: &str) -> bool {
     which::which(app_name).is_ok()
 }
 
@@ -535,7 +535,7 @@ fn wait_for_server_ready(timeout: Duration) -> Result<()> {
     }
 }
 
-fn send_command(command: Command) -> Result<()> {
+pub fn send_command(command: Command) -> Result<()> {
     let mut writer = NamedPipe::connect_default()
         .context("Failed to connect to server. Is the server running?")?;
 

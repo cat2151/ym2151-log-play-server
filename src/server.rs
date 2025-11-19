@@ -16,7 +16,7 @@ use crate::audio::AudioPlayer;
 use crate::ipc::pipe_windows::NamedPipe;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-enum ServerState {
+pub enum ServerState {
     Playing,
     Stopped,
     Interactive,
@@ -399,12 +399,12 @@ impl Server {
     }
 
     #[cfg(test)]
-    fn get_state(&self) -> ServerState {
+    pub fn get_state(&self) -> ServerState {
         self.state.lock().unwrap().clone()
     }
 
     #[cfg(test)]
-    fn is_shutdown_requested(&self) -> bool {
+    pub fn is_shutdown_requested(&self) -> bool {
         self.shutdown_flag.load(Ordering::Relaxed)
     }
 

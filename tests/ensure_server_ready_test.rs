@@ -5,8 +5,7 @@
 
 #[cfg(windows)]
 mod ensure_server_ready_tests {
-    use std::thread;
-    use std::time::Duration;
+
     use ym2151_log_play_server::client;
 
     /// Test that ensure_server_ready works when server is already running

@@ -71,7 +71,6 @@ fn test_is_app_in_path() {
 #[cfg(windows)]
 #[test]
 fn test_play_json_interactive_parses_valid_json() {
-    use crate::events::EventLog;
 
     // Test that the function can parse valid JSON
     let json_data = r#"{
