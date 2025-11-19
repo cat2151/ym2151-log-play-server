@@ -423,9 +423,15 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
 /// This function ensures that the YM2151 server is running and ready to accept
 /// commands. It provides a seamless developer experience by automatically:
 /// 1. Checking if the server is already running
-/// 2. Installing the server application if not found in PATH
+/// 2. Locating the server executable (test binary, PATH, or install via cargo)
 /// 3. Starting the server if not running
 /// 4. Waiting until the server is ready to accept commands
+///
+/// # Test Context Support (Windows only)
+/// When running in a test context (e.g., during `cargo test`), this function
+/// automatically detects and uses the test-built binary from `target/debug` or
+/// `target/debug/deps` instead of requiring the binary to be in PATH. This
+/// enables seamless integration testing without manual setup.
 ///
 /// # Arguments
 /// * `server_app_name` - Name of the server application (e.g., "cat-play-mml")
