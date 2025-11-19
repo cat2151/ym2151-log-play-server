@@ -20,6 +20,9 @@ pub enum Command {
     /// Get the current server time in the server time coordinate system (f64 seconds)
     /// This allows clients to synchronize with the server's timeline for precise scheduling
     GetServerTime,
+    /// Clear all scheduled events in interactive mode
+    /// This allows seamless phrase transitions without audio gaps
+    ClearSchedule,
 }
 
 impl Command {
@@ -295,6 +298,14 @@ mod tests {
         let original = Response::ServerTime { time_sec: 1.234567 };
         let binary = original.to_binary().unwrap();
         let parsed = Response::from_binary(&binary).unwrap();
+        assert_eq!(original, parsed);
+    }
+
+    #[test]
+    fn test_binary_clear_schedule_roundtrip() {
+        let original = Command::ClearSchedule;
+        let binary = original.to_binary().unwrap();
+        let parsed = Command::from_binary(&binary).unwrap();
         assert_eq!(original, parsed);
     }
 }
