@@ -5,50 +5,50 @@
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-A server and client that receive YM2151 (OPM) register event logs and perform real-time playback.
+A server-client application that receives YM2151 (OPM) register event logs and performs real-time playback.
 
 ## Target Platforms
 
 - Windows only
-- Linux-specific code prohibited
-    - Due to an observed increase in hallucinations within this project,
+- Prohibition of Linux-specific code
+    - As an increase in hallucinations was observed in this project,
         - Linux-specific code is prohibited.
 
 ## Status
 
-This is currently used as a library integrated into `cat-play-mml` and `ym2151-tone-editor`.
+Used as a library integrated into `cat-play-mml` and `ym2151-tone-editor`.
 
 ## Overview
 
 This project is a program that plays back register event logs from the YM2151 (OPM) sound chip.
-It operates in a server-client mode.
+It operates in server-client mode.
 
 ### Key Features
 
 - Real-time playback of JSON music data
 - WAV file output (when verbose)
-- Runs as a persistent server, continuing real-time playback in the background
+- Stays resident as a server, continuing real-time playback in the background
 - Controlled by a client to quickly switch to different performances
-- Uses named pipes for server-client communication
+- Utilizes named pipes for server-client communication
 
 ## Usage
 
-### Usage as a Library (Programmatic Control)
+### Using as a Library (Programmatic Control)
 
-Recommended pattern for using this library programmatically:
+The recommended pattern for programmatic use of this library:
 
 ```rust
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // Ensure server readiness (automatically installs and launches if necessary)
+    // Ensure the server is ready (automatically installs and launches if necessary)
     client::ensure_server_ready("cat-play-mml")?;
     
     // Send JSON data
     let json_data = r#"{"event_count": 2, "events": [...]}"#;
     client::send_json(json_data)?;
     
-    // Control playback
+    // Playback control
     client::stop_playback()?;
     
     // Shut down on exit
@@ -68,7 +68,7 @@ This eliminates the need for library users to manually manage the server's lifec
 
 ### Interactive Mode (Real-time Register Streaming)
 
-Interactive mode enables continuous audio streaming via real-time register writes. It is ideal for applications like tone editors that require immediate audio feedback and wish to avoid playback gaps.
+Interactive mode enables continuous audio streaming via real-time register writes. It is ideal for applications like tone editors that require immediate audio feedback and want to avoid playback gaps.
 
 #### Basic Interactive Mode
 
@@ -76,17 +76,17 @@ Interactive mode enables continuous audio streaming via real-time register write
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // Ensure server readiness
+    // Ensure server is ready
     client::ensure_server_ready("ym2151-log-play-server")?;
     
     // Start interactive mode
     client::start_interactive()?;
     
     // Write registers with specified timing (in seconds, f64)
-    client::write_register(0.0, 0x08, 0x00)?;     // Immediate: All channels key off
+    client::write_register(0.0, 0x08, 0x00)?;     // Immediate: All channels key-off
     client::write_register(0.050, 0x28, 0x48)?;   // +50ms: Set pitch
-    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: Channel 0 key on
-    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: Key off
+    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: Channel 0 key-on
+    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: Key-off
     
     // Get server time for precise synchronization
     let server_time = client::get_server_time()?;
@@ -99,21 +99,21 @@ fn main() -> anyhow::Result<()> {
 }
 ```
 
-#### Interactive Mode with JSON Data (Convenience Function)
+#### Interactive Mode using JSON Data (Convenience Function)
 
-For client applications already holding ym2151log-formatted JSON data, the `play_json_interactive()` convenience function eliminates the need to manually implement conversion and timing logic. This function only parses the JSON and writes registers; the user controls the interactive mode's lifecycle:
+For client applications already possessing `ym2151log`-formatted JSON data, the `play_json_interactive()` convenience function eliminates the need for manual implementation of conversion or timing logic. This function only handles JSON parsing and register writes; the user controls the interactive mode's lifecycle:
 
 ```rust
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // Ensure server readiness
+    // Ensure server is ready
     client::ensure_server_ready("ym2151-log-play-server")?;
     
     // Start interactive mode once
     client::start_interactive()?;
     
-    // Send multiple JSONs without stopping - No audio interruptions!
+    // Send multiple JSONs without stopping - no audio glitches!
     let json1 = r#"{
         "event_count": 2,
         "events": [
@@ -142,28 +142,28 @@ fn main() -> anyhow::Result<()> {
 ```
 
 **Key Features:**
-- **Continuous Streaming**: No audio interruptions, eliminates silent gaps during parameter changes.
+- **Continuous Streaming**: Eliminates audio dropouts and silent gaps during parameter changes.
 - **Latency Compensation**: 50ms buffer for jitter correction (Web Audio-style scheduling).
-- **Sample-Accurate Timing**: Float64 seconds (Web Audio API compatible) provides precision up to 1/55930 seconds (1 sample).
-- **Server Time Synchronization**: `get_server_time()` retrieves the server's time coordinate system, allowing for precise scheduling.
-- **No WAV Output**: Optimized for real-time without file I/O overhead.
-- **Convenience Function**: `play_json_interactive()` handles JSON parsing and time conversion without requiring interactive mode lifecycle management by the user.
+- **Sample-Accurate Timing**: Provides precision up to 1/55930 seconds (1 sample) using Float64 seconds (Web Audio API compatible).
+- **Server Time Synchronization**: `get_server_time()` allows retrieving the server's time coordinate system for precise scheduling.
+- **No WAV Output**: Optimized for real-time with no file I/O overhead.
+- **Convenience Function**: `play_json_interactive()` handles JSON parsing and time conversion without interactive mode lifecycle management.
 
 **Benefits:**
-- Immediate audio feedback in tone editors (e.g., ym2151-tone-editor).
-- Smooth parameter changes without interrupting playback.
-- Ability to send multiple JSONs consecutively without audio breaks.
+- Immediate audio feedback in tone editors (e.g., `ym2151-tone-editor`).
+- Smooth parameter changes without playback interruption.
+- Can continuously send multiple JSONs without audio glitches.
 - Lower latency compared to static event log playback.
 - Web Audio-compatible time representation for cross-platform consistency.
-- Client controls start/stop of interactive mode.
+- Client controls the start/stop of interactive mode.
 
-See `examples/interactive_demo.rs` and `examples/play_json_interactive_demo.rs` for complete examples.
+Refer to `examples/interactive_demo.rs` and `examples/play_json_interactive_demo.rs` for complete examples.
 
 ### Server-Client Mode
 
 #### Starting the Server
 
-Launch as a persistent server, waiting for commands:
+Stays resident as a server and starts in a waiting state:
 
 ```bash
 # Normal mode (log file only)
@@ -175,10 +175,10 @@ cargo run --release -- server --verbose
 
 #### Client Operations
 
-From another terminal, operate in client mode:
+Operate from another terminal in client mode:
 
 ```bash
-# Play a new JSON file (switches performance)
+# Play a new JSON file (switch performance)
 cargo run --release -- client test_input.json
 
 # Stop playback (mute)
@@ -188,7 +188,7 @@ cargo run --release -- client --stop
 cargo run --release -- client --shutdown
 ```
 
-### Command-Line Arguments
+### Command Line Arguments List
 
 ```
 Usage:
@@ -198,11 +198,11 @@ Usage:
   ym2151-log-play-server client --shutdown          # Shut down server
 
 Options:
-  server           Start as a server in standby mode
-  server --verbose Start server in verbose logging mode (outputs WAV files)
-  client <file>    Instruct the server to play a new JSON file
-  client --stop    Instruct the server to stop playback
-  client --shutdown Instruct the server to shut down
+  server           Starts the server in a waiting state.
+  server --verbose Starts the server in verbose mode (outputs WAV files).
+  client <file>    Instructs the server to play a new JSON file.
+  client --stop    Instructs the server to stop playback.
+  client --shutdown Instructs the server to shut down.
 
 Examples:
   # Start server
@@ -211,7 +211,7 @@ Examples:
   # Start server (verbose, with WAV output)
   ym2151-log-play-server server --verbose
 
-  # From another terminal: Switch playback
+  # From another terminal: Switch performance
   ym2151-log-play-server client test_input.json
 
   # From another terminal: Stop playback
@@ -221,17 +221,17 @@ Examples:
   ym2151-log-play-server --client --shutdown
 ```
 
-### Usage Scenarios
+### Usage Example Scenarios
 
 #### Scenario 1: Basic Usage
 
 ```bash
-# Terminal 1: Start server
+# Terminal 1: Start Server
 $ cargo run --release -- --server
 Server started: /tmp/ym2151-log-play-server.pipe
 Server is running. Waiting for client connections...
 
-# Terminal 2: Client operations
+# Terminal 2: Client Operations
 $ cargo run --release -- --client test_input.json
 ✅ Sent PLAY command to server
 
@@ -278,54 +278,61 @@ cargo test
 - Rust 1.70 or later
 - zig cc (used as a C compiler)
 
-## Future Outlook
-- Currently, the project is considered stable.
-- Implement new features as needed.
+## Future Prospects
+- Currently, the status is considered stable.
+- Will implement as needed, upon discovery.
 
 ## Project Goals
 - Motivation:
-  - Past Challenges:
-    - Unable to input the next command until the current playback finished.
+  - Previous challenges:
+    - Cannot input the next command until playback finishes (`ym2151-log-player-rust`).
   - Solution:
-    - Run as a persistent server, controlled by a client.
+    - Stays resident as a server and is controlled by a client.
   - Use Cases:
-    - Provide an experience similar to MSX's PLAY statement, where you can input the next command while music is playing.
-    - Utilize the crate as a client from tone editors and phrase editors.
-    - Integrate the crate into a player to make it both a server and a client.
-      - On the first run, launch a clone of itself as a background server to start playback, then terminate itself.
-        - *Note: Unlike explicit server usage, the concept is to output messages to a log instead of printing them, as logs are easier to track.*
-      - After the server is launched, it acts as a client to send JSON to the server, then terminates itself.
-- Simple and minimal. Intended to be easy to reference when building larger projects.
-- If it stops playing, the intention is to prioritize getting it to play again as much as possible.
+    - Provides an experience like MSX's PLAY statement, where the next command can be entered while playing.
+    - From a tone editor or phrase editor,
+      - Utilize the crate as a client.
+    - Integrate the crate into a player, making it both a server and a client.
+      - Initially, start a copy of itself as a background server to begin playback, then the original process exits.
+        - *Unlike explicit server usage, the idea is to output messages to a log instead of printing to console; logs are easier to track.*
+      - After the server is launched, act as a client to send JSON to the server, then the client process exits.
+- Simple and minimal. Designed to be easy to reference when building larger projects.
+- If it stops playing sound, the intention is to prioritize getting it to play again.
 
-## Project Rationale
-- Why this module split?
-  - To enable GitHub Copilot Coding Agent to perform TDD on the layers above this (from MML input to log generation) using GitHub Linux Runner.
-  - This layer (Windows real-time playback, and Windows client-server) cannot be TDD'd by GitHub Copilot Coding Agent on GitHub Linux Runner, requiring TDD by a Windows local agent instead, which increases the workload.
-  - Therefore, this workload-heavy layer was separated to allow other layers to be developed more efficiently.
+## Project Intent
+- Why was such module partitioning performed?
+  - To enable the GitHub Copilot Coding Agent to perform TDD on layers above this (from MML input to log generation) using GitHub Linux Runner.
+  - This layer (Windows real-time playback and Windows client-server) cannot be TDD'd by the GitHub Copilot Coding Agent on GitHub Linux Runner, and instead requires TDD by a local Windows agent, which entails a somewhat higher workload.
+  - Therefore, this high-workload layer was separated to enable efficient development of other layers.
 
 ## Out of Scope
 - Advanced features
 - Reproduction of existing songs
 
 ## Development Method
-- TDD with an agent on Windows.
-- Linux prohibited for this project only.
+- TDD with agent on Windows.
+- Linux prohibited specifically for this project.
   - This is because:
-    - Early on, effectively Linux-specific code was generated.
-      - Although it might have served as a foundation for the Windows version.
-    - Unix/Linux/Windows branching, real-time audio presence branching, and other branches, along with extensive comments,
-      - Led to code bloat and became a breeding ground for hallucinations.
-      - Resulted in low-quality code with many unnecessary `allow deadcode`, `ignored` tests, duplicate tests, and redundant `cfg windows` branches.
-      - Frequent hallucinations prevented bug fixes and the implementation of Windows-specific features.
-    - It was discovered that TDD with an agent works well on Windows for this project.
-      - The aforementioned hallucinations and inefficiencies were resolved through robust refactoring using TDD.
+    - In the early stages, virtually Linux-specific code was generated.
+      - (It might have been helpful for the Windows version's foundation.)
+    - Unix/Linux/Windows branching, realtime-audio presence branching, other branching, and a large number of associated comments,
+      - led to code bloat and became a breeding ground for hallucinations.
+      - Resulted in low-quality code, including unnecessary `allow deadcode`, ignored tests, duplicate tests, and redundant `cfg windows` branching.
+      - Frequent hallucinations made bug fixes and feature implementation for the Windows version impossible.
+    - It was discovered that TDD with an agent on Windows works well for this project.
+      - The aforementioned hallucinations and redundancies were resolved through robust refactoring using TDD.
+- Batch installation of related applications.
+    - Useful for usage and development.
+    - Prerequisite: `cargo install rust-script`.
+```powershell
+rust-script install-ym2151-tools.rs
+```
 
 ## License
 
 MIT License
 
-## Libraries Used
+## Used Libraries
 
 - Nuked-OPM: LGPL 2.1
-- Other Rust crates: Subject to each crate's license
+- Other Rust crates: Follow individual crate licenses
