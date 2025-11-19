@@ -18,11 +18,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Enable verbose output to see what's happening
     client::init_client(true);
 
-    // Ensure server is running
-    println!("Ensuring server is ready...");
-    client::ensure_server_ready("ym2151-log-play-server")?;
+    // Check if server is already running
+    println!("Checking if server is running...");
+    if !client::is_server_running() {
+        eprintln!("\n❌ エラー: サーバーが起動していません");
+        eprintln!("\n先に別のターミナルでサーバーを起動してください:");
+        eprintln!("  cargo run --release -- server --verbose");
+        eprintln!("\nまたは:");
+        eprintln!("  ym2151-log-play-server server --verbose");
+        eprintln!("\nサーバー起動後、このdemoを再実行してください。");
+        std::process::exit(1);
+    }
+    println!("✅ サーバーが起動しています\n");
 
-    println!("\n✅ Starting interactive mode...");
+    println!("✅ Starting interactive mode...");
     client::start_interactive()?;
 
     println!("📝 Sending register writes...\n");
@@ -60,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("⏹️  Stopping interactive mode...");
     client::stop_interactive()?;
 
-    println!("✅ Demo complete!");
+    println!("\n✅ Demo complete!");
     Ok(())
 }
 

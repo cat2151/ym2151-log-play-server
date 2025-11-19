@@ -218,14 +218,31 @@ Player::new_interactive()
 **症状**: テストは成功するがdemoが失敗
 
 **原因候補**:
-- テストとdemoで異なるタイミング/待機パターンを使用している
-- テストではサーバーを同一プロセス内で起動している可能性
-- demoでは外部サーバープロセスへの接続が必要で、起動待機が不足している
+- **テストの性質**: 
+  - `tests/interactive_mode_test.rs` は **ユニットテスト** で、Player クラスを直接テストしている
+  - サーバーを起動せずに Player の動作を検証
+  - エラーが発生しないことを確認しているのではなく、特定の動作（イベントキューへの追加など）を検証
+  
+- **demoの性質**:
+  - `examples/*_demo.rs` は **統合テスト/実用例** で、実際のサーバー/クライアント通信を必要とする
+  - サーバープロセスが別途起動している必要がある
+  - `ensure_server_ready()` の誤用により、存在しないバイナリをインストールしようとしていた
+
+- **play_json_interactive_test.rs の性質**:
+  - これらのテストは **エラーハンドリングのテスト** である
+  - サーバーが起動していない状態で、適切なエラーが返されることを確認
+  - 例: `assert!(error_msg.contains("Failed to connect"))`
+  - つまり、接続失敗が **期待される動作** であり、テストがグリーンなのは正常
+
+**修正内容**:
+- examples/ 内の全てのdemoで `ensure_server_ready()` の呼び出しを削除
+- 代わりに `is_server_running()` でサーバーの起動確認を行い、未起動の場合は明確なエラーメッセージを表示
+- ユーザーに手動でサーバーを起動するよう促すメッセージを追加
 
 **確認方法**:
-- tests と examples のコードを比較
-- サーバー起動の方法を確認
-- `ensure_server_ready()` の使用有無を確認
+- ✅ 修正済み: examples/interactive_demo.rs
+- ✅ 修正済み: examples/play_json_interactive_demo.rs
+- ✅ 修正済み: examples/clear_schedule_demo.rs
 
 ## 推奨される診断手順
 
