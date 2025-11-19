@@ -32,6 +32,35 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 //!
+//! ## Interactive Mode with JSON Data
+//!
+//! Use [`play_json_interactive`] to send ym2151log format JSON data to interactive mode.
+//! This convenience function handles JSON parsing and register writes without managing
+//! the interactive mode lifecycle, allowing continuous playback without audio gaps:
+//!
+//! ```no_run
+//! use ym2151_log_play_server::client;
+//!
+//! // Start interactive mode once
+//! client::start_interactive()?;
+//!
+//! // Send multiple JSONs without stopping - no audio gaps!
+//! let json1 = r#"{"event_count": 2, "events": [
+//!     {"time": 0, "addr": "0x08", "data": "0x00"},
+//!     {"time": 100, "addr": "0x20", "data": "0xC7"}
+//! ]}"#;
+//! client::play_json_interactive(json1)?;
+//!
+//! let json2 = r#"{"event_count": 1, "events": [
+//!     {"time": 200, "addr": "0x28", "data": "0x3E"}
+//! ]}"#;
+//! client::play_json_interactive(json2)?;
+//!
+//! // Stop when done
+//! client::stop_interactive()?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
 //! ## Controlling Playback
 //!
 //! ```no_run
@@ -249,6 +278,93 @@ pub fn get_server_time() -> Result<f64> {
 /// ```
 pub fn stop_interactive() -> Result<()> {
     send_command(Command::StopInteractive)
+}
+
+/// Send ym2151log format JSON data to interactive mode
+///
+/// This is a convenience function that accepts ym2151log format JSON data
+/// and sends the register writes to the server in interactive mode. It handles:
+/// - Parsing the JSON data
+/// - Converting event timestamps to time offsets
+/// - Sending register writes with proper timing
+///
+/// This function does NOT start or stop interactive mode - the client must
+/// manage the interactive mode lifecycle using `start_interactive()` and
+/// `stop_interactive()`. This allows sending multiple JSONs continuously
+/// without audio gaps.
+///
+/// This eliminates the need for client applications to implement similar
+/// processing logic repeatedly.
+///
+/// # Arguments
+/// * `json_data` - JSON string in ym2151log format with events
+///
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client;
+/// // Start interactive mode once
+/// client::start_interactive()?;
+///
+/// // Send multiple JSONs without stopping - no audio gaps!
+/// let json1 = r#"{"event_count": 2, "events": [
+///     {"time": 0, "addr": "0x08", "data": "0x00"},
+///     {"time": 2797, "addr": "0x20", "data": "0xC7"}
+/// ]}"#;
+/// client::play_json_interactive(json1)?;
+///
+/// let json2 = r#"{"event_count": 1, "events": [
+///     {"time": 5594, "addr": "0x28", "data": "0x3E"}
+/// ]}"#;
+/// client::play_json_interactive(json2)?;
+///
+/// // Stop interactive mode when done
+/// client::stop_interactive()?;
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+///
+/// # Notes
+/// - Events are scheduled with their original timing preserved
+/// - Time values in the JSON are in YM2151 sample units (55930 Hz)
+/// - Interactive mode must be started before calling this function
+/// - Interactive mode must be stopped manually when done
+pub fn play_json_interactive(json_data: &str) -> Result<()> {
+    use crate::events::EventLog;
+    use crate::resampler::OPM_SAMPLE_RATE;
+
+    // Parse the JSON data
+    let event_log = EventLog::from_json_str(json_data).context("Failed to parse JSON data")?;
+
+    // Validate the event log
+    if !event_log.validate() {
+        return Err(anyhow::anyhow!("Invalid event log: validation failed"));
+    }
+
+    log_client(&format!(
+        "📝 JSONから{}個のイベントを読み込みました",
+        event_log.event_count
+    ));
+
+    // Convert events to time offsets and send them
+    for event in &event_log.events {
+        // Convert sample time to seconds (f64)
+        // Event time is in samples at 55930 Hz
+        let time_offset_sec = event.time as f64 / OPM_SAMPLE_RATE as f64;
+
+        // Send register write
+        write_register(time_offset_sec, event.addr, event.data).with_context(|| {
+            format!(
+                "Failed to write register 0x{:02X} = 0x{:02X} at {:.6}s",
+                event.addr, event.data, time_offset_sec
+            )
+        })?;
+    }
+
+    log_client(&format!(
+        "✅ {}個のレジスタ書き込みを送信しました",
+        event_log.event_count
+    ));
+
+    Ok(())
 }
 
 /// Ensure the server is running and ready to accept commands
@@ -497,5 +613,73 @@ mod tests {
 
         // Test with a command that likely doesn't exist
         assert!(!is_app_in_path("this-command-should-not-exist-xyz123"));
+    }
+
+    #[test]
+    fn test_play_json_interactive_parses_valid_json() {
+        use crate::events::EventLog;
+
+        // Test that the function can parse valid JSON
+        let json_data = r#"{
+            "event_count": 2,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"},
+                {"time": 2797, "addr": "0x20", "data": "0xC7"}
+            ]
+        }"#;
+
+        // This will fail to connect to server when writing registers,
+        // but it should successfully parse JSON first
+        let result = play_json_interactive(json_data);
+
+        // Should fail because server is not running, but not because of JSON parsing
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        // Error should be about register write/server connection, not JSON parsing
+        assert!(
+            error_msg.contains("Failed to write register")
+                || error_msg.contains("Failed to connect")
+        );
+    }
+
+    #[test]
+    fn test_play_json_interactive_rejects_invalid_json() {
+        let invalid_json = r#"{"event_count": 1, "events": [}"#;
+
+        let result = play_json_interactive(invalid_json);
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("Failed to parse JSON"));
+    }
+
+    #[test]
+    fn test_play_json_interactive_validates_event_log() {
+        // Event count mismatch
+        let json_data = r#"{
+            "event_count": 5,
+            "events": [
+                {"time": 0, "addr": "0x08", "data": "0x00"}
+            ]
+        }"#;
+
+        let result = play_json_interactive(json_data);
+        assert!(result.is_err());
+        let error_msg = result.unwrap_err().to_string();
+        assert!(error_msg.contains("validation failed"));
+    }
+
+    #[test]
+    fn test_play_json_interactive_empty_events() {
+        let json_data = r#"{
+            "event_count": 0,
+            "events": []
+        }"#;
+
+        // Empty events should be valid and succeed (no register writes to send)
+        // Since the function doesn't start/stop interactive mode, it should just do nothing
+        let result = play_json_interactive(json_data);
+
+        // Should succeed since there are no events to process
+        assert!(result.is_ok());
     }
 }
