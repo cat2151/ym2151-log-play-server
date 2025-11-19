@@ -1,4 +1,4 @@
-Last updated: 2025-11-19
+Last updated: 2025-11-20
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -133,6 +133,8 @@ fn main() -> anyhow::Result<()> {
 
 インタラクティブモードは、リアルタイムレジスタ書き込みによる連続的な音声ストリーミングを可能にします。トーンエディタなど、即座の音声フィードバックが必要で、再生の空白時間を避けたいアプリケーションに最適です。
 
+#### 基本的なインタラクティブモード
+
 ```rust
 use ym2151_log_play_server::client;
 
@@ -143,13 +145,59 @@ fn main() -> anyhow::Result<()> {
     // インタラクティブモード開始
     client::start_interactive()?;
     
-    // タイミング指定してレジスタ書き込み
-    client::write_register(0, 0x08, 0x00)?;     // 即座: 全チャンネルキーオフ
-    client::write_register(50, 0x28, 0x48)?;    // +50ms: 音程設定
-    client::write_register(50, 0x08, 0x78)?;    // +50ms: チャンネル0キーオン
-    client::write_register(500, 0x08, 0x00)?;   // +500ms: キーオフ
+    // タイミング指定してレジスタ書き込み（秒単位、f64）
+    client::write_register(0.0, 0x08, 0x00)?;     // 即座: 全チャンネルキーオフ
+    client::write_register(0.050, 0x28, 0x48)?;   // +50ms: 音程設定
+    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: チャンネル0キーオン
+    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: キーオフ
+    
+    // 精密な同期のためサーバー時刻を取得
+    let server_time = client::get_server_time()?;
+    println!("サーバー時刻: {:.6} 秒", server_time);
     
     // インタラクティブモード停止
+    client::stop_interactive()?;
+    
+    Ok(())
+}
+```
+
+#### JSONデータを使用したインタラクティブモード（便利関数）
+
+すでにym2151log形式のJSONデータを持つクライアントアプリケーションのために、`play_json_interactive()` 便利関数は変換やタイミングロジックを手動で実装する必要性を排除します。この関数はJSONの解析とレジスタ書き込みのみを行い、インタラクティブモードのライフサイクルはユーザーが制御します：
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // サーバー準備確認
+    client::ensure_server_ready("ym2151-log-play-server")?;
+    
+    // インタラクティブモードを一度開始
+    client::start_interactive()?;
+    
+    // 複数のJSONを停止せずに送信 - 音の途切れなし！
+    let json1 = r#"{
+        "event_count": 2,
+        "events": [
+            {"time": 0, "addr": "0x08", "data": "0x00"},
+            {"time": 2797, "addr": "0x28", "data": "0x48"}
+        ]
+    }"#;
+    client::play_json_interactive(json1)?;
+    
+    let json2 = r#"{
+        "event_count": 1,
+        "events": [
+            {"time": 5594, "addr": "0x08", "data": "0x78"}
+        ]
+    }"#;
+    client::play_json_interactive(json2)?;
+    
+    // 再生完了待機
+    std::thread::sleep(std::time::Duration::from_secs(2));
+    
+    // 完了時にインタラクティブモード停止
     client::stop_interactive()?;
     
     Ok(())
@@ -159,15 +207,20 @@ fn main() -> anyhow::Result<()> {
 **主な特徴：**
 - **連続ストリーミング**: 音声が途切れず、パラメータ変更時の無音時間を排除
 - **レイテンシ補正**: ジッタ補正のための50msバッファ（Web Audioスタイルのスケジューリング）
-- **時間スケジューリング**: ミリ秒精度でのレジスタ書き込みスケジューリング
+- **サンプル精度のタイミング**: Float64秒（Web Audio API互換）で1/55930秒（1サンプル）までの精度を提供
+- **サーバー時刻同期**: `get_server_time()` でサーバーの時間座標系を取得し、精密なスケジューリングが可能
 - **WAV出力なし**: ファイルI/Oオーバーヘッドなしでリアルタイム用に最適化
+- **便利関数**: `play_json_interactive()` がインタラクティブモードのライフサイクル管理なしでJSONの解析と時間変換を処理
 
 **メリット：**
 - トーンエディタ（例：ym2151-tone-editor）で即座の音声フィードバック
 - 再生中断なしでのスムーズなパラメータ変更
+- 音の途切れなく複数のJSONを連続送信可能
 - 静的イベントログ再生と比較して低レイテンシ
+- クロスプラットフォームの一貫性のためWeb Audio互換の時間表現
+- クライアントがインタラクティブモードの開始/停止を制御
 
-完全な例は `examples/interactive_demo.rs` を参照してください。
+完全な例は `examples/interactive_demo.rs` と `examples/play_json_interactive_demo.rs` を参照してください。
 
 ### サーバー・クライアントモード
 
@@ -181,6 +234,12 @@ cargo run --release -- server
 
 # verbose モード（詳細ログとWAV出力）
 cargo run --release -- server --verbose
+
+# 低品位リサンプリングモード（比較用）
+cargo run --release -- server --low-quality-resampling
+
+# verbose + 低品位リサンプリング
+cargo run --release -- server --verbose --low-quality-resampling
 ```
 
 #### クライアントからの操作
@@ -189,7 +248,10 @@ cargo run --release -- server --verbose
 
 ```bash
 # 新しいJSONファイルを再生（演奏を切り替え）
-cargo run --release -- client test_input.json
+cargo run --release -- client output_ym2151.json
+
+# 詳細モードで新しいJSONファイルを再生
+cargo run --release -- client output_ym2151.json --verbose
 
 # 演奏を停止（無音化）
 cargo run --release -- client --stop
@@ -202,17 +264,21 @@ cargo run --release -- client --shutdown
 
 ```
 使用方法:
-  ym2151-log-play-server server [--verbose]         # サーバーモード
-  ym2151-log-play-server client <json_log_file>     # 新規JSONを演奏
-  ym2151-log-play-server client --stop              # 演奏停止
-  ym2151-log-play-server client --shutdown          # サーバーシャットダウン
+  ym2151-log-play-server server [OPTIONS]           # サーバーモード
+  ym2151-log-play-server client [OPTIONS] [FILE]    # クライアントモード
 
-オプション:
-  server           サーバーとして待機状態で起動
-  server --verbose サーバーを詳細ログモードで起動（WAVファイルを出力）
-  client <file>    サーバーに新しいJSONファイルの演奏を指示
-  client --stop    サーバーに演奏停止を指示
-  client --shutdown サーバーにシャットダウンを指示
+サーバーモード:
+  server                    サーバーとして待機状態で起動
+  server --verbose          詳細ログモードで起動（WAVファイルを出力）
+  server --low-quality-resampling  低品位リサンプリングを使用（線形補間、比較用）
+
+クライアントモード:
+  client <json_file>        サーバーに新しいJSONファイルの演奏を指示
+  client <json_file> --verbose  詳細な状態メッセージ付きで演奏を指示
+  client --stop             サーバーに演奏停止を指示
+  client --stop --verbose   詳細な状態メッセージ付きで演奏を停止
+  client --shutdown         サーバーにシャットダウンを指示
+  client --shutdown --verbose  詳細な状態メッセージ付きでサーバーをシャットダウン
 
 例:
   # サーバー起動
@@ -221,14 +287,20 @@ cargo run --release -- client --shutdown
   # サーバー起動（verbose、WAV出力あり）
   ym2151-log-play-server server --verbose
 
+  # サーバー起動（低品位リサンプリング）
+  ym2151-log-play-server server --low-quality-resampling
+
   # 別のターミナルから: 演奏を切り替え
-  ym2151-log-play-server client test_input.json
+  ym2151-log-play-server client output_ym2151.json
+
+  # 別のターミナルから: 詳細モードで演奏
+  ym2151-log-play-server client output_ym2151.json --verbose
 
   # 別のターミナルから: 演奏停止
   ym2151-log-play-server client --stop
 
   # 別のターミナルから: サーバー終了
-  ym2151-log-play-server --client --shutdown
+  ym2151-log-play-server client --shutdown
 ```
 
 ### 使用例シナリオ
@@ -237,44 +309,39 @@ cargo run --release -- client --shutdown
 
 ```bash
 # ターミナル1: サーバー起動
-$ cargo run --release -- --server
-サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
-サーバーが起動しました。クライアントからの接続を待機中...
+$ cargo run --release -- server
 
 # ターミナル2: クライアントから操作
-$ cargo run --release -- --client test_input.json
-✅ サーバーに PLAY コマンドを送信しました
+$ cargo run --release -- client output_ym2151.json
 
-$ cargo run --release -- --client --stop
-✅ サーバーに STOP コマンドを送信しました
+$ cargo run --release -- client --stop
 
-$ cargo run --release -- --client --shutdown
-✅ サーバーに SHUTDOWN コマンドを送信しました
+$ cargo run --release -- client --shutdown
 ```
 
 #### シナリオ2: 連続再生
 
 ```bash
 # サーバー起動（ターミナル1）
-$ cargo run --release -- --server
+$ cargo run --release -- server
 
 # 次々と曲を切り替え（ターミナル2）
-$ cargo run --release -- --client music2.json
-$ sleep 5
-$ cargo run --release -- --client music3.json
-$ sleep 5
-$ cargo run --release -- --client music1.json
+$ cargo run --release -- client music2.json
+$ Start-Sleep 5
+$ cargo run --release -- client music3.json
+$ Start-Sleep 5
+$ cargo run --release -- client music1.json
 ```
 
 ### リリースビルド
 
 ```bash
 cargo build --release
-./target/release/ym2151-log-play-server output_ym2151.json
-./target/release/ym2151-log-play-server --server
-./target/release/ym2151-log-play-server --client output_ym2151.json
-./target/release/ym2151-log-play-server --client --stop
-./target/release/ym2151-log-play-server --client --shutdown
+.\target\release\ym2151-log-play-server.exe server
+.\target\release\ym2151-log-play-server.exe server --verbose
+.\target\release\ym2151-log-play-server.exe client output_ym2151.json
+.\target\release\ym2151-log-play-server.exe client --stop
+.\target\release\ym2151-log-play-server.exe client --shutdown
 ```
 
 ### テストの実行
@@ -295,7 +362,7 @@ cargo test
 ## プロジェクトが目指すもの
 - モチベ：
   - これまでの課題：
-    - 演奏終了まで次のコマンドが入力できない
+    - 演奏終了まで次のコマンドが入力できない（ym2151-log-player-rust）
   - 対策：
     - サーバとして常駐し、クライアントから制御する
   - 用途：
@@ -331,6 +398,12 @@ cargo test
       - ハルシネーション多発し、バグ修正や、Windows版の機能実装ができなくなった
     - このプロジェクトならWindowsでのagentのTDDがよく機能することが判明した
       - 上記のハルシネーションやムダも、TDDを利用した堅牢なリファクタリングで解決できた
+- 関連アプリの一括インストール
+    - 用途、開発用に便利
+    - 前提、`cargo install rust-script`しておくこと
+```powershell
+rust-script install-ym2151-tools.rs
+```
 
 ## ライセンス
 
@@ -352,9 +425,12 @@ MIT License
 📄 .gitignore
 📄 Cargo.lock
 📄 Cargo.toml
+📖 INTERACTIVE_MODE_ANALYSIS.md
+📖 ISSUE_86_SUMMARY.md
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
+📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
 📁 _codeql_detected_source_root/
   📁 .cargo/
     📄 config.toml
@@ -362,9 +438,12 @@ MIT License
   📄 .gitignore
   📄 Cargo.lock
   📄 Cargo.toml
+  📖 INTERACTIVE_MODE_ANALYSIS.md
+  📖 ISSUE_86_SUMMARY.md
   📄 LICENSE
   📖 README.ja.md
   📖 README.md
+  📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
   📁 _codeql_detected_source_root/
     📁 .cargo/
       📄 config.toml
@@ -372,9 +451,12 @@ MIT License
     📄 .gitignore
     📄 Cargo.lock
     📄 Cargo.toml
+    📖 INTERACTIVE_MODE_ANALYSIS.md
+    📖 ISSUE_86_SUMMARY.md
     📄 LICENSE
     📖 README.ja.md
     📖 README.md
+    📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
     📁 _codeql_detected_source_root/
       📁 .cargo/
         📄 config.toml
@@ -382,9 +464,12 @@ MIT License
       📄 .gitignore
       📄 Cargo.lock
       📄 Cargo.toml
+      📖 INTERACTIVE_MODE_ANALYSIS.md
+      📖 ISSUE_86_SUMMARY.md
       📄 LICENSE
       📖 README.ja.md
       📖 README.md
+      📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
       📁 _codeql_detected_source_root/
         📁 .cargo/
           📄 config.toml
@@ -392,9 +477,12 @@ MIT License
         📄 .gitignore
         📄 Cargo.lock
         📄 Cargo.toml
+        📖 INTERACTIVE_MODE_ANALYSIS.md
+        📖 ISSUE_86_SUMMARY.md
         📄 LICENSE
         📖 README.ja.md
         📖 README.md
+        📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
         📁 _codeql_detected_source_root/
           📁 .cargo/
             📄 config.toml
@@ -402,9 +490,12 @@ MIT License
           📄 .gitignore
           📄 Cargo.lock
           📄 Cargo.toml
+          📖 INTERACTIVE_MODE_ANALYSIS.md
+          📖 ISSUE_86_SUMMARY.md
           📄 LICENSE
           📖 README.ja.md
           📖 README.md
+          📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
           📁 _codeql_detected_source_root/
             📁 .cargo/
               📄 config.toml
@@ -412,9 +503,12 @@ MIT License
             📄 .gitignore
             📄 Cargo.lock
             📄 Cargo.toml
+            📖 INTERACTIVE_MODE_ANALYSIS.md
+            📖 ISSUE_86_SUMMARY.md
             📄 LICENSE
             📖 README.ja.md
             📖 README.md
+            📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
             📁 _codeql_detected_source_root/
               📁 .cargo/
                 📄 config.toml
@@ -422,9 +516,12 @@ MIT License
               📄 .gitignore
               📄 Cargo.lock
               📄 Cargo.toml
+              📖 INTERACTIVE_MODE_ANALYSIS.md
+              📖 ISSUE_86_SUMMARY.md
               📄 LICENSE
               📖 README.ja.md
               📖 README.md
+              📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
               📁 _codeql_detected_source_root/
                 📁 .cargo/
                   📄 config.toml
@@ -432,9 +529,12 @@ MIT License
                 📄 .gitignore
                 📄 Cargo.lock
                 📄 Cargo.toml
+                📖 INTERACTIVE_MODE_ANALYSIS.md
+                📖 ISSUE_86_SUMMARY.md
                 📄 LICENSE
                 📖 README.ja.md
                 📖 README.md
+                📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                 📁 _codeql_detected_source_root/
                   📁 .cargo/
                     📄 config.toml
@@ -442,9 +542,12 @@ MIT License
                   📄 .gitignore
                   📄 Cargo.lock
                   📄 Cargo.toml
+                  📖 INTERACTIVE_MODE_ANALYSIS.md
+                  📖 ISSUE_86_SUMMARY.md
                   📄 LICENSE
                   📖 README.ja.md
                   📖 README.md
+                  📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                   📁 _codeql_detected_source_root/
                     📁 .cargo/
                       📄 config.toml
@@ -452,9 +555,12 @@ MIT License
                     📄 .gitignore
                     📄 Cargo.lock
                     📄 Cargo.toml
+                    📖 INTERACTIVE_MODE_ANALYSIS.md
+                    📖 ISSUE_86_SUMMARY.md
                     📄 LICENSE
                     📖 README.ja.md
                     📖 README.md
+                    📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                     📁 _codeql_detected_source_root/
                       📁 .cargo/
                         📄 config.toml
@@ -462,9 +568,12 @@ MIT License
                       📄 .gitignore
                       📄 Cargo.lock
                       📄 Cargo.toml
+                      📖 INTERACTIVE_MODE_ANALYSIS.md
+                      📖 ISSUE_86_SUMMARY.md
                       📄 LICENSE
                       📖 README.ja.md
                       📖 README.md
+                      📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                       📁 _codeql_detected_source_root/
                         📁 .cargo/
                           📄 config.toml
@@ -472,9 +581,12 @@ MIT License
                         📄 .gitignore
                         📄 Cargo.lock
                         📄 Cargo.toml
+                        📖 INTERACTIVE_MODE_ANALYSIS.md
+                        📖 ISSUE_86_SUMMARY.md
                         📄 LICENSE
                         📖 README.ja.md
                         📖 README.md
+                        📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                         📁 _codeql_detected_source_root/
                           📁 .cargo/
                             📄 config.toml
@@ -482,9 +594,12 @@ MIT License
                           📄 .gitignore
                           📄 Cargo.lock
                           📄 Cargo.toml
+                          📖 INTERACTIVE_MODE_ANALYSIS.md
+                          📖 ISSUE_86_SUMMARY.md
                           📄 LICENSE
                           📖 README.ja.md
                           📖 README.md
+                          📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                           📁 _codeql_detected_source_root/
                             📁 .cargo/
                               📄 config.toml
@@ -492,9 +607,12 @@ MIT License
                             📄 .gitignore
                             📄 Cargo.lock
                             📄 Cargo.toml
+                            📖 INTERACTIVE_MODE_ANALYSIS.md
+                            📖 ISSUE_86_SUMMARY.md
                             📄 LICENSE
                             📖 README.ja.md
                             📖 README.md
+                            📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                             📁 _codeql_detected_source_root/
                               📁 .cargo/
                                 📄 config.toml
@@ -502,9 +620,12 @@ MIT License
                               📄 .gitignore
                               📄 Cargo.lock
                               📄 Cargo.toml
+                              📖 INTERACTIVE_MODE_ANALYSIS.md
+                              📖 ISSUE_86_SUMMARY.md
                               📄 LICENSE
                               📖 README.ja.md
                               📖 README.md
+                              📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                               📁 _codeql_detected_source_root/
                                 📁 .cargo/
                                   📄 config.toml
@@ -512,9 +633,12 @@ MIT License
                                 📄 .gitignore
                                 📄 Cargo.lock
                                 📄 Cargo.toml
+                                📖 INTERACTIVE_MODE_ANALYSIS.md
+                                📖 ISSUE_86_SUMMARY.md
                                 📄 LICENSE
                                 📖 README.ja.md
                                 📖 README.md
+                                📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                 📁 _codeql_detected_source_root/
                                   📁 .cargo/
                                     📄 config.toml
@@ -522,9 +646,12 @@ MIT License
                                   📄 .gitignore
                                   📄 Cargo.lock
                                   📄 Cargo.toml
+                                  📖 INTERACTIVE_MODE_ANALYSIS.md
+                                  📖 ISSUE_86_SUMMARY.md
                                   📄 LICENSE
                                   📖 README.ja.md
                                   📖 README.md
+                                  📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                   📁 _codeql_detected_source_root/
                                     📁 .cargo/
                                       📄 config.toml
@@ -532,9 +659,12 @@ MIT License
                                     📄 .gitignore
                                     📄 Cargo.lock
                                     📄 Cargo.toml
+                                    📖 INTERACTIVE_MODE_ANALYSIS.md
+                                    📖 ISSUE_86_SUMMARY.md
                                     📄 LICENSE
                                     📖 README.ja.md
                                     📖 README.md
+                                    📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                     📁 _codeql_detected_source_root/
                                       📁 .cargo/
                                         📄 config.toml
@@ -542,9 +672,12 @@ MIT License
                                       📄 .gitignore
                                       📄 Cargo.lock
                                       📄 Cargo.toml
+                                      📖 INTERACTIVE_MODE_ANALYSIS.md
+                                      📖 ISSUE_86_SUMMARY.md
                                       📄 LICENSE
                                       📖 README.ja.md
                                       📖 README.md
+                                      📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                       📁 _codeql_detected_source_root/
                                         📁 .cargo/
                                           📄 config.toml
@@ -552,9 +685,12 @@ MIT License
                                         📄 .gitignore
                                         📄 Cargo.lock
                                         📄 Cargo.toml
+                                        📖 INTERACTIVE_MODE_ANALYSIS.md
+                                        📖 ISSUE_86_SUMMARY.md
                                         📄 LICENSE
                                         📖 README.ja.md
                                         📖 README.md
+                                        📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                         📁 _codeql_detected_source_root/
                                           📁 .cargo/
                                             📄 config.toml
@@ -562,9 +698,12 @@ MIT License
                                           📄 .gitignore
                                           📄 Cargo.lock
                                           📄 Cargo.toml
+                                          📖 INTERACTIVE_MODE_ANALYSIS.md
+                                          📖 ISSUE_86_SUMMARY.md
                                           📄 LICENSE
                                           📖 README.ja.md
                                           📖 README.md
+                                          📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                           📁 _codeql_detected_source_root/
                                             📁 .cargo/
                                               📄 config.toml
@@ -572,9 +711,12 @@ MIT License
                                             📄 .gitignore
                                             📄 Cargo.lock
                                             📄 Cargo.toml
+                                            📖 INTERACTIVE_MODE_ANALYSIS.md
+                                            📖 ISSUE_86_SUMMARY.md
                                             📄 LICENSE
                                             📖 README.ja.md
                                             📖 README.md
+                                            📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                             📁 _codeql_detected_source_root/
                                               📁 .cargo/
                                                 📄 config.toml
@@ -582,9 +724,12 @@ MIT License
                                               📄 .gitignore
                                               📄 Cargo.lock
                                               📄 Cargo.toml
+                                              📖 INTERACTIVE_MODE_ANALYSIS.md
+                                              📖 ISSUE_86_SUMMARY.md
                                               📄 LICENSE
                                               📖 README.ja.md
                                               📖 README.md
+                                              📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                               📁 _codeql_detected_source_root/
                                                 📁 .cargo/
                                                   📄 config.toml
@@ -592,9 +737,12 @@ MIT License
                                                 📄 .gitignore
                                                 📄 Cargo.lock
                                                 📄 Cargo.toml
+                                                📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                📖 ISSUE_86_SUMMARY.md
                                                 📄 LICENSE
                                                 📖 README.ja.md
                                                 📖 README.md
+                                                📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                 📁 _codeql_detected_source_root/
                                                   📁 .cargo/
                                                     📄 config.toml
@@ -602,9 +750,12 @@ MIT License
                                                   📄 .gitignore
                                                   📄 Cargo.lock
                                                   📄 Cargo.toml
+                                                  📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                  📖 ISSUE_86_SUMMARY.md
                                                   📄 LICENSE
                                                   📖 README.ja.md
                                                   📖 README.md
+                                                  📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                   📁 _codeql_detected_source_root/
                                                     📁 .cargo/
                                                       📄 config.toml
@@ -612,9 +763,12 @@ MIT License
                                                     📄 .gitignore
                                                     📄 Cargo.lock
                                                     📄 Cargo.toml
+                                                    📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                    📖 ISSUE_86_SUMMARY.md
                                                     📄 LICENSE
                                                     📖 README.ja.md
                                                     📖 README.md
+                                                    📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                     📁 _codeql_detected_source_root/
                                                       📁 .cargo/
                                                         📄 config.toml
@@ -622,9 +776,12 @@ MIT License
                                                       📄 .gitignore
                                                       📄 Cargo.lock
                                                       📄 Cargo.toml
+                                                      📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                      📖 ISSUE_86_SUMMARY.md
                                                       📄 LICENSE
                                                       📖 README.ja.md
                                                       📖 README.md
+                                                      📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                       📁 _codeql_detected_source_root/
                                                         📁 .cargo/
                                                           📄 config.toml
@@ -632,9 +789,12 @@ MIT License
                                                         📄 .gitignore
                                                         📄 Cargo.lock
                                                         📄 Cargo.toml
+                                                        📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                        📖 ISSUE_86_SUMMARY.md
                                                         📄 LICENSE
                                                         📖 README.ja.md
                                                         📖 README.md
+                                                        📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                         📁 _codeql_detected_source_root/
                                                           📁 .cargo/
                                                             📄 config.toml
@@ -642,9 +802,12 @@ MIT License
                                                           📄 .gitignore
                                                           📄 Cargo.lock
                                                           📄 Cargo.toml
+                                                          📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                          📖 ISSUE_86_SUMMARY.md
                                                           📄 LICENSE
                                                           📖 README.ja.md
                                                           📖 README.md
+                                                          📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                           📁 _codeql_detected_source_root/
                                                             📁 .cargo/
                                                               📄 config.toml
@@ -652,9 +815,12 @@ MIT License
                                                             📄 .gitignore
                                                             📄 Cargo.lock
                                                             📄 Cargo.toml
+                                                            📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                            📖 ISSUE_86_SUMMARY.md
                                                             📄 LICENSE
                                                             📖 README.ja.md
                                                             📖 README.md
+                                                            📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                             📁 _codeql_detected_source_root/
                                                               📁 .cargo/
                                                                 📄 config.toml
@@ -662,9 +828,12 @@ MIT License
                                                               📄 .gitignore
                                                               📄 Cargo.lock
                                                               📄 Cargo.toml
+                                                              📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                              📖 ISSUE_86_SUMMARY.md
                                                               📄 LICENSE
                                                               📖 README.ja.md
                                                               📖 README.md
+                                                              📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                               📁 _codeql_detected_source_root/
                                                                 📁 .cargo/
                                                                   📄 config.toml
@@ -672,9 +841,12 @@ MIT License
                                                                 📄 .gitignore
                                                                 📄 Cargo.lock
                                                                 📄 Cargo.toml
+                                                                📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                📖 ISSUE_86_SUMMARY.md
                                                                 📄 LICENSE
                                                                 📖 README.ja.md
                                                                 📖 README.md
+                                                                📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                 📁 _codeql_detected_source_root/
                                                                   📁 .cargo/
                                                                     📄 config.toml
@@ -682,9 +854,12 @@ MIT License
                                                                   📄 .gitignore
                                                                   📄 Cargo.lock
                                                                   📄 Cargo.toml
+                                                                  📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                  📖 ISSUE_86_SUMMARY.md
                                                                   📄 LICENSE
                                                                   📖 README.ja.md
                                                                   📖 README.md
+                                                                  📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                   📁 _codeql_detected_source_root/
                                                                     📁 .cargo/
                                                                       📄 config.toml
@@ -692,9 +867,12 @@ MIT License
                                                                     📄 .gitignore
                                                                     📄 Cargo.lock
                                                                     📄 Cargo.toml
+                                                                    📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                    📖 ISSUE_86_SUMMARY.md
                                                                     📄 LICENSE
                                                                     📖 README.ja.md
                                                                     📖 README.md
+                                                                    📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                     📁 _codeql_detected_source_root/
                                                                       📁 .cargo/
                                                                         📄 config.toml
@@ -702,9 +880,12 @@ MIT License
                                                                       📄 .gitignore
                                                                       📄 Cargo.lock
                                                                       📄 Cargo.toml
+                                                                      📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                      📖 ISSUE_86_SUMMARY.md
                                                                       📄 LICENSE
                                                                       📖 README.ja.md
                                                                       📖 README.md
+                                                                      📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                       📁 _codeql_detected_source_root/
                                                                         📁 .cargo/
                                                                           📄 config.toml
@@ -712,9 +893,12 @@ MIT License
                                                                         📄 .gitignore
                                                                         📄 Cargo.lock
                                                                         📄 Cargo.toml
+                                                                        📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                        📖 ISSUE_86_SUMMARY.md
                                                                         📄 LICENSE
                                                                         📖 README.ja.md
                                                                         📖 README.md
+                                                                        📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                         📁 _codeql_detected_source_root/
                                                                           📁 .cargo/
                                                                             📄 config.toml
@@ -722,9 +906,12 @@ MIT License
                                                                           📄 .gitignore
                                                                           📄 Cargo.lock
                                                                           📄 Cargo.toml
+                                                                          📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                          📖 ISSUE_86_SUMMARY.md
                                                                           📄 LICENSE
                                                                           📖 README.ja.md
                                                                           📖 README.md
+                                                                          📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                           📁 _codeql_detected_source_root/
                                                                             📁 .cargo/
                                                                               📄 config.toml
@@ -732,9 +919,12 @@ MIT License
                                                                             📄 .gitignore
                                                                             📄 Cargo.lock
                                                                             📄 Cargo.toml
+                                                                            📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                            📖 ISSUE_86_SUMMARY.md
                                                                             📄 LICENSE
                                                                             📖 README.ja.md
                                                                             📖 README.md
+                                                                            📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                             📁 _codeql_detected_source_root/
                                                                               📁 .cargo/
                                                                                 📄 config.toml
@@ -742,9 +932,12 @@ MIT License
                                                                               📄 .gitignore
                                                                               📄 Cargo.lock
                                                                               📄 Cargo.toml
+                                                                              📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                              📖 ISSUE_86_SUMMARY.md
                                                                               📄 LICENSE
                                                                               📖 README.ja.md
                                                                               📖 README.md
+                                                                              📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                               📁 _codeql_detected_source_root/
                                                                                 📁 .cargo/
                                                                                   📄 config.toml
@@ -752,18 +945,24 @@ MIT License
                                                                                 📄 .gitignore
                                                                                 📄 Cargo.lock
                                                                                 📄 Cargo.toml
+                                                                                📖 INTERACTIVE_MODE_ANALYSIS.md
+                                                                                📖 ISSUE_86_SUMMARY.md
                                                                                 📄 LICENSE
                                                                                 📖 README.ja.md
                                                                                 📖 README.md
+                                                                                📖 RUST_AGENTIC_CODING_BEST_PRACTICES.md
                                                                                 📄 _config.yml
                                                                                 📄 build.rs
                                                                                 📁 examples/
+                                                                                  📄 clear_schedule_demo.rs
                                                                                   📄 interactive_demo.rs
+                                                                                  📄 play_json_interactive_demo.rs
                                                                                   📄 test_client_non_verbose.rs
                                                                                   📄 test_client_verbose.rs
                                                                                   📄 test_logging_non_verbose.rs
                                                                                   📄 test_logging_verbose.rs
                                                                                 📁 generated-docs/
+                                                                                📄 install-ym2151-tools.rs
                                                                                 📁 issue-notes/
                                                                                   📖 34.md
                                                                                   📖 36.md
@@ -786,6 +985,12 @@ MIT License
                                                                                   📖 70.md
                                                                                   📖 72.md
                                                                                   📖 74.md
+                                                                                  📖 76.md
+                                                                                  📖 78.md
+                                                                                  📖 80.md
+                                                                                  📖 82.md
+                                                                                  📖 84.md
+                                                                                  📖 86.md
                                                                                 📄 opm.c
                                                                                 📄 opm.h
                                                                                 📄 setup_ci_environment.sh
@@ -807,8 +1012,24 @@ MIT License
                                                                                   📄 resampler.rs
                                                                                   📄 scheduler.rs
                                                                                   📄 server.rs
+                                                                                  📁 tests/
+                                                                                    📄 audio_tests.rs
+                                                                                    📄 client_tests.rs
+                                                                                    📄 debug_wav_tests.rs
+                                                                                    📄 events_tests.rs
+                                                                                    📄 ipc_pipe_windows_tests.rs
+                                                                                    📄 ipc_protocol_tests.rs
+                                                                                    📄 logging_tests.rs
+                                                                                    📄 mod.rs
+                                                                                    📄 opm_ffi_tests.rs
+                                                                                    📄 opm_tests.rs
+                                                                                    📄 resampler_tests.rs
+                                                                                    📄 scheduler_tests.rs
+                                                                                    📄 server_tests.rs
+                                                                                    📄 wav_writer_tests.rs
                                                                                   📄 wav_writer.rs
                                                                                 📁 tests/
+                                                                                  📄 clear_schedule_test.rs
                                                                                   📄 client_json_test.rs
                                                                                   📄 client_test.rs
                                                                                   📄 client_verbose_test.rs
@@ -826,6 +1047,7 @@ MIT License
                                                                                   📄 phase4_test.rs
                                                                                   📄 phase5_test.rs
                                                                                   📄 phase6_cli_test.rs
+                                                                                  📄 play_json_interactive_test.rs
                                                                                   📄 server_basic_test.rs
                                                                                   📄 server_windows_fix_test.rs
                                                                                   📄 tail_generation_test.rs
@@ -833,12 +1055,15 @@ MIT License
                                                                               📄 _config.yml
                                                                               📄 build.rs
                                                                               📁 examples/
+                                                                                📄 clear_schedule_demo.rs
                                                                                 📄 interactive_demo.rs
+                                                                                📄 play_json_interactive_demo.rs
                                                                                 📄 test_client_non_verbose.rs
                                                                                 📄 test_client_verbose.rs
                                                                                 📄 test_logging_non_verbose.rs
                                                                                 📄 test_logging_verbose.rs
                                                                               📁 generated-docs/
+                                                                              📄 install-ym2151-tools.rs
                                                                               📁 issue-notes/
                                                                                 📖 34.md
                                                                                 📖 36.md
@@ -861,6 +1086,12 @@ MIT License
                                                                                 📖 70.md
                                                                                 📖 72.md
                                                                                 📖 74.md
+                                                                                📖 76.md
+                                                                                📖 78.md
+                                                                                📖 80.md
+                                                                                📖 82.md
+                                                                                📖 84.md
+                                                                                📖 86.md
                                                                               📄 opm.c
                                                                               📄 opm.h
                                                                               📄 setup_ci_environment.sh
@@ -882,8 +1113,24 @@ MIT License
                                                                                 📄 resampler.rs
                                                                                 📄 scheduler.rs
                                                                                 📄 server.rs
+                                                                                📁 tests/
+                                                                                  📄 audio_tests.rs
+                                                                                  📄 client_tests.rs
+                                                                                  📄 debug_wav_tests.rs
+                                                                                  📄 events_tests.rs
+                                                                                  📄 ipc_pipe_windows_tests.rs
+                                                                                  📄 ipc_protocol_tests.rs
+                                                                                  📄 logging_tests.rs
+                                                                                  📄 mod.rs
+                                                                                  📄 opm_ffi_tests.rs
+                                                                                  📄 opm_tests.rs
+                                                                                  📄 resampler_tests.rs
+                                                                                  📄 scheduler_tests.rs
+                                                                                  📄 server_tests.rs
+                                                                                  📄 wav_writer_tests.rs
                                                                                 📄 wav_writer.rs
                                                                               📁 tests/
+                                                                                📄 clear_schedule_test.rs
                                                                                 📄 client_json_test.rs
                                                                                 📄 client_test.rs
                                                                                 📄 client_verbose_test.rs
@@ -901,6 +1148,7 @@ MIT License
                                                                                 📄 phase4_test.rs
                                                                                 📄 phase5_test.rs
                                                                                 📄 phase6_cli_test.rs
+                                                                                📄 play_json_interactive_test.rs
                                                                                 📄 server_basic_test.rs
                                                                                 📄 server_windows_fix_test.rs
                                                                                 📄 tail_generation_test.rs
@@ -908,12 +1156,15 @@ MIT License
                                                                             📄 _config.yml
                                                                             📄 build.rs
                                                                             📁 examples/
+                                                                              📄 clear_schedule_demo.rs
                                                                               📄 interactive_demo.rs
+                                                                              📄 play_json_interactive_demo.rs
                                                                               📄 test_client_non_verbose.rs
                                                                               📄 test_client_verbose.rs
                                                                               📄 test_logging_non_verbose.rs
                                                                               📄 test_logging_verbose.rs
                                                                             📁 generated-docs/
+                                                                            📄 install-ym2151-tools.rs
                                                                             📁 issue-notes/
                                                                               📖 34.md
                                                                               📖 36.md
@@ -936,6 +1187,12 @@ MIT License
                                                                               📖 70.md
                                                                               📖 72.md
                                                                               📖 74.md
+                                                                              📖 76.md
+                                                                              📖 78.md
+                                                                              📖 80.md
+                                                                              📖 82.md
+                                                                              📖 84.md
+                                                                              📖 86.md
                                                                             📄 opm.c
                                                                             📄 opm.h
                                                                             📄 setup_ci_environment.sh
@@ -957,8 +1214,24 @@ MIT License
                                                                               📄 resampler.rs
                                                                               📄 scheduler.rs
                                                                               📄 server.rs
+                                                                              📁 tests/
+                                                                                📄 audio_tests.rs
+                                                                                📄 client_tests.rs
+                                                                                📄 debug_wav_tests.rs
+                                                                                📄 events_tests.rs
+                                                                                📄 ipc_pipe_windows_tests.rs
+                                                                                📄 ipc_protocol_tests.rs
+                                                                                📄 logging_tests.rs
+                                                                                📄 mod.rs
+                                                                                📄 opm_ffi_tests.rs
+                                                                                📄 opm_tests.rs
+                                                                                📄 resampler_tests.rs
+                                                                                📄 scheduler_tests.rs
+                                                                                📄 server_tests.rs
+                                                                                📄 wav_writer_tests.rs
                                                                               📄 wav_writer.rs
                                                                             📁 tests/
+                                                                              📄 clear_schedule_test.rs
                                                                               📄 client_json_test.rs
                                                                               📄 client_test.rs
                                                                               📄 client_verbose_test.rs
@@ -976,6 +1249,7 @@ MIT License
                                                                               📄 phase4_test.rs
                                                                               📄 phase5_test.rs
                                                                               📄 phase6_cli_test.rs
+                                                                              📄 play_json_interactive_test.rs
                                                                               📄 server_basic_test.rs
                                                                               📄 server_windows_fix_test.rs
                                                                               📄 tail_generation_test.rs
@@ -983,12 +1257,15 @@ MIT License
                                                                           📄 _config.yml
                                                                           📄 build.rs
                                                                           📁 examples/
+                                                                            📄 clear_schedule_demo.rs
                                                                             📄 interactive_demo.rs
+                                                                            📄 play_json_interactive_demo.rs
                                                                             📄 test_client_non_verbose.rs
                                                                             📄 test_client_verbose.rs
                                                                             📄 test_logging_non_verbose.rs
                                                                             📄 test_logging_verbose.rs
                                                                           📁 generated-docs/
+                                                                          📄 install-ym2151-tools.rs
                                                                           📁 issue-notes/
                                                                             📖 34.md
                                                                             📖 36.md
@@ -1011,6 +1288,12 @@ MIT License
                                                                             📖 70.md
                                                                             📖 72.md
                                                                             📖 74.md
+                                                                            📖 76.md
+                                                                            📖 78.md
+                                                                            📖 80.md
+                                                                            📖 82.md
+                                                                            📖 84.md
+                                                                            📖 86.md
                                                                           📄 opm.c
                                                                           📄 opm.h
                                                                           📄 setup_ci_environment.sh
@@ -1032,8 +1315,24 @@ MIT License
                                                                             📄 resampler.rs
                                                                             📄 scheduler.rs
                                                                             📄 server.rs
+                                                                            📁 tests/
+                                                                              📄 audio_tests.rs
+                                                                              📄 client_tests.rs
+                                                                              📄 debug_wav_tests.rs
+                                                                              📄 events_tests.rs
+                                                                              📄 ipc_pipe_windows_tests.rs
+                                                                              📄 ipc_protocol_tests.rs
+                                                                              📄 logging_tests.rs
+                                                                              📄 mod.rs
+                                                                              📄 opm_ffi_tests.rs
+                                                                              📄 opm_tests.rs
+                                                                              📄 resampler_tests.rs
+                                                                              📄 scheduler_tests.rs
+                                                                              📄 server_tests.rs
+                                                                              📄 wav_writer_tests.rs
                                                                             📄 wav_writer.rs
                                                                           📁 tests/
+                                                                            📄 clear_schedule_test.rs
                                                                             📄 client_json_test.rs
                                                                             📄 client_test.rs
                                                                             📄 client_verbose_test.rs
@@ -1051,6 +1350,7 @@ MIT License
                                                                             📄 phase4_test.rs
                                                                             📄 phase5_test.rs
                                                                             📄 phase6_cli_test.rs
+                                                                            📄 play_json_interactive_test.rs
                                                                             📄 server_basic_test.rs
                                                                             📄 server_windows_fix_test.rs
                                                                             📄 tail_generation_test.rs
@@ -1058,12 +1358,15 @@ MIT License
                                                                         📄 _config.yml
                                                                         📄 build.rs
                                                                         📁 examples/
+                                                                          📄 clear_schedule_demo.rs
                                                                           📄 interactive_demo.rs
+                                                                          📄 play_json_interactive_demo.rs
                                                                           📄 test_client_non_verbose.rs
                                                                           📄 test_client_verbose.rs
                                                                           📄 test_logging_non_verbose.rs
                                                                           📄 test_logging_verbose.rs
                                                                         📁 generated-docs/
+                                                                        📄 install-ym2151-tools.rs
                                                                         📁 issue-notes/
                                                                           📖 34.md
                                                                           📖 36.md
@@ -1086,6 +1389,12 @@ MIT License
                                                                           📖 70.md
                                                                           📖 72.md
                                                                           📖 74.md
+                                                                          📖 76.md
+                                                                          📖 78.md
+                                                                          📖 80.md
+                                                                          📖 82.md
+                                                                          📖 84.md
+                                                                          📖 86.md
                                                                         📄 opm.c
                                                                         📄 opm.h
                                                                         📄 setup_ci_environment.sh
@@ -1107,8 +1416,24 @@ MIT License
                                                                           📄 resampler.rs
                                                                           📄 scheduler.rs
                                                                           📄 server.rs
+                                                                          📁 tests/
+                                                                            📄 audio_tests.rs
+                                                                            📄 client_tests.rs
+                                                                            📄 debug_wav_tests.rs
+                                                                            📄 events_tests.rs
+                                                                            📄 ipc_pipe_windows_tests.rs
+                                                                            📄 ipc_protocol_tests.rs
+                                                                            📄 logging_tests.rs
+                                                                            📄 mod.rs
+                                                                            📄 opm_ffi_tests.rs
+                                                                            📄 opm_tests.rs
+                                                                            📄 resampler_tests.rs
+                                                                            📄 scheduler_tests.rs
+                                                                            📄 server_tests.rs
+                                                                            📄 wav_writer_tests.rs
                                                                           📄 wav_writer.rs
                                                                         📁 tests/
+                                                                          📄 clear_schedule_test.rs
                                                                           📄 client_json_test.rs
                                                                           📄 client_test.rs
                                                                           📄 client_verbose_test.rs
@@ -1126,6 +1451,7 @@ MIT License
                                                                           📄 phase4_test.rs
                                                                           📄 phase5_test.rs
                                                                           📄 phase6_cli_test.rs
+                                                                          📄 play_json_interactive_test.rs
                                                                           📄 server_basic_test.rs
                                                                           📄 server_windows_fix_test.rs
                                                                           📄 tail_generation_test.rs
@@ -1133,12 +1459,15 @@ MIT License
                                                                       📄 _config.yml
                                                                       📄 build.rs
                                                                       📁 examples/
+                                                                        📄 clear_schedule_demo.rs
                                                                         📄 interactive_demo.rs
+                                                                        📄 play_json_interactive_demo.rs
                                                                         📄 test_client_non_verbose.rs
                                                                         📄 test_client_verbose.rs
                                                                         📄 test_logging_non_verbose.rs
                                                                         📄 test_logging_verbose.rs
                                                                       📁 generated-docs/
+                                                                      📄 install-ym2151-tools.rs
                                                                       📁 issue-notes/
                                                                         📖 34.md
                                                                         📖 36.md
@@ -1161,6 +1490,12 @@ MIT License
                                                                         📖 70.md
                                                                         📖 72.md
                                                                         📖 74.md
+                                                                        📖 76.md
+                                                                        📖 78.md
+                                                                        📖 80.md
+                                                                        📖 82.md
+                                                                        📖 84.md
+                                                                        📖 86.md
                                                                       📄 opm.c
                                                                       📄 opm.h
                                                                       📄 setup_ci_environment.sh
@@ -1182,8 +1517,24 @@ MIT License
                                                                         📄 resampler.rs
                                                                         📄 scheduler.rs
                                                                         📄 server.rs
+                                                                        📁 tests/
+                                                                          📄 audio_tests.rs
+                                                                          📄 client_tests.rs
+                                                                          📄 debug_wav_tests.rs
+                                                                          📄 events_tests.rs
+                                                                          📄 ipc_pipe_windows_tests.rs
+                                                                          📄 ipc_protocol_tests.rs
+                                                                          📄 logging_tests.rs
+                                                                          📄 mod.rs
+                                                                          📄 opm_ffi_tests.rs
+                                                                          📄 opm_tests.rs
+                                                                          📄 resampler_tests.rs
+                                                                          📄 scheduler_tests.rs
+                                                                          📄 server_tests.rs
+                                                                          📄 wav_writer_tests.rs
                                                                         📄 wav_writer.rs
                                                                       📁 tests/
+                                                                        📄 clear_schedule_test.rs
                                                                         📄 client_json_test.rs
                                                                         📄 client_test.rs
                                                                         📄 client_verbose_test.rs
@@ -1201,6 +1552,7 @@ MIT License
                                                                         📄 phase4_test.rs
                                                                         📄 phase5_test.rs
                                                                         📄 phase6_cli_test.rs
+                                                                        📄 play_json_interactive_test.rs
                                                                         📄 server_basic_test.rs
                                                                         📄 server_windows_fix_test.rs
                                                                         📄 tail_generation_test.rs
@@ -1208,12 +1560,15 @@ MIT License
                                                                     📄 _config.yml
                                                                     📄 build.rs
                                                                     📁 examples/
+                                                                      📄 clear_schedule_demo.rs
                                                                       📄 interactive_demo.rs
+                                                                      📄 play_json_interactive_demo.rs
                                                                       📄 test_client_non_verbose.rs
                                                                       📄 test_client_verbose.rs
                                                                       📄 test_logging_non_verbose.rs
                                                                       📄 test_logging_verbose.rs
                                                                     📁 generated-docs/
+                                                                    📄 install-ym2151-tools.rs
                                                                     📁 issue-notes/
                                                                       📖 34.md
                                                                       📖 36.md
@@ -1236,6 +1591,12 @@ MIT License
                                                                       📖 70.md
                                                                       📖 72.md
                                                                       📖 74.md
+                                                                      📖 76.md
+                                                                      📖 78.md
+                                                                      📖 80.md
+                                                                      📖 82.md
+                                                                      📖 84.md
+                                                                      📖 86.md
                                                                     📄 opm.c
                                                                     📄 opm.h
                                                                     📄 setup_ci_environment.sh
@@ -1257,8 +1618,24 @@ MIT License
                                                                       📄 resampler.rs
                                                                       📄 scheduler.rs
                                                                       📄 server.rs
+                                                                      📁 tests/
+                                                                        📄 audio_tests.rs
+                                                                        📄 client_tests.rs
+                                                                        📄 debug_wav_tests.rs
+                                                                        📄 events_tests.rs
+                                                                        📄 ipc_pipe_windows_tests.rs
+                                                                        📄 ipc_protocol_tests.rs
+                                                                        📄 logging_tests.rs
+                                                                        📄 mod.rs
+                                                                        📄 opm_ffi_tests.rs
+                                                                        📄 opm_tests.rs
+                                                                        📄 resampler_tests.rs
+                                                                        📄 scheduler_tests.rs
+                                                                        📄 server_tests.rs
+                                                                        📄 wav_writer_tests.rs
                                                                       📄 wav_writer.rs
                                                                     📁 tests/
+                                                                      📄 clear_schedule_test.rs
                                                                       📄 client_json_test.rs
                                                                       📄 client_test.rs
                                                                       📄 client_verbose_test.rs
@@ -1276,6 +1653,7 @@ MIT License
                                                                       📄 phase4_test.rs
                                                                       📄 phase5_test.rs
                                                                       📄 phase6_cli_test.rs
+                                                                      📄 play_json_interactive_test.rs
                                                                       📄 server_basic_test.rs
                                                                       📄 server_windows_fix_test.rs
                                                                       📄 tail_generation_test.rs
@@ -1283,12 +1661,15 @@ MIT License
                                                                   📄 _config.yml
                                                                   📄 build.rs
                                                                   📁 examples/
+                                                                    📄 clear_schedule_demo.rs
                                                                     📄 interactive_demo.rs
+                                                                    📄 play_json_interactive_demo.rs
                                                                     📄 test_client_non_verbose.rs
                                                                     📄 test_client_verbose.rs
                                                                     📄 test_logging_non_verbose.rs
                                                                     📄 test_logging_verbose.rs
                                                                   📁 generated-docs/
+                                                                  📄 install-ym2151-tools.rs
                                                                   📁 issue-notes/
                                                                     📖 34.md
                                                                     📖 36.md
@@ -1311,6 +1692,12 @@ MIT License
                                                                     📖 70.md
                                                                     📖 72.md
                                                                     📖 74.md
+                                                                    📖 76.md
+                                                                    📖 78.md
+                                                                    📖 80.md
+                                                                    📖 82.md
+                                                                    📖 84.md
+                                                                    📖 86.md
                                                                   📄 opm.c
                                                                   📄 opm.h
                                                                   📄 setup_ci_environment.sh
@@ -1332,8 +1719,24 @@ MIT License
                                                                     📄 resampler.rs
                                                                     📄 scheduler.rs
                                                                     📄 server.rs
+                                                                    📁 tests/
+                                                                      📄 audio_tests.rs
+                                                                      📄 client_tests.rs
+                                                                      📄 debug_wav_tests.rs
+                                                                      📄 events_tests.rs
+                                                                      📄 ipc_pipe_windows_tests.rs
+                                                                      📄 ipc_protocol_tests.rs
+                                                                      📄 logging_tests.rs
+                                                                      📄 mod.rs
+                                                                      📄 opm_ffi_tests.rs
+                                                                      📄 opm_tests.rs
+                                                                      📄 resampler_tests.rs
+                                                                      📄 scheduler_tests.rs
+                                                                      📄 server_tests.rs
+                                                                      📄 wav_writer_tests.rs
                                                                     📄 wav_writer.rs
                                                                   📁 tests/
+                                                                    📄 clear_schedule_test.rs
                                                                     📄 client_json_test.rs
                                                                     📄 client_test.rs
                                                                     📄 client_verbose_test.rs
@@ -1351,6 +1754,7 @@ MIT License
                                                                     📄 phase4_test.rs
                                                                     📄 phase5_test.rs
                                                                     📄 phase6_cli_test.rs
+                                                                    📄 play_json_interactive_test.rs
                                                                     📄 server_basic_test.rs
                                                                     📄 server_windows_fix_test.rs
                                                                     📄 tail_generation_test.rs
@@ -1358,12 +1762,15 @@ MIT License
                                                                 📄 _config.yml
                                                                 📄 build.rs
                                                                 📁 examples/
+                                                                  📄 clear_schedule_demo.rs
                                                                   📄 interactive_demo.rs
+                                                                  📄 play_json_interactive_demo.rs
                                                                   📄 test_client_non_verbose.rs
                                                                   📄 test_client_verbose.rs
                                                                   📄 test_logging_non_verbose.rs
                                                                   📄 test_logging_verbose.rs
                                                                 📁 generated-docs/
+                                                                📄 install-ym2151-tools.rs
                                                                 📁 issue-notes/
                                                                   📖 34.md
                                                                   📖 36.md
@@ -1386,6 +1793,12 @@ MIT License
                                                                   📖 70.md
                                                                   📖 72.md
                                                                   📖 74.md
+                                                                  📖 76.md
+                                                                  📖 78.md
+                                                                  📖 80.md
+                                                                  📖 82.md
+                                                                  📖 84.md
+                                                                  📖 86.md
                                                                 📄 opm.c
                                                                 📄 opm.h
                                                                 📄 setup_ci_environment.sh
@@ -1407,8 +1820,24 @@ MIT License
                                                                   📄 resampler.rs
                                                                   📄 scheduler.rs
                                                                   📄 server.rs
+                                                                  📁 tests/
+                                                                    📄 audio_tests.rs
+                                                                    📄 client_tests.rs
+                                                                    📄 debug_wav_tests.rs
+                                                                    📄 events_tests.rs
+                                                                    📄 ipc_pipe_windows_tests.rs
+                                                                    📄 ipc_protocol_tests.rs
+                                                                    📄 logging_tests.rs
+                                                                    📄 mod.rs
+                                                                    📄 opm_ffi_tests.rs
+                                                                    📄 opm_tests.rs
+                                                                    📄 resampler_tests.rs
+                                                                    📄 scheduler_tests.rs
+                                                                    📄 server_tests.rs
+                                                                    📄 wav_writer_tests.rs
                                                                   📄 wav_writer.rs
                                                                 📁 tests/
+                                                                  📄 clear_schedule_test.rs
                                                                   📄 client_json_test.rs
                                                                   📄 client_test.rs
                                                                   📄 client_verbose_test.rs
@@ -1426,6 +1855,7 @@ MIT License
                                                                   📄 phase4_test.rs
                                                                   📄 phase5_test.rs
                                                                   📄 phase6_cli_test.rs
+                                                                  📄 play_json_interactive_test.rs
                                                                   📄 server_basic_test.rs
                                                                   📄 server_windows_fix_test.rs
                                                                   📄 tail_generation_test.rs
@@ -1433,12 +1863,15 @@ MIT License
                                                               📄 _config.yml
                                                               📄 build.rs
                                                               📁 examples/
+                                                                📄 clear_schedule_demo.rs
                                                                 📄 interactive_demo.rs
+                                                                📄 play_json_interactive_demo.rs
                                                                 📄 test_client_non_verbose.rs
                                                                 📄 test_client_verbose.rs
                                                                 📄 test_logging_non_verbose.rs
                                                                 📄 test_logging_verbose.rs
                                                               📁 generated-docs/
+                                                              📄 install-ym2151-tools.rs
                                                               📁 issue-notes/
                                                                 📖 34.md
                                                                 📖 36.md
@@ -1461,6 +1894,12 @@ MIT License
                                                                 📖 70.md
                                                                 📖 72.md
                                                                 📖 74.md
+                                                                📖 76.md
+                                                                📖 78.md
+                                                                📖 80.md
+                                                                📖 82.md
+                                                                📖 84.md
+                                                                📖 86.md
                                                               📄 opm.c
                                                               📄 opm.h
                                                               📄 setup_ci_environment.sh
@@ -1482,8 +1921,24 @@ MIT License
                                                                 📄 resampler.rs
                                                                 📄 scheduler.rs
                                                                 📄 server.rs
+                                                                📁 tests/
+                                                                  📄 audio_tests.rs
+                                                                  📄 client_tests.rs
+                                                                  📄 debug_wav_tests.rs
+                                                                  📄 events_tests.rs
+                                                                  📄 ipc_pipe_windows_tests.rs
+                                                                  📄 ipc_protocol_tests.rs
+                                                                  📄 logging_tests.rs
+                                                                  📄 mod.rs
+                                                                  📄 opm_ffi_tests.rs
+                                                                  📄 opm_tests.rs
+                                                                  📄 resampler_tests.rs
+                                                                  📄 scheduler_tests.rs
+                                                                  📄 server_tests.rs
+                                                                  📄 wav_writer_tests.rs
                                                                 📄 wav_writer.rs
                                                               📁 tests/
+                                                                📄 clear_schedule_test.rs
                                                                 📄 client_json_test.rs
                                                                 📄 client_test.rs
                                                                 📄 client_verbose_test.rs
@@ -1501,6 +1956,7 @@ MIT License
                                                                 📄 phase4_test.rs
                                                                 📄 phase5_test.rs
                                                                 📄 phase6_cli_test.rs
+                                                                📄 play_json_interactive_test.rs
                                                                 📄 server_basic_test.rs
                                                                 📄 server_windows_fix_test.rs
                                                                 📄 tail_generation_test.rs
@@ -1508,12 +1964,15 @@ MIT License
                                                             📄 _config.yml
                                                             📄 build.rs
                                                             📁 examples/
+                                                              📄 clear_schedule_demo.rs
                                                               📄 interactive_demo.rs
+                                                              📄 play_json_interactive_demo.rs
                                                               📄 test_client_non_verbose.rs
                                                               📄 test_client_verbose.rs
                                                               📄 test_logging_non_verbose.rs
                                                               📄 test_logging_verbose.rs
                                                             📁 generated-docs/
+                                                            📄 install-ym2151-tools.rs
                                                             📁 issue-notes/
                                                               📖 34.md
                                                               📖 36.md
@@ -1536,6 +1995,12 @@ MIT License
                                                               📖 70.md
                                                               📖 72.md
                                                               📖 74.md
+                                                              📖 76.md
+                                                              📖 78.md
+                                                              📖 80.md
+                                                              📖 82.md
+                                                              📖 84.md
+                                                              📖 86.md
                                                             📄 opm.c
                                                             📄 opm.h
                                                             📄 setup_ci_environment.sh
@@ -1557,8 +2022,24 @@ MIT License
                                                               📄 resampler.rs
                                                               📄 scheduler.rs
                                                               📄 server.rs
+                                                              📁 tests/
+                                                                📄 audio_tests.rs
+                                                                📄 client_tests.rs
+                                                                📄 debug_wav_tests.rs
+                                                                📄 events_tests.rs
+                                                                📄 ipc_pipe_windows_tests.rs
+                                                                📄 ipc_protocol_tests.rs
+                                                                📄 logging_tests.rs
+                                                                📄 mod.rs
+                                                                📄 opm_ffi_tests.rs
+                                                                📄 opm_tests.rs
+                                                                📄 resampler_tests.rs
+                                                                📄 scheduler_tests.rs
+                                                                📄 server_tests.rs
+                                                                📄 wav_writer_tests.rs
                                                               📄 wav_writer.rs
                                                             📁 tests/
+                                                              📄 clear_schedule_test.rs
                                                               📄 client_json_test.rs
                                                               📄 client_test.rs
                                                               📄 client_verbose_test.rs
@@ -1576,6 +2057,7 @@ MIT License
                                                               📄 phase4_test.rs
                                                               📄 phase5_test.rs
                                                               📄 phase6_cli_test.rs
+                                                              📄 play_json_interactive_test.rs
                                                               📄 server_basic_test.rs
                                                               📄 server_windows_fix_test.rs
                                                               📄 tail_generation_test.rs
@@ -1583,12 +2065,15 @@ MIT License
                                                           📄 _config.yml
                                                           📄 build.rs
                                                           📁 examples/
+                                                            📄 clear_schedule_demo.rs
                                                             📄 interactive_demo.rs
+                                                            📄 play_json_interactive_demo.rs
                                                             📄 test_client_non_verbose.rs
                                                             📄 test_client_verbose.rs
                                                             📄 test_logging_non_verbose.rs
                                                             📄 test_logging_verbose.rs
                                                           📁 generated-docs/
+                                                          📄 install-ym2151-tools.rs
                                                           📁 issue-notes/
                                                             📖 34.md
                                                             📖 36.md
@@ -1611,6 +2096,12 @@ MIT License
                                                             📖 70.md
                                                             📖 72.md
                                                             📖 74.md
+                                                            📖 76.md
+                                                            📖 78.md
+                                                            📖 80.md
+                                                            📖 82.md
+                                                            📖 84.md
+                                                            📖 86.md
                                                           📄 opm.c
                                                           📄 opm.h
                                                           📄 setup_ci_environment.sh
@@ -1632,8 +2123,24 @@ MIT License
                                                             📄 resampler.rs
                                                             📄 scheduler.rs
                                                             📄 server.rs
+                                                            📁 tests/
+                                                              📄 audio_tests.rs
+                                                              📄 client_tests.rs
+                                                              📄 debug_wav_tests.rs
+                                                              📄 events_tests.rs
+                                                              📄 ipc_pipe_windows_tests.rs
+                                                              📄 ipc_protocol_tests.rs
+                                                              📄 logging_tests.rs
+                                                              📄 mod.rs
+                                                              📄 opm_ffi_tests.rs
+                                                              📄 opm_tests.rs
+                                                              📄 resampler_tests.rs
+                                                              📄 scheduler_tests.rs
+                                                              📄 server_tests.rs
+                                                              📄 wav_writer_tests.rs
                                                             📄 wav_writer.rs
                                                           📁 tests/
+                                                            📄 clear_schedule_test.rs
                                                             📄 client_json_test.rs
                                                             📄 client_test.rs
                                                             📄 client_verbose_test.rs
@@ -1651,6 +2158,7 @@ MIT License
                                                             📄 phase4_test.rs
                                                             📄 phase5_test.rs
                                                             📄 phase6_cli_test.rs
+                                                            📄 play_json_interactive_test.rs
                                                             📄 server_basic_test.rs
                                                             📄 server_windows_fix_test.rs
                                                             📄 tail_generation_test.rs
@@ -1658,12 +2166,15 @@ MIT License
                                                         📄 _config.yml
                                                         📄 build.rs
                                                         📁 examples/
+                                                          📄 clear_schedule_demo.rs
                                                           📄 interactive_demo.rs
+                                                          📄 play_json_interactive_demo.rs
                                                           📄 test_client_non_verbose.rs
                                                           📄 test_client_verbose.rs
                                                           📄 test_logging_non_verbose.rs
                                                           📄 test_logging_verbose.rs
                                                         📁 generated-docs/
+                                                        📄 install-ym2151-tools.rs
                                                         📁 issue-notes/
                                                           📖 34.md
                                                           📖 36.md
@@ -1686,6 +2197,12 @@ MIT License
                                                           📖 70.md
                                                           📖 72.md
                                                           📖 74.md
+                                                          📖 76.md
+                                                          📖 78.md
+                                                          📖 80.md
+                                                          📖 82.md
+                                                          📖 84.md
+                                                          📖 86.md
                                                         📄 opm.c
                                                         📄 opm.h
                                                         📄 setup_ci_environment.sh
@@ -1707,8 +2224,24 @@ MIT License
                                                           📄 resampler.rs
                                                           📄 scheduler.rs
                                                           📄 server.rs
+                                                          📁 tests/
+                                                            📄 audio_tests.rs
+                                                            📄 client_tests.rs
+                                                            📄 debug_wav_tests.rs
+                                                            📄 events_tests.rs
+                                                            📄 ipc_pipe_windows_tests.rs
+                                                            📄 ipc_protocol_tests.rs
+                                                            📄 logging_tests.rs
+                                                            📄 mod.rs
+                                                            📄 opm_ffi_tests.rs
+                                                            📄 opm_tests.rs
+                                                            📄 resampler_tests.rs
+                                                            📄 scheduler_tests.rs
+                                                            📄 server_tests.rs
+                                                            📄 wav_writer_tests.rs
                                                           📄 wav_writer.rs
                                                         📁 tests/
+                                                          📄 clear_schedule_test.rs
                                                           📄 client_json_test.rs
                                                           📄 client_test.rs
                                                           📄 client_verbose_test.rs
@@ -1726,6 +2259,7 @@ MIT License
                                                           📄 phase4_test.rs
                                                           📄 phase5_test.rs
                                                           📄 phase6_cli_test.rs
+                                                          📄 play_json_interactive_test.rs
                                                           📄 server_basic_test.rs
                                                           📄 server_windows_fix_test.rs
                                                           📄 tail_generation_test.rs
@@ -1733,12 +2267,15 @@ MIT License
                                                       📄 _config.yml
                                                       📄 build.rs
                                                       📁 examples/
+                                                        📄 clear_schedule_demo.rs
                                                         📄 interactive_demo.rs
+                                                        📄 play_json_interactive_demo.rs
                                                         📄 test_client_non_verbose.rs
                                                         📄 test_client_verbose.rs
                                                         📄 test_logging_non_verbose.rs
                                                         📄 test_logging_verbose.rs
                                                       📁 generated-docs/
+                                                      📄 install-ym2151-tools.rs
                                                       📁 issue-notes/
                                                         📖 34.md
                                                         📖 36.md
@@ -1761,6 +2298,12 @@ MIT License
                                                         📖 70.md
                                                         📖 72.md
                                                         📖 74.md
+                                                        📖 76.md
+                                                        📖 78.md
+                                                        📖 80.md
+                                                        📖 82.md
+                                                        📖 84.md
+                                                        📖 86.md
                                                       📄 opm.c
                                                       📄 opm.h
                                                       📄 setup_ci_environment.sh
@@ -1782,8 +2325,24 @@ MIT License
                                                         📄 resampler.rs
                                                         📄 scheduler.rs
                                                         📄 server.rs
+                                                        📁 tests/
+                                                          📄 audio_tests.rs
+                                                          📄 client_tests.rs
+                                                          📄 debug_wav_tests.rs
+                                                          📄 events_tests.rs
+                                                          📄 ipc_pipe_windows_tests.rs
+                                                          📄 ipc_protocol_tests.rs
+                                                          📄 logging_tests.rs
+                                                          📄 mod.rs
+                                                          📄 opm_ffi_tests.rs
+                                                          📄 opm_tests.rs
+                                                          📄 resampler_tests.rs
+                                                          📄 scheduler_tests.rs
+                                                          📄 server_tests.rs
+                                                          📄 wav_writer_tests.rs
                                                         📄 wav_writer.rs
                                                       📁 tests/
+                                                        📄 clear_schedule_test.rs
                                                         📄 client_json_test.rs
                                                         📄 client_test.rs
                                                         📄 client_verbose_test.rs
@@ -1801,6 +2360,7 @@ MIT License
                                                         📄 phase4_test.rs
                                                         📄 phase5_test.rs
                                                         📄 phase6_cli_test.rs
+                                                        📄 play_json_interactive_test.rs
                                                         📄 server_basic_test.rs
                                                         📄 server_windows_fix_test.rs
                                                         📄 tail_generation_test.rs
@@ -1808,12 +2368,15 @@ MIT License
                                                     📄 _config.yml
                                                     📄 build.rs
                                                     📁 examples/
+                                                      📄 clear_schedule_demo.rs
                                                       📄 interactive_demo.rs
+                                                      📄 play_json_interactive_demo.rs
                                                       📄 test_client_non_verbose.rs
                                                       📄 test_client_verbose.rs
                                                       📄 test_logging_non_verbose.rs
                                                       📄 test_logging_verbose.rs
                                                     📁 generated-docs/
+                                                    📄 install-ym2151-tools.rs
                                                     📁 issue-notes/
                                                       📖 34.md
                                                       📖 36.md
@@ -1836,6 +2399,12 @@ MIT License
                                                       📖 70.md
                                                       📖 72.md
                                                       📖 74.md
+                                                      📖 76.md
+                                                      📖 78.md
+                                                      📖 80.md
+                                                      📖 82.md
+                                                      📖 84.md
+                                                      📖 86.md
                                                     📄 opm.c
                                                     📄 opm.h
                                                     📄 setup_ci_environment.sh
@@ -1857,8 +2426,24 @@ MIT License
                                                       📄 resampler.rs
                                                       📄 scheduler.rs
                                                       📄 server.rs
+                                                      📁 tests/
+                                                        📄 audio_tests.rs
+                                                        📄 client_tests.rs
+                                                        📄 debug_wav_tests.rs
+                                                        📄 events_tests.rs
+                                                        📄 ipc_pipe_windows_tests.rs
+                                                        📄 ipc_protocol_tests.rs
+                                                        📄 logging_tests.rs
+                                                        📄 mod.rs
+                                                        📄 opm_ffi_tests.rs
+                                                        📄 opm_tests.rs
+                                                        📄 resampler_tests.rs
+                                                        📄 scheduler_tests.rs
+                                                        📄 server_tests.rs
+                                                        📄 wav_writer_tests.rs
                                                       📄 wav_writer.rs
                                                     📁 tests/
+                                                      📄 clear_schedule_test.rs
                                                       📄 client_json_test.rs
                                                       📄 client_test.rs
                                                       📄 client_verbose_test.rs
@@ -1876,6 +2461,7 @@ MIT License
                                                       📄 phase4_test.rs
                                                       📄 phase5_test.rs
                                                       📄 phase6_cli_test.rs
+                                                      📄 play_json_interactive_test.rs
                                                       📄 server_basic_test.rs
                                                       📄 server_windows_fix_test.rs
                                                       📄 tail_generation_test.rs
@@ -1883,12 +2469,15 @@ MIT License
                                                   📄 _config.yml
                                                   📄 build.rs
                                                   📁 examples/
+                                                    📄 clear_schedule_demo.rs
                                                     📄 interactive_demo.rs
+                                                    📄 play_json_interactive_demo.rs
                                                     📄 test_client_non_verbose.rs
                                                     📄 test_client_verbose.rs
                                                     📄 test_logging_non_verbose.rs
                                                     📄 test_logging_verbose.rs
                                                   📁 generated-docs/
+                                                  📄 install-ym2151-tools.rs
                                                   📁 issue-notes/
                                                     📖 34.md
                                                     📖 36.md
@@ -1911,6 +2500,12 @@ MIT License
                                                     📖 70.md
                                                     📖 72.md
                                                     📖 74.md
+                                                    📖 76.md
+                                                    📖 78.md
+                                                    📖 80.md
+                                                    📖 82.md
+                                                    📖 84.md
+                                                    📖 86.md
                                                   📄 opm.c
                                                   📄 opm.h
                                                   📄 setup_ci_environment.sh
@@ -1932,8 +2527,24 @@ MIT License
                                                     📄 resampler.rs
                                                     📄 scheduler.rs
                                                     📄 server.rs
+                                                    📁 tests/
+                                                      📄 audio_tests.rs
+                                                      📄 client_tests.rs
+                                                      📄 debug_wav_tests.rs
+                                                      📄 events_tests.rs
+                                                      📄 ipc_pipe_windows_tests.rs
+                                                      📄 ipc_protocol_tests.rs
+                                                      📄 logging_tests.rs
+                                                      📄 mod.rs
+                                                      📄 opm_ffi_tests.rs
+                                                      📄 opm_tests.rs
+                                                      📄 resampler_tests.rs
+                                                      📄 scheduler_tests.rs
+                                                      📄 server_tests.rs
+                                                      📄 wav_writer_tests.rs
                                                     📄 wav_writer.rs
                                                   📁 tests/
+                                                    📄 clear_schedule_test.rs
                                                     📄 client_json_test.rs
                                                     📄 client_test.rs
                                                     📄 client_verbose_test.rs
@@ -1951,6 +2562,7 @@ MIT License
                                                     📄 phase4_test.rs
                                                     📄 phase5_test.rs
                                                     📄 phase6_cli_test.rs
+                                                    📄 play_json_interactive_test.rs
                                                     📄 server_basic_test.rs
                                                     📄 server_windows_fix_test.rs
                                                     📄 tail_generation_test.rs
@@ -1958,12 +2570,15 @@ MIT License
                                                 📄 _config.yml
                                                 📄 build.rs
                                                 📁 examples/
+                                                  📄 clear_schedule_demo.rs
                                                   📄 interactive_demo.rs
+                                                  📄 play_json_interactive_demo.rs
                                                   📄 test_client_non_verbose.rs
                                                   📄 test_client_verbose.rs
                                                   📄 test_logging_non_verbose.rs
                                                   📄 test_logging_verbose.rs
                                                 📁 generated-docs/
+                                                📄 install-ym2151-tools.rs
                                                 📁 issue-notes/
                                                   📖 34.md
                                                   📖 36.md
@@ -1986,6 +2601,12 @@ MIT License
                                                   📖 70.md
                                                   📖 72.md
                                                   📖 74.md
+                                                  📖 76.md
+                                                  📖 78.md
+                                                  📖 80.md
+                                                  📖 82.md
+                                                  📖 84.md
+                                                  📖 86.md
                                                 📄 opm.c
                                                 📄 opm.h
                                                 📄 setup_ci_environment.sh
@@ -2007,8 +2628,24 @@ MIT License
                                                   📄 resampler.rs
                                                   📄 scheduler.rs
                                                   📄 server.rs
+                                                  📁 tests/
+                                                    📄 audio_tests.rs
+                                                    📄 client_tests.rs
+                                                    📄 debug_wav_tests.rs
+                                                    📄 events_tests.rs
+                                                    📄 ipc_pipe_windows_tests.rs
+                                                    📄 ipc_protocol_tests.rs
+                                                    📄 logging_tests.rs
+                                                    📄 mod.rs
+                                                    📄 opm_ffi_tests.rs
+                                                    📄 opm_tests.rs
+                                                    📄 resampler_tests.rs
+                                                    📄 scheduler_tests.rs
+                                                    📄 server_tests.rs
+                                                    📄 wav_writer_tests.rs
                                                   📄 wav_writer.rs
                                                 📁 tests/
+                                                  📄 clear_schedule_test.rs
                                                   📄 client_json_test.rs
                                                   📄 client_test.rs
                                                   📄 client_verbose_test.rs
@@ -2026,6 +2663,7 @@ MIT License
                                                   📄 phase4_test.rs
                                                   📄 phase5_test.rs
                                                   📄 phase6_cli_test.rs
+                                                  📄 play_json_interactive_test.rs
                                                   📄 server_basic_test.rs
                                                   📄 server_windows_fix_test.rs
                                                   📄 tail_generation_test.rs
@@ -2033,12 +2671,15 @@ MIT License
                                               📄 _config.yml
                                               📄 build.rs
                                               📁 examples/
+                                                📄 clear_schedule_demo.rs
                                                 📄 interactive_demo.rs
+                                                📄 play_json_interactive_demo.rs
                                                 📄 test_client_non_verbose.rs
                                                 📄 test_client_verbose.rs
                                                 📄 test_logging_non_verbose.rs
                                                 📄 test_logging_verbose.rs
                                               📁 generated-docs/
+                                              📄 install-ym2151-tools.rs
                                               📁 issue-notes/
                                                 📖 34.md
                                                 📖 36.md
@@ -2061,6 +2702,12 @@ MIT License
                                                 📖 70.md
                                                 📖 72.md
                                                 📖 74.md
+                                                📖 76.md
+                                                📖 78.md
+                                                📖 80.md
+                                                📖 82.md
+                                                📖 84.md
+                                                📖 86.md
                                               📄 opm.c
                                               📄 opm.h
                                               📄 setup_ci_environment.sh
@@ -2082,8 +2729,24 @@ MIT License
                                                 📄 resampler.rs
                                                 📄 scheduler.rs
                                                 📄 server.rs
+                                                📁 tests/
+                                                  📄 audio_tests.rs
+                                                  📄 client_tests.rs
+                                                  📄 debug_wav_tests.rs
+                                                  📄 events_tests.rs
+                                                  📄 ipc_pipe_windows_tests.rs
+                                                  📄 ipc_protocol_tests.rs
+                                                  📄 logging_tests.rs
+                                                  📄 mod.rs
+                                                  📄 opm_ffi_tests.rs
+                                                  📄 opm_tests.rs
+                                                  📄 resampler_tests.rs
+                                                  📄 scheduler_tests.rs
+                                                  📄 server_tests.rs
+                                                  📄 wav_writer_tests.rs
                                                 📄 wav_writer.rs
                                               📁 tests/
+                                                📄 clear_schedule_test.rs
                                                 📄 client_json_test.rs
                                                 📄 client_test.rs
                                                 📄 client_verbose_test.rs
@@ -2101,6 +2764,7 @@ MIT License
                                                 📄 phase4_test.rs
                                                 📄 phase5_test.rs
                                                 📄 phase6_cli_test.rs
+                                                📄 play_json_interactive_test.rs
                                                 📄 server_basic_test.rs
                                                 📄 server_windows_fix_test.rs
                                                 📄 tail_generation_test.rs
@@ -2108,12 +2772,15 @@ MIT License
                                             📄 _config.yml
                                             📄 build.rs
                                             📁 examples/
+                                              📄 clear_schedule_demo.rs
                                               📄 interactive_demo.rs
+                                              📄 play_json_interactive_demo.rs
                                               📄 test_client_non_verbose.rs
                                               📄 test_client_verbose.rs
                                               📄 test_logging_non_verbose.rs
                                               📄 test_logging_verbose.rs
                                             📁 generated-docs/
+                                            📄 install-ym2151-tools.rs
                                             📁 issue-notes/
                                               📖 34.md
                                               📖 36.md
@@ -2136,6 +2803,12 @@ MIT License
                                               📖 70.md
                                               📖 72.md
                                               📖 74.md
+                                              📖 76.md
+                                              📖 78.md
+                                              📖 80.md
+                                              📖 82.md
+                                              📖 84.md
+                                              📖 86.md
                                             📄 opm.c
                                             📄 opm.h
                                             📄 setup_ci_environment.sh
@@ -2157,8 +2830,24 @@ MIT License
                                               📄 resampler.rs
                                               📄 scheduler.rs
                                               📄 server.rs
+                                              📁 tests/
+                                                📄 audio_tests.rs
+                                                📄 client_tests.rs
+                                                📄 debug_wav_tests.rs
+                                                📄 events_tests.rs
+                                                📄 ipc_pipe_windows_tests.rs
+                                                📄 ipc_protocol_tests.rs
+                                                📄 logging_tests.rs
+                                                📄 mod.rs
+                                                📄 opm_ffi_tests.rs
+                                                📄 opm_tests.rs
+                                                📄 resampler_tests.rs
+                                                📄 scheduler_tests.rs
+                                                📄 server_tests.rs
+                                                📄 wav_writer_tests.rs
                                               📄 wav_writer.rs
                                             📁 tests/
+                                              📄 clear_schedule_test.rs
                                               📄 client_json_test.rs
                                               📄 client_test.rs
                                               📄 client_verbose_test.rs
@@ -2176,6 +2865,7 @@ MIT License
                                               📄 phase4_test.rs
                                               📄 phase5_test.rs
                                               📄 phase6_cli_test.rs
+                                              📄 play_json_interactive_test.rs
                                               📄 server_basic_test.rs
                                               📄 server_windows_fix_test.rs
                                               📄 tail_generation_test.rs
@@ -2183,12 +2873,15 @@ MIT License
                                           📄 _config.yml
                                           📄 build.rs
                                           📁 examples/
+                                            📄 clear_schedule_demo.rs
                                             📄 interactive_demo.rs
+                                            📄 play_json_interactive_demo.rs
                                             📄 test_client_non_verbose.rs
                                             📄 test_client_verbose.rs
                                             📄 test_logging_non_verbose.rs
                                             📄 test_logging_verbose.rs
                                           📁 generated-docs/
+                                          📄 install-ym2151-tools.rs
                                           📁 issue-notes/
                                             📖 34.md
                                             📖 36.md
@@ -2211,6 +2904,12 @@ MIT License
                                             📖 70.md
                                             📖 72.md
                                             📖 74.md
+                                            📖 76.md
+                                            📖 78.md
+                                            📖 80.md
+                                            📖 82.md
+                                            📖 84.md
+                                            📖 86.md
                                           📄 opm.c
                                           📄 opm.h
                                           📄 setup_ci_environment.sh
@@ -2232,8 +2931,24 @@ MIT License
                                             📄 resampler.rs
                                             📄 scheduler.rs
                                             📄 server.rs
+                                            📁 tests/
+                                              📄 audio_tests.rs
+                                              📄 client_tests.rs
+                                              📄 debug_wav_tests.rs
+                                              📄 events_tests.rs
+                                              📄 ipc_pipe_windows_tests.rs
+                                              📄 ipc_protocol_tests.rs
+                                              📄 logging_tests.rs
+                                              📄 mod.rs
+                                              📄 opm_ffi_tests.rs
+                                              📄 opm_tests.rs
+                                              📄 resampler_tests.rs
+                                              📄 scheduler_tests.rs
+                                              📄 server_tests.rs
+                                              📄 wav_writer_tests.rs
                                             📄 wav_writer.rs
                                           📁 tests/
+                                            📄 clear_schedule_test.rs
                                             📄 client_json_test.rs
                                             📄 client_test.rs
                                             📄 client_verbose_test.rs
@@ -2251,6 +2966,7 @@ MIT License
                                             📄 phase4_test.rs
                                             📄 phase5_test.rs
                                             📄 phase6_cli_test.rs
+                                            📄 play_json_interactive_test.rs
                                             📄 server_basic_test.rs
                                             📄 server_windows_fix_test.rs
                                             📄 tail_generation_test.rs
@@ -2258,12 +2974,15 @@ MIT License
                                         📄 _config.yml
                                         📄 build.rs
                                         📁 examples/
+                                          📄 clear_schedule_demo.rs
                                           📄 interactive_demo.rs
+                                          📄 play_json_interactive_demo.rs
                                           📄 test_client_non_verbose.rs
                                           📄 test_client_verbose.rs
                                           📄 test_logging_non_verbose.rs
                                           📄 test_logging_verbose.rs
                                         📁 generated-docs/
+                                        📄 install-ym2151-tools.rs
                                         📁 issue-notes/
                                           📖 34.md
                                           📖 36.md
@@ -2286,6 +3005,12 @@ MIT License
                                           📖 70.md
                                           📖 72.md
                                           📖 74.md
+                                          📖 76.md
+                                          📖 78.md
+                                          📖 80.md
+                                          📖 82.md
+                                          📖 84.md
+                                          📖 86.md
                                         📄 opm.c
                                         📄 opm.h
                                         📄 setup_ci_environment.sh
@@ -2307,8 +3032,24 @@ MIT License
                                           📄 resampler.rs
                                           📄 scheduler.rs
                                           📄 server.rs
+                                          📁 tests/
+                                            📄 audio_tests.rs
+                                            📄 client_tests.rs
+                                            📄 debug_wav_tests.rs
+                                            📄 events_tests.rs
+                                            📄 ipc_pipe_windows_tests.rs
+                                            📄 ipc_protocol_tests.rs
+                                            📄 logging_tests.rs
+                                            📄 mod.rs
+                                            📄 opm_ffi_tests.rs
+                                            📄 opm_tests.rs
+                                            📄 resampler_tests.rs
+                                            📄 scheduler_tests.rs
+                                            📄 server_tests.rs
+                                            📄 wav_writer_tests.rs
                                           📄 wav_writer.rs
                                         📁 tests/
+                                          📄 clear_schedule_test.rs
                                           📄 client_json_test.rs
                                           📄 client_test.rs
                                           📄 client_verbose_test.rs
@@ -2326,6 +3067,7 @@ MIT License
                                           📄 phase4_test.rs
                                           📄 phase5_test.rs
                                           📄 phase6_cli_test.rs
+                                          📄 play_json_interactive_test.rs
                                           📄 server_basic_test.rs
                                           📄 server_windows_fix_test.rs
                                           📄 tail_generation_test.rs
@@ -2333,12 +3075,15 @@ MIT License
                                       📄 _config.yml
                                       📄 build.rs
                                       📁 examples/
+                                        📄 clear_schedule_demo.rs
                                         📄 interactive_demo.rs
+                                        📄 play_json_interactive_demo.rs
                                         📄 test_client_non_verbose.rs
                                         📄 test_client_verbose.rs
                                         📄 test_logging_non_verbose.rs
                                         📄 test_logging_verbose.rs
                                       📁 generated-docs/
+                                      📄 install-ym2151-tools.rs
                                       📁 issue-notes/
                                         📖 34.md
                                         📖 36.md
@@ -2361,6 +3106,12 @@ MIT License
                                         📖 70.md
                                         📖 72.md
                                         📖 74.md
+                                        📖 76.md
+                                        📖 78.md
+                                        📖 80.md
+                                        📖 82.md
+                                        📖 84.md
+                                        📖 86.md
                                       📄 opm.c
                                       📄 opm.h
                                       📄 setup_ci_environment.sh
@@ -2382,8 +3133,24 @@ MIT License
                                         📄 resampler.rs
                                         📄 scheduler.rs
                                         📄 server.rs
+                                        📁 tests/
+                                          📄 audio_tests.rs
+                                          📄 client_tests.rs
+                                          📄 debug_wav_tests.rs
+                                          📄 events_tests.rs
+                                          📄 ipc_pipe_windows_tests.rs
+                                          📄 ipc_protocol_tests.rs
+                                          📄 logging_tests.rs
+                                          📄 mod.rs
+                                          📄 opm_ffi_tests.rs
+                                          📄 opm_tests.rs
+                                          📄 resampler_tests.rs
+                                          📄 scheduler_tests.rs
+                                          📄 server_tests.rs
+                                          📄 wav_writer_tests.rs
                                         📄 wav_writer.rs
                                       📁 tests/
+                                        📄 clear_schedule_test.rs
                                         📄 client_json_test.rs
                                         📄 client_test.rs
                                         📄 client_verbose_test.rs
@@ -2401,6 +3168,7 @@ MIT License
                                         📄 phase4_test.rs
                                         📄 phase5_test.rs
                                         📄 phase6_cli_test.rs
+                                        📄 play_json_interactive_test.rs
                                         📄 server_basic_test.rs
                                         📄 server_windows_fix_test.rs
                                         📄 tail_generation_test.rs
@@ -2408,12 +3176,15 @@ MIT License
                                     📄 _config.yml
                                     📄 build.rs
                                     📁 examples/
+                                      📄 clear_schedule_demo.rs
                                       📄 interactive_demo.rs
+                                      📄 play_json_interactive_demo.rs
                                       📄 test_client_non_verbose.rs
                                       📄 test_client_verbose.rs
                                       📄 test_logging_non_verbose.rs
                                       📄 test_logging_verbose.rs
                                     📁 generated-docs/
+                                    📄 install-ym2151-tools.rs
                                     📁 issue-notes/
                                       📖 34.md
                                       📖 36.md
@@ -2436,6 +3207,12 @@ MIT License
                                       📖 70.md
                                       📖 72.md
                                       📖 74.md
+                                      📖 76.md
+                                      📖 78.md
+                                      📖 80.md
+                                      📖 82.md
+                                      📖 84.md
+                                      📖 86.md
                                     📄 opm.c
                                     📄 opm.h
                                     📄 setup_ci_environment.sh
@@ -2457,8 +3234,24 @@ MIT License
                                       📄 resampler.rs
                                       📄 scheduler.rs
                                       📄 server.rs
+                                      📁 tests/
+                                        📄 audio_tests.rs
+                                        📄 client_tests.rs
+                                        📄 debug_wav_tests.rs
+                                        📄 events_tests.rs
+                                        📄 ipc_pipe_windows_tests.rs
+                                        📄 ipc_protocol_tests.rs
+                                        📄 logging_tests.rs
+                                        📄 mod.rs
+                                        📄 opm_ffi_tests.rs
+                                        📄 opm_tests.rs
+                                        📄 resampler_tests.rs
+                                        📄 scheduler_tests.rs
+                                        📄 server_tests.rs
+                                        📄 wav_writer_tests.rs
                                       📄 wav_writer.rs
                                     📁 tests/
+                                      📄 clear_schedule_test.rs
                                       📄 client_json_test.rs
                                       📄 client_test.rs
                                       📄 client_verbose_test.rs
@@ -2476,6 +3269,7 @@ MIT License
                                       📄 phase4_test.rs
                                       📄 phase5_test.rs
                                       📄 phase6_cli_test.rs
+                                      📄 play_json_interactive_test.rs
                                       📄 server_basic_test.rs
                                       📄 server_windows_fix_test.rs
                                       📄 tail_generation_test.rs
@@ -2483,12 +3277,15 @@ MIT License
                                   📄 _config.yml
                                   📄 build.rs
                                   📁 examples/
+                                    📄 clear_schedule_demo.rs
                                     📄 interactive_demo.rs
+                                    📄 play_json_interactive_demo.rs
                                     📄 test_client_non_verbose.rs
                                     📄 test_client_verbose.rs
                                     📄 test_logging_non_verbose.rs
                                     📄 test_logging_verbose.rs
                                   📁 generated-docs/
+                                  📄 install-ym2151-tools.rs
                                   📁 issue-notes/
                                     📖 34.md
                                     📖 36.md
@@ -2511,6 +3308,12 @@ MIT License
                                     📖 70.md
                                     📖 72.md
                                     📖 74.md
+                                    📖 76.md
+                                    📖 78.md
+                                    📖 80.md
+                                    📖 82.md
+                                    📖 84.md
+                                    📖 86.md
                                   📄 opm.c
                                   📄 opm.h
                                   📄 setup_ci_environment.sh
@@ -2532,8 +3335,24 @@ MIT License
                                     📄 resampler.rs
                                     📄 scheduler.rs
                                     📄 server.rs
+                                    📁 tests/
+                                      📄 audio_tests.rs
+                                      📄 client_tests.rs
+                                      📄 debug_wav_tests.rs
+                                      📄 events_tests.rs
+                                      📄 ipc_pipe_windows_tests.rs
+                                      📄 ipc_protocol_tests.rs
+                                      📄 logging_tests.rs
+                                      📄 mod.rs
+                                      📄 opm_ffi_tests.rs
+                                      📄 opm_tests.rs
+                                      📄 resampler_tests.rs
+                                      📄 scheduler_tests.rs
+                                      📄 server_tests.rs
+                                      📄 wav_writer_tests.rs
                                     📄 wav_writer.rs
                                   📁 tests/
+                                    📄 clear_schedule_test.rs
                                     📄 client_json_test.rs
                                     📄 client_test.rs
                                     📄 client_verbose_test.rs
@@ -2551,6 +3370,7 @@ MIT License
                                     📄 phase4_test.rs
                                     📄 phase5_test.rs
                                     📄 phase6_cli_test.rs
+                                    📄 play_json_interactive_test.rs
                                     📄 server_basic_test.rs
                                     📄 server_windows_fix_test.rs
                                     📄 tail_generation_test.rs
@@ -2558,12 +3378,15 @@ MIT License
                                 📄 _config.yml
                                 📄 build.rs
                                 📁 examples/
+                                  📄 clear_schedule_demo.rs
                                   📄 interactive_demo.rs
+                                  📄 play_json_interactive_demo.rs
                                   📄 test_client_non_verbose.rs
                                   📄 test_client_verbose.rs
                                   📄 test_logging_non_verbose.rs
                                   📄 test_logging_verbose.rs
                                 📁 generated-docs/
+                                📄 install-ym2151-tools.rs
                                 📁 issue-notes/
                                   📖 34.md
                                   📖 36.md
@@ -2586,6 +3409,12 @@ MIT License
                                   📖 70.md
                                   📖 72.md
                                   📖 74.md
+                                  📖 76.md
+                                  📖 78.md
+                                  📖 80.md
+                                  📖 82.md
+                                  📖 84.md
+                                  📖 86.md
                                 📄 opm.c
                                 📄 opm.h
                                 📄 setup_ci_environment.sh
@@ -2607,8 +3436,24 @@ MIT License
                                   📄 resampler.rs
                                   📄 scheduler.rs
                                   📄 server.rs
+                                  📁 tests/
+                                    📄 audio_tests.rs
+                                    📄 client_tests.rs
+                                    📄 debug_wav_tests.rs
+                                    📄 events_tests.rs
+                                    📄 ipc_pipe_windows_tests.rs
+                                    📄 ipc_protocol_tests.rs
+                                    📄 logging_tests.rs
+                                    📄 mod.rs
+                                    📄 opm_ffi_tests.rs
+                                    📄 opm_tests.rs
+                                    📄 resampler_tests.rs
+                                    📄 scheduler_tests.rs
+                                    📄 server_tests.rs
+                                    📄 wav_writer_tests.rs
                                   📄 wav_writer.rs
                                 📁 tests/
+                                  📄 clear_schedule_test.rs
                                   📄 client_json_test.rs
                                   📄 client_test.rs
                                   📄 client_verbose_test.rs
@@ -2626,6 +3471,7 @@ MIT License
                                   📄 phase4_test.rs
                                   📄 phase5_test.rs
                                   📄 phase6_cli_test.rs
+                                  📄 play_json_interactive_test.rs
                                   📄 server_basic_test.rs
                                   📄 server_windows_fix_test.rs
                                   📄 tail_generation_test.rs
@@ -2633,12 +3479,15 @@ MIT License
                               📄 _config.yml
                               📄 build.rs
                               📁 examples/
+                                📄 clear_schedule_demo.rs
                                 📄 interactive_demo.rs
+                                📄 play_json_interactive_demo.rs
                                 📄 test_client_non_verbose.rs
                                 📄 test_client_verbose.rs
                                 📄 test_logging_non_verbose.rs
                                 📄 test_logging_verbose.rs
                               📁 generated-docs/
+                              📄 install-ym2151-tools.rs
                               📁 issue-notes/
                                 📖 34.md
                                 📖 36.md
@@ -2661,6 +3510,12 @@ MIT License
                                 📖 70.md
                                 📖 72.md
                                 📖 74.md
+                                📖 76.md
+                                📖 78.md
+                                📖 80.md
+                                📖 82.md
+                                📖 84.md
+                                📖 86.md
                               📄 opm.c
                               📄 opm.h
                               📄 setup_ci_environment.sh
@@ -2682,8 +3537,24 @@ MIT License
                                 📄 resampler.rs
                                 📄 scheduler.rs
                                 📄 server.rs
+                                📁 tests/
+                                  📄 audio_tests.rs
+                                  📄 client_tests.rs
+                                  📄 debug_wav_tests.rs
+                                  📄 events_tests.rs
+                                  📄 ipc_pipe_windows_tests.rs
+                                  📄 ipc_protocol_tests.rs
+                                  📄 logging_tests.rs
+                                  📄 mod.rs
+                                  📄 opm_ffi_tests.rs
+                                  📄 opm_tests.rs
+                                  📄 resampler_tests.rs
+                                  📄 scheduler_tests.rs
+                                  📄 server_tests.rs
+                                  📄 wav_writer_tests.rs
                                 📄 wav_writer.rs
                               📁 tests/
+                                📄 clear_schedule_test.rs
                                 📄 client_json_test.rs
                                 📄 client_test.rs
                                 📄 client_verbose_test.rs
@@ -2701,6 +3572,7 @@ MIT License
                                 📄 phase4_test.rs
                                 📄 phase5_test.rs
                                 📄 phase6_cli_test.rs
+                                📄 play_json_interactive_test.rs
                                 📄 server_basic_test.rs
                                 📄 server_windows_fix_test.rs
                                 📄 tail_generation_test.rs
@@ -2708,12 +3580,15 @@ MIT License
                             📄 _config.yml
                             📄 build.rs
                             📁 examples/
+                              📄 clear_schedule_demo.rs
                               📄 interactive_demo.rs
+                              📄 play_json_interactive_demo.rs
                               📄 test_client_non_verbose.rs
                               📄 test_client_verbose.rs
                               📄 test_logging_non_verbose.rs
                               📄 test_logging_verbose.rs
                             📁 generated-docs/
+                            📄 install-ym2151-tools.rs
                             📁 issue-notes/
                               📖 34.md
                               📖 36.md
@@ -2736,6 +3611,12 @@ MIT License
                               📖 70.md
                               📖 72.md
                               📖 74.md
+                              📖 76.md
+                              📖 78.md
+                              📖 80.md
+                              📖 82.md
+                              📖 84.md
+                              📖 86.md
                             📄 opm.c
                             📄 opm.h
                             📄 setup_ci_environment.sh
@@ -2757,8 +3638,24 @@ MIT License
                               📄 resampler.rs
                               📄 scheduler.rs
                               📄 server.rs
+                              📁 tests/
+                                📄 audio_tests.rs
+                                📄 client_tests.rs
+                                📄 debug_wav_tests.rs
+                                📄 events_tests.rs
+                                📄 ipc_pipe_windows_tests.rs
+                                📄 ipc_protocol_tests.rs
+                                📄 logging_tests.rs
+                                📄 mod.rs
+                                📄 opm_ffi_tests.rs
+                                📄 opm_tests.rs
+                                📄 resampler_tests.rs
+                                📄 scheduler_tests.rs
+                                📄 server_tests.rs
+                                📄 wav_writer_tests.rs
                               📄 wav_writer.rs
                             📁 tests/
+                              📄 clear_schedule_test.rs
                               📄 client_json_test.rs
                               📄 client_test.rs
                               📄 client_verbose_test.rs
@@ -2776,6 +3673,7 @@ MIT License
                               📄 phase4_test.rs
                               📄 phase5_test.rs
                               📄 phase6_cli_test.rs
+                              📄 play_json_interactive_test.rs
                               📄 server_basic_test.rs
                               📄 server_windows_fix_test.rs
                               📄 tail_generation_test.rs
@@ -2783,12 +3681,15 @@ MIT License
                           📄 _config.yml
                           📄 build.rs
                           📁 examples/
+                            📄 clear_schedule_demo.rs
                             📄 interactive_demo.rs
+                            📄 play_json_interactive_demo.rs
                             📄 test_client_non_verbose.rs
                             📄 test_client_verbose.rs
                             📄 test_logging_non_verbose.rs
                             📄 test_logging_verbose.rs
                           📁 generated-docs/
+                          📄 install-ym2151-tools.rs
                           📁 issue-notes/
                             📖 34.md
                             📖 36.md
@@ -2811,6 +3712,12 @@ MIT License
                             📖 70.md
                             📖 72.md
                             📖 74.md
+                            📖 76.md
+                            📖 78.md
+                            📖 80.md
+                            📖 82.md
+                            📖 84.md
+                            📖 86.md
                           📄 opm.c
                           📄 opm.h
                           📄 setup_ci_environment.sh
@@ -2832,8 +3739,24 @@ MIT License
                             📄 resampler.rs
                             📄 scheduler.rs
                             📄 server.rs
+                            📁 tests/
+                              📄 audio_tests.rs
+                              📄 client_tests.rs
+                              📄 debug_wav_tests.rs
+                              📄 events_tests.rs
+                              📄 ipc_pipe_windows_tests.rs
+                              📄 ipc_protocol_tests.rs
+                              📄 logging_tests.rs
+                              📄 mod.rs
+                              📄 opm_ffi_tests.rs
+                              📄 opm_tests.rs
+                              📄 resampler_tests.rs
+                              📄 scheduler_tests.rs
+                              📄 server_tests.rs
+                              📄 wav_writer_tests.rs
                             📄 wav_writer.rs
                           📁 tests/
+                            📄 clear_schedule_test.rs
                             📄 client_json_test.rs
                             📄 client_test.rs
                             📄 client_verbose_test.rs
@@ -2851,6 +3774,7 @@ MIT License
                             📄 phase4_test.rs
                             📄 phase5_test.rs
                             📄 phase6_cli_test.rs
+                            📄 play_json_interactive_test.rs
                             📄 server_basic_test.rs
                             📄 server_windows_fix_test.rs
                             📄 tail_generation_test.rs
@@ -2858,12 +3782,15 @@ MIT License
                         📄 _config.yml
                         📄 build.rs
                         📁 examples/
+                          📄 clear_schedule_demo.rs
                           📄 interactive_demo.rs
+                          📄 play_json_interactive_demo.rs
                           📄 test_client_non_verbose.rs
                           📄 test_client_verbose.rs
                           📄 test_logging_non_verbose.rs
                           📄 test_logging_verbose.rs
                         📁 generated-docs/
+                        📄 install-ym2151-tools.rs
                         📁 issue-notes/
                           📖 34.md
                           📖 36.md
@@ -2886,6 +3813,12 @@ MIT License
                           📖 70.md
                           📖 72.md
                           📖 74.md
+                          📖 76.md
+                          📖 78.md
+                          📖 80.md
+                          📖 82.md
+                          📖 84.md
+                          📖 86.md
                         📄 opm.c
                         📄 opm.h
                         📄 setup_ci_environment.sh
@@ -2907,8 +3840,24 @@ MIT License
                           📄 resampler.rs
                           📄 scheduler.rs
                           📄 server.rs
+                          📁 tests/
+                            📄 audio_tests.rs
+                            📄 client_tests.rs
+                            📄 debug_wav_tests.rs
+                            📄 events_tests.rs
+                            📄 ipc_pipe_windows_tests.rs
+                            📄 ipc_protocol_tests.rs
+                            📄 logging_tests.rs
+                            📄 mod.rs
+                            📄 opm_ffi_tests.rs
+                            📄 opm_tests.rs
+                            📄 resampler_tests.rs
+                            📄 scheduler_tests.rs
+                            📄 server_tests.rs
+                            📄 wav_writer_tests.rs
                           📄 wav_writer.rs
                         📁 tests/
+                          📄 clear_schedule_test.rs
                           📄 client_json_test.rs
                           📄 client_test.rs
                           📄 client_verbose_test.rs
@@ -2926,6 +3875,7 @@ MIT License
                           📄 phase4_test.rs
                           📄 phase5_test.rs
                           📄 phase6_cli_test.rs
+                          📄 play_json_interactive_test.rs
                           📄 server_basic_test.rs
                           📄 server_windows_fix_test.rs
                           📄 tail_generation_test.rs
@@ -2933,13 +3883,15 @@ MIT License
                       📄 _config.yml
                       📄 build.rs
                       📁 examples/
+                        📄 clear_schedule_demo.rs
                         📄 interactive_demo.rs
+                        📄 play_json_interactive_demo.rs
                         📄 test_client_non_verbose.rs
                         📄 test_client_verbose.rs
                         📄 test_logging_non_verbose.rs
                         📄 test_logging_verbose.rs
                       📁 generated-docs/
-                        📖 development-status-generated-prompt.md
+                      📄 install-ym2151-tools.rs
                       📁 issue-notes/
                         📖 34.md
                         📖 36.md
@@ -2962,6 +3914,12 @@ MIT License
                         📖 70.md
                         📖 72.md
                         📖 74.md
+                        📖 76.md
+                        📖 78.md
+                        📖 80.md
+                        📖 82.md
+                        📖 84.md
+                        📖 86.md
                       📄 opm.c
                       📄 opm.h
                       📄 setup_ci_environment.sh
@@ -2983,8 +3941,24 @@ MIT License
                         📄 resampler.rs
                         📄 scheduler.rs
                         📄 server.rs
+                        📁 tests/
+                          📄 audio_tests.rs
+                          📄 client_tests.rs
+                          📄 debug_wav_tests.rs
+                          📄 events_tests.rs
+                          📄 ipc_pipe_windows_tests.rs
+                          📄 ipc_protocol_tests.rs
+                          📄 logging_tests.rs
+                          📄 mod.rs
+                          📄 opm_ffi_tests.rs
+                          📄 opm_tests.rs
+                          📄 resampler_tests.rs
+                          📄 scheduler_tests.rs
+                          📄 server_tests.rs
+                          📄 wav_writer_tests.rs
                         📄 wav_writer.rs
                       📁 tests/
+                        📄 clear_schedule_test.rs
                         📄 client_json_test.rs
                         📄 client_test.rs
                         📄 client_verbose_test.rs
@@ -3002,6 +3976,7 @@ MIT License
                         📄 phase4_test.rs
                         📄 phase5_test.rs
                         📄 phase6_cli_test.rs
+                        📄 play_json_interactive_test.rs
                         📄 server_basic_test.rs
                         📄 server_windows_fix_test.rs
                         📄 tail_generation_test.rs
@@ -3009,13 +3984,15 @@ MIT License
                     📄 _config.yml
                     📄 build.rs
                     📁 examples/
+                      📄 clear_schedule_demo.rs
                       📄 interactive_demo.rs
+                      📄 play_json_interactive_demo.rs
                       📄 test_client_non_verbose.rs
                       📄 test_client_verbose.rs
                       📄 test_logging_non_verbose.rs
                       📄 test_logging_verbose.rs
                     📁 generated-docs/
-                      📖 development-status-generated-prompt.md
+                    📄 install-ym2151-tools.rs
                     📁 issue-notes/
                       📖 34.md
                       📖 36.md
@@ -3038,6 +4015,12 @@ MIT License
                       📖 70.md
                       📖 72.md
                       📖 74.md
+                      📖 76.md
+                      📖 78.md
+                      📖 80.md
+                      📖 82.md
+                      📖 84.md
+                      📖 86.md
                     📄 opm.c
                     📄 opm.h
                     📄 setup_ci_environment.sh
@@ -3059,8 +4042,24 @@ MIT License
                       📄 resampler.rs
                       📄 scheduler.rs
                       📄 server.rs
+                      📁 tests/
+                        📄 audio_tests.rs
+                        📄 client_tests.rs
+                        📄 debug_wav_tests.rs
+                        📄 events_tests.rs
+                        📄 ipc_pipe_windows_tests.rs
+                        📄 ipc_protocol_tests.rs
+                        📄 logging_tests.rs
+                        📄 mod.rs
+                        📄 opm_ffi_tests.rs
+                        📄 opm_tests.rs
+                        📄 resampler_tests.rs
+                        📄 scheduler_tests.rs
+                        📄 server_tests.rs
+                        📄 wav_writer_tests.rs
                       📄 wav_writer.rs
                     📁 tests/
+                      📄 clear_schedule_test.rs
                       📄 client_json_test.rs
                       📄 client_test.rs
                       📄 client_verbose_test.rs
@@ -3078,6 +4077,7 @@ MIT License
                       📄 phase4_test.rs
                       📄 phase5_test.rs
                       📄 phase6_cli_test.rs
+                      📄 play_json_interactive_test.rs
                       📄 server_basic_test.rs
                       📄 server_windows_fix_test.rs
                       📄 tail_generation_test.rs
@@ -3085,13 +4085,15 @@ MIT License
                   📄 _config.yml
                   📄 build.rs
                   📁 examples/
+                    📄 clear_schedule_demo.rs
                     📄 interactive_demo.rs
+                    📄 play_json_interactive_demo.rs
                     📄 test_client_non_verbose.rs
                     📄 test_client_verbose.rs
                     📄 test_logging_non_verbose.rs
                     📄 test_logging_verbose.rs
                   📁 generated-docs/
-                    📖 development-status-generated-prompt.md
+                  📄 install-ym2151-tools.rs
                   📁 issue-notes/
                     📖 34.md
                     📖 36.md
@@ -3114,6 +4116,12 @@ MIT License
                     📖 70.md
                     📖 72.md
                     📖 74.md
+                    📖 76.md
+                    📖 78.md
+                    📖 80.md
+                    📖 82.md
+                    📖 84.md
+                    📖 86.md
                   📄 opm.c
                   📄 opm.h
                   📄 setup_ci_environment.sh
@@ -3135,8 +4143,24 @@ MIT License
                     📄 resampler.rs
                     📄 scheduler.rs
                     📄 server.rs
+                    📁 tests/
+                      📄 audio_tests.rs
+                      📄 client_tests.rs
+                      📄 debug_wav_tests.rs
+                      📄 events_tests.rs
+                      📄 ipc_pipe_windows_tests.rs
+                      📄 ipc_protocol_tests.rs
+                      📄 logging_tests.rs
+                      📄 mod.rs
+                      📄 opm_ffi_tests.rs
+                      📄 opm_tests.rs
+                      📄 resampler_tests.rs
+                      📄 scheduler_tests.rs
+                      📄 server_tests.rs
+                      📄 wav_writer_tests.rs
                     📄 wav_writer.rs
                   📁 tests/
+                    📄 clear_schedule_test.rs
                     📄 client_json_test.rs
                     📄 client_test.rs
                     📄 client_verbose_test.rs
@@ -3154,6 +4178,7 @@ MIT License
                     📄 phase4_test.rs
                     📄 phase5_test.rs
                     📄 phase6_cli_test.rs
+                    📄 play_json_interactive_test.rs
                     📄 server_basic_test.rs
                     📄 server_windows_fix_test.rs
                     📄 tail_generation_test.rs
@@ -3161,13 +4186,15 @@ MIT License
                 📄 _config.yml
                 📄 build.rs
                 📁 examples/
+                  📄 clear_schedule_demo.rs
                   📄 interactive_demo.rs
+                  📄 play_json_interactive_demo.rs
                   📄 test_client_non_verbose.rs
                   📄 test_client_verbose.rs
                   📄 test_logging_non_verbose.rs
                   📄 test_logging_verbose.rs
                 📁 generated-docs/
-                  📖 development-status-generated-prompt.md
+                📄 install-ym2151-tools.rs
                 📁 issue-notes/
                   📖 34.md
                   📖 36.md
@@ -3190,6 +4217,12 @@ MIT License
                   📖 70.md
                   📖 72.md
                   📖 74.md
+                  📖 76.md
+                  📖 78.md
+                  📖 80.md
+                  📖 82.md
+                  📖 84.md
+                  📖 86.md
                 📄 opm.c
                 📄 opm.h
                 📄 setup_ci_environment.sh
@@ -3211,8 +4244,24 @@ MIT License
                   📄 resampler.rs
                   📄 scheduler.rs
                   📄 server.rs
+                  📁 tests/
+                    📄 audio_tests.rs
+                    📄 client_tests.rs
+                    📄 debug_wav_tests.rs
+                    📄 events_tests.rs
+                    📄 ipc_pipe_windows_tests.rs
+                    📄 ipc_protocol_tests.rs
+                    📄 logging_tests.rs
+                    📄 mod.rs
+                    📄 opm_ffi_tests.rs
+                    📄 opm_tests.rs
+                    📄 resampler_tests.rs
+                    📄 scheduler_tests.rs
+                    📄 server_tests.rs
+                    📄 wav_writer_tests.rs
                   📄 wav_writer.rs
                 📁 tests/
+                  📄 clear_schedule_test.rs
                   📄 client_json_test.rs
                   📄 client_test.rs
                   📄 client_verbose_test.rs
@@ -3230,6 +4279,7 @@ MIT License
                   📄 phase4_test.rs
                   📄 phase5_test.rs
                   📄 phase6_cli_test.rs
+                  📄 play_json_interactive_test.rs
                   📄 server_basic_test.rs
                   📄 server_windows_fix_test.rs
                   📄 tail_generation_test.rs
@@ -3237,13 +4287,15 @@ MIT License
               📄 _config.yml
               📄 build.rs
               📁 examples/
+                📄 clear_schedule_demo.rs
                 📄 interactive_demo.rs
+                📄 play_json_interactive_demo.rs
                 📄 test_client_non_verbose.rs
                 📄 test_client_verbose.rs
                 📄 test_logging_non_verbose.rs
                 📄 test_logging_verbose.rs
               📁 generated-docs/
-                📖 development-status-generated-prompt.md
+              📄 install-ym2151-tools.rs
               📁 issue-notes/
                 📖 34.md
                 📖 36.md
@@ -3266,6 +4318,12 @@ MIT License
                 📖 70.md
                 📖 72.md
                 📖 74.md
+                📖 76.md
+                📖 78.md
+                📖 80.md
+                📖 82.md
+                📖 84.md
+                📖 86.md
               📄 opm.c
               📄 opm.h
               📄 setup_ci_environment.sh
@@ -3287,8 +4345,24 @@ MIT License
                 📄 resampler.rs
                 📄 scheduler.rs
                 📄 server.rs
+                📁 tests/
+                  📄 audio_tests.rs
+                  📄 client_tests.rs
+                  📄 debug_wav_tests.rs
+                  📄 events_tests.rs
+                  📄 ipc_pipe_windows_tests.rs
+                  📄 ipc_protocol_tests.rs
+                  📄 logging_tests.rs
+                  📄 mod.rs
+                  📄 opm_ffi_tests.rs
+                  📄 opm_tests.rs
+                  📄 resampler_tests.rs
+                  📄 scheduler_tests.rs
+                  📄 server_tests.rs
+                  📄 wav_writer_tests.rs
                 📄 wav_writer.rs
               📁 tests/
+                📄 clear_schedule_test.rs
                 📄 client_json_test.rs
                 📄 client_test.rs
                 📄 client_verbose_test.rs
@@ -3306,6 +4380,7 @@ MIT License
                 📄 phase4_test.rs
                 📄 phase5_test.rs
                 📄 phase6_cli_test.rs
+                📄 play_json_interactive_test.rs
                 📄 server_basic_test.rs
                 📄 server_windows_fix_test.rs
                 📄 tail_generation_test.rs
@@ -3313,13 +4388,16 @@ MIT License
             📄 _config.yml
             📄 build.rs
             📁 examples/
+              📄 clear_schedule_demo.rs
               📄 interactive_demo.rs
+              📄 play_json_interactive_demo.rs
               📄 test_client_non_verbose.rs
               📄 test_client_verbose.rs
               📄 test_logging_non_verbose.rs
               📄 test_logging_verbose.rs
             📁 generated-docs/
               📖 development-status-generated-prompt.md
+            📄 install-ym2151-tools.rs
             📁 issue-notes/
               📖 34.md
               📖 36.md
@@ -3342,6 +4420,12 @@ MIT License
               📖 70.md
               📖 72.md
               📖 74.md
+              📖 76.md
+              📖 78.md
+              📖 80.md
+              📖 82.md
+              📖 84.md
+              📖 86.md
             📄 opm.c
             📄 opm.h
             📄 setup_ci_environment.sh
@@ -3363,8 +4447,24 @@ MIT License
               📄 resampler.rs
               📄 scheduler.rs
               📄 server.rs
+              📁 tests/
+                📄 audio_tests.rs
+                📄 client_tests.rs
+                📄 debug_wav_tests.rs
+                📄 events_tests.rs
+                📄 ipc_pipe_windows_tests.rs
+                📄 ipc_protocol_tests.rs
+                📄 logging_tests.rs
+                📄 mod.rs
+                📄 opm_ffi_tests.rs
+                📄 opm_tests.rs
+                📄 resampler_tests.rs
+                📄 scheduler_tests.rs
+                📄 server_tests.rs
+                📄 wav_writer_tests.rs
               📄 wav_writer.rs
             📁 tests/
+              📄 clear_schedule_test.rs
               📄 client_json_test.rs
               📄 client_test.rs
               📄 client_verbose_test.rs
@@ -3382,6 +4482,7 @@ MIT License
               📄 phase4_test.rs
               📄 phase5_test.rs
               📄 phase6_cli_test.rs
+              📄 play_json_interactive_test.rs
               📄 server_basic_test.rs
               📄 server_windows_fix_test.rs
               📄 tail_generation_test.rs
@@ -3389,13 +4490,16 @@ MIT License
           📄 _config.yml
           📄 build.rs
           📁 examples/
+            📄 clear_schedule_demo.rs
             📄 interactive_demo.rs
+            📄 play_json_interactive_demo.rs
             📄 test_client_non_verbose.rs
             📄 test_client_verbose.rs
             📄 test_logging_non_verbose.rs
             📄 test_logging_verbose.rs
           📁 generated-docs/
             📖 development-status-generated-prompt.md
+          📄 install-ym2151-tools.rs
           📁 issue-notes/
             📖 34.md
             📖 36.md
@@ -3418,6 +4522,12 @@ MIT License
             📖 70.md
             📖 72.md
             📖 74.md
+            📖 76.md
+            📖 78.md
+            📖 80.md
+            📖 82.md
+            📖 84.md
+            📖 86.md
           📄 opm.c
           📄 opm.h
           📄 setup_ci_environment.sh
@@ -3439,8 +4549,24 @@ MIT License
             📄 resampler.rs
             📄 scheduler.rs
             📄 server.rs
+            📁 tests/
+              📄 audio_tests.rs
+              📄 client_tests.rs
+              📄 debug_wav_tests.rs
+              📄 events_tests.rs
+              📄 ipc_pipe_windows_tests.rs
+              📄 ipc_protocol_tests.rs
+              📄 logging_tests.rs
+              📄 mod.rs
+              📄 opm_ffi_tests.rs
+              📄 opm_tests.rs
+              📄 resampler_tests.rs
+              📄 scheduler_tests.rs
+              📄 server_tests.rs
+              📄 wav_writer_tests.rs
             📄 wav_writer.rs
           📁 tests/
+            📄 clear_schedule_test.rs
             📄 client_json_test.rs
             📄 client_test.rs
             📄 client_verbose_test.rs
@@ -3458,6 +4584,7 @@ MIT License
             📄 phase4_test.rs
             📄 phase5_test.rs
             📄 phase6_cli_test.rs
+            📄 play_json_interactive_test.rs
             📄 server_basic_test.rs
             📄 server_windows_fix_test.rs
             📄 tail_generation_test.rs
@@ -3465,13 +4592,16 @@ MIT License
         📄 _config.yml
         📄 build.rs
         📁 examples/
+          📄 clear_schedule_demo.rs
           📄 interactive_demo.rs
+          📄 play_json_interactive_demo.rs
           📄 test_client_non_verbose.rs
           📄 test_client_verbose.rs
           📄 test_logging_non_verbose.rs
           📄 test_logging_verbose.rs
         📁 generated-docs/
           📖 development-status-generated-prompt.md
+        📄 install-ym2151-tools.rs
         📁 issue-notes/
           📖 34.md
           📖 36.md
@@ -3494,6 +4624,12 @@ MIT License
           📖 70.md
           📖 72.md
           📖 74.md
+          📖 76.md
+          📖 78.md
+          📖 80.md
+          📖 82.md
+          📖 84.md
+          📖 86.md
         📄 opm.c
         📄 opm.h
         📄 setup_ci_environment.sh
@@ -3515,8 +4651,24 @@ MIT License
           📄 resampler.rs
           📄 scheduler.rs
           📄 server.rs
+          📁 tests/
+            📄 audio_tests.rs
+            📄 client_tests.rs
+            📄 debug_wav_tests.rs
+            📄 events_tests.rs
+            📄 ipc_pipe_windows_tests.rs
+            📄 ipc_protocol_tests.rs
+            📄 logging_tests.rs
+            📄 mod.rs
+            📄 opm_ffi_tests.rs
+            📄 opm_tests.rs
+            📄 resampler_tests.rs
+            📄 scheduler_tests.rs
+            📄 server_tests.rs
+            📄 wav_writer_tests.rs
           📄 wav_writer.rs
         📁 tests/
+          📄 clear_schedule_test.rs
           📄 client_json_test.rs
           📄 client_test.rs
           📄 client_verbose_test.rs
@@ -3534,6 +4686,7 @@ MIT License
           📄 phase4_test.rs
           📄 phase5_test.rs
           📄 phase6_cli_test.rs
+          📄 play_json_interactive_test.rs
           📄 server_basic_test.rs
           📄 server_windows_fix_test.rs
           📄 tail_generation_test.rs
@@ -3541,13 +4694,16 @@ MIT License
       📄 _config.yml
       📄 build.rs
       📁 examples/
+        📄 clear_schedule_demo.rs
         📄 interactive_demo.rs
+        📄 play_json_interactive_demo.rs
         📄 test_client_non_verbose.rs
         📄 test_client_verbose.rs
         📄 test_logging_non_verbose.rs
         📄 test_logging_verbose.rs
       📁 generated-docs/
         📖 development-status-generated-prompt.md
+      📄 install-ym2151-tools.rs
       📁 issue-notes/
         📖 34.md
         📖 36.md
@@ -3570,6 +4726,12 @@ MIT License
         📖 70.md
         📖 72.md
         📖 74.md
+        📖 76.md
+        📖 78.md
+        📖 80.md
+        📖 82.md
+        📖 84.md
+        📖 86.md
       📄 opm.c
       📄 opm.h
       📄 setup_ci_environment.sh
@@ -3591,8 +4753,24 @@ MIT License
         📄 resampler.rs
         📄 scheduler.rs
         📄 server.rs
+        📁 tests/
+          📄 audio_tests.rs
+          📄 client_tests.rs
+          📄 debug_wav_tests.rs
+          📄 events_tests.rs
+          📄 ipc_pipe_windows_tests.rs
+          📄 ipc_protocol_tests.rs
+          📄 logging_tests.rs
+          📄 mod.rs
+          📄 opm_ffi_tests.rs
+          📄 opm_tests.rs
+          📄 resampler_tests.rs
+          📄 scheduler_tests.rs
+          📄 server_tests.rs
+          📄 wav_writer_tests.rs
         📄 wav_writer.rs
       📁 tests/
+        📄 clear_schedule_test.rs
         📄 client_json_test.rs
         📄 client_test.rs
         📄 client_verbose_test.rs
@@ -3610,6 +4788,7 @@ MIT License
         📄 phase4_test.rs
         📄 phase5_test.rs
         📄 phase6_cli_test.rs
+        📄 play_json_interactive_test.rs
         📄 server_basic_test.rs
         📄 server_windows_fix_test.rs
         📄 tail_generation_test.rs
@@ -3617,13 +4796,16 @@ MIT License
     📄 _config.yml
     📄 build.rs
     📁 examples/
+      📄 clear_schedule_demo.rs
       📄 interactive_demo.rs
+      📄 play_json_interactive_demo.rs
       📄 test_client_non_verbose.rs
       📄 test_client_verbose.rs
       📄 test_logging_non_verbose.rs
       📄 test_logging_verbose.rs
     📁 generated-docs/
       📖 development-status-generated-prompt.md
+    📄 install-ym2151-tools.rs
     📁 issue-notes/
       📖 34.md
       📖 36.md
@@ -3646,6 +4828,12 @@ MIT License
       📖 70.md
       📖 72.md
       📖 74.md
+      📖 76.md
+      📖 78.md
+      📖 80.md
+      📖 82.md
+      📖 84.md
+      📖 86.md
     📄 opm.c
     📄 opm.h
     📄 setup_ci_environment.sh
@@ -3667,8 +4855,24 @@ MIT License
       📄 resampler.rs
       📄 scheduler.rs
       📄 server.rs
+      📁 tests/
+        📄 audio_tests.rs
+        📄 client_tests.rs
+        📄 debug_wav_tests.rs
+        📄 events_tests.rs
+        📄 ipc_pipe_windows_tests.rs
+        📄 ipc_protocol_tests.rs
+        📄 logging_tests.rs
+        📄 mod.rs
+        📄 opm_ffi_tests.rs
+        📄 opm_tests.rs
+        📄 resampler_tests.rs
+        📄 scheduler_tests.rs
+        📄 server_tests.rs
+        📄 wav_writer_tests.rs
       📄 wav_writer.rs
     📁 tests/
+      📄 clear_schedule_test.rs
       📄 client_json_test.rs
       📄 client_test.rs
       📄 client_verbose_test.rs
@@ -3686,6 +4890,7 @@ MIT License
       📄 phase4_test.rs
       📄 phase5_test.rs
       📄 phase6_cli_test.rs
+      📄 play_json_interactive_test.rs
       📄 server_basic_test.rs
       📄 server_windows_fix_test.rs
       📄 tail_generation_test.rs
@@ -3693,13 +4898,16 @@ MIT License
   📄 _config.yml
   📄 build.rs
   📁 examples/
+    📄 clear_schedule_demo.rs
     📄 interactive_demo.rs
+    📄 play_json_interactive_demo.rs
     📄 test_client_non_verbose.rs
     📄 test_client_verbose.rs
     📄 test_logging_non_verbose.rs
     📄 test_logging_verbose.rs
   📁 generated-docs/
     📖 development-status-generated-prompt.md
+  📄 install-ym2151-tools.rs
   📁 issue-notes/
     📖 34.md
     📖 36.md
@@ -3722,6 +4930,12 @@ MIT License
     📖 70.md
     📖 72.md
     📖 74.md
+    📖 76.md
+    📖 78.md
+    📖 80.md
+    📖 82.md
+    📖 84.md
+    📖 86.md
   📄 opm.c
   📄 opm.h
   📄 setup_ci_environment.sh
@@ -3743,8 +4957,24 @@ MIT License
     📄 resampler.rs
     📄 scheduler.rs
     📄 server.rs
+    📁 tests/
+      📄 audio_tests.rs
+      📄 client_tests.rs
+      📄 debug_wav_tests.rs
+      📄 events_tests.rs
+      📄 ipc_pipe_windows_tests.rs
+      📄 ipc_protocol_tests.rs
+      📄 logging_tests.rs
+      📄 mod.rs
+      📄 opm_ffi_tests.rs
+      📄 opm_tests.rs
+      📄 resampler_tests.rs
+      📄 scheduler_tests.rs
+      📄 server_tests.rs
+      📄 wav_writer_tests.rs
     📄 wav_writer.rs
   📁 tests/
+    📄 clear_schedule_test.rs
     📄 client_json_test.rs
     📄 client_test.rs
     📄 client_verbose_test.rs
@@ -3762,6 +4992,7 @@ MIT License
     📄 phase4_test.rs
     📄 phase5_test.rs
     📄 phase6_cli_test.rs
+    📄 play_json_interactive_test.rs
     📄 server_basic_test.rs
     📄 server_windows_fix_test.rs
     📄 tail_generation_test.rs
@@ -3769,13 +5000,16 @@ MIT License
 📄 _config.yml
 📄 build.rs
 📁 examples/
+  📄 clear_schedule_demo.rs
   📄 interactive_demo.rs
+  📄 play_json_interactive_demo.rs
   📄 test_client_non_verbose.rs
   📄 test_client_verbose.rs
   📄 test_logging_non_verbose.rs
   📄 test_logging_verbose.rs
 📁 generated-docs/
   📖 development-status-generated-prompt.md
+📄 install-ym2151-tools.rs
 📁 issue-notes/
   📖 34.md
   📖 36.md
@@ -3798,6 +5032,12 @@ MIT License
   📖 70.md
   📖 72.md
   📖 74.md
+  📖 76.md
+  📖 78.md
+  📖 80.md
+  📖 82.md
+  📖 84.md
+  📖 86.md
 📄 opm.c
 📄 opm.h
 📄 setup_ci_environment.sh
@@ -3819,8 +5059,24 @@ MIT License
   📄 resampler.rs
   📄 scheduler.rs
   📄 server.rs
+  📁 tests/
+    📄 audio_tests.rs
+    📄 client_tests.rs
+    📄 debug_wav_tests.rs
+    📄 events_tests.rs
+    📄 ipc_pipe_windows_tests.rs
+    📄 ipc_protocol_tests.rs
+    📄 logging_tests.rs
+    📄 mod.rs
+    📄 opm_ffi_tests.rs
+    📄 opm_tests.rs
+    📄 resampler_tests.rs
+    📄 scheduler_tests.rs
+    📄 server_tests.rs
+    📄 wav_writer_tests.rs
   📄 wav_writer.rs
 📁 tests/
+  📄 clear_schedule_test.rs
   📄 client_json_test.rs
   📄 client_test.rs
   📄 client_verbose_test.rs
@@ -3838,6 +5094,7 @@ MIT License
   📄 phase4_test.rs
   📄 phase5_test.rs
   📄 phase6_cli_test.rs
+  📄 play_json_interactive_test.rs
   📄 server_basic_test.rs
   📄 server_windows_fix_test.rs
   📄 tail_generation_test.rs
@@ -3850,54 +5107,36 @@ MIT License
 関数呼び出し階層を分析できませんでした
 
 ## プロジェクト構造（ファイル一覧）
+INTERACTIVE_MODE_ANALYSIS.md
+ISSUE_86_SUMMARY.md
 README.ja.md
 README.md
+RUST_AGENTIC_CODING_BEST_PRACTICES.md
+_codeql_detected_source_root/INTERACTIVE_MODE_ANALYSIS.md
+_codeql_detected_source_root/ISSUE_86_SUMMARY.md
 _codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/README.md
+_codeql_detected_source_root/RUST_AGENTIC_CODING_BEST_PRACTICES.md
+_codeql_detected_source_root/_codeql_detected_source_root/INTERACTIVE_MODE_ANALYSIS.md
+_codeql_detected_source_root/_codeql_detected_source_root/ISSUE_86_SUMMARY.md
 _codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/RUST_AGENTIC_CODING_BEST_PRACTICES.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/INTERACTIVE_MODE_ANALYSIS.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/ISSUE_86_SUMMARY.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/RUST_AGENTIC_CODING_BEST_PRACTICES.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/INTERACTIVE_MODE_ANALYSIS.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/ISSUE_86_SUMMARY.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/RUST_AGENTIC_CODING_BEST_PRACTICES.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/INTERACTIVE_MODE_ANALYSIS.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/ISSUE_86_SUMMARY.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/RUST_AGENTIC_CODING_BEST_PRACTICES.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/tests/fixtures/complex.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/34.md
@@ -3919,4 +5158,4 @@ tests/fixtures/complex.json
 
 
 ---
-Generated at: 2025-11-19 07:01:39 JST
+Generated at: 2025-11-20 07:01:50 JST

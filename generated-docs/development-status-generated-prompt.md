@@ -1,4 +1,4 @@
-Last updated: 2025-11-19
+Last updated: 2025-11-20
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -200,17 +200,23 @@ Last updated: 2025-11-19
 - .gitignore
 - Cargo.lock
 - Cargo.toml
+- INTERACTIVE_MODE_ANALYSIS.md
+- ISSUE_86_SUMMARY.md
 - LICENSE
 - README.ja.md
 - README.md
+- RUST_AGENTIC_CODING_BEST_PRACTICES.md
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- examples/clear_schedule_demo.rs
 - examples/interactive_demo.rs
+- examples/play_json_interactive_demo.rs
 - examples/test_client_non_verbose.rs
 - examples/test_client_verbose.rs
 - examples/test_logging_non_verbose.rs
 - examples/test_logging_verbose.rs
+- install-ym2151-tools.rs
 - issue-notes/34.md
 - issue-notes/36.md
 - issue-notes/38.md
@@ -232,6 +238,12 @@ Last updated: 2025-11-19
 - issue-notes/70.md
 - issue-notes/72.md
 - issue-notes/74.md
+- issue-notes/76.md
+- issue-notes/78.md
+- issue-notes/80.md
+- issue-notes/82.md
+- issue-notes/84.md
+- issue-notes/86.md
 - opm.c
 - opm.h
 - output_ym2151.json
@@ -252,7 +264,22 @@ Last updated: 2025-11-19
 - src/resampler.rs
 - src/scheduler.rs
 - src/server.rs
+- src/tests/audio_tests.rs
+- src/tests/client_tests.rs
+- src/tests/debug_wav_tests.rs
+- src/tests/events_tests.rs
+- src/tests/ipc_pipe_windows_tests.rs
+- src/tests/ipc_protocol_tests.rs
+- src/tests/logging_tests.rs
+- src/tests/mod.rs
+- src/tests/opm_ffi_tests.rs
+- src/tests/opm_tests.rs
+- src/tests/resampler_tests.rs
+- src/tests/scheduler_tests.rs
+- src/tests/server_tests.rs
+- src/tests/wav_writer_tests.rs
 - src/wav_writer.rs
+- tests/clear_schedule_test.rs
 - tests/client_json_test.rs
 - tests/client_test.rs
 - tests/client_verbose_test.rs
@@ -269,6 +296,7 @@ Last updated: 2025-11-19
 - tests/phase4_test.rs
 - tests/phase5_test.rs
 - tests/phase6_cli_test.rs
+- tests/play_json_interactive_test.rs
 - tests/server_basic_test.rs
 - tests/server_windows_fix_test.rs
 - tests/tail_generation_test.rs
@@ -282,39 +310,36 @@ Last updated: 2025-11-19
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-ff454bb Auto-translate README.ja.md to README.md [auto]
-4ff833d Merge pull request #75 from cat2151/copilot/add-interactive-server-mode
-a9266fa Add documentation and example for interactive mode
-086db08 Add client helper methods and comprehensive tests for interactive mode
-fca5a4f Add interactive server mode core infrastructure
-6981be4 Initial plan
-d3f72d8 Add issue note for #74 [auto]
-535302d Add issue note for #72 [auto]
-054b881 Update project summaries (overview & development status) [auto]
-87e4897 Merge pull request #71 from cat2151/copilot/change-default-resampling-method
+469f74c Merge pull request #87 from cat2151/copilot/add-debug-messages-interactive-mode
+17b4a83 Add comprehensive summary for issue #86
+bd360d9 Fix demo examples to properly check for running server
+8b62e63 Add enhanced debug messages for interactive mode
+c9f06d0 Initial plan
+2a45c83 Add issue note for #86 [auto]
+c35a877 使用例をupdate、実際に音が鳴るjsonを書いた
+368094f Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
+a62fac4 あちこちにコマンドライン引数仕様変更時の影響範囲考慮漏れがあったので、agentに修正させた
+00ebde0 Auto-translate README.ja.md to README.md [auto]
 
 ### 変更されたファイル:
+.github/copilot-instructions.md
+INTERACTIVE_MODE_ANALYSIS.md
+ISSUE_86_SUMMARY.md
 README.ja.md
 README.md
+RUST_AGENTIC_CODING_BEST_PRACTICES.md
+examples/clear_schedule_demo.rs
 examples/interactive_demo.rs
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/70.md
-issue-notes/72.md
-issue-notes/74.md
-src/audio.rs
+examples/play_json_interactive_demo.rs
+issue-notes/86.md
 src/client.rs
-src/ipc/protocol.rs
-src/lib.rs
-src/main.rs
-src/player.rs
-src/resampler.rs
-src/scheduler.rs
+src/debug_wav.rs
+src/ipc/pipe_windows.rs
 src/server.rs
-tests/interactive_mode_test.rs
+src/tests/client_tests.rs
+tests/ensure_server_ready_test.rs
+tests/phase4_test.rs
 
 
 ---
-Generated at: 2025-11-19 07:01:39 JST
+Generated at: 2025-11-20 07:01:50 JST
