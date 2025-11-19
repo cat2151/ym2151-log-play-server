@@ -271,8 +271,7 @@ fn test_high_quality_vs_linear_quality() {
     let linear_output = linear_resampler.resample(&input).unwrap();
 
     // Resample with high quality
-    let mut hq_resampler =
-        AudioResampler::with_quality(ResamplingQuality::HighQuality).unwrap();
+    let mut hq_resampler = AudioResampler::with_quality(ResamplingQuality::HighQuality).unwrap();
     let hq_output = hq_resampler.resample(&input).unwrap();
 
     // Both should produce similar length outputs (within reasonable tolerance)

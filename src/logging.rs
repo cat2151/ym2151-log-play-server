@@ -68,5 +68,3 @@ pub fn log_verbose(message: &str) {
         eprintln!("{}", message);
     }
 }
-
-

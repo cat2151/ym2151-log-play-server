@@ -64,5 +64,3 @@ impl Default for TimeTracker {
         Self::new()
     }
 }
-
-

@@ -1,5 +1,5 @@
-use ym2151_log_play_server::opm_ffi::*;
 use std::mem;
+use ym2151_log_play_server::opm_ffi::*;
 
 #[test]
 fn test_opm_t_size() {

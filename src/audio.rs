@@ -343,5 +343,3 @@ impl Drop for AudioPlayer {
         self.stop();
     }
 }
-
-

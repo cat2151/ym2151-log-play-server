@@ -1,4 +1,6 @@
-use ym2151_log_play_server::debug_wav::{generate_post_playback_buffers, is_debug_wav_enabled, save_debug_wav_files};
+use ym2151_log_play_server::debug_wav::{
+    generate_post_playback_buffers, is_debug_wav_enabled, save_debug_wav_files,
+};
 use ym2151_log_play_server::events::{EventLog, RegisterEvent};
 use ym2151_log_play_server::logging;
 use ym2151_log_play_server::resampler::ResamplingQuality;

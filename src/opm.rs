@@ -82,5 +82,3 @@ impl Default for OpmChip {
 }
 
 unsafe impl Send for OpmChip {}
-
-

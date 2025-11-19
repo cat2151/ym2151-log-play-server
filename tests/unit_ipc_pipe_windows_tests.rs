@@ -1,11 +1,11 @@
 #[cfg(windows)]
-use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
-#[cfg(windows)]
 use std::path::Path;
 #[cfg(windows)]
 use std::thread;
 #[cfg(windows)]
 use std::time::Duration;
+#[cfg(windows)]
+use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
 
 #[cfg(windows)]
 #[test]

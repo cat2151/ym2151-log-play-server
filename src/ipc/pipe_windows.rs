@@ -358,5 +358,3 @@ impl Drop for PipeWriter {
         }
     }
 }
-
-

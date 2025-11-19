@@ -23,5 +23,3 @@ extern "C" {
 
     pub fn OPM_SetIC(chip: *mut opm_t, ic: u8);
 }
-
-

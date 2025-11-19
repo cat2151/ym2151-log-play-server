@@ -91,8 +91,7 @@ fn test_play_json_interactive_parses_valid_json() {
     let error_msg = result.unwrap_err().to_string();
     // Error should be about register write/server connection, not JSON parsing
     assert!(
-        error_msg.contains("Failed to write register")
-            || error_msg.contains("Failed to connect")
+        error_msg.contains("Failed to write register") || error_msg.contains("Failed to connect")
     );
 }
 

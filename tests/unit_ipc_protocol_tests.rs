@@ -102,8 +102,7 @@ fn test_binary_play_json_with_silent_removed() {
 #[test]
 fn test_binary_play_json_backward_compatibility() {
     // Test that old JSON with silent field still deserializes (field is ignored)
-    let json_str =
-        r#"{"command":"play_json","data":{"event_count":0,"events":[]},"silent":true}"#;
+    let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]},"silent":true}"#;
     let json_bytes = json_str.as_bytes();
 
     let mut binary = Vec::with_capacity(4 + json_bytes.len());

@@ -117,5 +117,3 @@ impl Response {
         Ok(result)
     }
 }
-
-

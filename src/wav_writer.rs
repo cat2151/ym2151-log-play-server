@@ -109,5 +109,3 @@ pub fn generate_wav(mut player: Player, output_path: &str) -> Result<()> {
 
     Ok(())
 }
-
-
