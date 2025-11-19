@@ -171,6 +171,12 @@ cargo run --release -- server
 
 # verbose モード（詳細ログとWAV出力）
 cargo run --release -- server --verbose
+
+# 低品位リサンプリングモード（比較用）
+cargo run --release -- server --low-quality-resampling
+
+# verbose + 低品位リサンプリング
+cargo run --release -- server --verbose --low-quality-resampling
 ```
 
 #### クライアントからの操作
@@ -180,6 +186,9 @@ cargo run --release -- server --verbose
 ```bash
 # 新しいJSONファイルを再生（演奏を切り替え）
 cargo run --release -- client test_input.json
+
+# 詳細モードで新しいJSONファイルを再生
+cargo run --release -- client test_input.json --verbose
 
 # 演奏を停止（無音化）
 cargo run --release -- client --stop
@@ -192,17 +201,21 @@ cargo run --release -- client --shutdown
 
 ```
 使用方法:
-  ym2151-log-play-server server [--verbose]         # サーバーモード
-  ym2151-log-play-server client <json_log_file>     # 新規JSONを演奏
-  ym2151-log-play-server client --stop              # 演奏停止
-  ym2151-log-play-server client --shutdown          # サーバーシャットダウン
+  ym2151-log-play-server server [OPTIONS]           # サーバーモード
+  ym2151-log-play-server client [OPTIONS] [FILE]    # クライアントモード
 
-オプション:
-  server           サーバーとして待機状態で起動
-  server --verbose サーバーを詳細ログモードで起動（WAVファイルを出力）
-  client <file>    サーバーに新しいJSONファイルの演奏を指示
-  client --stop    サーバーに演奏停止を指示
-  client --shutdown サーバーにシャットダウンを指示
+サーバーモード:
+  server                    サーバーとして待機状態で起動
+  server --verbose          詳細ログモードで起動（WAVファイルを出力）
+  server --low-quality-resampling  低品位リサンプリングを使用（線形補間、比較用）
+
+クライアントモード:
+  client <json_file>        サーバーに新しいJSONファイルの演奏を指示
+  client <json_file> --verbose  詳細な状態メッセージ付きで演奏を指示
+  client --stop             サーバーに演奏停止を指示
+  client --stop --verbose   詳細な状態メッセージ付きで演奏を停止
+  client --shutdown         サーバーにシャットダウンを指示
+  client --shutdown --verbose  詳細な状態メッセージ付きでサーバーをシャットダウン
 
 例:
   # サーバー起動
@@ -211,14 +224,20 @@ cargo run --release -- client --shutdown
   # サーバー起動（verbose、WAV出力あり）
   ym2151-log-play-server server --verbose
 
+  # サーバー起動（低品位リサンプリング）
+  ym2151-log-play-server server --low-quality-resampling
+
   # 別のターミナルから: 演奏を切り替え
   ym2151-log-play-server client test_input.json
+
+  # 別のターミナルから: 詳細モードで演奏
+  ym2151-log-play-server client test_input.json --verbose
 
   # 別のターミナルから: 演奏停止
   ym2151-log-play-server client --stop
 
   # 別のターミナルから: サーバー終了
-  ym2151-log-play-server --client --shutdown
+  ym2151-log-play-server client --shutdown
 ```
 
 ### 使用例シナリオ
@@ -227,44 +246,44 @@ cargo run --release -- client --shutdown
 
 ```bash
 # ターミナル1: サーバー起動
-$ cargo run --release -- --server
-サーバーを起動しました: /tmp/ym2151-log-play-server.pipe
+$ cargo run --release -- server
+サーバーを起動しました: \pipe\ym2151-log-play-server.pipe
 サーバーが起動しました。クライアントからの接続を待機中...
 
 # ターミナル2: クライアントから操作
-$ cargo run --release -- --client test_input.json
-✅ サーバーに PLAY コマンドを送信しました
+$ cargo run --release -- client test_input.json
+✅ サーバーに演奏コマンドを送信しました
 
-$ cargo run --release -- --client --stop
-✅ サーバーに STOP コマンドを送信しました
+$ cargo run --release -- client --stop
+✅ サーバーに停止コマンドを送信しました
 
-$ cargo run --release -- --client --shutdown
-✅ サーバーに SHUTDOWN コマンドを送信しました
+$ cargo run --release -- client --shutdown
+✅ サーバーにシャットダウンコマンドを送信しました
 ```
 
 #### シナリオ2: 連続再生
 
 ```bash
 # サーバー起動（ターミナル1）
-$ cargo run --release -- --server
+$ cargo run --release -- server
 
 # 次々と曲を切り替え（ターミナル2）
-$ cargo run --release -- --client music2.json
-$ sleep 5
-$ cargo run --release -- --client music3.json
-$ sleep 5
-$ cargo run --release -- --client music1.json
+$ cargo run --release -- client music2.json
+$ Start-Sleep 5
+$ cargo run --release -- client music3.json
+$ Start-Sleep 5
+$ cargo run --release -- client music1.json
 ```
 
 ### リリースビルド
 
 ```bash
 cargo build --release
-./target/release/ym2151-log-play-server output_ym2151.json
-./target/release/ym2151-log-play-server --server
-./target/release/ym2151-log-play-server --client output_ym2151.json
-./target/release/ym2151-log-play-server --client --stop
-./target/release/ym2151-log-play-server --client --shutdown
+.\target\release\ym2151-log-play-server.exe server
+.\target\release\ym2151-log-play-server.exe server --verbose
+.\target\release\ym2151-log-play-server.exe client output_ym2151.json
+.\target\release\ym2151-log-play-server.exe client --stop
+.\target\release\ym2151-log-play-server.exe client --shutdown
 ```
 
 ### テストの実行
