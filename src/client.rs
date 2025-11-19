@@ -423,15 +423,18 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
 /// This function ensures that the YM2151 server is running and ready to accept
 /// commands. It provides a seamless developer experience by automatically:
 /// 1. Checking if the server is already running
-/// 2. Locating the server executable (test binary, PATH, or install via cargo)
+/// 2. Locating the server executable (test binary in test builds, PATH, or install via cargo)
 /// 3. Starting the server if not running
 /// 4. Waiting until the server is ready to accept commands
 ///
-/// # Test Context Support (Windows only)
-/// When running in a test context (e.g., during `cargo test`), this function
-/// automatically detects and uses the test-built binary from `target/debug` or
-/// `target/debug/deps` instead of requiring the binary to be in PATH. This
-/// enables seamless integration testing without manual setup.
+/// # Test Context Support (Windows only, cfg(test) builds)
+/// When compiled with cfg(test) (e.g., `cargo test`), this function automatically
+/// detects and uses the test-built binary from `target/debug` or `target/debug/deps`
+/// instead of requiring the binary to be in PATH. This enables seamless integration
+/// testing without manual setup.
+///
+/// In non-test builds (e.g., `cargo build`, `cargo run`), this function uses the
+/// standard PATH search or cargo install, ensuring predictable behavior in production.
 ///
 /// # Arguments
 /// * `server_app_name` - Name of the server application (e.g., "cat-play-mml")
@@ -466,9 +469,9 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
     log_client("⚙️  サーバーが起動していません。起動準備中...");
 
     // Determine the server path based on context
-    #[cfg(windows)]
+    #[cfg(all(windows, test))]
     let server_path = {
-        // First, try to find the binary in test context
+        // In test builds, try to find the binary in test context first
         if let Some(test_binary) = get_test_binary_path(server_app_name) {
             log_client(&format!("🧪 テストコンテキストを検出: {:?}", test_binary));
             test_binary.to_string_lossy().to_string()
@@ -477,6 +480,28 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
             server_app_name.to_string()
         } else {
             // Not in test context and not in PATH, install it
+            log_client(&format!(
+                "📦 {} が見つかりません。cargo経由でインストール中...",
+                server_app_name
+            ));
+            install_app_via_cargo(server_app_name)
+                .with_context(|| format!("Failed to install {}", server_app_name))?;
+            log_client(&format!(
+                "✅ {} のインストールが完了しました",
+                server_app_name
+            ));
+            server_app_name.to_string()
+        }
+    };
+
+    #[cfg(all(windows, not(test)))]
+    let server_path = {
+        // In non-test builds, use PATH or install
+        if is_app_in_path(server_app_name) {
+            // Use the app from PATH
+            server_app_name.to_string()
+        } else {
+            // Not in PATH, install it
             log_client(&format!(
                 "📦 {} が見つかりません。cargo経由でインストール中...",
                 server_app_name
@@ -538,13 +563,16 @@ pub fn is_server_running() -> bool {
 /// During testing, the binary is located in target/debug or target/debug/deps,
 /// not in PATH. This function locates the binary in the test build directory.
 ///
+/// This function is only available when compiled with cfg(test), ensuring
+/// predictable behavior - it only searches for test binaries in test builds.
+///
 /// # Arguments
 /// * `binary_name` - Name of the binary to find (e.g., "ym2151-log-play-server")
 ///
 /// # Returns
 /// * `Some(PathBuf)` - Path to the binary if found in test context
 /// * `None` - Not in test context or binary not found
-#[cfg(windows)]
+#[cfg(all(windows, test))]
 fn get_test_binary_path(binary_name: &str) -> Option<std::path::PathBuf> {
     use std::path::PathBuf;
 
