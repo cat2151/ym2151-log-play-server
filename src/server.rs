@@ -240,9 +240,14 @@ impl Server {
                     }
                     Command::StartInteractive => {
                         logging::log_verbose("🎮 インタラクティブモードを開始中...");
+                        logging::log_verbose(&format!(
+                            "🔍 [デバッグ] 現在のサーバー状態: {:?}",
+                            *self.state.lock().unwrap()
+                        ));
 
                         // Stop any existing playback
                         if let Some(mut player) = audio_player.take() {
+                            logging::log_verbose("⏹️  [デバッグ] 既存の再生を停止中...");
                             player.stop();
                         }
 
@@ -250,16 +255,23 @@ impl Server {
                         {
                             let mut tracker = self.time_tracker.lock().unwrap();
                             tracker.reset();
+                            logging::log_verbose("🕐 [デバッグ] タイムトラッカーをリセットしました");
                         }
 
                         // Start interactive mode
+                        logging::log_verbose("🎵 [デバッグ] インタラクティブオーディオプレーヤーを作成中...");
                         match self.start_interactive_mode() {
                             Ok(player) => {
                                 audio_player = Some(player);
                                 logging::log_verbose("✅ インタラクティブモードを開始しました");
+                                logging::log_verbose("🔊 [デバッグ] 音声ストリーミング開始");
 
                                 let mut state = self.state.lock().unwrap();
                                 *state = ServerState::Interactive;
+                                logging::log_verbose(&format!(
+                                    "📊 [デバッグ] サーバー状態を更新: {:?}",
+                                    *state
+                                ));
 
                                 Response::Ok
                             }
@@ -268,6 +280,10 @@ impl Server {
                                     "❌ インタラクティブモードの開始に失敗しました: {}",
                                     e
                                 ));
+                                logging::log_always("💡 [デバッグ情報] 以下を確認してください:");
+                                logging::log_always("   1. 音声デバイスが利用可能か");
+                                logging::log_always("   2. 他のアプリケーションが音声デバイスを使用していないか");
+                                logging::log_always("   3. システムの音量設定");
                                 Response::Error {
                                     message: format!("Failed to start interactive mode: {}", e),
                                 }
@@ -280,7 +296,15 @@ impl Server {
                         data,
                     } => {
                         let state = self.state.lock().unwrap();
+                        logging::log_verbose(&format!(
+                            "📝 [デバッグ] WriteRegisterコマンド受信: state={:?}",
+                            *state
+                        ));
                         if *state != ServerState::Interactive {
+                            logging::log_always(&format!(
+                                "⚠️  インタラクティブモードではありません。現在の状態: {:?}",
+                                *state
+                            ));
                             Response::Error {
                                 message: "Not in interactive mode".to_string(),
                             }
@@ -299,6 +323,14 @@ impl Server {
                                     current_time_sec + time_offset_sec,
                                 );
 
+                                logging::log_verbose(&format!(
+                                    "⏰ [デバッグ] 時刻計算: current={:.6}s, offset={:.6}s, scheduled={:.6}s ({}サンプル)",
+                                    current_time_sec,
+                                    time_offset_sec,
+                                    current_time_sec + time_offset_sec,
+                                    scheduled_samples
+                                ));
+
                                 // Schedule the register write
                                 player_ref.schedule_register_write(scheduled_samples, addr, data);
 
@@ -312,6 +344,7 @@ impl Server {
                                 ));
                                 Response::Ok
                             } else {
+                                logging::log_always("❌ [デバッグ] audio_playerが存在しません");
                                 Response::Error {
                                     message: "No active audio player".to_string(),
                                 }
@@ -326,12 +359,25 @@ impl Server {
                     }
                     Command::StopInteractive => {
                         logging::log_verbose("⏹️  インタラクティブモードを停止中...");
+                        logging::log_verbose(&format!(
+                            "🔍 [デバッグ] 現在のサーバー状態: {:?}",
+                            *self.state.lock().unwrap()
+                        ));
+
                         if let Some(mut player) = audio_player.take() {
+                            logging::log_verbose("🔊 [デバッグ] オーディオプレーヤーを停止中...");
                             player.stop();
+                            logging::log_verbose("✅ [デバッグ] オーディオプレーヤー停止完了");
+                        } else {
+                            logging::log_verbose("⚠️  [デバッグ] 停止するオーディオプレーヤーがありません");
                         }
 
                         let mut state = self.state.lock().unwrap();
                         *state = ServerState::Stopped;
+                        logging::log_verbose(&format!(
+                            "📊 [デバッグ] サーバー状態を更新: {:?}",
+                            *state
+                        ));
 
                         logging::log_verbose("✅ インタラクティブモードを停止しました");
                         Response::Ok
