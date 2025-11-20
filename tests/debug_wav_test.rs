@@ -21,7 +21,6 @@ fn test_debug_wav_enabled_flag() {
 #[test]
 fn test_post_playback_buffer_generation() {
     let log = EventLog {
-        event_count: 3,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -115,7 +114,6 @@ fn test_debug_wav_file_creation() {
 fn test_complete_debug_workflow() {
     // This test simulates the complete debug workflow
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,

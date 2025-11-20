@@ -63,7 +63,6 @@ fn test_generate_wav_with_player() {
     let temp_path_str = temp_path.to_str().unwrap();
 
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,

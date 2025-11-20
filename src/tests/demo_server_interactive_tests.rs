@@ -29,7 +29,6 @@ fn test_interactive_demo_json_parsing() {
 
     // Test JSON parsing with sample data (floating-point time format)
     let sample_json = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0.0, "addr": "0x08", "data": "0x00"},
             {"time": 0.5, "addr": "0x08", "data": "0x01"}
@@ -37,8 +36,7 @@ fn test_interactive_demo_json_parsing() {
     }"#;
 
     let event_log = EventLogF64::from_json_str(sample_json).expect("Should parse sample JSON");
-    assert_eq!(event_log.event_count, 2);
-    assert!(event_log.validate());
+        assert!(event_log.validate());
     assert_eq!(event_log.events.len(), 2);
     assert_eq!(event_log.events[0].time, 0.0);
     assert_eq!(event_log.events[1].time, 0.5);

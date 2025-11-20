@@ -12,7 +12,6 @@ use ym2151_log_play_server::player::Player;
 #[test]
 fn test_audio_player_creation() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,
@@ -40,7 +39,6 @@ fn test_audio_player_creation() {
 #[test]
 fn test_audio_player_with_multiple_events() {
     let log = EventLog {
-        event_count: 5,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -103,7 +101,6 @@ fn test_audio_player_early_stop() {
     }
 
     let log = EventLog {
-        event_count: events.len(),
         events,
     };
 
@@ -124,7 +121,6 @@ fn test_audio_player_early_stop() {
 #[test]
 fn test_audio_player_drop() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,

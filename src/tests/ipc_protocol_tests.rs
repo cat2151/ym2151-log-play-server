@@ -5,7 +5,6 @@ use crate::ipc::protocol::{Command, Response};
 #[test]
 fn test_binary_play_json_roundtrip() {
     let json_data = serde_json::json!({
-        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 2, "addr": "0x20", "data": "0xC7"}
@@ -90,7 +89,6 @@ fn test_binary_invalid_json() {
 fn test_binary_play_json_with_silent_removed() {
     // Test that PlayJson works without silent field
     let json_data = serde_json::json!({
-        "event_count": 1,
         "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
     });
     let original = Command::PlayJson { data: json_data };
@@ -102,7 +100,7 @@ fn test_binary_play_json_with_silent_removed() {
 #[test]
 fn test_binary_play_json_backward_compatibility() {
     // Test that old JSON with silent field still deserializes (field is ignored)
-    let json_str = r#"{"command":"play_json","data":{"event_count":0,"events":[]},"silent":true}"#;
+    let json_str = r#"{"command":"play_json","data":{"events":[]},"silent":true}"#;
     let json_bytes = json_str.as_bytes();
 
     let mut binary = Vec::with_capacity(4 + json_bytes.len());

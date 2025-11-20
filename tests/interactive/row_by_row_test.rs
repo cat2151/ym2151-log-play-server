@@ -51,7 +51,7 @@ mod windows_tests {
         for (index, event) in events.iter().enumerate() {
             // Create single-event JSON
             let single_event_json = format!(
-                r#"{{"event_count": 1, "events": [{{"time": {}, "addr": "0x{:02X}", "data": "0x{:02X}"}}]}}"#,
+                r#"{{"events": [{{"time": {}, "addr": "0x{:02X}", "data": "0x{:02X}"}}]}}"#,
                 event.time, event.addr, event.data
             );
 
@@ -60,8 +60,7 @@ mod windows_tests {
             assert!(parsed.is_ok(), "Failed to parse single event JSON for event {}: {:?}", index, parsed.err());
 
             let parsed = parsed.unwrap();
-            assert_eq!(parsed.event_count, 1);
-            assert_eq!(parsed.events.len(), 1);
+                        assert_eq!(parsed.events.len(), 1);
             assert_eq!(parsed.events[0].time, event.time);
             assert_eq!(parsed.events[0].addr, event.addr);
             assert_eq!(parsed.events[0].data, event.data);
@@ -108,7 +107,7 @@ mod windows_tests {
 
             // Send register write command
             let json_data = format!(
-                r#"{{"event_count": 1, "events": [
+                r#"{{"events": [
                     {{"time": {}, "addr": "0x{:02X}", "data": "0x{:02X}"}}
                 ]}}"#,
                 (time_offset_sec * 1000.0) as u32, // Convert to milliseconds
@@ -281,7 +280,7 @@ fn test_output_ym2151_json_structure() {
     assert!(event_log.validate(), "output_ym2151.json validation failed");
 
     // Verify structure
-    assert_eq!(event_log.events.len(), event_log.event_count as usize);
+    assert_eq!(event_log.events.len(), event_log.events.len() as usize);
 
     // Verify all events have valid timestamps
     for (index, event) in event_log.events.iter().enumerate() {

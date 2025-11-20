@@ -5,8 +5,7 @@ fn test_load_simple_fixture() {
     let log =
         EventLog::from_file("tests/fixtures/simple.json").expect("Failed to load simple.json");
 
-    assert_eq!(log.event_count, 3);
-    assert_eq!(log.events.len(), 3);
+        assert_eq!(log.events.len(), 3);
     assert!(log.validate());
 }
 
@@ -15,8 +14,7 @@ fn test_load_complex_fixture() {
     let log =
         EventLog::from_file("tests/fixtures/complex.json").expect("Failed to load complex.json");
 
-    assert_eq!(log.event_count, 10);
-    assert_eq!(log.events.len(), 10);
+        assert_eq!(log.events.len(), 10);
     assert!(log.validate());
 
     for event in &log.events {
@@ -31,7 +29,7 @@ fn test_load_complex_fixture() {
 fn test_load_sample_events_json() {
     let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
-    assert_eq!(log.event_count, 46, "Event count should be 46");
+    assert_eq!(log.events.len(), 46, "Event count should be 46");
     assert_eq!(log.events.len(), 46, "Should have 46 events");
 
     assert!(log.validate(), "Event log should be valid");

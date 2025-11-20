@@ -41,7 +41,6 @@ mod client_integration_tests {
             match cmd {
                 Command::PlayJson { data } => {
                     // Verify the JSON structure
-                    assert!(data.get("event_count").is_some());
                     assert!(data.get("events").is_some());
                 }
                 _ => panic!("Expected PlayJson command"),
@@ -59,7 +58,7 @@ mod client_integration_tests {
 
         // Send JSON data from client
         let json_data =
-            r#"{"event_count": 1, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
+            r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
         let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 
