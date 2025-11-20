@@ -139,11 +139,14 @@ impl Player {
         let mut output = Vec::with_capacity(input.len());
 
         for event in input {
+            // Convert time from f64 seconds to u32 samples
+            let time_samples = (event.time * OPM_SAMPLE_RATE as f64).round() as u32;
+            
             // Store addr-data pairs directly
             // The 2-sample delay between address and data writes will be applied
             // at the final stage in generate_samples()
             output.push(ProcessedEvent {
-                time: event.time,
+                time: time_samples,
                 addr: event.addr,
                 data: event.data,
             });
@@ -356,7 +359,7 @@ mod tests {
     #[test]
     fn test_convert_events_single() {
         let events = vec![RegisterEvent {
-            time: 100,
+            time: 0.5,
             addr: 0x08,
             data: 0x00,
             is_data: None,
@@ -366,8 +369,9 @@ mod tests {
 
         assert_eq!(processed.len(), 1);
 
-        // Single event with addr-data pair
-        assert_eq!(processed[0].time, 100);
+        // Single event with addr-data pair, time converted from seconds to samples
+        // 0.5 seconds * 55930 Hz = 27965 samples
+        assert_eq!(processed[0].time, 27965);
         assert_eq!(processed[0].addr, 0x08);
         assert_eq!(processed[0].data, 0x00);
     }
@@ -376,19 +380,19 @@ mod tests {
     fn test_convert_events_multiple() {
         let events = vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 10,
+                time: 0.0001,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
             },
             RegisterEvent {
-                time: 20,
+                time: 0.0002,
                 addr: 0x28,
                 data: 0x3E,
                 is_data: None,
@@ -399,16 +403,18 @@ mod tests {
 
         assert_eq!(processed.len(), 3);
 
-        // All events at their original times (no delay during conversion)
+        // All events converted from seconds to samples
         assert_eq!(processed[0].time, 0);
         assert_eq!(processed[0].addr, 0x08);
         assert_eq!(processed[0].data, 0x00);
 
-        assert_eq!(processed[1].time, 10);
+        // 0.0001 * 55930 ≈ 6 samples
+        assert_eq!(processed[1].time, 6);
         assert_eq!(processed[1].addr, 0x20);
         assert_eq!(processed[1].data, 0xC7);
 
-        assert_eq!(processed[2].time, 20);
+        // 0.0002 * 55930 ≈ 11 samples
+        assert_eq!(processed[2].time, 11);
         assert_eq!(processed[2].addr, 0x28);
         assert_eq!(processed[2].data, 0x3E);
     }
@@ -416,7 +422,7 @@ mod tests {
     #[test]
     fn test_convert_events_delay() {
         let events = vec![RegisterEvent {
-            time: 0,
+            time: 0.0,
             addr: 0xFF,
             data: 0xAA,
             is_data: None,
@@ -433,19 +439,19 @@ mod tests {
     fn test_convert_events_same_time_accumulation() {
         let events = vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
             },
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x28,
                 data: 0x3E,
                 is_data: None,
@@ -474,7 +480,7 @@ mod tests {
     fn test_player_creation() {
         let log = EventLog {
             events: vec![RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
@@ -492,7 +498,7 @@ mod tests {
     fn test_generate_samples_basic() {
         let log = EventLog {
             events: vec![RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
@@ -512,13 +518,13 @@ mod tests {
         let log = EventLog {
             events: vec![
                 RegisterEvent {
-                    time: 0,
+                    time: 0.0,
                     addr: 0x08,
                     data: 0x00,
                     is_data: None,
                 },
                 RegisterEvent {
-                    time: 1000,
+                    time: 0.017881603406326504, // ~1000 samples at 55930 Hz
                     addr: 0x20,
                     data: 0xC7,
                     is_data: None,
@@ -547,7 +553,7 @@ mod tests {
     fn test_total_samples() {
         let log = EventLog {
             events: vec![RegisterEvent {
-                time: 1000,
+                time: 0.017881603406326504, // ~1000 samples at 55930 Hz
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
@@ -556,7 +562,7 @@ mod tests {
 
         let player = Player::new(log);
 
-        // Events are at their original time (delay applied in generate_samples)
+        // Events are converted from seconds to samples
         let expected = 1000;
         assert_eq!(player.total_samples(), expected);
     }
@@ -578,7 +584,7 @@ mod tests {
     fn test_playback_completion() {
         let log = EventLog {
             events: vec![RegisterEvent {
-                time: 10,
+                time: 0.00017881603406326504, // ~10 samples at 55930 Hz
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,

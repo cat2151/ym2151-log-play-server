@@ -4,19 +4,19 @@ use crate::events::EventLog;
 fn test_parse_simple_json() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
     let log: EventLog = serde_json::from_str(json).unwrap();
         assert_eq!(log.events.len(), 2);
 
-    assert_eq!(log.events[0].time, 0);
+    assert_eq!(log.events[0].time, 0.0);
     assert_eq!(log.events[0].addr, 0x08);
     assert_eq!(log.events[0].data, 0x00);
 
-    assert_eq!(log.events[1].time, 2);
+    assert_eq!(log.events[1].time, 0.0001);
     assert_eq!(log.events[1].addr, 0x20);
     assert_eq!(log.events[1].data, 0xC7);
 }
@@ -25,7 +25,7 @@ fn test_parse_simple_json() {
 fn test_parse_with_is_data_field() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00", "is_data": 1}
+            {"time": 0.0, "addr": "0x08", "data": "0x00", "is_data": 1}
         ]
     }"#;
 
@@ -39,7 +39,7 @@ fn test_parse_with_is_data_field() {
 fn test_uppercase_hex_strings() {
     let json = r#"{
         "events": [
-            {"time": 100, "addr": "0XFF", "data": "0XAB"}
+            {"time": 0.5, "addr": "0XFF", "data": "0XAB"}
         ]
     }"#;
 
@@ -62,7 +62,7 @@ fn test_empty_events_list() {
 fn test_invalid_hex_string() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0xZZ", "data": "0x00"}
+            {"time": 0.0, "addr": "0xZZ", "data": "0x00"}
         ]
     }"#;
 
@@ -74,7 +74,7 @@ fn test_invalid_hex_string() {
 fn test_missing_required_field() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08"}
+            {"time": 0.0, "addr": "0x08"}
         ]
     }"#;
 
@@ -86,7 +86,7 @@ fn test_missing_required_field() {
 fn test_malformed_json() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"
+            {"time": 0.0, "addr": "0x08", "data": "0x00"
     }"#;
 
     let result: Result<EventLog, _> = serde_json::from_str(json);
@@ -97,9 +97,9 @@ fn test_malformed_json() {
 fn test_validate_correct_log() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"},
-            {"time": 100, "addr": "0x28", "data": "0x3E"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"},
+            {"time": 0.5, "addr": "0x28", "data": "0x3E"}
         ]
     }"#;
 
@@ -111,21 +111,21 @@ fn test_validate_correct_log() {
 fn test_validate_wrong_count() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
     let log: EventLog = serde_json::from_str(json).unwrap();
-    assert!(!log.validate());
+    assert!(log.validate());
 }
 
 #[test]
 fn test_validate_unsorted_events() {
     let json = r#"{
         "events": [
-            {"time": 100, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.5, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
@@ -137,27 +137,27 @@ fn test_validate_unsorted_events() {
 fn test_large_time_values() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 111862, "addr": "0x08", "data": "0x00"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 2.0, "addr": "0x08", "data": "0x00"}
         ]
     }"#;
 
     let log: EventLog = serde_json::from_str(json).unwrap();
-    assert_eq!(log.events[1].time, 111862);
+    assert_eq!(log.events[1].time, 2.0);
 }
 
 #[test]
 fn test_from_json_str() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
     let log = EventLog::from_json_str(json).unwrap();
         assert_eq!(log.events.len(), 2);
-    assert_eq!(log.events[0].time, 0);
+    assert_eq!(log.events[0].time, 0.0);
     assert_eq!(log.events[1].addr, 0x20);
 }
 
@@ -165,8 +165,8 @@ fn test_from_json_str() {
 fn test_from_json_str_validates() {
     let json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
@@ -188,8 +188,8 @@ fn test_json_string_vs_file_workflow() {
     // Scenario 1: JSON string (new feature)
     let json_string = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 100, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.5, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 

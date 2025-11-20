@@ -369,15 +369,15 @@ impl Server {
 
                             match json_result {
                                 Ok(json_str) => {
-                                    logging::log_verbose("🎵 インタラクティブモードでf64秒JSONを処理中...");
+                                    logging::log_verbose("🎵 インタラクティブモードでJSONを処理中...");
 
-                                    // Parse the f64 JSON event log (time in seconds)
-                                    match crate::events::EventLogF64::from_json_str(&json_str) {
+                                    // Parse the JSON event log (time in seconds)
+                                    match crate::events::EventLog::from_json_str(&json_str) {
                                         Ok(event_log) => {
                                             if !event_log.validate() {
-                                                logging::log_always("❌ 無効なf64イベントログです");
+                                                logging::log_always("❌ 無効なイベントログです");
                                                 Response::Error {
-                                                    message: "Invalid f64 event log: validation failed".to_string(),
+                                                    message: "Invalid event log: validation failed".to_string(),
                                                 }
                                             } else if let Some(ref player_ref) = audio_player {
                                                 // Get current server time
@@ -387,7 +387,7 @@ impl Server {
                                                 };
 
                                                 logging::log_verbose(&format!(
-                                                    "📝 {}個のf64秒イベントをスケジュール中...",
+                                                    "📝 {}個のイベントをスケジュール中...",
                                                     event_log.events.len()
                                                 ));
 
@@ -409,7 +409,7 @@ impl Server {
                                                 }
 
                                                 logging::log_verbose(&format!(
-                                                    "✅ {}個のf64秒イベントを正常にスケジュールしました",
+                                                    "✅ {}個のイベントを正常にスケジュールしました",
                                                     success_count
                                                 ));
                                                 Response::Ok
@@ -422,11 +422,11 @@ impl Server {
                                         }
                                         Err(e) => {
                                             logging::log_always(&format!(
-                                                "❌ f64 JSONの解析に失敗しました: {}",
+                                                "❌ JSONの解析に失敗しました: {}",
                                                 e
                                             ));
                                             Response::Error {
-                                                message: format!("Failed to parse f64 JSON: {}", e),
+                                                message: format!("Failed to parse JSON: {}", e),
                                             }
                                         }
                                     }
