@@ -1,3 +1,19 @@
+//! Audio playback module with real-time priority optimization
+//!
+//! This module implements a dual-thread audio architecture with priority boosting
+//! to minimize audio dropouts:
+//!
+//! 1. **Generator Thread** (see `generate_samples_thread`):
+//!    - Runs OPM emulation: `player.generate_samples()` → `chip.generate_samples()` → `OPM_Clock()`
+//!    - Priority boost: Windows MMCSS "Pro Audio" task (via `mmcss` module)
+//!    - Generates samples at OPM's native 55930 Hz rate
+//!
+//! 2. **CPAL Callback Thread** (managed by cpal library):
+//!    - Sends resampled audio to hardware at 48000 Hz
+//!    - Priority boost: Automatic via cpal's `audio_thread_priority` feature
+//!
+//! Both threads run with elevated priority to ensure smooth, glitch-free playback.
+
 use anyhow::{Context, Result};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
@@ -375,6 +391,10 @@ impl AudioPlayer {
         event_log: Option<EventLog>,
         resampling_quality: crate::resampler::ResamplingQuality,
     ) -> Result<()> {
+        // Set MMCSS Pro Audio priority for this thread on Windows
+        // This handle will automatically revert priority when dropped
+        let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
+
         let mut resampler = AudioResampler::with_quality(resampling_quality)
             .context("Failed to initialize resampler")?;
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];

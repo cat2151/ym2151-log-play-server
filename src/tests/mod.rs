@@ -10,6 +10,7 @@ mod events_tests;
 mod ipc_pipe_windows_tests;
 mod ipc_protocol_tests;
 mod logging_tests;
+mod mmcss_tests;
 mod opm_ffi_tests;
 mod opm_tests;
 mod play_json_interactive_tests;
