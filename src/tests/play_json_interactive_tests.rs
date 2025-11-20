@@ -1,62 +1,45 @@
-//! Tests for play_json_interactive function - f64 second timing conversion validation
+//! Tests for play_json_interactive function - f64 second timing
 //!
 //! These tests verify that:
-//! 1. JSON timing is converted from sample units to f64 seconds
-//! 2. Converted JSON is sent to the server properly
+//! 1. JSON timing uses f64 seconds
+//! 2. JSON is sent to the server properly
 //! 3. PlayJsonInInteractive command handles f64 timing correctly
 
 use crate::ipc::protocol::Command;
 use anyhow::Result;
 
 #[test]
-fn test_json_timing_conversion() {
-    // Test the conversion function directly
-    use crate::events::convert_json_to_f64_seconds;
+fn test_json_f64_parsing() {
+    // Test parsing f64 JSON directly
+    use crate::events::EventLog;
 
     let input_json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2797, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.05, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
-    let result = convert_json_to_f64_seconds(input_json);
+    let result = EventLog::from_json_str(input_json);
     assert!(result.is_ok());
 
-    let output_json = result.unwrap();
-    println!("Converted JSON: {}", output_json);
-
-    // Verify the output contains f64 times
-    assert!(output_json.contains("\"time\": 0.0"));
-    // 2797 / 55930 ≈ 0.050027
-    assert!(output_json.contains("0.05") || output_json.contains("0.050"));
-
-    // Verify it can be parsed as f64 events
-    use crate::events::EventLogF64;
-    let parsed = EventLogF64::from_json_str(&output_json);
-    assert!(parsed.is_ok());
-
-    let log = parsed.unwrap();
-        assert!(log.validate());
+    let log = result.unwrap();
+    assert!(log.validate());
     assert_eq!(log.events[0].time, 0.0);
-    let expected_time = 2797.0 / 55930.0;
-    assert!((log.events[1].time - expected_time).abs() < 0.000001); // floating point comparison
+    assert_eq!(log.events[1].time, 0.05);
 }
 
 #[test]
-fn test_play_json_interactive_sends_f64_json() {
-    // Test that play_json_interactive converts and sends correct command
+fn test_play_json_interactive_sends_json() {
+    // Test that play_json_interactive sends correct command
     let test_json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 100, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.5, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
-    // Convert manually to see what should be sent
-    use crate::events::convert_json_to_f64_seconds;
-    let converted = convert_json_to_f64_seconds(test_json).unwrap();
-    let parsed: serde_json::Value = serde_json::from_str(&converted).unwrap();
+    let parsed: serde_json::Value = serde_json::from_str(test_json).unwrap();
 
     // Create the expected command
     let expected_command = Command::PlayJsonInInteractive { data: parsed };
@@ -71,10 +54,10 @@ fn test_play_json_interactive_sends_f64_json() {
 }
 
 #[test]
-fn test_f64_event_log_validation() {
-    use crate::events::EventLogF64;
+fn test_event_log_validation() {
+    use crate::events::EventLog;
 
-    // Valid f64 JSON should pass validation
+    // Valid JSON should pass validation
     let valid_json = r#"{
         "events": [
             {"time": 0.0, "addr": "0x28", "data": "0x3E"},
@@ -82,27 +65,27 @@ fn test_f64_event_log_validation() {
         ]
     }"#;
 
-    let parsed_result = EventLogF64::from_json_str(valid_json);
+    let parsed_result = EventLog::from_json_str(valid_json);
     assert!(parsed_result.is_ok());
 
     let log = parsed_result.unwrap();
     assert!(log.validate());
 
-    // Invalid f64 JSON (wrong event count) should fail validation
-    let invalid_json = r#"{
+    // Valid single-event JSON should pass validation
+    let single_event_json = r#"{
         "events": [
             {"time": 0.0, "addr": "0x28", "data": "0x3E"}
         ]
     }"#;
 
-    let invalid_log = EventLogF64::from_json_str(invalid_json).unwrap();
-    assert!(!invalid_log.validate());
+    let single_log = EventLog::from_json_str(single_event_json).unwrap();
+    assert!(single_log.validate());
 }
 
-/// Integration test that verifies the full f64 play_json_interactive workflow
+/// Integration test that verifies the full play_json_interactive workflow
 /// Note: This test requires a running server and may be skipped in CI
 #[test]
-fn test_f64_play_json_interactive_integration() -> Result<()> {
+fn test_play_json_interactive_integration() -> Result<()> {
     use crate::client;
 
     // Initialize client
@@ -117,15 +100,15 @@ fn test_f64_play_json_interactive_integration() -> Result<()> {
 
     println!("✅ [インタラクティブモード] 正常に開始しました");
 
-    // Test JSON data with sample timing
+    // Test JSON data with f64 second timing
     let test_json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 100, "addr": "0x20", "data": "0xC7"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.5, "addr": "0x20", "data": "0xC7"}
         ]
     }"#;
 
-    // Send JSON to interactive mode (should convert to f64 internally)
+    // Send JSON to interactive mode
     let result = crate::client::interactive::play_json_interactive(test_json);
 
     // Clean up first before checking result

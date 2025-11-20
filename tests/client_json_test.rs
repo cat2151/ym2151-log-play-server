@@ -29,7 +29,7 @@ mod client_json_integration_tests {
 
         cleanup_pipe();
 
-        let json_data = r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
+        let json_data = r#"{"events": [{"time": 0.0, "addr": "0x08", "data": "0x00"}, {"time": 0.0001, "addr": "0x20", "data": "0xC7"}]}"#;
 
         // Start a mock server in a separate thread
         let server_handle = thread::spawn(move || {
@@ -121,7 +121,7 @@ mod client_json_integration_tests {
                 large_events.push_str(", ");
             }
             large_events.push_str(&format!(
-                r#"{{"time": {}, "addr": "0x08", "data": "0x00"}}"#,
+                r#"{{"time": {}.0, "addr": "0x08", "data": "0x00"}}"#,
                 i
             ));
         }

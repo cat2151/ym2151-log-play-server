@@ -153,11 +153,11 @@ mod feature_demonstrations {
 
         let json1 = r#"{
             "events": [
-                {"time": 0, "addr": "0x08", "data": "0x00"},
-                {"time": 2797, "addr": "0x28", "data": "0x48"},
-                {"time": 2797, "addr": "0x30", "data": "0x00"},
-                {"time": 2797, "addr": "0x08", "data": "0x78"},
-                {"time": 30762, "addr": "0x08", "data": "0x00"}
+                {"time": 0.0, "addr": "0x08", "data": "0x00"},
+                {"time": 0.05002683861556923, "addr": "0x28", "data": "0x48"},
+                {"time": 0.05002683861556923, "addr": "0x30", "data": "0x00"},
+                {"time": 0.05002683861556923, "addr": "0x08", "data": "0x78"},
+                {"time": 0.5499910723849867, "addr": "0x08", "data": "0x00"}
             ]
         }"#;
 
@@ -168,9 +168,9 @@ mod feature_demonstrations {
 
         let json2 = r#"{
             "events": [
-                {"time": 33559, "addr": "0x28", "data": "0x4A"},
-                {"time": 33559, "addr": "0x08", "data": "0x78"},
-                {"time": 61524, "addr": "0x08", "data": "0x00"}
+                {"time": 0.6000000, "addr": "0x28", "data": "0x4A"},
+                {"time": 0.6000000, "addr": "0x08", "data": "0x78"},
+                {"time": 1.1, "addr": "0x08", "data": "0x00"}
             ]
         }"#;
 
@@ -181,8 +181,8 @@ mod feature_demonstrations {
 
         let json3 = r#"{
             "events": [
-                {"time": 67117, "addr": "0x28", "data": "0x4C"},
-                {"time": 67117, "addr": "0x08", "data": "0x78"}
+                {"time": 1.2, "addr": "0x28", "data": "0x4C"},
+                {"time": 1.2, "addr": "0x08", "data": "0x78"}
             ]
         }"#;
 
@@ -194,7 +194,8 @@ mod feature_demonstrations {
 
         // Convert events from first JSON and schedule them
         for event in &log1.events {
-            player.schedule_register_write(event.time, event.addr, event.data);
+            let time_samples = (event.time * scheduler::sec_to_samples(1.0) as f64).round() as u32;
+            player.schedule_register_write(time_samples, event.addr, event.data);
         }
 
         // Verify events are scheduled

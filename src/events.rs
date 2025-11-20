@@ -13,7 +13,7 @@ where
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RegisterEvent {
-    pub time: u32,
+    pub time: f64,
 
     #[serde(deserialize_with = "parse_hex_string")]
     pub addr: u8,
@@ -28,26 +28,6 @@ pub struct RegisterEvent {
 #[derive(Debug, Clone, Deserialize)]
 pub struct EventLog {
     pub events: Vec<RegisterEvent>,
-}
-
-// F64版の構造体（時間表現がf64秒）
-#[derive(Debug, Clone, Deserialize)]
-pub struct RegisterEventF64 {
-    pub time: f64,
-
-    #[serde(deserialize_with = "parse_hex_string")]
-    pub addr: u8,
-
-    #[serde(deserialize_with = "parse_hex_string")]
-    pub data: u8,
-
-    #[serde(default, skip_deserializing)]
-    pub is_data: Option<u8>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct EventLogF64 {
-    pub events: Vec<RegisterEventF64>,
 }
 
 impl EventLog {
@@ -68,8 +48,8 @@ impl EventLog {
     /// # use ym2151_log_play_server::events::EventLog;
     /// let json_str = r#"{
     ///     "events": [
-    ///         {"time": 0, "addr": "0x08", "data": "0x00"},
-    ///         {"time": 2, "addr": "0x20", "data": "0xC7"}
+    ///         {"time": 0.0, "addr": "0x08", "data": "0x00"},
+    ///         {"time": 0.0001, "addr": "0x20", "data": "0xC7"}
     ///     ]
     /// }"#;
     ///
@@ -91,58 +71,4 @@ impl EventLog {
 
         true
     }
-}
-
-impl EventLogF64 {
-    /// Parse event log directly from a JSON string (for f64 time format)
-    pub fn from_json_str(json_str: &str) -> anyhow::Result<Self> {
-        let log: EventLogF64 = serde_json::from_str(json_str)?;
-        Ok(log)
-    }
-
-    pub fn validate(&self) -> bool {
-        // Check if events are sorted by time
-        for i in 1..self.events.len() {
-            if self.events[i].time < self.events[i - 1].time {
-                return false;
-            }
-        }
-
-        true
-    }
-}
-
-/// Convert JSON from integer time (samples) to f64 time (seconds)
-///
-/// This function converts event timing from OPM samples (55930 Hz) to seconds.
-/// This is useful for interactive playback and timing analysis.
-///
-/// The function also validates the input JSON to ensure:
-/// - Events are in chronological order
-pub fn convert_json_to_f64_seconds(json_str: &str) -> anyhow::Result<String> {
-    const OPM_SAMPLE_RATE: f64 = 55930.0;
-
-    // Parse the original JSON
-    let log: EventLog = serde_json::from_str(json_str)?;
-
-    // Validate the event log
-    if !log.validate() {
-        return Err(anyhow::anyhow!("Invalid input event log"));
-    }
-
-    // Convert to f64 format
-    let mut f64_events = Vec::new();
-    for event in log.events {
-        f64_events.push(serde_json::json!({
-            "time": event.time as f64 / OPM_SAMPLE_RATE,
-            "addr": format!("0x{:02x}", event.addr),
-            "data": format!("0x{:02x}", event.data)
-        }));
-    }
-
-    let f64_log = serde_json::json!({
-        "events": f64_events
-    });
-
-    Ok(serde_json::to_string_pretty(&f64_log)?)
 }

@@ -11,8 +11,8 @@ mod windows_tests {
     fn test_play_json_interactive_parses_simple_json() {
         let json_data = r#"{
             "events": [
-                {"time": 0, "addr": "0x08", "data": "0x00"},
-                {"time": 2797, "addr": "0x20", "data": "0xC7"}
+                {"time": 0.0, "addr": "0x08", "data": "0x00"},
+                {"time": 0.05, "addr": "0x20", "data": "0xC7"}
             ]
         }"#;
 
@@ -54,8 +54,8 @@ mod windows_tests {
         // Events not in time order
         let json_data = r#"{
             "events": [
-                {"time": 100, "addr": "0x08", "data": "0x00"},
-                {"time": 50, "addr": "0x20", "data": "0xC7"}
+                {"time": 0.5, "addr": "0x08", "data": "0x00"},
+                {"time": 0.1, "addr": "0x20", "data": "0xC7"}
             ]
         }"#;
 
@@ -88,8 +88,8 @@ mod windows_tests {
         // Test both uppercase and lowercase hex
         let json_data = r#"{
             "events": [
-                {"time": 0, "addr": "0x08", "data": "0xFF"},
-                {"time": 100, "addr": "0XAB", "data": "0xcd"}
+                {"time": 0.0, "addr": "0x08", "data": "0xFF"},
+                {"time": 0.5, "addr": "0XAB", "data": "0xcd"}
             ]
         }"#;
 
@@ -111,7 +111,7 @@ mod windows_tests {
     fn test_play_json_interactive_rejects_invalid_hex() {
         let json_data = r#"{
             "events": [
-                {"time": 0, "addr": "0xZZ", "data": "0x00"}
+                {"time": 0.0, "addr": "0xZZ", "data": "0x00"}
             ]
         }"#;
 
@@ -129,12 +129,12 @@ mod windows_tests {
 
     #[test]
     fn test_play_json_interactive_handles_large_time_values() {
-        // Test with large sample counts (e.g., several seconds of playback)
+        // Test with large time values (e.g., several seconds of playback)
         let json_data = r#"{
             "events": [
-                {"time": 0, "addr": "0x08", "data": "0x00"},
-                {"time": 55930, "addr": "0x20", "data": "0xC7"},
-                {"time": 111860, "addr": "0x28", "data": "0x3E"}
+                {"time": 0.0, "addr": "0x08", "data": "0x00"},
+                {"time": 1.0, "addr": "0x20", "data": "0xC7"},
+                {"time": 2.0, "addr": "0x28", "data": "0x3E"}
             ]
         }"#;
 
@@ -197,9 +197,9 @@ fn test_event_log_parsing_for_interactive_mode() {
     // Test the EventLog parser that play_json_interactive uses
     let json_data = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2797, "addr": "0x20", "data": "0xC7"},
-            {"time": 5594, "addr": "0x28", "data": "0x3E"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 0.05, "addr": "0x20", "data": "0xC7"},
+            {"time": 0.1, "addr": "0x28", "data": "0x3E"}
         ]
     }"#;
 
@@ -207,15 +207,15 @@ fn test_event_log_parsing_for_interactive_mode() {
         assert!(event_log.validate());
 
     // Verify event values
-    assert_eq!(event_log.events[0].time, 0);
+    assert_eq!(event_log.events[0].time, 0.0);
     assert_eq!(event_log.events[0].addr, 0x08);
     assert_eq!(event_log.events[0].data, 0x00);
 
-    assert_eq!(event_log.events[1].time, 2797);
+    assert_eq!(event_log.events[1].time, 0.05);
     assert_eq!(event_log.events[1].addr, 0x20);
     assert_eq!(event_log.events[1].data, 0xC7);
 
-    assert_eq!(event_log.events[2].time, 5594);
+    assert_eq!(event_log.events[2].time, 0.1);
     assert_eq!(event_log.events[2].addr, 0x28);
     assert_eq!(event_log.events[2].data, 0x3E);
 }

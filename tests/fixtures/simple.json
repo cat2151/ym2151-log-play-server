@@ -1,7 +1,7 @@
 {
   "events": [
-    {"time": 0, "addr": "0x08", "data": "0x00"},
-    {"time": 2, "addr": "0x20", "data": "0xC7"},
-    {"time": 100, "addr": "0x28", "data": "0x3E"}
+    {"time": 0.0, "addr": "0x08", "data": "0x00"},
+    {"time": 3.5763206812653e-05, "addr": "0x20", "data": "0xC7"},
+    {"time": 0.001788160340632651, "addr": "0x28", "data": "0x3E"}
   ]
 }
