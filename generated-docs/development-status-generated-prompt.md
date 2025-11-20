@@ -1,4 +1,4 @@
-Last updated: 2025-11-20
+Last updated: 2025-11-21
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -200,23 +200,17 @@ Last updated: 2025-11-20
 - .gitignore
 - Cargo.lock
 - Cargo.toml
-- INTERACTIVE_MODE_ANALYSIS.md
-- ISSUE_86_SUMMARY.md
 - LICENSE
 - README.ja.md
 - README.md
-- RUST_AGENTIC_CODING_BEST_PRACTICES.md
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
-- examples/clear_schedule_demo.rs
-- examples/interactive_demo.rs
-- examples/play_json_interactive_demo.rs
-- examples/test_client_non_verbose.rs
-- examples/test_client_verbose.rs
-- examples/test_logging_non_verbose.rs
-- examples/test_logging_verbose.rs
 - install-ym2151-tools.rs
+- issue-notes/100.md
+- issue-notes/101.md
+- issue-notes/102.md
+- issue-notes/103.md
 - issue-notes/34.md
 - issue-notes/36.md
 - issue-notes/38.md
@@ -229,7 +223,6 @@ Last updated: 2025-11-20
 - issue-notes/52.md
 - issue-notes/54.md
 - issue-notes/56.md
-- issue-notes/58.md
 - issue-notes/60.md
 - issue-notes/62.md
 - issue-notes/64.md
@@ -244,13 +237,31 @@ Last updated: 2025-11-20
 - issue-notes/82.md
 - issue-notes/84.md
 - issue-notes/86.md
+- issue-notes/88.md
+- issue-notes/90.md
+- issue-notes/91.md
+- issue-notes/94.md
+- issue-notes/96.md
+- issue-notes/97.md
+- issue-notes/98.md
+- issue-notes/99.md
 - opm.c
 - opm.h
 - output_ym2151.json
+- output_ym2151_f64seconds.json
 - setup_ci_environment.sh
 - src/audio.rs
-- src/client.rs
+- src/audio_config.rs
+- src/client/config.rs
+- src/client/core.rs
+- src/client/interactive.rs
+- src/client/json.rs
+- src/client/mod.rs
+- src/client/server.rs
 - src/debug_wav.rs
+- src/demo.rs
+- src/demo_server_interactive.rs
+- src/demo_server_non_interactive.rs
 - src/events.rs
 - src/ipc/mod.rs
 - src/ipc/pipe_windows.rs
@@ -258,6 +269,7 @@ Last updated: 2025-11-20
 - src/lib.rs
 - src/logging.rs
 - src/main.rs
+- src/mmcss.rs
 - src/opm.rs
 - src/opm_ffi.rs
 - src/player.rs
@@ -267,79 +279,519 @@ Last updated: 2025-11-20
 - src/tests/audio_tests.rs
 - src/tests/client_tests.rs
 - src/tests/debug_wav_tests.rs
+- src/tests/demo_server_interactive_tests.rs
+- src/tests/demo_server_non_interactive_tests.rs
 - src/tests/events_tests.rs
 - src/tests/ipc_pipe_windows_tests.rs
 - src/tests/ipc_protocol_tests.rs
 - src/tests/logging_tests.rs
+- src/tests/mmcss_tests.rs
 - src/tests/mod.rs
 - src/tests/opm_ffi_tests.rs
 - src/tests/opm_tests.rs
+- src/tests/play_json_interactive_tests.rs
 - src/tests/resampler_tests.rs
 - src/tests/scheduler_tests.rs
 - src/tests/server_tests.rs
 - src/tests/wav_writer_tests.rs
 - src/wav_writer.rs
+- tests/audio/audio_playback_test.rs
+- tests/audio/audio_sound_test.rs
+- tests/audio/mod.rs
 - tests/clear_schedule_test.rs
+- tests/cli_integration_test.rs
 - tests/client_json_test.rs
 - tests/client_test.rs
 - tests/client_verbose_test.rs
 - tests/debug_wav_test.rs
 - tests/duration_test.rs
 - tests/ensure_server_ready_test.rs
+- tests/events_processing_test.rs
+- tests/feature_demonstration_test.rs
 - tests/fixtures/complex.json
 - tests/fixtures/simple.json
 - tests/integration_test.rs
-- tests/interactive_mode_test.rs
+- tests/interactive/mod.rs
+- tests/interactive/mode_test.rs
+- tests/interactive/play_json_test.rs
+- tests/interactive/row_by_row_test.rs
+- tests/interactive/shared_mutex.rs
+- tests/interactive/step_by_step_test.rs
+- tests/interactive_tests.rs
 - tests/ipc_pipe_test.rs
 - tests/logging_test.rs
-- tests/phase3_test.rs
-- tests/phase4_test.rs
-- tests/phase5_test.rs
-- tests/phase6_cli_test.rs
-- tests/play_json_interactive_test.rs
 - tests/server_basic_test.rs
-- tests/server_windows_fix_test.rs
+- tests/server_integration_test.rs
 - tests/tail_generation_test.rs
-- tests/test_utils.rs
+- tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-オープン中のIssueはありません
+## [Issue #102](../issue-notes/102.md): JSONフォーマットを f64 seconds に統一する
+[issue-notes/102.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/102.md)
+
+...
+ラベル: 
+--- issue-notes/102.md の内容 ---
+
+```markdown
+# issue JSONフォーマットを f64 seconds に統一する #102
+[issues #102](https://github.com/cat2151/ym2151-log-play-server/issues/102)
+
+# 影響範囲ざっくり
+- smf-to-ym2151log
+- ym2151-tone-editor
+- cat-play-mml（GitHubからの再installだけでOK？）
+- cat-edit-mml（GitHubからの再installだけでOK？）
+# メリット
+- ミス防止
+    - わかりやすい
+        - sample単位だと、55930Hzか48000Hzかなどのミスもありうる
+            - ミス考慮のコストが必要になる
+                - 変換が1つ増えればそのぶん、ミスのリスクは増える、その対策コストが増える
+                    - 無意識にミスしやすくなるし、全体品質も無意識に下がるので、
+                        - こういったシンプル化の積み重ねが重要
+        - WebAudioと同じ単位、挙動も類似しているので、わかりやすい
+# いつやる？
+- 別issueの、
+    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 同一時刻レジスタ書き込み時の2sample delayを最終段で行う
+    - [issues #101](https://github.com/cat2151/ym2151-log-play-server/issues/101) 最終段でのevent listのデータ形式は、addr data pairとする
+    - を実装したあと
+# close条件
+- 以下のアプリがエラーなくJSONを出力して、それが鳴ること
+    - smf-to-ym2151log
+    - ym2151-tone-editor
+    - cat-play-mml（GitHubからの再installだけでOK？）
+    - cat-edit-mml（GitHubからの再installだけでOK？）
+
+
+
+```
+
+## [Issue #98](../issue-notes/98.md): client側のdemo interactive modeで音が崩れる
+[issue-notes/98.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/98.md)
+
+...
+ラベル: 
+--- issue-notes/98.md の内容 ---
+
+```markdown
+# issue client側のdemo interactive modeで音が崩れる #98
+[issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98)
+
+# 事象は？
+- ドレドレドレ...が期待値
+- 実際はドレミレミレ
+# server verboseを起動して、これを実行、の確認結果は？
+- 問題発見
+    - 同一sampleにレジスタ書き込みがあった
+        - ※ログでこれを見つける = 致命的バグが発生しているという証拠
+        - これはドの音が鳴らなかったことの説明になる
+        - 分析、原因は、2sample delayをどの段で入れるかの考慮漏れ、対策は後述
+# どうする？
+- 別issueで切り分けて対処する
+    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 最終段で規定sampleぶんのdelayを入れて、
+        - レジスタ書き込みが同一sample時刻に連続しないようにする
+    - 今まではあちこちの段でまちまちに入れていたので、
+        - こうやって漏れが発生して、
+        - 根の深いトラブルの原因になっていた
+# close条件は？
+- 音が崩れず、期待値どおりに、ドレドレドレ…と鳴ること
+
+```
+
+## [Issue #96](../issue-notes/96.md): インタラクティブモードで音が鳴らない
+[issue-notes/96.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/96.md)
+
+...
+ラベル: 
+--- issue-notes/96.md の内容 ---
+
+```markdown
+# issue インタラクティブモードで音が鳴らない #96
+[issues #96](https://github.com/cat2151/ym2151-log-play-server/issues/96)
+
+# 課題
+- 事象がわかりづらい
+# 対策
+- 切り分ける
+    - サーバ側だけで動かして切り分ける
+        - サーバ側だけで動くdemo interactive modeを作る
+            - 別issue参照
+# close条件
+- 別issueの
+    - [issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98) client側のdemo interactive modeで音が崩れる
+    - が解決すること
+- ym2151 tone editorでインタラクティブモードを使って音が鳴ること
+    - ※今はym2151 tone editor側は、デフォルトは、
+        - 安全優先で、非インタラクティブモードで運用している。
+            - optionでインタラクティブモードで動かすと鳴らない、という状況
+
+```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/2.md
+```md
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
 
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+```
+
+### .github/actions-tmp/issue-notes/8.md
+```md
+# issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
+[issues #8](https://github.com/cat2151/github-actions/issues/8)
+
+# これまでの課題
+- 以下が決め打ちになっていた
+```
+  const allowedFiles = [
+    'src/main.js',
+    'src/mml2json.js',
+    'src/play.js'
+  ];
+```
+
+# 対策
+- 呼び出し元ymlで指定できるようにする
+
+# agent
+- agentにやらせることができれば楽なので、初手agentを試した
+- 失敗
+    - ハルシネーションしてscriptを大量破壊した
+- 分析
+    - 修正対象scriptはagentが生成したもの
+    - 低品質な生成結果でありソースが巨大
+    - ハルシネーションで破壊されやすいソース
+    - AIの生成したソースは、必ずしもAIフレンドリーではない
+
+# 人力リファクタリング
+- 低品質コードを、最低限agentが扱えて、ハルシネーションによる大量破壊を防止できる内容、にする
+- 手短にやる
+    - そもそもビジュアライズは、agentに雑に指示してやらせたもので、
+    - 今後別のビジュアライザを選ぶ可能性も高い
+    - 今ここで手間をかけすぎてコンコルド効果（サンクコストバイアス）を増やすのは、project群をトータルで俯瞰して見たとき、損
+- 対象
+    - allowedFiles のあるソース
+        - callgraph-utils.cjs
+            - たかだか300行未満のソースである
+            - この程度でハルシネーションされるのは予想外
+            - やむなし、リファクタリングでソース分割を進める
+
+# agentに修正させる
+## prompt
+```
+allowedFilesを引数で受け取るようにしたいです。
+ないならエラー。
+最終的に呼び出し元すべてに波及して修正したいです。
+
+呼び出し元をたどってエントリポイントも見つけて、
+エントリポイントにおいては、
+引数で受け取ったjsonファイル名 allowedFiles.js から
+jsonファイル allowedFiles.jsonの内容をreadして
+変数 allowedFilesに格納、
+後続処理に引き渡す、としたいです。
+
+まずplanしてください。
+planにおいては、修正対象のソースファイル名と関数名を、呼び出し元を遡ってすべて特定し、listしてください。
+```
+
+# 修正が順調にできた
+- コマンドライン引数から受け取る作りになっていなかったので、そこだけ指示して修正させた
+- yml側は人力で修正した
+
+# 他のリポジトリから呼び出した場合にバグらないよう修正する
+- 気付いた
+    - 共通ワークフローとして他のリポジトリから使った場合はバグるはず。
+        - ymlから、共通ワークフロー側リポジトリのcheckoutが漏れているので。
+- 他のyml同様に修正する
+- あわせて全体にymlをリファクタリングし、修正しやすくし、今後のyml読み書きの学びにしやすくする
+
+# local WSL + act : test green
+
+# closeとする
+- もし生成されたhtmlがNGの場合は、別issueとするつもり
+
+```
+
+### issue-notes/102.md
+```md
+# issue JSONフォーマットを f64 seconds に統一する #102
+[issues #102](https://github.com/cat2151/ym2151-log-play-server/issues/102)
+
+# 影響範囲ざっくり
+- smf-to-ym2151log
+- ym2151-tone-editor
+- cat-play-mml（GitHubからの再installだけでOK？）
+- cat-edit-mml（GitHubからの再installだけでOK？）
+# メリット
+- ミス防止
+    - わかりやすい
+        - sample単位だと、55930Hzか48000Hzかなどのミスもありうる
+            - ミス考慮のコストが必要になる
+                - 変換が1つ増えればそのぶん、ミスのリスクは増える、その対策コストが増える
+                    - 無意識にミスしやすくなるし、全体品質も無意識に下がるので、
+                        - こういったシンプル化の積み重ねが重要
+        - WebAudioと同じ単位、挙動も類似しているので、わかりやすい
+# いつやる？
+- 別issueの、
+    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 同一時刻レジスタ書き込み時の2sample delayを最終段で行う
+    - [issues #101](https://github.com/cat2151/ym2151-log-play-server/issues/101) 最終段でのevent listのデータ形式は、addr data pairとする
+    - を実装したあと
+# close条件
+- 以下のアプリがエラーなくJSONを出力して、それが鳴ること
+    - smf-to-ym2151log
+    - ym2151-tone-editor
+    - cat-play-mml（GitHubからの再installだけでOK？）
+    - cat-edit-mml（GitHubからの再installだけでOK？）
+
+
+
+```
+
+### issue-notes/96.md
+```md
+# issue インタラクティブモードで音が鳴らない #96
+[issues #96](https://github.com/cat2151/ym2151-log-play-server/issues/96)
+
+# 課題
+- 事象がわかりづらい
+# 対策
+- 切り分ける
+    - サーバ側だけで動かして切り分ける
+        - サーバ側だけで動くdemo interactive modeを作る
+            - 別issue参照
+# close条件
+- 別issueの
+    - [issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98) client側のdemo interactive modeで音が崩れる
+    - が解決すること
+- ym2151 tone editorでインタラクティブモードを使って音が鳴ること
+    - ※今はym2151 tone editor側は、デフォルトは、
+        - 安全優先で、非インタラクティブモードで運用している。
+            - optionでインタラクティブモードで動かすと鳴らない、という状況
+
+```
+
+### issue-notes/98.md
+```md
+# issue client側のdemo interactive modeで音が崩れる #98
+[issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98)
+
+# 事象は？
+- ドレドレドレ...が期待値
+- 実際はドレミレミレ
+# server verboseを起動して、これを実行、の確認結果は？
+- 問題発見
+    - 同一sampleにレジスタ書き込みがあった
+        - ※ログでこれを見つける = 致命的バグが発生しているという証拠
+        - これはドの音が鳴らなかったことの説明になる
+        - 分析、原因は、2sample delayをどの段で入れるかの考慮漏れ、対策は後述
+# どうする？
+- 別issueで切り分けて対処する
+    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 最終段で規定sampleぶんのdelayを入れて、
+        - レジスタ書き込みが同一sample時刻に連続しないようにする
+    - 今まではあちこちの段でまちまちに入れていたので、
+        - こうやって漏れが発生して、
+        - 根の深いトラブルの原因になっていた
+# close条件は？
+- 音が崩れず、期待値どおりに、ドレドレドレ…と鳴ること
+
+```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-469f74c Merge pull request #87 from cat2151/copilot/add-debug-messages-interactive-mode
-17b4a83 Add comprehensive summary for issue #86
-bd360d9 Fix demo examples to properly check for running server
-8b62e63 Add enhanced debug messages for interactive mode
-c9f06d0 Initial plan
-2a45c83 Add issue note for #86 [auto]
-c35a877 使用例をupdate、実際に音が鳴るjsonを書いた
-368094f Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-a62fac4 あちこちにコマンドライン引数仕様変更時の影響範囲考慮漏れがあったので、agentに修正させた
-00ebde0 Auto-translate README.ja.md to README.md [auto]
+7aa3b63 Merge pull request #106 from cat2151/copilot/update-event-list-data-format
+64b6580 Fix is_complete to check pending_data_write
+69ca5ac Update interactive mode tests for addr-data pair format
+5ee74db Change ProcessedEvent to store addr-data pairs instead of individual port writes
+eb45bb6 Initial plan
+6eb18d3 Merge pull request #105 from cat2151/copilot/fix-two-sample-delay
+ad6d1af Improve 2-sample delay logic to handle consecutive writes properly
+2721314 Fix syntax errors in player.rs
+ce18aab Remove 2-sample delays from intermediate stages and implement final-stage delay
+fa90991 Initial plan
 
 ### 変更されたファイル:
-.github/copilot-instructions.md
-INTERACTIVE_MODE_ANALYSIS.md
-ISSUE_86_SUMMARY.md
-README.ja.md
-README.md
-RUST_AGENTIC_CODING_BEST_PRACTICES.md
-examples/clear_schedule_demo.rs
-examples/interactive_demo.rs
-examples/play_json_interactive_demo.rs
-issue-notes/86.md
-src/client.rs
-src/debug_wav.rs
-src/ipc/pipe_windows.rs
-src/server.rs
-src/tests/client_tests.rs
-tests/ensure_server_ready_test.rs
-tests/phase4_test.rs
+Cargo.lock
+Cargo.toml
+issue-notes/101.md
+issue-notes/102.md
+issue-notes/103.md
+src/audio.rs
+src/lib.rs
+src/mmcss.rs
+src/player.rs
+src/tests/mmcss_tests.rs
+src/tests/mod.rs
+tests/clear_schedule_test.rs
+tests/events_processing_test.rs
+tests/interactive/mode_test.rs
 
 
 ---
-Generated at: 2025-11-20 07:01:50 JST
+Generated at: 2025-11-21 07:01:49 JST
