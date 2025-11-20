@@ -15,6 +15,139 @@ use windows::Win32::System::Pipes::{
 
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151-log-play-server";
 
+/// Test-only logging infrastructure for named pipe communication
+///
+/// This module provides logging functionality that is only active in test builds (cfg(test)).
+/// It logs named pipe send/receive operations to separate files for server and client,
+/// helping to visualize the communication flow during TDD on Windows.
+///
+/// # Usage in Tests
+///
+/// Before performing pipe operations in tests, set the context:
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_server_context, test_set_client_context};
+///
+/// // In server thread:
+/// test_set_server_context();
+/// // ... perform server pipe operations ...
+///
+/// // In client thread:
+/// test_set_client_context();
+/// // ... perform client pipe operations ...
+/// ```
+///
+/// # Log Files
+///
+/// - `test_server.log` - Server-side operations (reading commands, sending responses)
+/// - `test_client.log` - Client-side operations (sending commands, reading responses)
+///
+/// Both files include timestamps and are automatically excluded from git via .gitignore.
+#[cfg(test)]
+mod test_logging {
+    use std::cell::RefCell;
+    use std::fs::OpenOptions;
+    use std::io::Write;
+    use std::sync::Mutex;
+
+    static SERVER_LOG: Mutex<()> = Mutex::new(());
+    static CLIENT_LOG: Mutex<()> = Mutex::new(());
+
+    thread_local! {
+        static PIPE_CONTEXT: RefCell<PipeContext> = RefCell::new(PipeContext::Unknown);
+    }
+
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum PipeContext {
+        Server,
+        Client,
+        Unknown,
+    }
+
+    pub fn set_server_context() {
+        PIPE_CONTEXT.with(|ctx| *ctx.borrow_mut() = PipeContext::Server);
+    }
+
+    pub fn set_client_context() {
+        PIPE_CONTEXT.with(|ctx| *ctx.borrow_mut() = PipeContext::Client);
+    }
+
+    pub fn log_server(message: &str) {
+        let _guard = SERVER_LOG.lock().unwrap();
+        if let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("test_server.log")
+        {
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            let _ = writeln!(file, "[{}] {}", timestamp, message);
+        }
+    }
+
+    pub fn log_client(message: &str) {
+        let _guard = CLIENT_LOG.lock().unwrap();
+        if let Ok(mut file) = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open("test_client.log")
+        {
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            let _ = writeln!(file, "[{}] {}", timestamp, message);
+        }
+    }
+
+    pub fn log_write(message: &str) {
+        PIPE_CONTEXT.with(|ctx| match *ctx.borrow() {
+            PipeContext::Server => log_server(message),
+            PipeContext::Client => log_client(message),
+            PipeContext::Unknown => {
+                // Log to both if context unknown
+                log_server(&format!("[UNKNOWN_CTX] {}", message));
+                log_client(&format!("[UNKNOWN_CTX] {}", message));
+            }
+        });
+    }
+}
+
+#[cfg(test)]
+use test_logging::{log_client, log_server, log_write, set_client_context, set_server_context};
+
+/// Set the current thread's pipe context to server mode (test builds only)
+///
+/// Call this function at the beginning of server-side test code to ensure
+/// all pipe operations in the current thread are logged to `test_server.log`.
+///
+/// # Example
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_server_context, NamedPipe};
+///
+/// test_set_server_context();
+/// let pipe = NamedPipe::create().unwrap();
+/// let mut reader = pipe.open_read().unwrap();
+/// // ... server operations will be logged to test_server.log
+/// ```
+#[cfg(test)]
+pub fn test_set_server_context() {
+    set_server_context();
+}
+
+/// Set the current thread's pipe context to client mode (test builds only)
+///
+/// Call this function at the beginning of client-side test code to ensure
+/// all pipe operations in the current thread are logged to `test_client.log`.
+///
+/// # Example
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_client_context, NamedPipe};
+///
+/// test_set_client_context();
+/// let mut writer = NamedPipe::connect_default().unwrap();
+/// // ... client operations will be logged to test_client.log
+/// ```
+#[cfg(test)]
+pub fn test_set_client_context() {
+    set_client_context();
+}
+
 #[derive(Debug)]
 pub struct NamedPipe {
     path: PathBuf,
@@ -178,14 +311,25 @@ impl PipeReader {
 
     /// Read binary data with length prefix (u32 little-endian + data)
     pub fn read_binary(&mut self) -> io::Result<Vec<u8>> {
+        #[cfg(test)]
+        log_server("📥 [SERVER] 開始: クライアントからバイナリデータ受信");
+
         // Read 4-byte length prefix
         let mut len_bytes = [0u8; 4];
         self.read_exact(&mut len_bytes)?;
 
         let len = u32::from_le_bytes(len_bytes) as usize;
 
+        #[cfg(test)]
+        log_server(&format!("📥 [SERVER] 受信データ長: {} bytes", len));
+
         // Validate reasonable length (max 10MB to prevent memory issues)
         if len > 10 * 1024 * 1024 {
+            #[cfg(test)]
+            log_server(&format!(
+                "❌ [SERVER] エラー: データ長が大きすぎます: {} bytes",
+                len
+            ));
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!("Message length too large: {} bytes", len),
@@ -200,6 +344,12 @@ impl PipeReader {
         let mut result = Vec::with_capacity(4 + len);
         result.extend_from_slice(&len_bytes);
         result.extend_from_slice(&data);
+
+        #[cfg(test)]
+        log_server(&format!(
+            "✅ [SERVER] 完了: {} bytes 受信しました",
+            result.len()
+        ));
 
         Ok(result)
     }
@@ -264,15 +414,29 @@ impl PipeWriter {
 
     /// Write binary data (already includes length prefix)
     pub fn write_binary(&mut self, data: &[u8]) -> io::Result<()> {
+        #[cfg(test)]
+        log_write(&format!(
+            "📤 [WRITE] 開始: バイナリデータ送信 ({} bytes)",
+            data.len()
+        ));
+
         let mut bytes_written = 0u32;
 
         let result = unsafe { WriteFile(self.handle, Some(data), Some(&mut bytes_written), None) };
 
         if let Err(e) = result {
+            #[cfg(test)]
+            log_write(&format!("❌ [WRITE] エラー: 書き込み失敗: {:?}", e));
             return Err(io::Error::other(e));
         }
 
         if bytes_written as usize != data.len() {
+            #[cfg(test)]
+            log_write(&format!(
+                "❌ [WRITE] エラー: 不完全な書き込み: {} / {} bytes",
+                bytes_written,
+                data.len()
+            ));
             return Err(io::Error::new(
                 io::ErrorKind::WriteZero,
                 "Failed to write all bytes",
@@ -282,6 +446,12 @@ impl PipeWriter {
         unsafe {
             FlushFileBuffers(self.handle).map_err(io::Error::other)?;
         }
+
+        #[cfg(test)]
+        log_write(&format!(
+            "✅ [WRITE] 完了: {} bytes 送信しました",
+            bytes_written
+        ));
 
         Ok(())
     }
@@ -316,14 +486,25 @@ impl PipeWriter {
 
     /// Read binary response with length prefix
     pub fn read_binary_response(&mut self) -> io::Result<Vec<u8>> {
+        #[cfg(test)]
+        log_client("📥 [CLIENT] 開始: サーバーからレスポンス受信");
+
         // Read 4-byte length prefix
         let mut len_bytes = [0u8; 4];
         self.read_exact(&mut len_bytes)?;
 
         let len = u32::from_le_bytes(len_bytes) as usize;
 
+        #[cfg(test)]
+        log_client(&format!("📥 [CLIENT] レスポンス長: {} bytes", len));
+
         // Validate reasonable length
         if len > 10 * 1024 * 1024 {
+            #[cfg(test)]
+            log_client(&format!(
+                "❌ [CLIENT] エラー: レスポンス長が大きすぎます: {} bytes",
+                len
+            ));
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!("Response length too large: {} bytes", len),
@@ -338,6 +519,12 @@ impl PipeWriter {
         let mut result = Vec::with_capacity(4 + len);
         result.extend_from_slice(&len_bytes);
         result.extend_from_slice(&data);
+
+        #[cfg(test)]
+        log_client(&format!(
+            "✅ [CLIENT] 完了: {} bytes 受信しました",
+            result.len()
+        ));
 
         Ok(result)
     }
