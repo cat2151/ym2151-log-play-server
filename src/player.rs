@@ -312,7 +312,7 @@ impl Player {
         if self.interactive_mode {
             return false;
         }
-        self.next_event_idx >= self.events.len()
+        self.next_event_idx >= self.events.len() && self.pending_data_write.is_none()
     }
 
     pub const fn sample_rate() -> u32 {
