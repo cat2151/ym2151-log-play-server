@@ -1,5 +1,4 @@
 {
-  "event_count": 10,
   "events": [
     {"time": 0, "addr": "0x08", "data": "0x00", "is_data": 0},
     {"time": 2, "addr": "0x08", "data": "0x00", "is_data": 1},

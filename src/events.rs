@@ -27,7 +27,6 @@ pub struct RegisterEvent {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct EventLog {
-    pub event_count: u32,
     pub events: Vec<RegisterEvent>,
 }
 
@@ -48,7 +47,6 @@ pub struct RegisterEventF64 {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct EventLogF64 {
-    pub event_count: u32,
     pub events: Vec<RegisterEventF64>,
 }
 
@@ -69,7 +67,6 @@ impl EventLog {
     /// ```
     /// # use ym2151_log_play_server::events::EventLog;
     /// let json_str = r#"{
-    ///     "event_count": 2,
     ///     "events": [
     ///         {"time": 0, "addr": "0x08", "data": "0x00"},
     ///         {"time": 2, "addr": "0x20", "data": "0xC7"}
@@ -77,7 +74,6 @@ impl EventLog {
     /// }"#;
     ///
     /// let log = EventLog::from_json_str(json_str).unwrap();
-    /// assert_eq!(log.event_count, 2);
     /// assert!(log.validate());
     /// ```
     pub fn from_json_str(json_str: &str) -> anyhow::Result<Self> {
@@ -86,11 +82,6 @@ impl EventLog {
     }
 
     pub fn validate(&self) -> bool {
-        // Check if event_count matches actual number of events
-        if self.event_count != self.events.len() as u32 {
-            return false;
-        }
-
         // Check if events are sorted by time
         for i in 1..self.events.len() {
             if self.events[i].time < self.events[i - 1].time {
@@ -110,11 +101,6 @@ impl EventLogF64 {
     }
 
     pub fn validate(&self) -> bool {
-        // Check if event_count matches actual number of events
-        if self.event_count != self.events.len() as u32 {
-            return false;
-        }
-
         // Check if events are sorted by time
         for i in 1..self.events.len() {
             if self.events[i].time < self.events[i - 1].time {
@@ -132,7 +118,6 @@ impl EventLogF64 {
 /// This is useful for interactive playback and timing analysis.
 ///
 /// The function also validates the input JSON to ensure:
-/// - Event count matches the actual number of events
 /// - Events are in chronological order
 pub fn convert_json_to_f64_seconds(json_str: &str) -> anyhow::Result<String> {
     const OPM_SAMPLE_RATE: f64 = 55930.0;
@@ -156,7 +141,6 @@ pub fn convert_json_to_f64_seconds(json_str: &str) -> anyhow::Result<String> {
     }
 
     let f64_log = serde_json::json!({
-        "event_count": log.event_count,
         "events": f64_events
     });
 

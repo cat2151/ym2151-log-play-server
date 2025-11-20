@@ -17,7 +17,7 @@ use anyhow::{Context, Result};
 /// # Example
 /// ```no_run
 /// # use ym2151_log_play_server::client::json;
-/// let json = r#"{"event_count": 1, "events": []}"#;
+/// let json = r#"{"events": []}"#;
 /// json::send_json(json).unwrap();
 /// ```
 pub fn send_json(json_data: &str) -> Result<()> {

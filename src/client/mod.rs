@@ -27,7 +27,7 @@
 //! ```no_run
 //! use ym2151_log_play_server::client;
 //!
-//! let json_data = r#"{"event_count": 2, "events": [...]}"#;
+//! let json_data = r#"{"events": [...]}"#;
 //! client::send_json(json_data)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
@@ -43,7 +43,7 @@
 //! client::start_interactive()?;
 //!
 //! // Send multiple JSONs without stopping - no audio gaps!
-//! let json1 = r#"{"event_count": 2, "events": [
+//! let json1 = r#"{"events": [
 //!     {"time": 0, "addr": "0x08", "data": "0x00"},
 //!     {"time": 100, "addr": "0x20", "data": "0xC7"}
 //! ]}"#;
@@ -65,7 +65,7 @@
 //! client::ensure_server_ready("cat-play-mml")?;
 //!
 //! // Now you can send JSON data
-//! let json_data = r#"{"event_count": 1, "events": [...]}"#;
+//! let json_data = r#"{"events": [...]}"#;
 //! client::send_json(json_data)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
