@@ -33,3 +33,7 @@ test_syntax
 
 # Server log file
 ym2151-server.log
+
+# Test log files (cfg(test) only)
+test_server.log
+test_client.log

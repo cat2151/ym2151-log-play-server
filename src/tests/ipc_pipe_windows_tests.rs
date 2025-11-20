@@ -67,3 +67,57 @@ fn test_multiple_messages() {
     assert_eq!(line2, "Message 2\n");
     assert_eq!(line3, "Message 3\n");
 }
+
+#[cfg(windows)]
+#[test]
+fn test_binary_protocol_with_logging() {
+    use crate::ipc::pipe_windows::{test_set_client_context, test_set_server_context};
+    use crate::ipc::protocol::{Command, Response};
+
+    let test_path = r"\\.\pipe\test_ym2151-log-play-server_binary_log";
+
+    let pipe = NamedPipe::create_at(test_path).unwrap();
+
+    let write_path = test_path.to_string();
+    let client_thread = thread::spawn(move || {
+        thread::sleep(Duration::from_millis(100));
+
+        // Set client context for logging
+        test_set_client_context();
+
+        let mut writer = NamedPipe::connect(&write_path).unwrap();
+
+        // Send a command
+        let command = Command::Stop;
+        let binary_data = command.to_binary().unwrap();
+        writer.write_binary(&binary_data).unwrap();
+
+        // Read response
+        let response_data = writer.read_binary_response().unwrap();
+        let response = Response::from_binary(&response_data).unwrap();
+
+        assert_eq!(response, Response::Ok);
+    });
+
+    // Set server context for logging
+    test_set_server_context();
+
+    // Read command from client
+    let mut reader = pipe.open_read().unwrap();
+    let binary_data = reader.read_binary().unwrap();
+    let command = Command::from_binary(&binary_data).unwrap();
+
+    assert_eq!(command, Command::Stop);
+
+    // Send response
+    let mut writer = pipe.open_write().unwrap();
+    let response = Response::Ok;
+    let response_binary = response.to_binary().unwrap();
+    writer.write_binary(&response_binary).unwrap();
+
+    client_thread.join().unwrap();
+
+    // Check that log files were created
+    assert!(std::path::Path::new("test_server.log").exists(), "test_server.log should be created");
+    assert!(std::path::Path::new("test_client.log").exists(), "test_client.log should be created");
+}
