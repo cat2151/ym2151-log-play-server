@@ -8,24 +8,29 @@ mod ensure_server_ready_tests {
 
     use ym2151_log_play_server::client;
 
-    /// Test that ensure_server_ready works when server is already running
+    /// Test that ensure_server_ready works (automatically starts server if needed)
     #[test]
-    #[ignore] // Requires manual server to be running
     fn test_ensure_server_ready_with_running_server() {
-        // This test demonstrates the usage pattern when server is already running
-        // Start a server manually before running this test:
-        // cargo run --release -- server
+        // This test demonstrates the usage pattern
+        // ensure_server_ready automatically starts the server if not running
 
         let result = client::ensure_server_ready("ym2151-log-play-server");
-        assert!(result.is_ok(), "Should succeed when server is running");
+        assert!(
+            result.is_ok(),
+            "Should succeed - server starts automatically if needed"
+        );
+
+        // Cleanup
+        let _ = client::shutdown_server();
     }
 
-    /// Test documentation example
+    /// Test documentation example for external applications
     #[test]
-    #[ignore] // Requires Windows and proper setup
-    fn test_documentation_example() {
-        // This test demonstrates the documented usage pattern
+    #[ignore] // Only run manually - requires external application "cat-play-mml"
+    fn test_documentation_example_external_app() {
+        // This test demonstrates the documented usage pattern for external apps
         // It should work seamlessly without any manual setup
+        // Ignored by default since it requires an external application
 
         // Ensure server is ready (installs and starts if needed)
         client::ensure_server_ready("cat-play-mml").unwrap();

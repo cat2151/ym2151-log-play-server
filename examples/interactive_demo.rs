@@ -4,8 +4,9 @@
 //! stream register writes to the YM2151 chip without stopping playback.
 //!
 //! To run this example:
-//! 1. Start the server: cargo run --release -- server
-//! 2. In another terminal: cargo run --example interactive_demo
+//! cargo run --example interactive_demo
+//!
+//! The server will be automatically started if needed.
 
 #[cfg(windows)]
 use ym2151_log_play_server::client;
@@ -18,18 +19,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Enable verbose output to see what's happening
     client::init_client(true);
 
-    // Check if server is already running
-    println!("Checking if server is running...");
-    if !client::is_server_running() {
-        eprintln!("\n❌ エラー: サーバーが起動していません");
-        eprintln!("\n先に別のターミナルでサーバーを起動してください:");
-        eprintln!("  cargo run --release -- server --verbose");
-        eprintln!("\nまたは:");
-        eprintln!("  ym2151-log-play-server server --verbose");
-        eprintln!("\nサーバー起動後、このdemoを再実行してください。");
-        std::process::exit(1);
-    }
-    println!("✅ サーバーが起動しています\n");
+    // Ensure server is ready (automatically starts if needed)
+    println!("Ensuring server is ready...");
+    client::ensure_server_ready("ym2151-log-play-server")?;
+    println!("✅ サーバーの準備ができました\n");
 
     println!("✅ Starting interactive mode...");
     client::start_interactive()?;
