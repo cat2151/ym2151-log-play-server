@@ -38,6 +38,9 @@ pub struct Player {
 
     // Track last address register write for key on/off logging
     last_address_register: u8,
+
+    // Track last address write time for 2-sample delay enforcement
+    last_address_write_time: Option<u32>,
 }
 
 impl Player {
@@ -52,6 +55,7 @@ impl Player {
             samples_played: 0,
             consecutive_silent_samples: 0,
             last_address_register: 0,
+            last_address_write_time: None,
         }
     }
 
@@ -65,6 +69,10 @@ impl Player {
             scheduled_events: Arc::new(Mutex::new(VecDeque::new())),
             samples_played: 0,
             consecutive_silent_samples: 0,
+            last_address_register: 0,
+            last_address_write_time: None,
+        }
+    }
             last_address_register: 0,
         }
     }
@@ -82,16 +90,16 @@ impl Player {
 
         let mut queue = self.scheduled_events.lock().unwrap();
 
-        // Add address write
+        // No delay applied here - both address and data are scheduled at the same time
+        // The 2-sample delay will be applied at the final stage in generate_samples()
         queue.push_back(ProcessedEvent {
             time: scheduled_time_samples,
             port: OPM_ADDRESS_REGISTER,
             value: addr,
         });
 
-        // Add data write with delay
         queue.push_back(ProcessedEvent {
-            time: scheduled_time_samples + DELAY_SAMPLES,
+            time: scheduled_time_samples,
             port: OPM_DATA_REGISTER,
             value: data,
         });
@@ -131,28 +139,21 @@ impl Player {
 
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
         let mut output = Vec::with_capacity(input.len() * 2);
-        let mut accumulated_delay = 0u32;
-        let mut last_time = 0u32;
 
         for event in input {
-            if event.time != last_time {
-                accumulated_delay = 0;
-                last_time = event.time;
-            }
-
+            // No delay applied here - both address and data are scheduled at the same time
+            // The 2-sample delay will be applied at the final stage in generate_samples()
             output.push(ProcessedEvent {
-                time: event.time + accumulated_delay,
+                time: event.time,
                 port: OPM_ADDRESS_REGISTER,
                 value: event.addr,
             });
-            accumulated_delay += DELAY_SAMPLES;
 
             output.push(ProcessedEvent {
-                time: event.time + accumulated_delay,
+                time: event.time,
                 port: OPM_DATA_REGISTER,
                 value: event.data,
             });
-            accumulated_delay += DELAY_SAMPLES;
         }
 
         output
@@ -169,6 +170,30 @@ impl Player {
                 while let Some(event) = queue.front() {
                     if event.time <= self.samples_played {
                         let event = queue.pop_front().unwrap();
+
+                        // Apply 2-sample delay at final stage
+                        if event.port == OPM_DATA_REGISTER {
+                            // Data register write - ensure 2-sample delay from last address write
+                            if let Some(last_addr_time) = self.last_address_write_time {
+                                let required_time = last_addr_time + DELAY_SAMPLES;
+                                if self.samples_played < required_time {
+                                    // Not enough time has passed - re-queue this event for later
+                                    let deferred_event = ProcessedEvent {
+                                        time: required_time,
+                                        port: event.port,
+                                        value: event.value,
+                                    };
+                                    
+                                    // Find the correct position to insert (maintain sorted order)
+                                    let insert_pos = queue.iter().position(|e| e.time > required_time).unwrap_or(queue.len());
+                                    queue.insert(insert_pos, deferred_event);
+                                    continue;
+                                }
+                            }
+                        } else if event.port == OPM_ADDRESS_REGISTER {
+                            // Address register write - record the time
+                            self.last_address_write_time = Some(self.samples_played);
+                        }
 
                         // Track address register writes and log key events
                         if event.port == OPM_ADDRESS_REGISTER {
@@ -189,6 +214,21 @@ impl Player {
                     let event = &self.events[self.next_event_idx];
 
                     if event.time <= self.samples_played {
+                        // Apply 2-sample delay at final stage
+                        if event.port == OPM_DATA_REGISTER {
+                            // Data register write - ensure 2-sample delay from last address write
+                            if let Some(last_addr_time) = self.last_address_write_time {
+                                let required_time = last_addr_time + DELAY_SAMPLES;
+                                if self.samples_played < required_time {
+                                    // Not enough time has passed - break and wait
+                                    break;
+                                }
+                            }
+                        } else if event.port == OPM_ADDRESS_REGISTER {
+                            // Address register write - record the time
+                            self.last_address_write_time = Some(self.samples_played);
+                        }
+
                         // Track address register writes and log key events
                         if event.port == OPM_ADDRESS_REGISTER {
                             self.last_address_register = event.value;
@@ -337,11 +377,12 @@ mod tests {
 
         assert_eq!(processed.len(), 2);
 
+        // Both address and data are at the same time now (no delay during conversion)
         assert_eq!(processed[0].time, 100);
         assert_eq!(processed[0].port, OPM_ADDRESS_REGISTER);
         assert_eq!(processed[0].value, 0x08);
 
-        assert_eq!(processed[1].time, 102);
+        assert_eq!(processed[1].time, 100);
         assert_eq!(processed[1].port, OPM_DATA_REGISTER);
         assert_eq!(processed[1].value, 0x00);
     }
@@ -373,12 +414,13 @@ mod tests {
 
         assert_eq!(processed.len(), 6);
 
+        // All events at their original times (no delay during conversion)
         assert_eq!(processed[0].time, 0);
-        assert_eq!(processed[1].time, 2);
+        assert_eq!(processed[1].time, 0);
         assert_eq!(processed[2].time, 10);
-        assert_eq!(processed[3].time, 12);
+        assert_eq!(processed[3].time, 10);
         assert_eq!(processed[4].time, 20);
-        assert_eq!(processed[5].time, 22);
+        assert_eq!(processed[5].time, 20);
     }
 
     #[test]
@@ -392,7 +434,8 @@ mod tests {
 
         let processed = Player::convert_events(&events);
 
-        assert_eq!(processed[1].time - processed[0].time, DELAY_SAMPLES);
+        // Address and data are at the same time (delay applied in generate_samples)
+        assert_eq!(processed[0].time, processed[1].time);
     }
 
     #[test]
@@ -422,27 +465,28 @@ mod tests {
 
         assert_eq!(processed.len(), 6);
 
+        // All events at time 0 (delay applied in generate_samples, not during conversion)
         assert_eq!(processed[0].time, 0);
         assert_eq!(processed[0].port, OPM_ADDRESS_REGISTER);
         assert_eq!(processed[0].value, 0x08);
 
-        assert_eq!(processed[1].time, 2);
+        assert_eq!(processed[1].time, 0);
         assert_eq!(processed[1].port, OPM_DATA_REGISTER);
         assert_eq!(processed[1].value, 0x00);
 
-        assert_eq!(processed[2].time, 4);
+        assert_eq!(processed[2].time, 0);
         assert_eq!(processed[2].port, OPM_ADDRESS_REGISTER);
         assert_eq!(processed[2].value, 0x20);
 
-        assert_eq!(processed[3].time, 6);
+        assert_eq!(processed[3].time, 0);
         assert_eq!(processed[3].port, OPM_DATA_REGISTER);
         assert_eq!(processed[3].value, 0xC7);
 
-        assert_eq!(processed[4].time, 8);
+        assert_eq!(processed[4].time, 0);
         assert_eq!(processed[4].port, OPM_ADDRESS_REGISTER);
         assert_eq!(processed[4].value, 0x28);
 
-        assert_eq!(processed[5].time, 10);
+        assert_eq!(processed[5].time, 0);
         assert_eq!(processed[5].port, OPM_DATA_REGISTER);
         assert_eq!(processed[5].value, 0x3E);
     }
@@ -537,7 +581,8 @@ mod tests {
 
         let player = Player::new(log);
 
-        let expected = 1002;
+        // Events are at their original time (delay applied in generate_samples)
+        let expected = 1000;
         assert_eq!(player.total_samples(), expected);
     }
 
@@ -610,9 +655,11 @@ mod tests {
         assert_eq!(q[0].port, OPM_ADDRESS_REGISTER);
         assert_eq!(q[0].value, 0x08);
 
-        // Check data write with delay
-        assert_eq!(q[1].time, 102); // 100 + DELAY_SAMPLES
+        // Check data write at same time (delay applied in generate_samples)
+        assert_eq!(q[1].time, 100);
         assert_eq!(q[1].port, OPM_DATA_REGISTER);
+        assert_eq!(q[1].value, 0x78);
+    }
         assert_eq!(q[1].value, 0x78);
     }
 

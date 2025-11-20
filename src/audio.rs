@@ -48,10 +48,6 @@ pub struct AudioPlayer {
 
     // Audio stream start time for continuous time-based scheduling
     audio_start_time: Option<Instant>,
-
-    // For interactive mode: tracking last scheduled time to manage delays
-    last_scheduled_time: Arc<Mutex<u32>>,
-    accumulated_delay: Arc<Mutex<u32>>,
 }
 
 impl AudioPlayer {
@@ -181,10 +177,6 @@ impl AudioPlayer {
             None
         };
 
-        // Initialize delay tracking for interactive mode
-        let last_scheduled_time = Arc::new(Mutex::new(0u32));
-        let accumulated_delay = Arc::new(Mutex::new(0u32));
-
         let event_log_for_thread = event_log.clone();
         let generator_handle = std::thread::spawn(move || {
             if let Err(e) = Self::generate_samples_thread(
@@ -210,40 +202,26 @@ impl AudioPlayer {
             event_log,
             player_event_queue,
             audio_start_time,
-            last_scheduled_time,
-            accumulated_delay,
         })
     }
 
     /// Schedule a register write in interactive mode
     pub fn schedule_register_write(&self, scheduled_samples: u32, addr: u8, data: u8) {
         if let Some(ref queue) = self.player_event_queue {
-            // Simple delay management following ETC principle
-            let mut last_time = self.last_scheduled_time.lock().unwrap();
-            let mut delay = self.accumulated_delay.lock().unwrap();
-
-            // Reset delay if this is a different time
-            if scheduled_samples != *last_time {
-                *delay = 0;
-                *last_time = scheduled_samples;
-            }
-
-            // Lock the queue and add events with proper delay
+            // No delay applied here - the 2-sample delay will be applied at the final stage in generate_samples()
             let mut q = queue.lock().unwrap();
 
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples + *delay,
+                time: scheduled_samples,
                 port: 0, // OPM_ADDRESS_REGISTER
                 value: addr,
             });
-            *delay += 2; // DELAY_SAMPLES
 
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples + *delay,
+                time: scheduled_samples,
                 port: 1, // OPM_DATA_REGISTER
                 value: data,
             });
-            *delay += 2; // DELAY_SAMPLES
         }
     }
 
@@ -284,38 +262,23 @@ impl AudioPlayer {
     /// Returns (address_time, data_time) tuple
     pub fn schedule_register_write_with_times(&self, scheduled_samples: u32, addr: u8, data: u8) -> Option<(u32, u32)> {
         if let Some(ref queue) = self.player_event_queue {
-            // Simple delay management following ETC principle
-            let mut last_time = self.last_scheduled_time.lock().unwrap();
-            let mut delay = self.accumulated_delay.lock().unwrap();
-
-            // Reset delay if this is a different time
-            if scheduled_samples != *last_time {
-                *delay = 0;
-                *last_time = scheduled_samples;
-            }
-
-            // Calculate actual times
-            let addr_time = scheduled_samples + *delay;
-            *delay += 2;
-            let data_time = scheduled_samples + *delay;
-            *delay += 2;
-
-            // Lock the queue and add events
+            // No delay applied here - the 2-sample delay will be applied at the final stage in generate_samples()
             let mut q = queue.lock().unwrap();
 
             q.push_back(crate::player::ProcessedEvent {
-                time: addr_time,
+                time: scheduled_samples,
                 port: 0, // OPM_ADDRESS_REGISTER
                 value: addr,
             });
 
             q.push_back(crate::player::ProcessedEvent {
-                time: data_time,
+                time: scheduled_samples,
                 port: 1, // OPM_DATA_REGISTER
                 value: data,
             });
 
-            Some((addr_time, data_time))
+            // Both are scheduled at the same time, delay will be applied at final stage
+            Some((scheduled_samples, scheduled_samples))
         } else {
             None
         }
