@@ -18,7 +18,7 @@ fn test_clear_schedule_removes_all_events() {
     {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
-        assert_eq!(q.len(), 6); // 3 writes × 2 events each
+        assert_eq!(q.len(), 3); // 3 addr-data pair events
     }
 
     // Clear the schedule to cancel phrase 1
@@ -39,10 +39,10 @@ fn test_clear_schedule_removes_all_events() {
     {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
-        assert_eq!(q.len(), 4); // 2 writes × 2 events each
+        assert_eq!(q.len(), 2); // 2 addr-data pair events
 
         // Verify first event is from phrase 2
-        assert_eq!(q[0].value, 0x30); // First address from phrase 2
+        assert_eq!(q[0].addr, 0x30); // First address from phrase 2
     }
 }
 
@@ -78,7 +78,7 @@ fn test_clear_schedule_after_partial_playback() {
     {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
-        assert_eq!(q.len(), 2);
+        assert_eq!(q.len(), 1); // 1 addr-data pair event
     }
 }
 
@@ -102,7 +102,7 @@ fn test_clear_schedule_on_empty_queue() {
     {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
-        assert_eq!(q.len(), 2);
+        assert_eq!(q.len(), 1); // 1 addr-data pair event
     }
 }
 
