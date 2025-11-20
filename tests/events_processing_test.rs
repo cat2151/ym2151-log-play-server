@@ -9,7 +9,6 @@ use ym2151_log_play_server::player::Player;
 #[test]
 fn test_pass1_to_pass2_conversion() {
     let log = EventLog {
-        event_count: 3,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -41,7 +40,6 @@ fn test_pass1_to_pass2_conversion() {
 #[test]
 fn test_event_execution_timing() {
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -94,7 +92,6 @@ fn test_event_execution_timing() {
 #[test]
 fn test_delay_samples() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 10,
             addr: 0x08,
@@ -148,7 +145,6 @@ fn test_sample_events_json() {
 #[test]
 fn test_complete_playback() {
     let log = EventLog {
-        event_count: 3,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -187,7 +183,6 @@ fn test_complete_playback() {
 #[test]
 fn test_empty_log() {
     let log = EventLog {
-        event_count: 0,
         events: vec![],
     };
 
@@ -201,7 +196,6 @@ fn test_empty_log() {
 #[test]
 fn test_event_order_preservation() {
     let log = EventLog {
-        event_count: 3,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -235,7 +229,6 @@ fn test_event_order_preservation() {
 #[test]
 fn test_buffer_boundaries() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 512,
             addr: 0x08,
@@ -267,7 +260,6 @@ fn test_sample_rate() {
 #[test]
 fn test_total_samples_calculation() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 1000,
             addr: 0x08,

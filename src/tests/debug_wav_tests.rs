@@ -21,7 +21,6 @@ fn test_is_debug_wav_enabled_true() {
 #[test]
 fn test_generate_post_playback_buffers() {
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -52,7 +51,6 @@ fn test_generate_post_playback_buffers() {
 fn test_generate_post_playback_buffers_high_quality() {
     // Test that high-quality resampling can be used in post-playback generation
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,

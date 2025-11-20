@@ -388,7 +388,7 @@ impl Server {
 
                                                 logging::log_verbose(&format!(
                                                     "📝 {}個のf64秒イベントをスケジュール中...",
-                                                    event_log.event_count
+                                                    event_log.events.len()
                                                 ));
 
                                                 let mut success_count = 0;
@@ -505,7 +505,7 @@ impl Server {
 
         if !log.validate() {
             return Err(anyhow::anyhow!(
-                "Event log validation failed: event_count doesn't match events array length"
+                "Event log validation failed: events are not in chronological order"
             ));
         }
 

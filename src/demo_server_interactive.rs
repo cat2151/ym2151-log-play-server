@@ -93,13 +93,13 @@ fn schedule_all_events(
         logging::log_always(&format!(
             "📊 スケジュール完了後: キューに{}個のイベント ({}個追加)",
             queue_count,
-            event_log.event_count
+            event_log.events.len()
         ));
     }
 
     logging::log_always(&format!(
         "📝 {}個のイベントをスケジュールしました",
-        event_log.event_count
+        event_log.events.len()
     ));
 
     Ok(())
@@ -136,7 +136,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
 
     logging::log_always(&format!(
         "✅ JSONファイルを読み込み完了: {}個のイベント",
-        event_log.event_count
+        event_log.events.len()
     ));
 
     // Create server instance
@@ -171,7 +171,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
             "🔄 ラウンド {}/{}: {}個のイベントを{:.1}秒後にスケジュール (音声経過時間: {:.6}秒)",
             round + 1,
             RESCHEDULE_COUNT,
-            event_log.event_count,
+            event_log.events.len(),
             if round == 0 { 0.0 } else { RESCHEDULE_INTERVAL_SEC },
             current_audio_elapsed
         ));
@@ -325,7 +325,6 @@ mod tests {
     fn test_demo_json_parsing() {
         // Test JSON parsing with sample data (floating-point time format)
         let sample_json = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 0.0, "addr": "0x08", "data": "0x00"},
                 {"time": 0.5, "addr": "0x08", "data": "0x01"}
@@ -333,7 +332,6 @@ mod tests {
         }"#;
 
         let event_log = EventLogF64::from_json_str(sample_json).expect("Should parse sample JSON");
-        assert_eq!(event_log.event_count, 2);
         assert!(event_log.validate());
         assert_eq!(event_log.events.len(), 2);
         assert_eq!(event_log.events[0].time, 0.0);

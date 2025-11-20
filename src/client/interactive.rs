@@ -119,7 +119,7 @@ pub fn stop_interactive() -> Result<()> {
 /// interactive::start_interactive()?;
 ///
 /// // Send JSON for phrase 1
-/// let phrase1_json = r#"{"event_count": 2, "events": [
+/// let phrase1_json = r#"{"events": [
 ///     {"time": 2797, "addr": "0x08", "data": "0x78"},
 ///     {"time": 5594, "addr": "0x20", "data": "0xC7"}
 /// ]}"#;
@@ -127,7 +127,7 @@ pub fn stop_interactive() -> Result<()> {
 ///
 /// // Cancel phrase 1 and switch to phrase 2 without audio gap
 /// interactive::clear_schedule()?;
-/// let phrase2_json = r#"{"event_count": 1, "events": [
+/// let phrase2_json = r#"{"events": [
 ///     {"time": 2797, "addr": "0x28", "data": "0x3E"}
 /// ]}"#;
 /// interactive::play_json_interactive(phrase2_json)?;
@@ -163,13 +163,13 @@ pub fn clear_schedule() -> Result<()> {
 /// interactive::start_interactive()?;
 ///
 /// // Send multiple JSONs without stopping - no audio gaps!
-/// let json1 = r#"{"event_count": 2, "events": [
+/// let json1 = r#"{"events": [
 ///     {"time": 0, "addr": "0x08", "data": "0x00"},
 ///     {"time": 2797, "addr": "0x20", "data": "0xC7"}
 /// ]}"#;
 /// interactive::play_json_interactive(json1)?;
 ///
-/// let json2 = r#"{"event_count": 1, "events": [
+/// let json2 = r#"{"events": [
 ///     {"time": 5594, "addr": "0x28", "data": "0x3E"}
 /// ]}"#;
 /// interactive::play_json_interactive(json2)?;

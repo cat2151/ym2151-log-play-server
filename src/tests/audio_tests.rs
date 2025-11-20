@@ -5,7 +5,6 @@ use crate::player::Player;
 #[test]
 fn test_audio_player_creation() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,
@@ -32,7 +31,6 @@ fn test_audio_player_creation() {
 #[test]
 fn test_audio_player_short_playback() {
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,

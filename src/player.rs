@@ -469,12 +469,10 @@ mod tests {
         assert_eq!(processed[2].addr, 0x28);
         assert_eq!(processed[2].data, 0x3E);
     }
-    }
 
     #[test]
     fn test_player_creation() {
         let log = EventLog {
-            event_count: 1,
             events: vec![RegisterEvent {
                 time: 0,
                 addr: 0x08,
@@ -493,7 +491,6 @@ mod tests {
     #[test]
     fn test_generate_samples_basic() {
         let log = EventLog {
-            event_count: 1,
             events: vec![RegisterEvent {
                 time: 0,
                 addr: 0x08,
@@ -513,7 +510,6 @@ mod tests {
     #[test]
     fn test_generate_samples_timing() {
         let log = EventLog {
-            event_count: 2,
             events: vec![
                 RegisterEvent {
                     time: 0,
@@ -550,7 +546,6 @@ mod tests {
     #[test]
     fn test_total_samples() {
         let log = EventLog {
-            event_count: 1,
             events: vec![RegisterEvent {
                 time: 1000,
                 addr: 0x08,
@@ -569,7 +564,6 @@ mod tests {
     #[test]
     fn test_empty_event_log() {
         let log = EventLog {
-            event_count: 0,
             events: vec![],
         };
 
@@ -583,7 +577,6 @@ mod tests {
     #[test]
     fn test_playback_completion() {
         let log = EventLog {
-            event_count: 1,
             events: vec![RegisterEvent {
                 time: 10,
                 addr: 0x08,
@@ -665,7 +658,6 @@ mod tests {
     #[test]
     fn test_clear_schedule_non_interactive_mode() {
         let log = EventLog {
-            event_count: 0,
             events: vec![],
         };
         let player = Player::new(log);

@@ -93,7 +93,7 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         // First register write only (this should succeed based on logs)
-        let json_data = r#"{"event_count": 1, "events": [
+        let json_data = r#"{"events": [
             {"time": 0, "addr": "0x08", "data": "0x00"}
         ]}"#;
         client::play_json_interactive(json_data)
@@ -143,7 +143,7 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         // First register write (should succeed)
-        let json_data = r#"{"event_count": 1, "events": [
+        let json_data = r#"{"events": [
             {"time": 0, "addr": "0x08", "data": "0x00"}
         ]}"#;
         client::play_json_interactive(json_data)
@@ -152,7 +152,7 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Second register write (this might fail based on logs)
-        let json_data2 = r#"{"event_count": 1, "events": [
+        let json_data2 = r#"{"events": [
             {"time": 50, "addr": "0x20", "data": "0xC7"}
         ]}"#;
         let result = client::play_json_interactive(json_data2);

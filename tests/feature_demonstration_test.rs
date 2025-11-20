@@ -152,7 +152,6 @@ mod feature_demonstrations {
         println!("📝 Parsing first melody JSON...");
 
         let json1 = r#"{
-            "event_count": 5,
             "events": [
                 {"time": 0, "addr": "0x08", "data": "0x00"},
                 {"time": 2797, "addr": "0x28", "data": "0x48"},
@@ -163,13 +162,11 @@ mod feature_demonstrations {
         }"#;
 
         let log1 = EventLog::from_json_str(json1).unwrap();
-        assert_eq!(log1.event_count, 5);
-        assert!(log1.validate(), "First JSON should be valid");
+                assert!(log1.validate(), "First JSON should be valid");
 
         println!("📝 Parsing second melody JSON (seamlessly continues)...");
 
         let json2 = r#"{
-            "event_count": 3,
             "events": [
                 {"time": 33559, "addr": "0x28", "data": "0x4A"},
                 {"time": 33559, "addr": "0x08", "data": "0x78"},
@@ -178,13 +175,11 @@ mod feature_demonstrations {
         }"#;
 
         let log2 = EventLog::from_json_str(json2).unwrap();
-        assert_eq!(log2.event_count, 3);
-        assert!(log2.validate(), "Second JSON should be valid");
+                assert!(log2.validate(), "Second JSON should be valid");
 
         println!("📝 Parsing third melody JSON (seamlessly continues)...");
 
         let json3 = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 67117, "addr": "0x28", "data": "0x4C"},
                 {"time": 67117, "addr": "0x08", "data": "0x78"}
@@ -192,8 +187,7 @@ mod feature_demonstrations {
         }"#;
 
         let log3 = EventLog::from_json_str(json3).unwrap();
-        assert_eq!(log3.event_count, 2);
-        assert!(log3.validate(), "Third JSON should be valid");
+                assert!(log3.validate(), "Third JSON should be valid");
 
         // Demonstrate that these could be played in interactive mode
         let player = Player::new_interactive();

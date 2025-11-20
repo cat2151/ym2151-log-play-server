@@ -6,7 +6,6 @@ use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 fn test_tail_generation_continues_after_events() {
     // Create a simple event log
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -59,7 +58,6 @@ fn test_tail_generation_continues_after_events() {
 fn test_tail_generation_stops_after_silence() {
     // Create a very short event log
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 100,
             addr: 0x08,
@@ -98,7 +96,6 @@ fn test_tail_generation_stops_after_silence() {
 #[test]
 fn test_tail_info_before_events_complete() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 1000,
             addr: 0x08,
@@ -119,7 +116,6 @@ fn test_tail_info_before_events_complete() {
 #[test]
 fn test_should_continue_tail_during_events() {
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 1000,
             addr: 0x08,
@@ -141,7 +137,6 @@ fn test_should_continue_tail_during_events() {
 fn test_silence_detection_resets_on_non_zero_sample() {
     // This test verifies that the silence counter resets when a non-zero sample is detected
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,

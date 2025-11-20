@@ -12,7 +12,6 @@ fn test_player_generates_all_samples() {
     let target_samples = ((1500.0 / 1000.0) * OPM_SAMPLE_RATE as f64) as u32;
 
     let log = EventLog {
-        event_count: 2,
         events: vec![
             RegisterEvent {
                 time: 0,
@@ -91,7 +90,6 @@ fn test_player_generates_samples_after_last_event() {
     let target_samples = 10000u32;
 
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,

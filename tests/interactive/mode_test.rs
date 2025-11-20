@@ -107,7 +107,6 @@ fn test_protocol_interactive_commands() {
 
     // Test PlayJsonInInteractive command serialization
     let json_value = serde_json::json!({
-        "event_count": 1,
         "events": [
             {"time": 50, "addr": "0x08", "data": "0x78"}
         ]
@@ -138,7 +137,6 @@ fn test_non_interactive_mode_unaffected() {
 
     // Create a normal player with static events
     let log = EventLog {
-        event_count: 1,
         events: vec![RegisterEvent {
             time: 0,
             addr: 0x08,

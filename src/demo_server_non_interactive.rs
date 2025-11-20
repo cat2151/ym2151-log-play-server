@@ -54,7 +54,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
 
     logging::log_always(&format!(
         "✅ JSONファイルを読み込み完了: {}個のイベント",
-        event_log.event_count
+        event_log.events.len()
     ));
 
     // Calculate total duration before creating player (to avoid move)
@@ -148,7 +148,6 @@ mod tests {
     fn test_demo_non_interactive_json_parsing() {
         // Test JSON parsing with sample data (integer time format)
         let sample_json = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 0, "addr": "0x08", "data": "0x00"},
                 {"time": 55930, "addr": "0x08", "data": "0x01"}
@@ -156,7 +155,6 @@ mod tests {
         }"#;
 
         let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
-        assert_eq!(event_log.event_count, 2);
         assert!(event_log.validate());
         assert_eq!(event_log.events.len(), 2);
         assert_eq!(event_log.events[0].time, 0);

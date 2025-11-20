@@ -29,7 +29,7 @@ mod client_json_integration_tests {
 
         cleanup_pipe();
 
-        let json_data = r#"{"event_count": 2, "events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
+        let json_data = r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}, {"time": 2, "addr": "0x20", "data": "0xC7"}]}"#;
 
         // Start a mock server in a separate thread
         let server_handle = thread::spawn(move || {
@@ -43,7 +43,6 @@ mod client_json_integration_tests {
             // Verify it's a PlayJson command
             match cmd {
                 Command::PlayJson { data } => {
-                    assert!(data.get("event_count").is_some());
                     assert!(data.get("events").is_some());
                 }
                 _ => panic!("Expected PlayJson command"),
@@ -74,7 +73,7 @@ mod client_json_integration_tests {
 
         cleanup_pipe();
 
-        let json_data = r#"{"event_count": 0, "events": []}"#;
+        let json_data = r#"{"events": []}"#;
 
         let server_handle = thread::spawn(move || {
             let pipe = NamedPipe::create().unwrap();
@@ -87,7 +86,8 @@ mod client_json_integration_tests {
             // Verify it's a PlayJson command with empty events
             match cmd {
                 Command::PlayJson { data } => {
-                    assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(0));
+                    let events = data.get("events").and_then(|v| v.as_array());
+                    assert_eq!(events.map(|e| e.len()), Some(0));
                 }
                 _ => panic!("Expected PlayJson command"),
             }
@@ -115,7 +115,7 @@ mod client_json_integration_tests {
         cleanup_pipe();
 
         // Create large JSON to test binary protocol can handle it
-        let mut large_events = String::from(r#"{"event_count": 500, "events": ["#);
+        let mut large_events = String::from(r#"{"events": ["#);
         for i in 0..500 {
             if i > 0 {
                 large_events.push_str(", ");
@@ -138,7 +138,8 @@ mod client_json_integration_tests {
             // Verify it's a PlayJson command with large data
             match cmd {
                 Command::PlayJson { data } => {
-                    assert_eq!(data.get("event_count").and_then(|v| v.as_u64()), Some(500));
+                    let events = data.get("events").and_then(|v| v.as_array());
+                    assert_eq!(events.map(|e| e.len()), Some(500));
                 }
                 _ => panic!("Expected PlayJson command"),
             }

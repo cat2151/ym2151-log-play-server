@@ -82,7 +82,6 @@ fn test_play_json_interactive_parses_valid_json() {
 
     // Test that the function can parse valid JSON
     let json_data = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 2797, "addr": "0x20", "data": "0xC7"}
@@ -106,7 +105,7 @@ fn test_play_json_interactive_parses_valid_json() {
 #[cfg(windows)]
 #[test]
 fn test_play_json_interactive_rejects_invalid_json() {
-    let invalid_json = r#"{"event_count": 1, "events": [}"#;
+    let invalid_json = r#"{"events": [}"#;
 
     let result = play_json_interactive(invalid_json);
     assert!(result.is_err());
@@ -125,7 +124,6 @@ fn test_play_json_interactive_rejects_invalid_json() {
 fn test_play_json_interactive_validates_event_log() {
     // Event count mismatch
     let json_data = r#"{
-        "event_count": 5,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"}
         ]
@@ -152,7 +150,6 @@ fn test_play_json_interactive_validates_event_log() {
 #[test]
 fn test_play_json_interactive_empty_events() {
     let json_data = r#"{
-        "event_count": 0,
         "events": []
     }"#;
 

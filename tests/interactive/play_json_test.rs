@@ -10,7 +10,6 @@ mod windows_tests {
     #[test]
     fn test_play_json_interactive_parses_simple_json() {
         let json_data = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 0, "addr": "0x08", "data": "0x00"},
                 {"time": 2797, "addr": "0x20", "data": "0xC7"}
@@ -37,7 +36,7 @@ mod windows_tests {
 
     #[test]
     fn test_play_json_interactive_rejects_malformed_json() {
-        let invalid_json = r#"{"event_count": 1, "events": [}"#;
+        let invalid_json = r#"{"events": [}"#;
 
         let result = client::play_json_interactive(invalid_json);
         assert!(result.is_err());
@@ -51,31 +50,9 @@ mod windows_tests {
     }
 
     #[test]
-    fn test_play_json_interactive_validates_event_count() {
-        // Event count doesn't match actual events
-        let json_data = r#"{
-            "event_count": 5,
-            "events": [
-                {"time": 0, "addr": "0x08", "data": "0x00"}
-            ]
-        }"#;
-
-        let result = client::play_json_interactive(json_data);
-        assert!(result.is_err());
-        let error_msg = result.unwrap_err().to_string();
-        assert!(
-            error_msg.contains("Event count mismatch") || error_msg.contains("Invalid input event log")
-                || error_msg.contains("Failed to convert JSON timing"),
-            "Expected validation error, got: {}",
-            error_msg
-        );
-    }
-
-    #[test]
     fn test_play_json_interactive_validates_time_ordering() {
         // Events not in time order
         let json_data = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 100, "addr": "0x08", "data": "0x00"},
                 {"time": 50, "addr": "0x20", "data": "0xC7"}
@@ -96,7 +73,6 @@ mod windows_tests {
     #[test]
     fn test_play_json_interactive_accepts_empty_events() {
         let json_data = r#"{
-            "event_count": 0,
             "events": []
         }"#;
 
@@ -111,7 +87,6 @@ mod windows_tests {
     fn test_play_json_interactive_handles_hex_formats() {
         // Test both uppercase and lowercase hex
         let json_data = r#"{
-            "event_count": 2,
             "events": [
                 {"time": 0, "addr": "0x08", "data": "0xFF"},
                 {"time": 100, "addr": "0XAB", "data": "0xcd"}
@@ -135,7 +110,6 @@ mod windows_tests {
     #[test]
     fn test_play_json_interactive_rejects_invalid_hex() {
         let json_data = r#"{
-            "event_count": 1,
             "events": [
                 {"time": 0, "addr": "0xZZ", "data": "0x00"}
             ]
@@ -157,7 +131,6 @@ mod windows_tests {
     fn test_play_json_interactive_handles_large_time_values() {
         // Test with large sample counts (e.g., several seconds of playback)
         let json_data = r#"{
-            "event_count": 3,
             "events": [
                 {"time": 0, "addr": "0x08", "data": "0x00"},
                 {"time": 55930, "addr": "0x20", "data": "0xC7"},
@@ -223,7 +196,6 @@ fn test_event_log_parsing_for_interactive_mode() {
 
     // Test the EventLog parser that play_json_interactive uses
     let json_data = r#"{
-        "event_count": 3,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 2797, "addr": "0x20", "data": "0xC7"},
@@ -232,8 +204,7 @@ fn test_event_log_parsing_for_interactive_mode() {
     }"#;
 
     let event_log = EventLog::from_json_str(json_data).unwrap();
-    assert_eq!(event_log.event_count, 3);
-    assert!(event_log.validate());
+        assert!(event_log.validate());
 
     // Verify event values
     assert_eq!(event_log.events[0].time, 0);

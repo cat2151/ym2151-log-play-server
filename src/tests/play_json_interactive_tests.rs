@@ -14,7 +14,6 @@ fn test_json_timing_conversion() {
     use crate::events::convert_json_to_f64_seconds;
 
     let input_json = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 2797, "addr": "0x20", "data": "0xC7"}
@@ -38,8 +37,7 @@ fn test_json_timing_conversion() {
     assert!(parsed.is_ok());
 
     let log = parsed.unwrap();
-    assert_eq!(log.event_count, 2);
-    assert!(log.validate());
+        assert!(log.validate());
     assert_eq!(log.events[0].time, 0.0);
     let expected_time = 2797.0 / 55930.0;
     assert!((log.events[1].time - expected_time).abs() < 0.000001); // floating point comparison
@@ -49,7 +47,6 @@ fn test_json_timing_conversion() {
 fn test_play_json_interactive_sends_f64_json() {
     // Test that play_json_interactive converts and sends correct command
     let test_json = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 100, "addr": "0x20", "data": "0xC7"}
@@ -79,7 +76,6 @@ fn test_f64_event_log_validation() {
 
     // Valid f64 JSON should pass validation
     let valid_json = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0.0, "addr": "0x28", "data": "0x3E"},
             {"time": 0.1, "addr": "0x08", "data": "0x00"}
@@ -94,7 +90,6 @@ fn test_f64_event_log_validation() {
 
     // Invalid f64 JSON (wrong event count) should fail validation
     let invalid_json = r#"{
-        "event_count": 5,
         "events": [
             {"time": 0.0, "addr": "0x28", "data": "0x3E"}
         ]
@@ -124,7 +119,6 @@ fn test_f64_play_json_interactive_integration() -> Result<()> {
 
     // Test JSON data with sample timing
     let test_json = r#"{
-        "event_count": 2,
         "events": [
             {"time": 0, "addr": "0x08", "data": "0x00"},
             {"time": 100, "addr": "0x20", "data": "0xC7"}
