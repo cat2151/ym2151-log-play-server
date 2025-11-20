@@ -1,8 +1,13 @@
+//! Event Processing Integration Tests
+//!
+//! These tests validate the core event processing functionality including
+//! Pass1 to Pass2 conversion, event timing, and buffer management.
+
 use ym2151_log_play_server::events::{EventLog, RegisterEvent};
 use ym2151_log_play_server::player::Player;
 
 #[test]
-fn test_phase3_pass1_to_pass2_conversion() {
+fn test_pass1_to_pass2_conversion() {
     let log = EventLog {
         event_count: 3,
         events: vec![
@@ -34,7 +39,7 @@ fn test_phase3_pass1_to_pass2_conversion() {
 }
 
 #[test]
-fn test_phase3_event_execution_timing() {
+fn test_event_execution_timing() {
     let log = EventLog {
         event_count: 2,
         events: vec![
@@ -87,7 +92,7 @@ fn test_phase3_event_execution_timing() {
 }
 
 #[test]
-fn test_phase3_delay_samples() {
+fn test_delay_samples() {
     let log = EventLog {
         event_count: 1,
         events: vec![RegisterEvent {
@@ -121,7 +126,7 @@ fn test_phase3_delay_samples() {
 }
 
 #[test]
-fn test_phase3_sample_events_json() {
+fn test_sample_events_json() {
     let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
 
     let mut player = Player::new(log);
@@ -144,7 +149,7 @@ fn test_phase3_sample_events_json() {
 }
 
 #[test]
-fn test_phase3_complete_playback() {
+fn test_complete_playback() {
     let log = EventLog {
         event_count: 3,
         events: vec![
@@ -183,7 +188,7 @@ fn test_phase3_complete_playback() {
 }
 
 #[test]
-fn test_phase3_empty_log() {
+fn test_empty_log() {
     let log = EventLog {
         event_count: 0,
         events: vec![],
@@ -197,7 +202,7 @@ fn test_phase3_empty_log() {
 }
 
 #[test]
-fn test_phase3_event_order_preservation() {
+fn test_event_order_preservation() {
     let log = EventLog {
         event_count: 3,
         events: vec![
@@ -231,7 +236,7 @@ fn test_phase3_event_order_preservation() {
 }
 
 #[test]
-fn test_phase3_buffer_boundaries() {
+fn test_buffer_boundaries() {
     let log = EventLog {
         event_count: 1,
         events: vec![RegisterEvent {
@@ -258,12 +263,12 @@ fn test_phase3_buffer_boundaries() {
 }
 
 #[test]
-fn test_phase3_sample_rate() {
+fn test_sample_rate() {
     assert_eq!(Player::sample_rate(), 55930);
 }
 
 #[test]
-fn test_phase3_total_samples_calculation() {
+fn test_total_samples_calculation() {
     let log = EventLog {
         event_count: 1,
         events: vec![RegisterEvent {

@@ -24,24 +24,6 @@ mod ensure_server_ready_tests {
         let _ = client::shutdown_server();
     }
 
-    /// Test documentation example for external applications
-    #[test]
-    #[ignore] // Only run manually - requires external application "cat-play-mml"
-    fn test_documentation_example_external_app() {
-        // This test demonstrates the documented usage pattern for external apps
-        // It should work seamlessly without any manual setup
-        // Ignored by default since it requires an external application
-
-        // Ensure server is ready (installs and starts if needed)
-        client::ensure_server_ready("cat-play-mml").unwrap();
-
-        // Now you can play files immediately
-        // client::play_file("music.json").unwrap();
-
-        // Cleanup
-        let _ = client::shutdown_server();
-    }
-
     /// Test that get_test_binary_path can find the test binary
     #[test]
     fn test_get_test_binary_path_in_test_context() {
@@ -73,7 +55,6 @@ mod ensure_server_ready_tests {
     #[test]
     fn test_binary_path_construction() {
         // Test the logic for constructing binary paths
-        use std::path::PathBuf;
 
         let current_exe = std::env::current_exe().expect("Should get current exe");
         let mut path = current_exe

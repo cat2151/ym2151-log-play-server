@@ -5,7 +5,7 @@
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント
+YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント（のライブラリ）
 
 ## 対象プラットフォーム
 
@@ -66,98 +66,135 @@ fn main() -> anyhow::Result<()> {
 
 これにより、ライブラリユーザーがサーバーのライフサイクルを手動で管理する必要がなくなります。
 
-### インタラクティブモード（リアルタイムレジスタストリーミング）
+## クライアント実装ガイド
 
-インタラクティブモードは、リアルタイムレジスタ書き込みによる連続的な音声ストリーミングを可能にします。トーンエディタなど、即座の音声フィードバックが必要で、再生の空白時間を避けたいアプリケーションに最適です。
+このセクションでは、2つの主要なクライアント実装パターンについて説明します。
 
-#### 基本的なインタラクティブモード
+### パターン1: 非インタラクティブモード
+
+非インタラクティブモードは、単発のJSONデータ送信に適したシンプルなモードです。
+各JSON送信ごとに演奏が停止・再開されます。
+
+#### 基本的な使用方法
 
 ```rust
 use ym2151_log_play_server::client;
 
 fn main() -> anyhow::Result<()> {
-    // サーバー準備確認
-    client::ensure_server_ready("ym2151-log-play-server")?;
+    // サーバーの準備を確認（必要に応じて自動的にインストールと起動）
+    client::ensure_server_ready("your-app-name")?;
     
-    // インタラクティブモード開始
+    // JSONデータを送信（演奏開始）
+    let json_data = r#"{"event_count": 2, "events": [
+        {"time": 0, "addr": "0x08", "data": "0x00"},
+        {"time": 2797, "addr": "0x20", "data": "0xC7"}
+    ]}"#;
+    client::send_json(json_data)?;
+    
+    // 必要に応じて演奏制御
+    std::thread::sleep(std::time::Duration::from_secs(5));
+    client::stop_playback()?;
+    
+    // 別のJSONを再生
+    let json_data2 = r#"{"event_count": 1, "events": [
+        {"time": 1000, "addr": "0x28", "data": "0x3E"}
+    ]}"#;
+    client::send_json(json_data2)?;
+    
+    // 終了時にシャットダウン
+    client::shutdown_server()?;
+    
+    Ok(())
+}
+```
+
+#### 特徴
+- **シンプル**: 各JSONは独立して処理
+- **演奏の切り替え**: JSON送信ごとに前の演奏は自動停止
+- **間隔あり**: JSON間に短い無音期間が発生する可能性
+- **用途**: 楽曲の切り替えや、連続性を重視しない用途、WAV保存用（verboseモード）
+
+### パターン2: インタラクティブモード
+
+インタラクティブモードは、リアルタイムな音響制御に適した高度なモードです。
+連続した音声ストリームを維持しながら、レジスタイベントを動的にスケジューリングできます。
+
+#### 基本的な使用方法
+
+```rust
+use ym2151_log_play_server::client;
+
+fn main() -> anyhow::Result<()> {
+    // サーバーの準備
+    client::ensure_server_ready("your-app-name")?;
+    
+    // インタラクティブモード開始（連続音声ストリーム開始）
     client::start_interactive()?;
     
-    // タイミング指定してレジスタ書き込み（秒単位、f64）
-    client::write_register(0.0, 0x08, 0x00)?;     // 即座: 全チャンネルキーオフ
-    client::write_register(0.050, 0x28, 0x48)?;   // +50ms: 音程設定
-    client::write_register(0.050, 0x08, 0x78)?;   // +50ms: チャンネル0キーオン
-    client::write_register(0.500, 0x08, 0x00)?;   // +500ms: キーオフ
+    // 複数のJSONを無音ギャップなしで送信
+    let phrase1 = r#"{"event_count": 2, "events": [
+        {"time": 0, "addr": "0x08", "data": "0x78"},
+        {"time": 2797, "addr": "0x20", "data": "0xC7"}
+    ]}"#;
+    client::play_json_interactive(phrase1)?;
     
-    // 精密な同期のためサーバー時刻を取得
+    // フレーズの途中で別のフレーズに切り替え（音響ギャップなし）
+    client::clear_schedule()?; // 未来のイベントをキャンセル
+    let phrase2 = r#"{"event_count": 1, "events": [
+        {"time": 1000, "addr": "0x28", "data": "0x3E"}
+    ]}"#;
+    client::play_json_interactive(phrase2)?;
+    
+    // サーバー時刻の同期取得（Web Audioの currentTime 相当）
     let server_time = client::get_server_time()?;
-    println!("サーバー時刻: {:.6} 秒", server_time);
+    println!("現在のサーバー時刻: {:.6}秒", server_time);
     
-    // インタラクティブモード停止
+    // インタラクティブモード終了
     client::stop_interactive()?;
     
     Ok(())
 }
 ```
 
-#### JSONデータを使用したインタラクティブモード（便利関数）
+#### 高度な機能
 
-すでにym2151log形式のJSONデータを持つクライアントアプリケーションのために、`play_json_interactive()` 便利関数は変換やタイミングロジックを手動で実装する必要性を排除します。この関数はJSONの解析とレジスタ書き込みのみを行い、インタラクティブモードのライフサイクルはユーザーが制御します：
+**スケジュールクリア機能**
+```rust
+// フレーズ1を開始
+client::play_json_interactive(phrase1_json)?;
+
+// フレーズ1の途中でフレーズ2に無音ギャップなしで切り替え
+client::clear_schedule()?; // まだ処理されていないイベントをクリア
+client::play_json_interactive(phrase2_json)?; // 新しいフレーズを即座にスケジューリング
+```
+
+**サーバー時刻同期**
+```rust
+// 正確なタイミング制御のためのサーバー時刻取得
+let current_time = client::get_server_time()?;
+// Web Audioの currentTime プロパティと同等の機能
+```
+
+#### 特徴
+- **連続性**: 音声ストリームが途切れない
+- **リアルタイム制御**: イベントの動的スケジューリング
+- **無音ギャップなし**: フレーズ間の切り替えが滑らか
+- **時刻同期**: サーバーとの正確なタイミング制御
+- **用途**: リアルタイム音楽制御、音色エディタ、ライブパフォーマンス
+
+#### タイミング変換
+インタラクティブモードでは、ym2151logフォーマット（サンプル単位、55930 Hz）のJSONを自動的にf64秒単位に変換してサーバーに送信します：
 
 ```rust
-use ym2151_log_play_server::client;
+// 入力: サンプル単位（i64、55930 Hz）
+let input_json = r#"{"event_count": 1, "events": [
+    {"time": 2797, "addr": "0x08", "data": "0x00"}  // 2797サンプル = 約0.05秒
+]}"#;
 
-fn main() -> anyhow::Result<()> {
-    // サーバー準備確認
-    client::ensure_server_ready("ym2151-log-play-server")?;
-    
-    // インタラクティブモードを一度開始
-    client::start_interactive()?;
-    
-    // 複数のJSONを停止せずに送信 - 音の途切れなし！
-    let json1 = r#"{
-        "event_count": 2,
-        "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 2797, "addr": "0x28", "data": "0x48"}
-        ]
-    }"#;
-    client::play_json_interactive(json1)?;
-    
-    let json2 = r#"{
-        "event_count": 1,
-        "events": [
-            {"time": 5594, "addr": "0x08", "data": "0x78"}
-        ]
-    }"#;
-    client::play_json_interactive(json2)?;
-    
-    // 再生完了待機
-    std::thread::sleep(std::time::Duration::from_secs(2));
-    
-    // 完了時にインタラクティブモード停止
-    client::stop_interactive()?;
-    
-    Ok(())
-}
+// 内部で自動変換: f64秒単位
+// {"time": 0.050027, ...} としてサーバーに送信
+client::play_json_interactive(input_json)?;
 ```
-
-**主な特徴：**
-- **連続ストリーミング**: 音声が途切れず、パラメータ変更時の無音時間を排除
-- **レイテンシ補正**: ジッタ補正のための50msバッファ（Web Audioスタイルのスケジューリング）
-- **サンプル精度のタイミング**: Float64秒（Web Audio API互換）で1/55930秒（1サンプル）までの精度を提供
-- **サーバー時刻同期**: `get_server_time()` でサーバーの時間座標系を取得し、精密なスケジューリングが可能
-- **WAV出力なし**: ファイルI/Oオーバーヘッドなしでリアルタイム用に最適化
-- **便利関数**: `play_json_interactive()` がインタラクティブモードのライフサイクル管理なしでJSONの解析と時間変換を処理
-
-**メリット：**
-- トーンエディタ（例：ym2151-tone-editor）で即座の音声フィードバック
-- 再生中断なしでのスムーズなパラメータ変更
-- 音の途切れなく複数のJSONを連続送信可能
-- 静的イベントログ再生と比較して低レイテンシ
-- クロスプラットフォームの一貫性のためWeb Audio互換の時間表現
-- クライアントがインタラクティブモードの開始/停止を制御
-
-完全な例は `examples/interactive_demo.rs` と `examples/play_json_interactive_demo.rs` を参照してください。
 
 ### サーバー・クライアントモード
 
@@ -293,8 +330,11 @@ cargo test
 - zig cc（Cコンパイラとして使用）
 
 ## 今後の展望
-- 現状は落ち着いている認識
-- 必要なものが見つかり次第実装
+- 破壊的変更中
+  - jsonフォーマットを変更予定
+  - レジスタ書き込み後の規定cycle消費の仕様を簡素化して最終段で一括してかけるよう変更予定
+- //現状は落ち着いている認識
+- //必要なものが見つかり次第実装
 
 ## プロジェクトが目指すもの
 - モチベ：

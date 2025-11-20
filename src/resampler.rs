@@ -76,7 +76,7 @@ impl AudioResampler {
                 };
 
                 // Choose a reasonable chunk size for processing
-                let chunk_size = 1024;
+                let chunk_size = crate::audio_config::buffer::RESAMPLING_CHUNK_SIZE;
                 let resample_ratio = output_rate as f64 / input_rate as f64;
 
                 let rubato = SincFixedIn::<f32>::new(

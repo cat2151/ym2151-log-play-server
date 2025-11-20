@@ -72,6 +72,36 @@ mod client_verbose_tests {
         client::init_client(false);
         assert!(!client::is_client_verbose());
     }
+
+    #[test]
+    fn test_verbose_mode_demonstration() {
+        // Test verbose mode demonstration (migrated from examples/test_client_verbose.rs)
+        client::init_client(true);
+
+        // In verbose mode, client operations would print status messages
+        // This test verifies the mode is set correctly for debugging
+        assert!(client::is_client_verbose());
+
+        // Note: Verbose mode is useful for:
+        // - Debugging client-server communication
+        // - Development and testing
+        // - Command-line applications
+    }
+
+    #[test]
+    fn test_non_verbose_mode_demonstration() {
+        // Test non-verbose mode demonstration (migrated from examples/test_client_non_verbose.rs)
+        client::init_client(false);
+
+        // In non-verbose mode, client operations should be silent
+        // This prevents TUI display corruption
+        assert!(!client::is_client_verbose());
+
+        // Note: Non-verbose mode is essential for:
+        // - TUI applications (like ym2151-tone-editor)
+        // - Applications that need clean output
+        // - Production use where output should be minimal
+    }
 }
 
 #[cfg(not(windows))]

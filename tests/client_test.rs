@@ -4,7 +4,7 @@
 
 #![cfg(windows)]
 
-mod test_utils;
+mod test_util_server_mutex;
 
 mod client_integration_tests {
     use std::thread;
@@ -13,7 +13,7 @@ mod client_integration_tests {
     use ym2151_log_play_server::ipc::protocol::{Command, Response};
 
     // Import test utilities for sequential server tests
-    use super::test_utils::server_test_lock;
+    use super::test_util_server_mutex::server_test_lock;
 
     /// Helper to clean up pipe before test
     fn cleanup_pipe() {

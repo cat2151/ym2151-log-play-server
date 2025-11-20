@@ -4,13 +4,12 @@ use std::sync::mpsc::{self, Receiver, Sender, SyncSender};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
+use crate::audio_config::buffer::*;
 use crate::debug_wav;
 use crate::events::EventLog;
 use crate::logging;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
-
-const GENERATION_BUFFER_SIZE: usize = 2048;
 
 enum AudioCommand {
     Stop,
@@ -30,6 +29,13 @@ pub struct AudioPlayer {
     // For interactive mode: shared reference to player's event queue
     player_event_queue:
         Option<Arc<Mutex<std::collections::VecDeque<crate::player::ProcessedEvent>>>>,
+
+    // Audio stream start time for continuous time-based scheduling
+    audio_start_time: Option<Instant>,
+
+    // For interactive mode: tracking last scheduled time to manage delays
+    last_scheduled_time: Arc<Mutex<u32>>,
+    accumulated_delay: Arc<Mutex<u32>>,
 }
 
 impl AudioPlayer {
@@ -64,11 +70,17 @@ impl AudioPlayer {
         let config = cpal::StreamConfig {
             channels: 2,
             sample_rate: cpal::SampleRate(OUTPUT_SAMPLE_RATE),
-            buffer_size: cpal::BufferSize::Default,
+            buffer_size: CPAL_BUFFER_SIZE,
         };
 
+        // Log the actual buffer size configuration
+        logging::log_verbose(&format!(
+            "Audio buffer size configured: {:?}",
+            CPAL_BUFFER_SIZE
+        ));
+
         let (sample_tx, sample_rx): (SyncSender<Vec<f32>>, Receiver<Vec<f32>>) =
-            mpsc::sync_channel(8);
+            mpsc::sync_channel(SYNC_CHANNEL_CAPACITY);
         let (command_tx, command_rx) = mpsc::channel();
 
         let wav_buffer_55k = Arc::new(Mutex::new(Vec::new()));
@@ -84,6 +96,14 @@ impl AudioPlayer {
             .build_output_stream(
                 &config,
                 move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+                    // Log buffer size on first callback (for debugging)
+                    static FIRST_CALLBACK: std::sync::Once = std::sync::Once::new();
+                    FIRST_CALLBACK.call_once(|| {
+                        logging::log_verbose(&format!(
+                            "Actual audio callback buffer size: {} samples",
+                            data.len()
+                        ));
+                    });
                     let mut offset = 0;
 
                     if let Ok(mut leftover) = leftover_buffer_clone.lock() {
@@ -138,6 +158,17 @@ impl AudioPlayer {
             None
         };
 
+        // Record audio start time for interactive mode timing
+        let audio_start_time = if player.is_interactive() {
+            Some(Instant::now())
+        } else {
+            None
+        };
+
+        // Initialize delay tracking for interactive mode
+        let last_scheduled_time = Arc::new(Mutex::new(0u32));
+        let accumulated_delay = Arc::new(Mutex::new(0u32));
+
         let event_log_for_thread = event_log.clone();
         let generator_handle = std::thread::spawn(move || {
             if let Err(e) = Self::generate_samples_thread(
@@ -162,33 +193,176 @@ impl AudioPlayer {
             wav_buffer_48k,
             event_log,
             player_event_queue,
+            audio_start_time,
+            last_scheduled_time,
+            accumulated_delay,
         })
     }
 
     /// Schedule a register write in interactive mode
     pub fn schedule_register_write(&self, scheduled_samples: u32, addr: u8, data: u8) {
         if let Some(ref queue) = self.player_event_queue {
-            // Lock the queue and add events
+            // Simple delay management following ETC principle
+            let mut last_time = self.last_scheduled_time.lock().unwrap();
+            let mut delay = self.accumulated_delay.lock().unwrap();
+
+            // Reset delay if this is a different time
+            if scheduled_samples != *last_time {
+                *delay = 0;
+                *last_time = scheduled_samples;
+            }
+
+            // Lock the queue and add events with proper delay
             let mut q = queue.lock().unwrap();
+
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples,
+                time: scheduled_samples + *delay,
                 port: 0, // OPM_ADDRESS_REGISTER
                 value: addr,
             });
+            *delay += 2; // DELAY_SAMPLES
+
             q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples + 2, // DELAY_SAMPLES
-                port: 1,                     // OPM_DATA_REGISTER
+                time: scheduled_samples + *delay,
+                port: 1, // OPM_DATA_REGISTER
                 value: data,
             });
+            *delay += 2; // DELAY_SAMPLES
         }
     }
 
-    /// Clear all scheduled events in interactive mode
+    /// Get current playback position in samples for interactive mode
+    /// Returns None if not in interactive mode
+    pub fn get_current_samples_played(&self) -> Option<u32> {
+        if self.player_event_queue.is_some() {
+            // In interactive mode, we can't directly access samples_played from here
+            // We'll need to implement this differently - for now return None
+            // TODO: Implement proper current position tracking
+            None
+        } else {
+            None
+        }
+    }
+
+    /// Get elapsed time since audio stream started (for interactive mode)
+    /// Returns None if not in interactive mode
+    pub fn get_audio_elapsed_sec(&self) -> Option<f64> {
+        self.audio_start_time.map(|start| start.elapsed().as_secs_f64())
+    }
+
+    /// Schedule register write using audio-relative time
+    /// This method uses the audio stream start time as reference
+    pub fn schedule_register_write_audio_time(&self, event_time_sec: f64, addr: u8, data: u8) -> Result<()> {
+        if let Some(audio_start) = self.audio_start_time {
+            let elapsed_sec = audio_start.elapsed().as_secs_f64();
+            let absolute_time_sec = elapsed_sec + event_time_sec;
+            let scheduled_samples = crate::scheduler::sec_to_samples(absolute_time_sec);
+            self.schedule_register_write(scheduled_samples, addr, data);
+            Ok(())
+        } else {
+            Err(anyhow::anyhow!("Audio-relative scheduling not available in non-interactive mode"))
+        }
+    }
+
+    /// Schedule register write and return actual scheduled times (with delay applied)
+    /// Returns (address_time, data_time) tuple
+    pub fn schedule_register_write_with_times(&self, scheduled_samples: u32, addr: u8, data: u8) -> Option<(u32, u32)> {
+        if let Some(ref queue) = self.player_event_queue {
+            // Simple delay management following ETC principle
+            let mut last_time = self.last_scheduled_time.lock().unwrap();
+            let mut delay = self.accumulated_delay.lock().unwrap();
+
+            // Reset delay if this is a different time
+            if scheduled_samples != *last_time {
+                *delay = 0;
+                *last_time = scheduled_samples;
+            }
+
+            // Calculate actual times
+            let addr_time = scheduled_samples + *delay;
+            *delay += 2;
+            let data_time = scheduled_samples + *delay;
+            *delay += 2;
+
+            // Lock the queue and add events
+            let mut q = queue.lock().unwrap();
+
+            q.push_back(crate::player::ProcessedEvent {
+                time: addr_time,
+                port: 0, // OPM_ADDRESS_REGISTER
+                value: addr,
+            });
+
+            q.push_back(crate::player::ProcessedEvent {
+                time: data_time,
+                port: 1, // OPM_DATA_REGISTER
+                value: data,
+            });
+
+            Some((addr_time, data_time))
+        } else {
+            None
+        }
+    }
+
+    /// Schedule using audio-relative time and return actual scheduled times
+    pub fn schedule_register_write_audio_time_with_times(&self, event_time_sec: f64, addr: u8, data: u8) -> Result<(u32, u32)> {
+        if let Some(audio_start) = self.audio_start_time {
+            let elapsed_sec = audio_start.elapsed().as_secs_f64();
+            let absolute_time_sec = elapsed_sec + event_time_sec;
+            let scheduled_samples = crate::scheduler::sec_to_samples(absolute_time_sec);
+
+            if let Some(times) = self.schedule_register_write_with_times(scheduled_samples, addr, data) {
+                Ok(times)
+            } else {
+                Err(anyhow::anyhow!("Failed to schedule register write"))
+            }
+        } else {
+            Err(anyhow::anyhow!("Audio-relative scheduling not available in non-interactive mode"))
+        }
+    }
+
+    /// Schedule using fixed base time and return actual scheduled times
+    /// This prevents time drift during batch scheduling
+    pub fn schedule_register_write_fixed_time_with_times(&self, base_audio_elapsed: f64, event_time_sec: f64, addr: u8, data: u8) -> Result<(u32, u32)> {
+        let absolute_time_sec = base_audio_elapsed + event_time_sec;
+        let scheduled_samples = crate::scheduler::sec_to_samples(absolute_time_sec);
+
+        if let Some(times) = self.schedule_register_write_with_times(scheduled_samples, addr, data) {
+            Ok(times)
+        } else {
+            Err(anyhow::anyhow!("Failed to schedule register write"))
+        }
+    }
+
+    /// Schedule using fixed base time with future offset and return actual scheduled times
+    /// This prevents time drift during batch scheduling and adds safety buffer
+    pub fn schedule_register_write_fixed_time_with_future_offset(&self, audio_stream_elapsed_sec: f64, future_offset_sec: f64, event_time_sec: f64, addr: u8, data: u8) -> Result<(u32, u32)> {
+        let absolute_time_sec = audio_stream_elapsed_sec + future_offset_sec + event_time_sec;
+        let scheduled_samples = crate::scheduler::sec_to_samples(absolute_time_sec);
+
+        if let Some(times) = self.schedule_register_write_with_times(scheduled_samples, addr, data) {
+            Ok(times)
+        } else {
+            Err(anyhow::anyhow!("Failed to schedule register write"))
+        }
+    }    /// Clear all scheduled events in interactive mode
     /// This allows seamless phrase transitions without audio gaps
     pub fn clear_schedule(&self) {
         if let Some(ref queue) = self.player_event_queue {
             let mut q = queue.lock().unwrap();
             q.clear();
+        }
+    }
+
+    /// Get current schedule queue size (number of scheduled events)
+    /// Returns None if not in interactive mode
+    pub fn get_scheduled_event_count(&self) -> Option<usize> {
+        if let Some(ref queue) = self.player_event_queue {
+            let q = queue.lock().unwrap();
+            Some(q.len())
+        } else {
+            None
         }
     }
 

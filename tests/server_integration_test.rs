@@ -1,159 +1,11 @@
-//! Phase 5 integration tests for real-time audio playback and server control
+//! Server Integration Tests
+//!
+//! These tests validate the server functionality including playback control
+//! and command processing via named pipes.
 
-mod test_utils;
+mod test_util_server_mutex;
 
-mod realtime_audio_tests {
-    use ym2151_log_play_server::audio::AudioPlayer;
-    use ym2151_log_play_server::events::{EventLog, RegisterEvent};
-    use ym2151_log_play_server::player::Player;
-
-    // Import test utilities for sequential audio tests
-    use super::test_utils::audio_test_lock;
-
-    #[test]
-    fn test_audio_player_creation() {
-        // Acquire lock to prevent parallel execution of audio tests
-        let _lock = audio_test_lock();
-        let log = EventLog {
-            event_count: 1,
-            events: vec![RegisterEvent {
-                time: 0,
-                addr: 0x08,
-                data: 0x00,
-                is_data: None,
-            }],
-        };
-
-        let player = Player::new(log);
-
-        let result = AudioPlayer::new(player);
-
-        match result {
-            Ok(mut audio_player) => {
-                audio_player.stop();
-                println!("✅ Audio player created successfully");
-            }
-            Err(e) => {
-                println!("ℹ️  Audio player creation failed (expected in CI): {}", e);
-            }
-        }
-    }
-
-    #[test]
-    fn test_audio_player_with_events() {
-        // Acquire lock to prevent parallel execution of audio tests
-        let _lock = audio_test_lock();
-        let log = EventLog {
-            event_count: 5,
-            events: vec![
-                RegisterEvent {
-                    time: 0,
-                    addr: 0x08,
-                    data: 0x00,
-                    is_data: None,
-                },
-                RegisterEvent {
-                    time: 100,
-                    addr: 0x20,
-                    data: 0xC7,
-                    is_data: None,
-                },
-                RegisterEvent {
-                    time: 200,
-                    addr: 0x28,
-                    data: 0x3E,
-                    is_data: None,
-                },
-                RegisterEvent {
-                    time: 300,
-                    addr: 0x38,
-                    data: 0x01,
-                    is_data: None,
-                },
-                RegisterEvent {
-                    time: 400,
-                    addr: 0x08,
-                    data: 0x00,
-                    is_data: None,
-                },
-            ],
-        };
-
-        let player = Player::new(log);
-
-        match AudioPlayer::new(player) {
-            Ok(mut audio_player) => {
-                std::thread::sleep(std::time::Duration::from_millis(50));
-                audio_player.stop();
-                println!("✅ Audio playback test completed");
-            }
-            Err(e) => {
-                println!("ℹ️  Audio player creation failed (expected in CI): {}", e);
-            }
-        }
-    }
-
-    #[test]
-    fn test_audio_player_early_stop() {
-        // Acquire lock to prevent parallel execution of audio tests
-        let _lock = audio_test_lock();
-        let mut events = Vec::new();
-        for i in 0..20 {
-            events.push(RegisterEvent {
-                time: i * 1000,
-                addr: 0x20,
-                data: 0xC7,
-                is_data: None,
-            });
-        }
-
-        let log = EventLog {
-            event_count: events.len(),
-            events,
-        };
-
-        let player = Player::new(log);
-
-        match AudioPlayer::new(player) {
-            Ok(mut audio_player) => {
-                audio_player.stop();
-                println!("✅ Early stop test completed");
-            }
-            Err(e) => {
-                println!("ℹ️  Audio player creation failed (expected in CI): {}", e);
-            }
-        }
-    }
-
-    #[test]
-    fn test_audio_player_drop() {
-        // Acquire lock to prevent parallel execution of audio tests
-        let _lock = audio_test_lock();
-        let log = EventLog {
-            event_count: 1,
-            events: vec![RegisterEvent {
-                time: 0,
-                addr: 0x08,
-                data: 0x00,
-                is_data: None,
-            }],
-        };
-
-        let player = Player::new(log);
-
-        match AudioPlayer::new(player) {
-            Ok(audio_player) => {
-                drop(audio_player);
-                println!("✅ Drop test completed");
-            }
-            Err(e) => {
-                println!("ℹ️  Audio player creation failed (expected in CI): {}", e);
-            }
-        }
-    }
-}
-
-/// Integration tests for Phase 5: Server with playback control
+/// Server integration tests for playback control
 #[cfg(windows)]
 mod server_playback_tests {
     use std::thread;
@@ -163,7 +15,7 @@ mod server_playback_tests {
     use ym2151_log_play_server::server::Server;
 
     // Import test utilities from the parent module
-    use super::test_utils::server_test_lock;
+    use super::test_util_server_mutex::server_test_lock;
 
     /// Test server can start in idle state and accept PLAY command
     #[test]
@@ -253,9 +105,13 @@ mod server_playback_tests {
         // Wait for server to finish
         thread::sleep(Duration::from_millis(500));
 
-        // Wait for server thread
-        if let Err(e) = server_handle.join() {
-            eprintln!("Server thread panicked: {:?}", e);
+        // Wait for server thread and verify it shuts down cleanly
+        match server_handle.join() {
+            Ok(_) => eprintln!("Server thread finished successfully"),
+            Err(e) => {
+                eprintln!("Server thread panicked: {:?}", e);
+                panic!("Server thread should not panic");
+            }
         }
 
         eprintln!("Test complete");
@@ -320,9 +176,13 @@ mod server_playback_tests {
         // Wait for server to finish
         thread::sleep(Duration::from_millis(500));
 
-        // Wait for server thread
-        if let Err(e) = server_handle.join() {
-            eprintln!("Server thread panicked: {:?}", e);
+        // Wait for server thread and verify it shuts down cleanly
+        match server_handle.join() {
+            Ok(_) => eprintln!("Server thread finished successfully"),
+            Err(e) => {
+                eprintln!("Server thread panicked: {:?}", e);
+                panic!("Server thread should not panic");
+            }
         }
 
         eprintln!("Test complete");

@@ -94,18 +94,9 @@ fn test_scheduler_sec_to_samples() {
     assert_eq!(scheduler::sec_to_samples(one_sample_sec), 1);
 }
 
-#[test]
-fn test_scheduler_schedule_event() {
-    // Current time at 1000 samples, offset 0 sec
-    // Should add 50ms (0.05 sec) latency buffer = 2797 samples
-    let scheduled = scheduler::schedule_event(1000, 0.0);
-    assert_eq!(scheduled, 1000 + 2797);
-
-    // With 0.1 sec (100ms) offset
-    let scheduled = scheduler::schedule_event(1000, 0.1);
-    let expected = 1000 + 2797 + 5593; // 50ms latency + 100ms offset
-    assert_eq!(scheduled, expected);
-}
+// Note: test_scheduler_schedule_event was removed because schedule_event function
+// was deleted as it was unused in production code. Production code uses direct
+// sec_to_samples conversion for timing calculations.
 
 #[cfg(windows)]
 #[test]
@@ -118,11 +109,15 @@ fn test_protocol_interactive_commands() {
     let parsed = Command::from_binary(&binary).unwrap();
     assert_eq!(cmd, parsed);
 
-    // Test WriteRegister command serialization with f64 seconds
-    let cmd = Command::WriteRegister {
-        time_offset_sec: 0.050,
-        addr: 0x08,
-        data: 0x78,
+    // Test PlayJsonInInteractive command serialization
+    let json_value = serde_json::json!({
+        "event_count": 1,
+        "events": [
+            {"time": 50, "addr": "0x08", "data": "0x78"}
+        ]
+    });
+    let cmd = Command::PlayJsonInInteractive {
+        data: json_value,
     };
     let binary = cmd.to_binary().unwrap();
     let parsed = Command::from_binary(&binary).unwrap();

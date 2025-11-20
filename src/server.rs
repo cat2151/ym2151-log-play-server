@@ -296,67 +296,6 @@ impl Server {
                             }
                         }
                     }
-                    Command::WriteRegister {
-                        time_offset_sec,
-                        addr,
-                        data,
-                    } => {
-                        let state = self.state.lock().unwrap();
-                        logging::log_verbose(&format!(
-                            "📝 [デバッグ] WriteRegisterコマンド受信: state={:?}",
-                            *state
-                        ));
-                        if *state != ServerState::Interactive {
-                            logging::log_always(&format!(
-                                "⚠️  インタラクティブモードではありません。現在の状態: {:?}",
-                                *state
-                            ));
-                            Response::Error {
-                                message: "Not in interactive mode".to_string(),
-                            }
-                        } else {
-                            drop(state); // Release lock before potentially slow operation
-
-                            if let Some(ref player_ref) = audio_player {
-                                // Get current server time
-                                let current_time_sec = {
-                                    let tracker = self.time_tracker.lock().unwrap();
-                                    tracker.elapsed_sec()
-                                };
-
-                                // Convert time offset to scheduled sample time
-                                let scheduled_samples = crate::scheduler::sec_to_samples(
-                                    current_time_sec + time_offset_sec,
-                                );
-
-                                logging::log_verbose(&format!(
-                                    "⏰ [デバッグ] 時刻計算: current={:.6}s, offset={:.6}s, scheduled={:.6}s ({}サンプル)",
-                                    current_time_sec,
-                                    time_offset_sec,
-                                    current_time_sec + time_offset_sec,
-                                    scheduled_samples
-                                ));
-
-                                // Schedule the register write
-                                player_ref.schedule_register_write(scheduled_samples, addr, data);
-
-                                logging::log_verbose(&format!(
-                                    "📝 レジスタ書き込みをスケジュール: server_time={:.6}秒, offset={:.6}秒, scheduled_time={:.6}秒, addr:0x{:02X}, data:0x{:02X}",
-                                    current_time_sec,
-                                    time_offset_sec,
-                                    current_time_sec + time_offset_sec,
-                                    addr,
-                                    data
-                                ));
-                                Response::Ok
-                            } else {
-                                logging::log_always("❌ [デバッグ] audio_playerが存在しません");
-                                Response::Error {
-                                    message: "No active audio player".to_string(),
-                                }
-                            }
-                        }
-                    }
                     Command::GetServerTime => {
                         let tracker = self.time_tracker.lock().unwrap();
                         let time_sec = tracker.elapsed_sec();
@@ -408,6 +347,98 @@ impl Server {
                             } else {
                                 Response::Error {
                                     message: "No active audio player".to_string(),
+                                }
+                            }
+                        }
+                    }
+                    Command::PlayJsonInInteractive { data } => {
+                        let state = self.state.lock().unwrap();
+                        if *state != ServerState::Interactive {
+                            logging::log_always(&format!(
+                                "⚠️  インタラクティブモードではありません。現在の状態: {:?}",
+                                *state
+                            ));
+                            Response::Error {
+                                message: "Not in interactive mode".to_string(),
+                            }
+                        } else {
+                            drop(state);
+
+                            // Convert JSON value to string for parsing
+                            let json_result = serde_json::to_string(&data);
+
+                            match json_result {
+                                Ok(json_str) => {
+                                    logging::log_verbose("🎵 インタラクティブモードでf64秒JSONを処理中...");
+
+                                    // Parse the f64 JSON event log (time in seconds)
+                                    match crate::events::EventLogF64::from_json_str(&json_str) {
+                                        Ok(event_log) => {
+                                            if !event_log.validate() {
+                                                logging::log_always("❌ 無効なf64イベントログです");
+                                                Response::Error {
+                                                    message: "Invalid f64 event log: validation failed".to_string(),
+                                                }
+                                            } else if let Some(ref player_ref) = audio_player {
+                                                // Get current server time
+                                                let current_time_sec = {
+                                                    let tracker = self.time_tracker.lock().unwrap();
+                                                    tracker.elapsed_sec()
+                                                };
+
+                                                logging::log_verbose(&format!(
+                                                    "📝 {}個のf64秒イベントをスケジュール中...",
+                                                    event_log.event_count
+                                                ));
+
+                                                let mut success_count = 0;
+
+                                                // Schedule all events (time is already in seconds)
+                                                for event in &event_log.events {
+                                                    // Time is already in seconds, just add current time offset
+                                                    let scheduled_samples = crate::scheduler::sec_to_samples(
+                                                        current_time_sec + event.time,
+                                                    );
+
+                                                    player_ref.schedule_register_write(
+                                                        scheduled_samples,
+                                                        event.addr,
+                                                        event.data,
+                                                    );
+                                                    success_count += 1;
+                                                }
+
+                                                logging::log_verbose(&format!(
+                                                    "✅ {}個のf64秒イベントを正常にスケジュールしました",
+                                                    success_count
+                                                ));
+                                                Response::Ok
+                                            } else {
+                                                logging::log_always("⚠️  音声プレーヤーがありません");
+                                                Response::Error {
+                                                    message: "No audio player found".to_string(),
+                                                }
+                                            }
+                                        }
+                                        Err(e) => {
+                                            logging::log_always(&format!(
+                                                "❌ f64 JSONの解析に失敗しました: {}",
+                                                e
+                                            ));
+                                            Response::Error {
+                                                message: format!("Failed to parse f64 JSON: {}", e),
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    logging::log_always(&format!(
+                                        "❌ JSONシリアライズに失敗しました: {}",
+                                        e
+                                    ));
+                                    Response::Error {
+                                        message: format!("Failed to serialize JSON: {}", e),
+                                    }
                                 }
                             }
                         }
@@ -494,6 +525,13 @@ impl Server {
         // No event log in interactive mode, and no WAV output
         AudioPlayer::new_with_quality(player, None, self.resampling_quality)
             .context("Failed to create interactive audio player")
+    }
+
+    /// Start interactive mode for demo purposes
+    /// This is a public wrapper for the private start_interactive_mode method
+    /// to be used by demo_server module for standalone testing
+    pub fn start_interactive_mode_demo(&self) -> Result<AudioPlayer> {
+        self.start_interactive_mode()
     }
 }
 

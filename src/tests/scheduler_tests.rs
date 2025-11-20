@@ -20,18 +20,8 @@ fn test_sec_to_samples() {
     assert_eq!(sec_to_samples(one_sample_sec), 1);
 }
 
-#[test]
-fn test_schedule_event() {
-    // Current time at 1000 samples, offset 0 sec
-    // Should add 50ms (0.05 sec) latency buffer = 2797 samples
-    let scheduled = schedule_event(1000, 0.0);
-    assert_eq!(scheduled, 1000 + 2797);
-
-    // Current time at 1000 samples, offset 0.1 sec (100ms)
-    // Should add 50ms latency (2797) + 100ms offset (5593) = 8390 samples
-    let scheduled = schedule_event(1000, 0.1);
-    assert_eq!(scheduled, 1000 + 2797 + 5593);
-}
+// Note: schedule_event function was removed as it was unused in production code
+// Only sec_to_samples/samples_to_sec functions are used in actual implementation
 
 #[test]
 fn test_time_tracker_creation() {

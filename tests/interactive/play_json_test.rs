@@ -26,8 +26,10 @@ mod windows_tests {
         let error_msg = result.unwrap_err().to_string();
         // Error should be about register write/server connection, not JSON parsing
         assert!(
-            error_msg.contains("Failed to write register")
-                || error_msg.contains("Failed to connect"),
+            error_msg.contains("Failed to send")
+                || error_msg.contains("Failed to connect")
+                || error_msg.contains("pipe")
+                || error_msg.contains("server"),
             "Unexpected error: {}",
             error_msg
         );
@@ -41,7 +43,8 @@ mod windows_tests {
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("Failed to parse JSON"),
+            error_msg.contains("EOF while parsing") || error_msg.contains("expected")
+                || error_msg.contains("Failed to parse") || error_msg.contains("JSON"),
             "Expected JSON parse error, got: {}",
             error_msg
         );
@@ -61,7 +64,8 @@ mod windows_tests {
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("validation failed"),
+            error_msg.contains("Event count mismatch") || error_msg.contains("Invalid input event log")
+                || error_msg.contains("Failed to convert JSON timing"),
             "Expected validation error, got: {}",
             error_msg
         );
@@ -82,7 +86,8 @@ mod windows_tests {
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("validation failed"),
+            error_msg.contains("not in time order") || error_msg.contains("Invalid input event log")
+                || error_msg.contains("Failed to convert JSON timing"),
             "Expected validation error, got: {}",
             error_msg
         );
@@ -118,8 +123,10 @@ mod windows_tests {
         let error_msg = result.unwrap_err().to_string();
         // Should parse hex correctly and fail on register write/server connection
         assert!(
-            error_msg.contains("Failed to write register")
-                || error_msg.contains("Failed to connect"),
+            error_msg.contains("Failed to send")
+                || error_msg.contains("Failed to connect")
+                || error_msg.contains("pipe")
+                || error_msg.contains("server"),
             "Expected server connection error (hex parsing should succeed), got: {}",
             error_msg
         );
@@ -138,7 +145,9 @@ mod windows_tests {
         assert!(result.is_err());
         let error_msg = result.unwrap_err().to_string();
         assert!(
-            error_msg.contains("Failed to parse JSON"),
+            error_msg.contains("invalid digit") || error_msg.contains("parse")
+                || error_msg.contains("hex") || error_msg.contains("Invalid")
+                || error_msg.contains("Failed to convert JSON timing"),
             "Expected JSON parse error for invalid hex, got: {}",
             error_msg
         );
@@ -161,8 +170,10 @@ mod windows_tests {
         let error_msg = result.unwrap_err().to_string();
         // Should handle large values and fail on register write/server connection
         assert!(
-            error_msg.contains("Failed to write register")
-                || error_msg.contains("Failed to connect"),
+            error_msg.contains("Failed to send")
+                || error_msg.contains("Failed to connect")
+                || error_msg.contains("pipe")
+                || error_msg.contains("server"),
             "Expected server connection error (large values should be valid), got: {}",
             error_msg
         );

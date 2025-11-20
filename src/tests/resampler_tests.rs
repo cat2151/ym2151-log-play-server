@@ -252,6 +252,26 @@ fn test_high_quality_resample_sine_wave() {
 }
 
 #[test]
+fn test_expected_output_frames_accuracy() {
+    let resampler = AudioResampler::new().expect("Failed to create resampler");
+
+    let test_cases = vec![(1000, 858), (5593, 4800), (55930, 48000)];
+
+    for (input_frames, expected_output) in test_cases {
+        let predicted = resampler.expected_output_frames(input_frames);
+        let tolerance = (expected_output as f64 * 0.02) as usize;
+
+        assert!(
+            predicted >= expected_output - tolerance && predicted <= expected_output + tolerance,
+            "For {} input frames, expected ~{} output, got {}",
+            input_frames,
+            expected_output,
+            predicted
+        );
+    }
+}
+
+#[test]
 fn test_high_quality_vs_linear_quality() {
     // Generate a high-frequency sine wave to test aliasing
     let freq = 10000.0; // 10kHz - near Nyquist for 48kHz output

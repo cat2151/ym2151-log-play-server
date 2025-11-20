@@ -9,13 +9,6 @@ pub enum Command {
     Stop,
     Shutdown,
     StartInteractive,
-    WriteRegister {
-        /// Time offset in seconds (f64) from now, for Web Audio-style scheduling
-        /// Provides sample-accurate precision at 55930 Hz (1/55930 = ~0.0000179 sec per sample)
-        time_offset_sec: f64,
-        addr: u8,
-        data: u8,
-    },
     StopInteractive,
     /// Get the current server time in the server time coordinate system (f64 seconds)
     /// This allows clients to synchronize with the server's timeline for precise scheduling
@@ -23,6 +16,11 @@ pub enum Command {
     /// Clear all scheduled events in interactive mode
     /// This allows seamless phrase transitions without audio gaps
     ClearSchedule,
+    /// Play JSON data in interactive mode
+    /// The server parses the JSON and schedules register writes in interactive mode
+    PlayJsonInInteractive {
+        data: serde_json::Value,
+    },
 }
 
 impl Command {

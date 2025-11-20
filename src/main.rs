@@ -1,10 +1,9 @@
 use clap::{Parser, Subcommand};
-#[cfg(windows)]
 use ym2151_log_play_server::logging;
-
-#[cfg(windows)]
 use ym2151_log_play_server::client;
-#[cfg(windows)]
+use ym2151_log_play_server::demo;
+use ym2151_log_play_server::demo_server_interactive;
+use ym2151_log_play_server::demo_server_non_interactive;
 use ym2151_log_play_server::server::Server;
 
 /// YM2151 Log Player - Rust implementation
@@ -28,6 +27,14 @@ enum Commands {
         /// 低品位リサンプリングを使用 (線形補間、比較用)
         #[arg(long)]
         low_quality_resampling: bool,
+
+        /// インタラクティブデモモード (output_ym2151_f64seconds.jsonを使用してサーバー単体テスト)
+        #[arg(long)]
+        demo_interactive: bool,
+
+        /// 非インタラクティブデモモード (output_ym2151.jsonを使用して音響テスト)
+        #[arg(long)]
+        demo_non_interactive: bool,
     },
     /// サーバーに演奏指示
     Client {
@@ -46,6 +53,10 @@ enum Commands {
         /// サーバーをシャットダウン
         #[arg(long)]
         shutdown: bool,
+
+        /// インタラクティブモードデモ（output_ym2151.jsonを1秒ごとに5回繰り返し演奏）
+        #[arg(long)]
+        demo_interactive_mode: bool,
     },
 }
 
@@ -86,7 +97,7 @@ fn main() {
                     eprintln!();
                     eprintln!("使用方法:");
                     eprintln!(
-                        "  ym2151-log-play-server server [--verbose] [--low-quality-resampling]         # サーバーとして起動"
+                        "  ym2151-log-play-server server [--verbose] [--low-quality-resampling] [--demo-interactive] [--demo-non-interactive]  # サーバーとして起動"
                     );
                     eprintln!(
                         "  ym2151-log-play-server client <json_file> [--verbose]  # サーバーに演奏指示"
@@ -101,6 +112,8 @@ fn main() {
                     eprintln!("  ym2151-log-play-server server --verbose");
                     eprintln!("  ym2151-log-play-server server --low-quality-resampling");
                     eprintln!("  ym2151-log-play-server server --verbose --low-quality-resampling");
+                    eprintln!("  ym2151-log-play-server server --demo-interactive");
+                    eprintln!("  ym2151-log-play-server server --demo-non-interactive");
                     eprintln!("  ym2151-log-play-server client test_input.json");
                     eprintln!("  ym2151-log-play-server client test_input.json --verbose");
                     eprintln!("  ym2151-log-play-server client --stop");
@@ -124,6 +137,12 @@ fn main() {
                     eprintln!(
                         "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
                     );
+                    eprintln!(
+                        "  --demo-interactive        インタラクティブデモモード (output_ym2151_f64seconds.jsonを使用してサーバー単体テスト)"
+                    );
+                    eprintln!(
+                        "  --demo-non-interactive    非インタラクティブデモモード (output_ym2151.jsonを使用して音響テスト)"
+                    );
                     eprintln!();
                     eprintln!("クライアントオプション:");
                     eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
@@ -141,12 +160,45 @@ fn main() {
         Commands::Server {
             verbose,
             low_quality_resampling,
+            demo_interactive,
+            demo_non_interactive,
         } => {
-            #[cfg(windows)]
-            {
-                // Initialize logging with verbose flag
-                logging::init(verbose);
+            // Initialize logging with verbose flag
+            logging::init(verbose);
 
+            if demo_interactive && demo_non_interactive {
+                logging::log_always("❌ エラー: --demo-interactive と --demo-non-interactive は同時に使用できません");
+                std::process::exit(1);
+            } else if demo_interactive {
+                // Run server demo mode
+                match demo_server_interactive::run_server_demo(verbose, low_quality_resampling) {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        logging::log_always(&format!(
+                            "❌ エラー: サーバーデモモードの実行に失敗しました: {}",
+                            e
+                        ));
+                        std::process::exit(1);
+                    }
+                }
+            } else if demo_non_interactive {
+                // Run non-interactive demo mode
+                match demo_server_non_interactive::run_server_demo_non_interactive(verbose, low_quality_resampling) {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        logging::log_always(&format!(
+                            "❌ エラー: 非インタラクティブデモモードの実行に失敗しました: {}",
+                            e
+                        ));
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                // Run normal server mode
                 let server = Server::new_with_resampling_quality(low_quality_resampling);
                 match server.run() {
                     Ok(_) => {
@@ -161,26 +213,29 @@ fn main() {
                     }
                 }
             }
-            #[cfg(not(windows))]
-            {
-                let _ = (verbose, low_quality_resampling);
-                eprintln!("❌ エラー: サーバーモードはWindowsでのみサポートされています");
-                std::process::exit(1);
-            }
         }
         Commands::Client {
             json_file,
             verbose,
             stop,
             shutdown,
+            demo_interactive_mode,
         } => {
-            #[cfg(windows)]
-            {
-                // Initialize client with verbose flag
-                client::init_client(verbose);
+            // Initialize client with verbose flag
+            client::init_client(verbose);
 
-                // Handle different client commands
-                if stop {
+            // Handle different client commands
+            if demo_interactive_mode {
+                match demo::run_interactive_demo(verbose) {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: インタラクティブモードデモの実行に失敗しました: {}", e);
+                        std::process::exit(1);
+                    }
+                }
+            } else if stop {
                     match client::stop_playback() {
                         Ok(_) => {
                             std::process::exit(0);
@@ -223,17 +278,10 @@ fn main() {
                 } else {
                     eprintln!("❌ エラー: client コマンドには引数が必要です");
                     eprintln!(
-                        "   --stop または --shutdown を使用するか、JSONファイルを指定してください"
+                        "   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください"
                     );
                     std::process::exit(1);
                 }
-            }
-            #[cfg(not(windows))]
-            {
-                let _ = (json_file, verbose, stop, shutdown);
-                eprintln!("❌ エラー: クライアントモードはWindowsでのみサポートされています");
-                std::process::exit(1);
-            }
         }
     }
 }

@@ -143,18 +143,6 @@ fn test_binary_start_interactive_roundtrip() {
 }
 
 #[test]
-fn test_binary_write_register_roundtrip() {
-    let original = Command::WriteRegister {
-        time_offset_sec: 0.050,
-        addr: 0x08,
-        data: 0x78,
-    };
-    let binary = original.to_binary().unwrap();
-    let parsed = Command::from_binary(&binary).unwrap();
-    assert_eq!(original, parsed);
-}
-
-#[test]
 fn test_binary_stop_interactive_roundtrip() {
     let original = Command::StopInteractive;
     let binary = original.to_binary().unwrap();

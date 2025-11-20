@@ -37,7 +37,9 @@ pub fn is_verbose() -> bool {
 fn write_to_log(message: &str) {
     if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(LOG_FILE) {
         let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-        let _ = writeln!(file, "[{}] {}", timestamp, message);
+        if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {
+            eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
+        }
     }
 }
 

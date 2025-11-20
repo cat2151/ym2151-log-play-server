@@ -7,7 +7,6 @@ YM2151 (OPM) チップレジスタイベントログのサーバー・クライ�
 オリジナル実装（サーバー・クライアント組み込み前）: https://github.com/cat2151/ym2151-log-player-rust
 
 ### 主要機能
-- スタンドアロンモード（従来の単体実行）
 - サーバー・クライアントモード（名前付きパイプ経由IPC）
 - 16進文字列対応JSONイベントログ解析 ("0x08"形式)
 - cpalによるリアルタイム音声再生
@@ -28,9 +27,6 @@ cargo build
 
 # リリースビルド（本番推奨）
 cargo build --release
-
-# スタンドアロンモード実行
-cargo run --release -- sample_events.json
 
 # サーバーモード起動
 cargo run --release -- server
@@ -67,7 +63,7 @@ cargo test phase7_integration_test
 - 安全ラッパーは `src/opm.rs` に配置
 
 ### 主要ファイル
-- `src/main.rs` - エントリーポイント（スタンドアロン/サーバー/クライアント分岐）
+- `src/main.rs` - エントリーポイント（サーバー/クライアント分岐）
 - `src/server.rs` - サーバーモード実装（名前付きパイプ待機、マルチスレッド）
 - `src/client.rs` - クライアント機能（サーバーへのコマンド送信）
 - `src/events.rs` - 16進対応JSONイベント解析
@@ -168,3 +164,5 @@ cargo clippy --all-targets -- -D warnings
   - DRY原則に準拠し、「codeやbuild scriptと同じことを、documentに書いたせいで、そのdocumentが陳腐化してハルシネーションやuserレビューコスト増大や混乱ほか様々なトラブル原因になる」を防止する
   - なおissue-notes/は、userがissueごとの意図を記録する用途で使う
 - Rustのunit testは、本体codeとは別ファイル（src/tests/配下）に書く。agentハルシネーションのリスクを下げる用。
+- test時は、test_client.logと、test_server.logも参考にすること。それをtest codeに含めてもよい。その場合はtest並列動作させず、clean upすること
+- build時は、`Get-Process | Where-Object {$_.ProcessName -eq "ym2151-log-play-server"} | Stop-Process -Force` して、exeのlockを解除してからbuildすること

@@ -93,6 +93,76 @@ fn test_generate_wav_with_player() {
 }
 
 #[test]
+fn test_generate_wav_from_simple_events() {
+    let temp_dir = std::env::temp_dir();
+    let temp_path = temp_dir.join("test_generate_from_simple.wav");
+    let temp_path_str = temp_path.to_str().unwrap();
+
+    let _ = std::fs::remove_file(temp_path_str);
+
+    let log = EventLog::from_file("tests/fixtures/simple.json").expect("Failed to load simple.json");
+
+    let player = Player::new(log);
+    let result = generate_wav(player, temp_path_str);
+
+    assert!(result.is_ok(), "Failed to generate WAV: {:?}", result.err());
+    assert!(Path::new(temp_path_str).exists());
+
+    let metadata = std::fs::metadata(temp_path_str).unwrap();
+    assert!(metadata.len() > 1000);
+
+    let _ = std::fs::remove_file(temp_path_str);
+}
+
+#[test]
+fn test_generate_wav_from_sample_events() {
+    let temp_dir = std::env::temp_dir();
+    let temp_path = temp_dir.join("test_generate_from_sample.wav");
+    let temp_path_str = temp_path.to_str().unwrap();
+
+    let _ = std::fs::remove_file(temp_path_str);
+
+    let log = EventLog::from_file("output_ym2151.json").expect("Failed to load output_ym2151.json");
+
+    let player = Player::new(log);
+    let result = generate_wav(player, temp_path_str);
+
+    assert!(result.is_ok(), "Failed to generate WAV: {:?}", result.err());
+    assert!(Path::new(temp_path_str).exists());
+
+    let metadata = std::fs::metadata(temp_path_str).unwrap();
+    assert!(metadata.len() > 10000);
+
+    let _ = std::fs::remove_file(temp_path_str);
+}
+
+#[test]
+fn test_wav_format_verification() {
+    let temp_dir = std::env::temp_dir();
+    let temp_path = temp_dir.join("test_wav_format.wav");
+    let temp_path_str = temp_path.to_str().unwrap();
+
+    let _ = std::fs::remove_file(temp_path_str);
+
+    let samples = vec![0i16; 48000 * 2];
+    write_wav(temp_path_str, &samples, 48000).expect("Failed to write WAV");
+
+    let reader = hound::WavReader::open(temp_path_str).expect("Failed to open WAV");
+    let spec = reader.spec();
+
+    assert_eq!(spec.channels, 2, "Expected stereo");
+    assert_eq!(spec.sample_rate, 48000, "Expected 48kHz");
+    assert_eq!(spec.bits_per_sample, 16, "Expected 16-bit");
+    assert_eq!(
+        spec.sample_format,
+        hound::SampleFormat::Int,
+        "Expected integer samples"
+    );
+
+    let _ = std::fs::remove_file(temp_path_str);
+}
+
+#[test]
 fn test_default_output_filename() {
     assert_eq!(DEFAULT_OUTPUT_FILENAME, "output.wav");
 }

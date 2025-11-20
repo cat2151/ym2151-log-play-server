@@ -1,0 +1,124 @@
+//! Core client communication module
+//!
+//! This module provides basic client-server communication functionality.
+
+use super::config::log_client;
+use crate::ipc::pipe_windows::NamedPipe;
+use crate::ipc::protocol::{Command, Response};
+use anyhow::{Context, Result};
+
+/// Send a standard command to the server
+pub fn send_command(command: Command) -> Result<()> {
+    send_command_internal(command, false)
+}
+
+/// Send command specifically for interactive mode (includes [インタラクティブ] tag in debug messages)
+pub fn send_command_interactive(command: Command) -> Result<()> {
+    send_command_internal(command, true)
+}
+
+fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
+    let debug_tag = if is_interactive {
+        "[デバッグ][インタラクティブ]"
+    } else {
+        "[デバッグ]"
+    };
+
+    log_client(&format!(
+        "🔌 {} パイプ接続を試行中: {}",
+        debug_tag,
+        crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
+    ));
+
+    let mut writer = NamedPipe::connect_default().context(
+        r"Failed to connect to server. Is the server running? \
+         サーバーが起動していることを確認してください。\
+         \n💡 ヒント: 以下を確認してください:\
+         \n  1. サーバーが起動しているか (ym2151-log-play-server server)\
+         \n  2. パイプパスが正しいか (\\.\pipe\ym2151-log-play-server)\
+         \n  3. 他のプロセスがパイプを使用していないか",
+    )?;
+
+    log_client(&format!("✅ {} パイプ接続成功", debug_tag));
+
+    // Serialize command to binary format
+    let binary_data = command
+        .to_binary()
+        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+    log_client(&format!(
+        "📤 {} コマンドをバイナリ化しました ({}バイト)",
+        debug_tag,
+        binary_data.len()
+    ));
+
+    // Display command info
+    match &command {
+        Command::PlayJson { .. } => {
+            log_client("⏳ サーバーにJSON送信中...");
+        }
+        Command::PlayJsonInInteractive { .. } => {
+            log_client("⏳ インタラクティブモードにJSON送信中...");
+        }
+        Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
+        Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
+        Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
+        Command::StartInteractive => log_client("⏳ インタラクティブモード開始要求を送信中..."),
+        Command::StopInteractive => log_client("⏳ インタラクティブモード停止要求を送信中..."),
+        _ => {}
+    }
+
+    // Send command via binary protocol
+    writer
+        .write_binary(&binary_data)
+        .context("Failed to send command to server")?;
+
+    log_client(&format!("✅ {} コマンド送信完了", debug_tag));
+    log_client(&format!("⏳ {} サーバーからのレスポンス待機中...", debug_tag));
+
+    // Read binary response from server
+    let response_data = writer
+        .read_binary_response()
+        .context("Failed to read response from server")?;
+
+    log_client(&format!(
+        "✅ {} レスポンス受信完了 ({}バイト)",
+        debug_tag,
+        response_data.len()
+    ));
+
+    // Parse binary response
+    let response = Response::from_binary(&response_data)
+        .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
+
+    match response {
+        Response::Ok => match &command {
+            Command::PlayJson { .. } => {
+                log_client("✅ JSON送信で演奏開始しました");
+            }
+            Command::PlayJsonInInteractive { .. } => {
+                log_client("✅ インタラクティブモードでJSON処理完了");
+            }
+            Command::Stop => log_client("✅ 演奏停止しました"),
+            Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
+            Command::ClearSchedule => log_client("✅ スケジュールをクリアしました"),
+            _ => {} // Other commands don't have custom success logging
+        },
+        Response::Error { message } => {
+            log_client(&format!("❌ サーバーエラー: {}", message));
+            return Err(anyhow::anyhow!("Server returned error: {}", message));
+        }
+        _ => {} // Handle other response types (like ServerTime) without error
+    }
+
+    Ok(())
+}
+
+/// Basic playback control functions
+pub fn stop_playback() -> Result<()> {
+    send_command(Command::Stop)
+}
+
+pub fn shutdown_server() -> Result<()> {
+    send_command(Command::Shutdown)
+}

@@ -1,7 +1,13 @@
 use ym2151_log_play_server::logging;
 
+// Import the server test mutex from test utilities
+mod test_util_server_mutex;
+use test_util_server_mutex::server_test_lock;
+
 #[test]
 fn test_logging_verbose_mode() {
+    let _lock = server_test_lock();
+
     // Test verbose mode enabled
     logging::init(true);
     assert!(logging::is_verbose());
@@ -13,6 +19,8 @@ fn test_logging_verbose_mode() {
 
 #[test]
 fn test_logging_functions_dont_panic() {
+    let _lock = server_test_lock();
+
     // Initialize with verbose mode
     logging::init(true);
 
@@ -26,4 +34,38 @@ fn test_logging_functions_dont_panic() {
     // These should also not panic
     logging::log_always("Test always message");
     logging::log_verbose("Test verbose message");
+}
+
+#[test]
+fn test_logging_verbose_mode_demonstration() {
+    let _lock = server_test_lock();
+
+    // Test verbose mode demonstration (migrated from examples/test_logging_verbose.rs)
+    logging::init(true);
+
+    // Verify verbose mode is enabled
+    assert!(logging::is_verbose());
+
+    // In verbose mode:
+    // - log_always() would print and log
+    // - log_verbose() would also print
+    logging::log_always("Test message for verbose mode");
+    logging::log_verbose("Test verbose-specific message");
+}
+
+#[test]
+fn test_logging_non_verbose_mode_demonstration() {
+    let _lock = server_test_lock();
+
+    // Test non-verbose mode demonstration (migrated from examples/test_logging_non_verbose.rs)
+    logging::init(false);
+
+    // Verify non-verbose mode is enabled
+    assert!(!logging::is_verbose());
+
+    // In non-verbose mode:
+    // - log_always() should only log to file, not print
+    // - log_verbose() should not print or log
+    logging::log_always("Test message for non-verbose mode (should only log to file)");
+    logging::log_verbose("Test verbose message (should not print or log)");
 }

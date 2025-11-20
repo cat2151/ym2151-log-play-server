@@ -33,14 +33,13 @@
 //! This is particularly useful for debugging audio glitches that occur with
 //! high MUL (frequency multiplier) values in tone parameters.
 
+use crate::audio_config::buffer::GENERATION_BUFFER_SIZE;
 use crate::events::EventLog;
 use crate::logging;
 use crate::player::Player;
 use crate::resampler::{AudioResampler, ResamplingQuality, OPM_SAMPLE_RATE, OUTPUT_SAMPLE_RATE};
 use crate::wav_writer;
 use anyhow::{Context, Result};
-
-const GENERATION_BUFFER_SIZE: usize = 2048;
 
 /// Check if debug WAV output is enabled via verbose mode.
 ///

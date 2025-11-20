@@ -1,11 +1,10 @@
 use anyhow::{Context, Result};
 use hound::{SampleFormat, WavSpec, WavWriter};
 
+use crate::audio_config::buffer::GENERATION_BUFFER_SIZE;
 use crate::player::Player;
 
 pub const DEFAULT_OUTPUT_FILENAME: &str = "output.wav";
-
-const GENERATION_BUFFER_SIZE: usize = 2048;
 
 const MAX_TAIL_SECONDS: u32 = 10;
 

@@ -35,6 +35,9 @@ pub struct Player {
     samples_played: u32,
 
     consecutive_silent_samples: u32,
+
+    // Track last address register write for key on/off logging
+    last_address_register: u8,
 }
 
 impl Player {
@@ -48,6 +51,7 @@ impl Player {
             scheduled_events: Arc::new(Mutex::new(VecDeque::new())),
             samples_played: 0,
             consecutive_silent_samples: 0,
+            last_address_register: 0,
         }
     }
 
@@ -61,6 +65,7 @@ impl Player {
             scheduled_events: Arc::new(Mutex::new(VecDeque::new())),
             samples_played: 0,
             consecutive_silent_samples: 0,
+            last_address_register: 0,
         }
     }
 
@@ -164,6 +169,15 @@ impl Player {
                 while let Some(event) = queue.front() {
                     if event.time <= self.samples_played {
                         let event = queue.pop_front().unwrap();
+
+                        // Track address register writes and log key events
+                        if event.port == OPM_ADDRESS_REGISTER {
+                            self.last_address_register = event.value;
+                        } else if event.port == OPM_DATA_REGISTER && self.last_address_register == 0x08 {
+                            // This is a key on/off data write
+                            self.log_key_event_with_timing(event.value, event.time);
+                        }
+
                         self.chip.write(event.port, event.value);
                     } else {
                         break;
@@ -175,6 +189,14 @@ impl Player {
                     let event = &self.events[self.next_event_idx];
 
                     if event.time <= self.samples_played {
+                        // Track address register writes and log key events
+                        if event.port == OPM_ADDRESS_REGISTER {
+                            self.last_address_register = event.value;
+                        } else if event.port == OPM_DATA_REGISTER && self.last_address_register == 0x08 {
+                            // This is a key on/off data write
+                            self.log_key_event_with_timing(event.value, event.time);
+                        }
+
                         self.chip.write(event.port, event.value);
                         self.next_event_idx += 1;
                     } else {
@@ -203,6 +225,40 @@ impl Player {
             true
         } else {
             self.next_event_idx < self.events.len()
+        }
+    }
+
+    /// Log key on/off events for debugging with timing comparison
+    fn log_key_event_with_timing(&self, key_data: u8, scheduled_time: u32) {
+        use crate::logging;
+
+        // YM2151 key on/off register (0x08) data format:
+        // Bit 7-3: Key on/off flags for channels
+        // Bit 2-0: Channel selection for key operations
+        // Key off: bit3-7 are all 0 (data value 0-7)
+        // Key on: any of bit3-7 is 1 (data value 8 or higher)
+
+        let samples_sec = self.samples_played as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
+        let samples_str = format!("{:.6}", samples_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+
+        let scheduled_sec = scheduled_time as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
+        let scheduled_str = format!("{:.6}", scheduled_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+
+        let delay_samples = self.samples_played.saturating_sub(scheduled_time);
+        let delay_sec = delay_samples as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
+        let delay_str = format!("{:.6}", delay_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+
+        // Check if bit3-7 are all 0 (key off condition)
+        if key_data & 0xF8 == 0 {
+            logging::log_verbose(&format!(
+                "🎹 Key OFF実行: 実行={}秒({}samples), 予定={}秒({}samples), 遅延={}秒({}samples) - data=0x{:02x}",
+                samples_str, self.samples_played, scheduled_str, scheduled_time, delay_str, delay_samples, key_data
+            ));
+        } else {
+            logging::log_verbose(&format!(
+                "🎹 Key ON実行: 実行={}秒({}samples), 予定={}秒({}samples), 遅延={}秒({}samples) - data=0x{:02x}",
+                samples_str, self.samples_played, scheduled_str, scheduled_time, delay_str, delay_samples, key_data
+            ));
         }
     }
 
