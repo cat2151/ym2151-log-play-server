@@ -375,6 +375,10 @@ impl AudioPlayer {
         event_log: Option<EventLog>,
         resampling_quality: crate::resampler::ResamplingQuality,
     ) -> Result<()> {
+        // Set MMCSS Pro Audio priority for this thread on Windows
+        // This handle will automatically revert priority when dropped
+        let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
+
         let mut resampler = AudioResampler::with_quality(resampling_quality)
             .context("Failed to initialize resampler")?;
         let mut generation_buffer = vec![0i16; GENERATION_BUFFER_SIZE * 2];

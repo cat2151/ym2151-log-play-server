@@ -8,6 +8,7 @@ pub mod demo_server_non_interactive;
 pub mod events;
 pub mod ipc;
 pub mod logging;
+pub mod mmcss;
 pub mod opm;
 pub mod opm_ffi;
 pub mod player;

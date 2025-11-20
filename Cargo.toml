@@ -13,7 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-cpal = "0.16.0"  # Updated for latest audio processing features
+cpal = { version = "0.16.0", features = ["audio_thread_priority"] }  # Updated for latest audio processing features with thread priority
 hound = "3.5"
 anyhow = "1.0"
 chrono = "0.4"
@@ -21,7 +21,7 @@ clap = { version = "4.5", features = ["derive"] }
 rubato = "0.16.2"  # High-quality audio resampling library
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Pipes", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_Security"] }  # Windows named pipe creation
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_System_Pipes", "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_Security", "Win32_Media_Audio"] }  # Windows named pipe creation and MMCSS
 which = "8.0"  # For checking if applications are in PATH
 
 [dev-dependencies]
