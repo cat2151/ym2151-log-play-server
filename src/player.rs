@@ -39,8 +39,9 @@ pub struct Player {
     // Track last address register write for key on/off logging
     last_address_register: u8,
 
-    // Track last address write time for 2-sample delay enforcement
-    last_address_write_time: Option<u32>,
+    // Track next available write time for 2-sample delay enforcement
+    // This ensures proper spacing between all chip writes
+    next_available_write_time: u32,
 }
 
 impl Player {
@@ -55,7 +56,7 @@ impl Player {
             samples_played: 0,
             consecutive_silent_samples: 0,
             last_address_register: 0,
-            last_address_write_time: None,
+            next_available_write_time: 0,
         }
     }
 
@@ -70,7 +71,7 @@ impl Player {
             samples_played: 0,
             consecutive_silent_samples: 0,
             last_address_register: 0,
-            last_address_write_time: None,
+            next_available_write_time: 0,
         }
     }
 
@@ -169,27 +170,19 @@ impl Player {
                         let event = queue.pop_front().unwrap();
 
                         // Apply 2-sample delay at final stage
-                        if event.port == OPM_DATA_REGISTER {
-                            // Data register write - ensure 2-sample delay from last address write
-                            if let Some(last_addr_time) = self.last_address_write_time {
-                                let required_time = last_addr_time + DELAY_SAMPLES;
-                                if self.samples_played < required_time {
-                                    // Not enough time has passed - re-queue this event for later
-                                    let deferred_event = ProcessedEvent {
-                                        time: required_time,
-                                        port: event.port,
-                                        value: event.value,
-                                    };
-                                    
-                                    // Find the correct position to insert (maintain sorted order)
-                                    let insert_pos = queue.iter().position(|e| e.time > required_time).unwrap_or(queue.len());
-                                    queue.insert(insert_pos, deferred_event);
-                                    continue;
-                                }
-                            }
-                        } else if event.port == OPM_ADDRESS_REGISTER {
-                            // Address register write - record the time
-                            self.last_address_write_time = Some(self.samples_played);
+                        // Ensure this write doesn't happen before next_available_write_time
+                        if self.samples_played < self.next_available_write_time {
+                            // Not enough time has passed - re-queue this event for later
+                            let deferred_event = ProcessedEvent {
+                                time: self.next_available_write_time,
+                                port: event.port,
+                                value: event.value,
+                            };
+                            
+                            // Find the correct position to insert (maintain sorted order)
+                            let insert_pos = queue.iter().position(|e| e.time > self.next_available_write_time).unwrap_or(queue.len());
+                            queue.insert(insert_pos, deferred_event);
+                            continue;
                         }
 
                         // Track address register writes and log key events
@@ -201,6 +194,9 @@ impl Player {
                         }
 
                         self.chip.write(event.port, event.value);
+                        
+                        // After any write, update next available write time
+                        self.next_available_write_time = self.samples_played + DELAY_SAMPLES;
                     } else {
                         break;
                     }
@@ -212,18 +208,10 @@ impl Player {
 
                     if event.time <= self.samples_played {
                         // Apply 2-sample delay at final stage
-                        if event.port == OPM_DATA_REGISTER {
-                            // Data register write - ensure 2-sample delay from last address write
-                            if let Some(last_addr_time) = self.last_address_write_time {
-                                let required_time = last_addr_time + DELAY_SAMPLES;
-                                if self.samples_played < required_time {
-                                    // Not enough time has passed - break and wait
-                                    break;
-                                }
-                            }
-                        } else if event.port == OPM_ADDRESS_REGISTER {
-                            // Address register write - record the time
-                            self.last_address_write_time = Some(self.samples_played);
+                        // Ensure this write doesn't happen before next_available_write_time
+                        if self.samples_played < self.next_available_write_time {
+                            // Not enough time has passed - break and wait
+                            break;
                         }
 
                         // Track address register writes and log key events
@@ -235,6 +223,10 @@ impl Player {
                         }
 
                         self.chip.write(event.port, event.value);
+                        
+                        // After any write, update next available write time
+                        self.next_available_write_time = self.samples_played + DELAY_SAMPLES;
+                        
                         self.next_event_idx += 1;
                     } else {
                         break;
