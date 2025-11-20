@@ -73,9 +73,6 @@ impl Player {
             last_address_write_time: None,
         }
     }
-            last_address_register: 0,
-        }
-    }
 
     /// Get a handle to the scheduled events queue for interactive mode
     pub fn get_event_queue(&self) -> Arc<Mutex<VecDeque<ProcessedEvent>>> {
@@ -658,8 +655,6 @@ mod tests {
         // Check data write at same time (delay applied in generate_samples)
         assert_eq!(q[1].time, 100);
         assert_eq!(q[1].port, OPM_DATA_REGISTER);
-        assert_eq!(q[1].value, 0x78);
-    }
         assert_eq!(q[1].value, 0x78);
     }
 
