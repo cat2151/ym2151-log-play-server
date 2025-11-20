@@ -16,6 +16,32 @@ use windows::Win32::System::Pipes::{
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151-log-play-server";
 
 /// Test-only logging infrastructure for named pipe communication
+///
+/// This module provides logging functionality that is only active in test builds (cfg(test)).
+/// It logs named pipe send/receive operations to separate files for server and client,
+/// helping to visualize the communication flow during TDD on Windows.
+///
+/// # Usage in Tests
+///
+/// Before performing pipe operations in tests, set the context:
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_server_context, test_set_client_context};
+///
+/// // In server thread:
+/// test_set_server_context();
+/// // ... perform server pipe operations ...
+///
+/// // In client thread:
+/// test_set_client_context();
+/// // ... perform client pipe operations ...
+/// ```
+///
+/// # Log Files
+///
+/// - `test_server.log` - Server-side operations (reading commands, sending responses)
+/// - `test_client.log` - Client-side operations (sending commands, reading responses)
+///
+/// Both files include timestamps and are automatically excluded from git via .gitignore.
 #[cfg(test)]
 mod test_logging {
     use std::cell::RefCell;
@@ -86,12 +112,37 @@ mod test_logging {
 use test_logging::{log_client, log_server, log_write, set_client_context, set_server_context};
 
 /// Set the current thread's pipe context to server mode (test builds only)
+///
+/// Call this function at the beginning of server-side test code to ensure
+/// all pipe operations in the current thread are logged to `test_server.log`.
+///
+/// # Example
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_server_context, NamedPipe};
+///
+/// test_set_server_context();
+/// let pipe = NamedPipe::create().unwrap();
+/// let mut reader = pipe.open_read().unwrap();
+/// // ... server operations will be logged to test_server.log
+/// ```
 #[cfg(test)]
 pub fn test_set_server_context() {
     set_server_context();
 }
 
 /// Set the current thread's pipe context to client mode (test builds only)
+///
+/// Call this function at the beginning of client-side test code to ensure
+/// all pipe operations in the current thread are logged to `test_client.log`.
+///
+/// # Example
+/// ```ignore
+/// use crate::ipc::pipe_windows::{test_set_client_context, NamedPipe};
+///
+/// test_set_client_context();
+/// let mut writer = NamedPipe::connect_default().unwrap();
+/// // ... client operations will be logged to test_client.log
+/// ```
 #[cfg(test)]
 pub fn test_set_client_context() {
     set_client_context();
