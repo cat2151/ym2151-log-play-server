@@ -326,7 +326,10 @@ impl PipeReader {
         // Validate reasonable length (max 10MB to prevent memory issues)
         if len > 10 * 1024 * 1024 {
             #[cfg(test)]
-            log_server(&format!("❌ [SERVER] エラー: データ長が大きすぎます: {} bytes", len));
+            log_server(&format!(
+                "❌ [SERVER] エラー: データ長が大きすぎます: {} bytes",
+                len
+            ));
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!("Message length too large: {} bytes", len),
@@ -343,7 +346,10 @@ impl PipeReader {
         result.extend_from_slice(&data);
 
         #[cfg(test)]
-        log_server(&format!("✅ [SERVER] 完了: {} bytes 受信しました", result.len()));
+        log_server(&format!(
+            "✅ [SERVER] 完了: {} bytes 受信しました",
+            result.len()
+        ));
 
         Ok(result)
     }
@@ -409,7 +415,10 @@ impl PipeWriter {
     /// Write binary data (already includes length prefix)
     pub fn write_binary(&mut self, data: &[u8]) -> io::Result<()> {
         #[cfg(test)]
-        log_write(&format!("📤 [WRITE] 開始: バイナリデータ送信 ({} bytes)", data.len()));
+        log_write(&format!(
+            "📤 [WRITE] 開始: バイナリデータ送信 ({} bytes)",
+            data.len()
+        ));
 
         let mut bytes_written = 0u32;
 
@@ -439,7 +448,10 @@ impl PipeWriter {
         }
 
         #[cfg(test)]
-        log_write(&format!("✅ [WRITE] 完了: {} bytes 送信しました", bytes_written));
+        log_write(&format!(
+            "✅ [WRITE] 完了: {} bytes 送信しました",
+            bytes_written
+        ));
 
         Ok(())
     }
@@ -489,7 +501,10 @@ impl PipeWriter {
         // Validate reasonable length
         if len > 10 * 1024 * 1024 {
             #[cfg(test)]
-            log_client(&format!("❌ [CLIENT] エラー: レスポンス長が大きすぎます: {} bytes", len));
+            log_client(&format!(
+                "❌ [CLIENT] エラー: レスポンス長が大きすぎます: {} bytes",
+                len
+            ));
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!("Response length too large: {} bytes", len),
@@ -506,7 +521,10 @@ impl PipeWriter {
         result.extend_from_slice(&data);
 
         #[cfg(test)]
-        log_client(&format!("✅ [CLIENT] 完了: {} bytes 受信しました", result.len()));
+        log_client(&format!(
+            "✅ [CLIENT] 完了: {} bytes 受信しました",
+            result.len()
+        ));
 
         Ok(result)
     }

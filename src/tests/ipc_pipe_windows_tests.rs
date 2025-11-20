@@ -118,6 +118,12 @@ fn test_binary_protocol_with_logging() {
     client_thread.join().unwrap();
 
     // Check that log files were created
-    assert!(std::path::Path::new("test_server.log").exists(), "test_server.log should be created");
-    assert!(std::path::Path::new("test_client.log").exists(), "test_client.log should be created");
+    assert!(
+        std::path::Path::new("test_server.log").exists(),
+        "test_server.log should be created"
+    );
+    assert!(
+        std::path::Path::new("test_client.log").exists(),
+        "test_client.log should be created"
+    );
 }
