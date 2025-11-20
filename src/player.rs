@@ -469,7 +469,6 @@ mod tests {
         assert_eq!(processed[2].addr, 0x28);
         assert_eq!(processed[2].data, 0x3E);
     }
-    }
 
     #[test]
     fn test_player_creation() {
