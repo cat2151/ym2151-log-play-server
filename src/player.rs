@@ -16,9 +16,9 @@ const SILENCE_SAMPLES: u32 = SILENCE_DURATION_MS * OPM_SAMPLE_RATE / 1000;
 pub struct ProcessedEvent {
     pub time: u32,
 
-    pub port: u8,
+    pub addr: u8,
 
-    pub value: u8,
+    pub data: u8,
 }
 
 pub struct Player {
@@ -42,6 +42,10 @@ pub struct Player {
     // Track next available write time for 2-sample delay enforcement
     // This ensures proper spacing between all chip writes
     next_available_write_time: u32,
+
+    // Track pending data write for addr-data pair processing
+    // When Some, contains (data_value, scheduled_time) waiting to be written
+    pending_data_write: Option<(u8, u32)>,
 }
 
 impl Player {
@@ -57,6 +61,7 @@ impl Player {
             consecutive_silent_samples: 0,
             last_address_register: 0,
             next_available_write_time: 0,
+            pending_data_write: None,
         }
     }
 
@@ -72,6 +77,7 @@ impl Player {
             consecutive_silent_samples: 0,
             last_address_register: 0,
             next_available_write_time: 0,
+            pending_data_write: None,
         }
     }
 
@@ -88,27 +94,21 @@ impl Player {
 
         let mut queue = self.scheduled_events.lock().unwrap();
 
-        // No delay applied here - both address and data are scheduled at the same time
-        // The 2-sample delay will be applied at the final stage in generate_samples()
+        // Store addr-data pair directly
+        // The 2-sample delay between address and data writes will be applied
+        // at the final stage in generate_samples()
         queue.push_back(ProcessedEvent {
             time: scheduled_time_samples,
-            port: OPM_ADDRESS_REGISTER,
-            value: addr,
-        });
-
-        queue.push_back(ProcessedEvent {
-            time: scheduled_time_samples,
-            port: OPM_DATA_REGISTER,
-            value: data,
+            addr,
+            data,
         });
 
         // Keep queue sorted by time
-        // Check if we need to sort (new events might be out of order)
+        // Check if we need to sort (new event might be out of order)
         let len = queue.len();
-        if len >= 3 {
-            // Check if the newly added events are out of order with existing events
-            let needs_sort = queue[len - 2].time < queue[len - 3].time
-                || queue[len - 1].time < queue[len - 2].time;
+        if len >= 2 {
+            // Check if the newly added event is out of order with existing events
+            let needs_sort = queue[len - 1].time < queue[len - 2].time;
 
             if needs_sort {
                 // Need to sort - convert to vec, sort, and rebuild
@@ -136,21 +136,16 @@ impl Player {
     }
 
     fn convert_events(input: &[RegisterEvent]) -> Vec<ProcessedEvent> {
-        let mut output = Vec::with_capacity(input.len() * 2);
+        let mut output = Vec::with_capacity(input.len());
 
         for event in input {
-            // No delay applied here - both address and data are scheduled at the same time
-            // The 2-sample delay will be applied at the final stage in generate_samples()
+            // Store addr-data pairs directly
+            // The 2-sample delay between address and data writes will be applied
+            // at the final stage in generate_samples()
             output.push(ProcessedEvent {
                 time: event.time,
-                port: OPM_ADDRESS_REGISTER,
-                value: event.addr,
-            });
-
-            output.push(ProcessedEvent {
-                time: event.time,
-                port: OPM_DATA_REGISTER,
-                value: event.data,
+                addr: event.addr,
+                data: event.data,
             });
         }
 
@@ -161,12 +156,27 @@ impl Player {
         let num_samples = buffer.len() / 2;
 
         for i in 0..num_samples {
+            // First, check if we have a pending data write from a previous addr write
+            if let Some((data_value, scheduled_time)) = self.pending_data_write {
+                if self.samples_played >= self.next_available_write_time {
+                    // Time to write the data register
+                    // Log key event if this is a key on/off
+                    if self.last_address_register == 0x08 {
+                        self.log_key_event_with_timing(data_value, scheduled_time);
+                    }
+
+                    self.chip.write(OPM_DATA_REGISTER, data_value);
+                    self.next_available_write_time = self.samples_played + DELAY_SAMPLES;
+                    self.pending_data_write = None;
+                }
+            }
+
             // Process events from the appropriate source
             if self.interactive_mode {
                 // Interactive mode: process from VecDeque
                 let mut queue = self.scheduled_events.lock().unwrap();
                 while let Some(event) = queue.front() {
-                    if event.time <= self.samples_played {
+                    if event.time <= self.samples_played && self.pending_data_write.is_none() {
                         let event = queue.pop_front().unwrap();
 
                         // Apply 2-sample delay at final stage
@@ -175,8 +185,8 @@ impl Player {
                             // Not enough time has passed - re-queue this event for later
                             let deferred_event = ProcessedEvent {
                                 time: self.next_available_write_time,
-                                port: event.port,
-                                value: event.value,
+                                addr: event.addr,
+                                data: event.data,
                             };
                             
                             // Find the correct position to insert (maintain sorted order)
@@ -185,25 +195,20 @@ impl Player {
                             continue;
                         }
 
-                        // Track address register writes and log key events
-                        if event.port == OPM_ADDRESS_REGISTER {
-                            self.last_address_register = event.value;
-                        } else if event.port == OPM_DATA_REGISTER && self.last_address_register == 0x08 {
-                            // This is a key on/off data write
-                            self.log_key_event_with_timing(event.value, event.time);
-                        }
-
-                        self.chip.write(event.port, event.value);
-                        
-                        // After any write, update next available write time
+                        // Write address register first
+                        self.last_address_register = event.addr;
+                        self.chip.write(OPM_ADDRESS_REGISTER, event.addr);
                         self.next_available_write_time = self.samples_played + DELAY_SAMPLES;
+                        
+                        // Schedule data write for later (after 2-sample delay)
+                        self.pending_data_write = Some((event.data, event.time));
                     } else {
                         break;
                     }
                 }
             } else {
                 // Static mode: process from Vec
-                while self.next_event_idx < self.events.len() {
+                while self.next_event_idx < self.events.len() && self.pending_data_write.is_none() {
                     let event = &self.events[self.next_event_idx];
 
                     if event.time <= self.samples_played {
@@ -214,18 +219,13 @@ impl Player {
                             break;
                         }
 
-                        // Track address register writes and log key events
-                        if event.port == OPM_ADDRESS_REGISTER {
-                            self.last_address_register = event.value;
-                        } else if event.port == OPM_DATA_REGISTER && self.last_address_register == 0x08 {
-                            // This is a key on/off data write
-                            self.log_key_event_with_timing(event.value, event.time);
-                        }
-
-                        self.chip.write(event.port, event.value);
-                        
-                        // After any write, update next available write time
+                        // Write address register first
+                        self.last_address_register = event.addr;
+                        self.chip.write(OPM_ADDRESS_REGISTER, event.addr);
                         self.next_available_write_time = self.samples_played + DELAY_SAMPLES;
+                        
+                        // Schedule data write for later (after 2-sample delay)
+                        self.pending_data_write = Some((event.data, event.time));
                         
                         self.next_event_idx += 1;
                     } else {
@@ -249,11 +249,11 @@ impl Player {
         }
 
         // In interactive mode, always return true (continuous streaming)
-        // In static mode, return whether there are more events
+        // In static mode, return whether there are more events or pending writes
         if self.interactive_mode {
             true
         } else {
-            self.next_event_idx < self.events.len()
+            self.next_event_idx < self.events.len() || self.pending_data_write.is_some()
         }
     }
 
@@ -312,7 +312,7 @@ impl Player {
         if self.interactive_mode {
             return false;
         }
-        self.next_event_idx >= self.events.len()
+        self.next_event_idx >= self.events.len() && self.pending_data_write.is_none()
     }
 
     pub const fn sample_rate() -> u32 {
@@ -364,16 +364,12 @@ mod tests {
 
         let processed = Player::convert_events(&events);
 
-        assert_eq!(processed.len(), 2);
+        assert_eq!(processed.len(), 1);
 
-        // Both address and data are at the same time now (no delay during conversion)
+        // Single event with addr-data pair
         assert_eq!(processed[0].time, 100);
-        assert_eq!(processed[0].port, OPM_ADDRESS_REGISTER);
-        assert_eq!(processed[0].value, 0x08);
-
-        assert_eq!(processed[1].time, 100);
-        assert_eq!(processed[1].port, OPM_DATA_REGISTER);
-        assert_eq!(processed[1].value, 0x00);
+        assert_eq!(processed[0].addr, 0x08);
+        assert_eq!(processed[0].data, 0x00);
     }
 
     #[test]
@@ -401,15 +397,20 @@ mod tests {
 
         let processed = Player::convert_events(&events);
 
-        assert_eq!(processed.len(), 6);
+        assert_eq!(processed.len(), 3);
 
         // All events at their original times (no delay during conversion)
         assert_eq!(processed[0].time, 0);
-        assert_eq!(processed[1].time, 0);
-        assert_eq!(processed[2].time, 10);
-        assert_eq!(processed[3].time, 10);
-        assert_eq!(processed[4].time, 20);
-        assert_eq!(processed[5].time, 20);
+        assert_eq!(processed[0].addr, 0x08);
+        assert_eq!(processed[0].data, 0x00);
+
+        assert_eq!(processed[1].time, 10);
+        assert_eq!(processed[1].addr, 0x20);
+        assert_eq!(processed[1].data, 0xC7);
+
+        assert_eq!(processed[2].time, 20);
+        assert_eq!(processed[2].addr, 0x28);
+        assert_eq!(processed[2].data, 0x3E);
     }
 
     #[test]
@@ -423,8 +424,9 @@ mod tests {
 
         let processed = Player::convert_events(&events);
 
-        // Address and data are at the same time (delay applied in generate_samples)
-        assert_eq!(processed[0].time, processed[1].time);
+        // Single event with addr-data pair (delay applied in generate_samples)
+        assert_eq!(processed.len(), 1);
+        assert_eq!(processed[0].time, 0);
     }
 
     #[test]
@@ -452,32 +454,21 @@ mod tests {
 
         let processed = Player::convert_events(&events);
 
-        assert_eq!(processed.len(), 6);
+        assert_eq!(processed.len(), 3);
 
-        // All events at time 0 (delay applied in generate_samples, not during conversion)
+        // All events at time 0 as addr-data pairs (delay applied in generate_samples)
         assert_eq!(processed[0].time, 0);
-        assert_eq!(processed[0].port, OPM_ADDRESS_REGISTER);
-        assert_eq!(processed[0].value, 0x08);
+        assert_eq!(processed[0].addr, 0x08);
+        assert_eq!(processed[0].data, 0x00);
 
         assert_eq!(processed[1].time, 0);
-        assert_eq!(processed[1].port, OPM_DATA_REGISTER);
-        assert_eq!(processed[1].value, 0x00);
+        assert_eq!(processed[1].addr, 0x20);
+        assert_eq!(processed[1].data, 0xC7);
 
         assert_eq!(processed[2].time, 0);
-        assert_eq!(processed[2].port, OPM_ADDRESS_REGISTER);
-        assert_eq!(processed[2].value, 0x20);
-
-        assert_eq!(processed[3].time, 0);
-        assert_eq!(processed[3].port, OPM_DATA_REGISTER);
-        assert_eq!(processed[3].value, 0xC7);
-
-        assert_eq!(processed[4].time, 0);
-        assert_eq!(processed[4].port, OPM_ADDRESS_REGISTER);
-        assert_eq!(processed[4].value, 0x28);
-
-        assert_eq!(processed[5].time, 0);
-        assert_eq!(processed[5].port, OPM_DATA_REGISTER);
-        assert_eq!(processed[5].value, 0x3E);
+        assert_eq!(processed[2].addr, 0x28);
+        assert_eq!(processed[2].data, 0x3E);
+    }
     }
 
     #[test]
@@ -494,7 +485,7 @@ mod tests {
 
         let player = Player::new(log);
 
-        assert_eq!(player.total_events(), 2);
+        assert_eq!(player.total_events(), 1);
         assert_eq!(player.events_processed(), 0);
         assert!(!player.is_complete());
     }
@@ -541,18 +532,18 @@ mod tests {
 
         let mut player = Player::new(log);
 
-        assert_eq!(player.total_events(), 4);
+        assert_eq!(player.total_events(), 2);
 
         let mut buffer = vec![0i16; 200];
         player.generate_samples(&mut buffer);
 
-        assert_eq!(player.events_processed(), 2);
+        assert_eq!(player.events_processed(), 1);
         assert_eq!(player.current_sample(), 100);
 
         let mut buffer = vec![0i16; 2000];
         player.generate_samples(&mut buffer);
 
-        assert_eq!(player.events_processed(), 4);
+        assert_eq!(player.events_processed(), 2);
         assert!(player.is_complete());
     }
 
@@ -634,20 +625,15 @@ mod tests {
         // Schedule a register write
         player.schedule_register_write(100, 0x08, 0x78);
 
-        // Check that events were added to the queue
+        // Check that event was added to the queue
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
-        assert_eq!(q.len(), 2); // Address write + data write
+        assert_eq!(q.len(), 1); // One addr-data pair event
 
-        // Check address write
+        // Check addr-data pair
         assert_eq!(q[0].time, 100);
-        assert_eq!(q[0].port, OPM_ADDRESS_REGISTER);
-        assert_eq!(q[0].value, 0x08);
-
-        // Check data write at same time (delay applied in generate_samples)
-        assert_eq!(q[1].time, 100);
-        assert_eq!(q[1].port, OPM_DATA_REGISTER);
-        assert_eq!(q[1].value, 0x78);
+        assert_eq!(q[0].addr, 0x08);
+        assert_eq!(q[0].data, 0x78);
     }
 
     #[test]
@@ -662,7 +648,7 @@ mod tests {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert_eq!(q.len(), 4); // 2 register writes = 4 events
+            assert_eq!(q.len(), 2); // 2 register writes = 2 addr-data pair events
         }
 
         // Clear the schedule
@@ -702,8 +688,8 @@ mod tests {
         let queue = player.get_event_queue();
         let q = queue.lock().unwrap();
 
-        // Should have 6 events (3 register writes × 2)
-        assert_eq!(q.len(), 6);
+        // Should have 3 events (3 register writes as addr-data pairs)
+        assert_eq!(q.len(), 3);
 
         // Verify they are in time order
         for i in 1..q.len() {

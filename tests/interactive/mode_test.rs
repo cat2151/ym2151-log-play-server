@@ -24,17 +24,13 @@ fn test_schedule_register_write() {
     let queue = player.get_event_queue();
     let q = queue.lock().unwrap();
 
-    // Should have 2 events (address write + data write)
-    assert_eq!(q.len(), 2);
+    // Should have 1 addr-data pair event
+    assert_eq!(q.len(), 1);
 
-    // Check first event (address write)
-    assert_eq!(q[0].port, 0);
-    assert_eq!(q[0].value, 0x08);
-
-    // Check second event (data write)
-    assert_eq!(q[1].port, 1);
-    assert_eq!(q[1].value, 0x78);
-    assert_eq!(q[1].time, q[0].time + 2); // DELAY_SAMPLES = 2
+    // Check the addr-data pair
+    assert_eq!(q[0].time, 100);
+    assert_eq!(q[0].addr, 0x08);
+    assert_eq!(q[0].data, 0x78);
 }
 
 #[test]
@@ -49,8 +45,8 @@ fn test_multiple_register_writes() {
     let queue = player.get_event_queue();
     let q = queue.lock().unwrap();
 
-    // Should have 6 events (3 writes × 2 events each)
-    assert_eq!(q.len(), 6);
+    // Should have 3 addr-data pair events
+    assert_eq!(q.len(), 3);
 
     // Verify timing order is maintained
     for i in 0..q.len() - 1 {
@@ -72,12 +68,12 @@ fn test_interactive_generate_samples() {
     // Interactive mode always returns true (continuous streaming)
     assert!(has_more);
 
-    // Events should have been processed
+    // Event should have been processed
     let queue = player.get_event_queue();
     let q = queue.lock().unwrap();
     assert!(
-        q.is_empty() || q.len() < 2,
-        "Some events should be processed"
+        q.is_empty(),
+        "Event should be processed and removed from queue"
     );
 }
 

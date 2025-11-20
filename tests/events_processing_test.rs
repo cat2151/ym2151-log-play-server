@@ -34,7 +34,7 @@ fn test_pass1_to_pass2_conversion() {
 
     let player = Player::new(log);
 
-    assert_eq!(player.total_events(), 6);
+    assert_eq!(player.total_events(), 3);
     assert_eq!(player.events_processed(), 0);
 }
 
@@ -66,8 +66,8 @@ fn test_event_execution_timing() {
     assert_eq!(player.current_sample(), 100);
     assert_eq!(
         player.events_processed(),
-        2,
-        "Should have processed events at times 0 and 2"
+        1,
+        "Should have processed first event (addr-data pair)"
     );
 
     let mut buffer = vec![0i16; 800];
@@ -76,8 +76,8 @@ fn test_event_execution_timing() {
     assert_eq!(player.current_sample(), 500);
     assert_eq!(
         player.events_processed(),
-        2,
-        "Events at time 500 not yet processed (boundary)"
+        1,
+        "Event at time 500 not yet processed (boundary)"
     );
 
     let mut buffer = vec![0i16; 20];
@@ -85,7 +85,7 @@ fn test_event_execution_timing() {
 
     assert_eq!(
         player.events_processed(),
-        4,
+        2,
         "Should have processed all events"
     );
     assert!(player.is_complete());
@@ -111,18 +111,15 @@ fn test_delay_samples() {
     assert_eq!(
         player.events_processed(),
         1,
-        "Should have processed address write at time 10"
+        "Should have processed addr-data pair event at time 10"
     );
 
+    // The event should be complete now (addr written at sample 10, data written at sample 12)
+    // but we need to wait for the pending data write to complete
     let mut buffer = vec![0i16; 4];
     player.generate_samples(&mut buffer);
 
-    assert_eq!(
-        player.events_processed(),
-        2,
-        "Should have processed data write at time 12"
-    );
-    assert!(player.is_complete());
+    assert!(player.is_complete(), "Should be complete after pending data write");
 }
 
 #[test]
@@ -131,7 +128,7 @@ fn test_sample_events_json() {
 
     let mut player = Player::new(log);
 
-    assert_eq!(player.total_events(), 92); // 46 events * 2 (address + data pairs)
+    assert_eq!(player.total_events(), 46); // 46 addr-data pair events
 
     let mut buffer = vec![0i16; 1024];
     let mut total_processed = 0;
@@ -281,6 +278,8 @@ fn test_total_samples_calculation() {
 
     let player = Player::new(log);
 
-    let expected = 1002;
+    // With addr-data pair format, total_samples returns the scheduled time
+    // The 2-sample delay is applied only during playback in generate_samples()
+    let expected = 1000;
     assert_eq!(player.total_samples(), expected);
 }
