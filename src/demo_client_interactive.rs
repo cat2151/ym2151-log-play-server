@@ -55,6 +55,9 @@ pub fn run_interactive_demo(verbose: bool) -> Result<()> {
     for i in 1..=DEMO_REPEAT_COUNT {
         client::log_client(&format!("演奏回数: {}/{}", i, DEMO_REPEAT_COUNT));
 
+        // Clear schedule before playing
+        client::clear_schedule()?; // 備忘、これがないと前の演奏と衝突して音が崩れたりするので
+
         // Send JSON to interactive mode
         client::play_json_interactive(&json_content)?;
 
