@@ -5,25 +5,26 @@
 
 use ym2151_log_play_server::events::{EventLog, RegisterEvent};
 use ym2151_log_play_server::player::Player;
+use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 
 #[test]
 fn test_pass1_to_pass2_conversion() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 100,
+                time: 100.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
             },
             RegisterEvent {
-                time: 200,
+                time: 200.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x28,
                 data: 0x3E,
                 is_data: None,
@@ -42,13 +43,13 @@ fn test_event_execution_timing() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 500,
+                time: 500.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
@@ -93,7 +94,7 @@ fn test_event_execution_timing() {
 fn test_delay_samples() {
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 10,
+            time: 10.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0xFF,
             is_data: None,
@@ -147,19 +148,19 @@ fn test_complete_playback() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 10,
+                time: 10.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
             },
             RegisterEvent {
-                time: 20,
+                time: 20.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x28,
                 data: 0x3E,
                 is_data: None,
@@ -168,10 +169,10 @@ fn test_complete_playback() {
     };
 
     let mut player = Player::new(log);
-    let mut buffer = vec![0i16; 100];
+    let mut buffer = vec![0i16; 1000]; // Larger buffer to handle all events
 
     let mut iterations = 0;
-    while !player.is_complete() && iterations < 1000 {
+    while !player.is_complete() && iterations < 100 {
         player.generate_samples(&mut buffer);
         iterations += 1;
     }
@@ -198,19 +199,19 @@ fn test_event_order_preservation() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x01,
                 data: 0x11,
                 is_data: None,
             },
             RegisterEvent {
-                time: 1,
+                time: 1.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x02,
                 data: 0x22,
                 is_data: None,
             },
             RegisterEvent {
-                time: 2,
+                time: 2.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x03,
                 data: 0x33,
                 is_data: None,
@@ -220,17 +221,24 @@ fn test_event_order_preservation() {
 
     let mut player = Player::new(log);
 
-    let mut buffer = vec![0i16; 100];
-    player.generate_samples(&mut buffer);
+    let mut buffer = vec![0i16; 1000];
 
-    assert!(player.events_processed() >= 6);
+    // Generate samples multiple times to ensure all events are processed
+    let mut iterations = 0;
+    while player.events_processed() < 3 && iterations < 10 {
+        player.generate_samples(&mut buffer);
+        iterations += 1;
+    }
+
+    // 3 RegisterEvent entries are processed as 3 events (addr+data pair implementation was removed)
+    assert_eq!(player.events_processed(), 3);
 }
 
 #[test]
 fn test_buffer_boundaries() {
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 512,
+            time: 512.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0x00,
             is_data: None,
@@ -261,7 +269,7 @@ fn test_sample_rate() {
 fn test_total_samples_calculation() {
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 1000,
+            time: 1000.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0x00,
             is_data: None,

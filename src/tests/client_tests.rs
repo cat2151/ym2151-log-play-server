@@ -115,6 +115,7 @@ fn test_play_json_interactive_rejects_invalid_json() {
     assert!(
         error_msg.contains("Failed to parse JSON") ||
         error_msg.contains("Failed to convert JSON") ||
+        error_msg.contains("Failed to parse converted JSON") ||
         error_msg.contains("timing from samples")
     );
 }

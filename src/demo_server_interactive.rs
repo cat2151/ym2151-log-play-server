@@ -9,7 +9,7 @@ use std::thread;
 use std::time::Duration;
 
 use crate::audio_config::timing::*;
-use crate::events::EventLogF64;
+use crate::events::EventLog;
 use crate::logging;
 use crate::server::Server;
 
@@ -39,7 +39,7 @@ const VERBOSE_EVENT_DISPLAY_COUNT: usize = 5;
 /// audio stream elapsed time as the base for scheduling.
 fn schedule_all_events(
     audio_player: &crate::audio::AudioPlayer,
-    event_log: &EventLogF64,
+    event_log: &EventLog,
     audio_stream_elapsed_sec: f64,
     verbose: bool,
 ) -> Result<()> {
@@ -127,7 +127,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         .with_context(|| format!("JSONファイルの読み込みに失敗: {}", DEMO_F64_JSON_FILE))?;
 
     // Parse the JSON to validate it
-    let event_log = EventLogF64::from_json_str(&json_content)
+    let event_log = EventLog::from_json_str(&json_content)
         .with_context(|| "JSONファイルの解析に失敗")?;
 
     if !event_log.validate() {
@@ -331,7 +331,7 @@ mod tests {
             ]
         }"#;
 
-        let event_log = EventLogF64::from_json_str(sample_json).expect("Should parse sample JSON");
+        let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
         assert!(event_log.validate());
         assert_eq!(event_log.events.len(), 2);
         assert_eq!(event_log.events[0].time, 0.0);

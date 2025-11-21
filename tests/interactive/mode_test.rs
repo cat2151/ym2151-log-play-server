@@ -5,6 +5,7 @@
 
 use ym2151_log_play_server::player::Player;
 use ym2151_log_play_server::scheduler;
+use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
 
 #[test]
 fn test_interactive_player_creation() {
@@ -17,8 +18,9 @@ fn test_interactive_player_creation() {
 fn test_schedule_register_write() {
     let player = Player::new_interactive();
 
-    // Schedule a register write at sample 100
-    player.schedule_register_write(100, 0x08, 0x78);
+    // Schedule a register write at 100 samples converted to seconds
+    let time_samples = 100;
+    player.schedule_register_write(time_samples, 0x08, 0x78);
 
     // Verify the event was added to the queue
     let queue = player.get_event_queue();
@@ -79,14 +81,14 @@ fn test_interactive_generate_samples() {
 
 #[test]
 fn test_scheduler_sec_to_samples() {
-    // At 55930 Hz, 1.0 sec = 55930 samples
-    assert_eq!(scheduler::sec_to_samples(1.0), 55930);
+    // At OPM_SAMPLE_RATE Hz, 1.0 sec = OPM_SAMPLE_RATE samples
+    assert_eq!(scheduler::sec_to_samples(1.0), OPM_SAMPLE_RATE);
 
     // 0.05 sec (50ms) = 2796.5 ≈ 2797 samples
     assert_eq!(scheduler::sec_to_samples(0.050), 2797);
 
     // Sample-accurate precision test
-    let one_sample_sec = 1.0 / 55930.0;
+    let one_sample_sec = 1.0 / OPM_SAMPLE_RATE as f64;
     assert_eq!(scheduler::sec_to_samples(one_sample_sec), 1);
 }
 
@@ -108,7 +110,7 @@ fn test_protocol_interactive_commands() {
     // Test PlayJsonInInteractive command serialization
     let json_value = serde_json::json!({
         "events": [
-            {"time": 50, "addr": "0x08", "data": "0x78"}
+            {"time": 50.0 / OPM_SAMPLE_RATE as f64, "addr": "0x08", "data": "0x78"}
         ]
     });
     let cmd = Command::PlayJsonInInteractive {
@@ -138,7 +140,7 @@ fn test_non_interactive_mode_unaffected() {
     // Create a normal player with static events
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 0,
+            time: 0.0,
             addr: 0x08,
             data: 0x00,
             is_data: None,

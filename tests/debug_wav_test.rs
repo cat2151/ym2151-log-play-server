@@ -23,19 +23,19 @@ fn test_post_playback_buffer_generation() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 100,
+                time: 100.0 / ym2151_log_play_server::resampler::OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
             },
             RegisterEvent {
-                time: 200,
+                time: 200.0 / ym2151_log_play_server::resampler::OPM_SAMPLE_RATE as f64,
                 addr: 0x28,
                 data: 0x3E,
                 is_data: None,
@@ -116,13 +116,13 @@ fn test_complete_debug_workflow() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 1000,
+                time: 1000.0 / ym2151_log_play_server::resampler::OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,

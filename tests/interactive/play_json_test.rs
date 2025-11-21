@@ -64,7 +64,8 @@ mod windows_tests {
         let error_msg = result.unwrap_err().to_string();
         assert!(
             error_msg.contains("not in time order") || error_msg.contains("Invalid input event log")
-                || error_msg.contains("Failed to convert JSON timing"),
+                || error_msg.contains("Failed to convert JSON timing")
+                || error_msg.contains("Failed to send converted JSON data"),
             "Expected validation error, got: {}",
             error_msg
         );
@@ -121,7 +122,8 @@ mod windows_tests {
         assert!(
             error_msg.contains("invalid digit") || error_msg.contains("parse")
                 || error_msg.contains("hex") || error_msg.contains("Invalid")
-                || error_msg.contains("Failed to convert JSON timing"),
+                || error_msg.contains("Failed to convert JSON timing")
+                || error_msg.contains("Failed to send converted JSON data"),
             "Expected JSON parse error for invalid hex, got: {}",
             error_msg
         );

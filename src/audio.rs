@@ -208,19 +208,15 @@ impl AudioPlayer {
     /// Schedule a register write in interactive mode
     pub fn schedule_register_write(&self, scheduled_samples: u32, addr: u8, data: u8) {
         if let Some(ref queue) = self.player_event_queue {
-            // No delay applied here - the 2-sample delay will be applied at the final stage in generate_samples()
+            // Store addr-data pair directly in a single event
+            // The 2-sample delay between address and data writes will be applied
+            // at the final stage in generate_samples()
             let mut q = queue.lock().unwrap();
 
             q.push_back(crate::player::ProcessedEvent {
                 time: scheduled_samples,
-                port: 0, // OPM_ADDRESS_REGISTER
-                value: addr,
-            });
-
-            q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples,
-                port: 1, // OPM_DATA_REGISTER
-                value: data,
+                addr,
+                data,
             });
         }
     }
@@ -262,19 +258,15 @@ impl AudioPlayer {
     /// Returns (address_time, data_time) tuple
     pub fn schedule_register_write_with_times(&self, scheduled_samples: u32, addr: u8, data: u8) -> Option<(u32, u32)> {
         if let Some(ref queue) = self.player_event_queue {
-            // No delay applied here - the 2-sample delay will be applied at the final stage in generate_samples()
+            // Store addr-data pair directly in a single event
+            // The 2-sample delay between address and data writes will be applied
+            // at the final stage in generate_samples()
             let mut q = queue.lock().unwrap();
 
             q.push_back(crate::player::ProcessedEvent {
                 time: scheduled_samples,
-                port: 0, // OPM_ADDRESS_REGISTER
-                value: addr,
-            });
-
-            q.push_back(crate::player::ProcessedEvent {
-                time: scheduled_samples,
-                port: 1, // OPM_DATA_REGISTER
-                value: data,
+                addr,
+                data,
             });
 
             // Both are scheduled at the same time, delay will be applied at final stage
@@ -356,7 +348,8 @@ impl AudioPlayer {
     ) -> Result<()> {
         // Set MMCSS Pro Audio priority for this thread on Windows
         // This handle will automatically revert priority when dropped
-        let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
+        // TODO: Re-enable after MMCSS implementation stabilization
+        // let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
 
         let mut resampler = AudioResampler::with_quality(resampling_quality)
             .context("Failed to initialize resampler")?;

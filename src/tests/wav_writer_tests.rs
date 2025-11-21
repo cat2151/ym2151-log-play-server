@@ -65,13 +65,13 @@ fn test_generate_wav_with_player() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 100,
+                time: 100.0 / crate::resampler::OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,

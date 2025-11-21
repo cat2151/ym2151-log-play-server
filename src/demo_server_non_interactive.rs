@@ -62,7 +62,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
     let max_event_time_samples = event_log.events
         .iter()
         .map(|e| e.time)
-        .fold(0u32, |a, b| a.max(b));
+        .fold(0.0f64, |a, b| a.max(b));
 
     let max_event_time_sec = max_event_time_samples as f64 / sample_rate;
 
@@ -146,18 +146,18 @@ mod tests {
 
     #[test]
     fn test_demo_non_interactive_json_parsing() {
-        // Test JSON parsing with sample data (integer time format)
+        // Test JSON parsing with sample data (f64 second time format)
         let sample_json = r#"{
             "events": [
-                {"time": 0, "addr": "0x08", "data": "0x00"},
-                {"time": 55930, "addr": "0x08", "data": "0x01"}
+                {"time": 0.0, "addr": "0x08", "data": "0x00"},
+                {"time": 1.0, "addr": "0x08", "data": "0x01"}
             ]
         }"#;
 
         let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
         assert!(event_log.validate());
         assert_eq!(event_log.events.len(), 2);
-        assert_eq!(event_log.events[0].time, 0);
-        assert_eq!(event_log.events[1].time, 55930);
+        assert_eq!(event_log.events[0].time, 0.0);
+        assert_eq!(event_log.events[1].time, 1.0); // 1.0 second
     }
 }

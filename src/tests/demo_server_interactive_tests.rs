@@ -25,7 +25,7 @@ fn test_interactive_demo_json_file_exists() {
 
 #[test]
 fn test_interactive_demo_json_parsing() {
-    use crate::events::EventLogF64;
+    use crate::events::EventLog;
 
     // Test JSON parsing with sample data (floating-point time format)
     let sample_json = r#"{
@@ -35,7 +35,7 @@ fn test_interactive_demo_json_parsing() {
         ]
     }"#;
 
-    let event_log = EventLogF64::from_json_str(sample_json).expect("Should parse sample JSON");
+    let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
         assert!(event_log.validate());
     assert_eq!(event_log.events.len(), 2);
     assert_eq!(event_log.events[0].time, 0.0);

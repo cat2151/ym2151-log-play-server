@@ -8,13 +8,13 @@ fn test_tail_generation_continues_after_events() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: 1000,
+                time: 1000.0 / OPM_SAMPLE_RATE as f64,
                 addr: 0x20,
                 data: 0xC7,
                 is_data: None,
@@ -59,7 +59,7 @@ fn test_tail_generation_stops_after_silence() {
     // Create a very short event log
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 100,
+            time: 100.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0x00,
             is_data: None,
@@ -97,7 +97,7 @@ fn test_tail_generation_stops_after_silence() {
 fn test_tail_info_before_events_complete() {
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 1000,
+            time: 1000.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0x00,
             is_data: None,
@@ -117,7 +117,7 @@ fn test_tail_info_before_events_complete() {
 fn test_should_continue_tail_during_events() {
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 1000,
+            time: 1000.0 / OPM_SAMPLE_RATE as f64,
             addr: 0x08,
             data: 0x00,
             is_data: None,
@@ -138,7 +138,7 @@ fn test_silence_detection_resets_on_non_zero_sample() {
     // This test verifies that the silence counter resets when a non-zero sample is detected
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 0,
+            time: 0.0,
             addr: 0x08,
             data: 0x00,
             is_data: None,

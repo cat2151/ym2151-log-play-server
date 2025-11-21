@@ -1,233 +1,232 @@
 {
-  "event_count": 46,
   "events": [
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x00"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x01"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x02"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x03"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x04"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x06"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x07"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x20",
       "data": "0xC7"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x38",
       "data": "0x00"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x40",
       "data": "0x01"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x60",
       "data": "0x00"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x80",
       "data": "0x1F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xA0",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xC0",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xE0",
-      "data": "0xF7"
+      "data": "0xFF"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x48",
       "data": "0x01"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x68",
       "data": "0x7F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x88",
       "data": "0x1F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xA8",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xC8",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xE8",
-      "data": "0xF7"
+      "data": "0xFF"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x50",
       "data": "0x01"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x70",
       "data": "0x7F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x90",
       "data": "0x1F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xB0",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xD0",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xF0",
-      "data": "0xF7"
+      "data": "0xFF"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x58",
       "data": "0x01"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x78",
       "data": "0x7F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x98",
       "data": "0x1F"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xB8",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xD8",
       "data": "0x05"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0xF8",
-      "data": "0xF7"
+      "data": "0xFF"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x28",
       "data": "0x3E"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x30",
       "data": "0x00"
     },
     {
-      "time": 0,
+      "time": 0.0,
       "addr": "0x08",
       "data": "0x78"
     },
     {
-      "time": 27965,
+      "time": 0.5,
       "addr": "0x08",
       "data": "0x00"
     },
     {
-      "time": 27965,
+      "time": 0.5,
       "addr": "0x28",
       "data": "0x41"
     },
     {
-      "time": 27965,
+      "time": 0.5,
       "addr": "0x30",
       "data": "0x00"
     },
     {
-      "time": 27965,
+      "time": 0.5,
       "addr": "0x08",
       "data": "0x78"
     },
     {
-      "time": 55930,
+      "time": 1.0,
       "addr": "0x08",
       "data": "0x00"
     },
     {
-      "time": 55930,
+      "time": 1.0,
       "addr": "0x28",
       "data": "0x44"
     },
     {
-      "time": 55930,
+      "time": 1.0,
       "addr": "0x30",
       "data": "0x00"
     },
     {
-      "time": 55930,
+      "time": 1.0,
       "addr": "0x08",
       "data": "0x78"
     },
     {
-      "time": 83895,
+      "time": 1.5,
       "addr": "0x08",
       "data": "0x00"
     }

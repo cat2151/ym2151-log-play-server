@@ -27,17 +27,17 @@ fn test_non_interactive_demo_json_file_exists() {
 fn test_non_interactive_demo_json_parsing() {
     use crate::events::EventLog;
 
-    // Test JSON parsing with sample data (integer time format)
+    // Test JSON parsing with sample data (f64 second time format)
     let sample_json = r#"{
         "events": [
-            {"time": 0, "addr": "0x08", "data": "0x00"},
-            {"time": 55930, "addr": "0x08", "data": "0x01"}
+            {"time": 0.0, "addr": "0x08", "data": "0x00"},
+            {"time": 1.0, "addr": "0x08", "data": "0x01"}
         ]
     }"#;
 
     let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
         assert!(event_log.validate());
     assert_eq!(event_log.events.len(), 2);
-    assert_eq!(event_log.events[0].time, 0);
-    assert_eq!(event_log.events[1].time, 55930);
+    assert_eq!(event_log.events[0].time, 0.0);
+    assert_eq!(event_log.events[1].time, 1.0); // 1.0 second
 }

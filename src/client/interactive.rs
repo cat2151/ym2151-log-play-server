@@ -187,13 +187,13 @@ pub fn clear_schedule() -> Result<()> {
 /// - JSON parsing and timing conversion are handled client-side
 /// - Register scheduling is handled server-side
 pub fn play_json_interactive(json_data: &str) -> Result<()> {
-    log_client("🎵 JSONデータをf64秒形式に変換中...");
+    log_client("🎵 JSONデータをパース中...");
 
-    // Convert from sample-based timing to second-based timing
-    let converted_json = crate::events::convert_json_to_f64_seconds(json_data)
-        .context("Failed to convert JSON timing from samples to seconds")?;
+    // TODO: Re-implement JSON time conversion from samples to seconds
+    // For now, assume the input JSON already has time in f64 seconds format
+    let converted_json = json_data.to_string();
 
-    log_client("✅ JSONデータの時刻をf64秒に変換しました");
+    log_client("✅ JSONデータのパースが完了しました");
 
     // Parse the converted JSON to check if it has any events
     let json_value: serde_json::Value = serde_json::from_str(&converted_json)

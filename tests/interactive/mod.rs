@@ -13,7 +13,7 @@ mod shared_mutex;
 mod mode_test;
 mod step_by_step_test;
 mod play_json_test;
-mod row_by_row_test;
+// mod row_by_row_test;  // File does not exist yet
 
 // Re-export any public test utilities if needed
 // (Currently none, but structure is ready for future additions)

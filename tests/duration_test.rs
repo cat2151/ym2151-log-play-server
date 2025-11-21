@@ -14,13 +14,13 @@ fn test_player_generates_all_samples() {
     let log = EventLog {
         events: vec![
             RegisterEvent {
-                time: 0,
+                time: 0.0,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
             },
             RegisterEvent {
-                time: target_samples,
+                time: target_samples as f64 / OPM_SAMPLE_RATE as f64,
                 addr: 0x08,
                 data: 0x00,
                 is_data: None,
@@ -91,7 +91,7 @@ fn test_player_generates_samples_after_last_event() {
 
     let log = EventLog {
         events: vec![RegisterEvent {
-            time: 0,
+            time: 0.0,
             addr: 0x08,
             data: 0x00,
             is_data: None,
