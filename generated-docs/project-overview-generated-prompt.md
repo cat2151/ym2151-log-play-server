@@ -1,4 +1,4 @@
-Last updated: 2025-11-21
+Last updated: 2025-11-22
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -877,6 +877,12 @@ MIT License
                                                                                   📖 101.md
                                                                                   📖 102.md
                                                                                   📖 103.md
+                                                                                  📖 107.md
+                                                                                  📖 110.md
+                                                                                  📖 111.md
+                                                                                  📖 112.md
+                                                                                  📖 113.md
+                                                                                  📖 114.md
                                                                                   📖 34.md
                                                                                   📖 36.md
                                                                                   📖 38.md
@@ -913,10 +919,17 @@ MIT License
                                                                                   📖 99.md
                                                                                 📄 opm.c
                                                                                 📄 opm.h
-                                                                                📊 output_ym2151_f64seconds.json
+                                                                                📊 output_ym2151.json
                                                                                 📄 setup_ci_environment.sh
                                                                                 📁 src/
-                                                                                  📄 audio.rs
+                                                                                  📁 audio/
+                                                                                    📄 buffers.rs
+                                                                                    📄 commands.rs
+                                                                                    📄 generator.rs
+                                                                                    📄 mod.rs
+                                                                                    📄 player.rs
+                                                                                    📄 scheduler.rs
+                                                                                    📄 stream.rs
                                                                                   📄 audio_config.rs
                                                                                   📁 client/
                                                                                     📄 config.rs
@@ -926,7 +939,7 @@ MIT License
                                                                                     📄 mod.rs
                                                                                     📄 server.rs
                                                                                   📄 debug_wav.rs
-                                                                                  📄 demo.rs
+                                                                                  📄 demo_client_interactive.rs
                                                                                   📄 demo_server_interactive.rs
                                                                                   📄 demo_server_non_interactive.rs
                                                                                   📄 events.rs
@@ -934,6 +947,13 @@ MIT License
                                                                                     📄 mod.rs
                                                                                     📄 pipe_windows.rs
                                                                                     📄 protocol.rs
+                                                                                    📁 windows/
+                                                                                      📄 mod.rs
+                                                                                      📄 pipe_factory.rs
+                                                                                      📄 pipe_handle.rs
+                                                                                      📄 pipe_reader.rs
+                                                                                      📄 pipe_writer.rs
+                                                                                      📄 test_logging.rs
                                                                                   📄 lib.rs
                                                                                   📄 logging.rs
                                                                                   📄 main.rs
@@ -943,7 +963,12 @@ MIT License
                                                                                   📄 player.rs
                                                                                   📄 resampler.rs
                                                                                   📄 scheduler.rs
-                                                                                  📄 server.rs
+                                                                                  📁 server/
+                                                                                    📄 command_handler.rs
+                                                                                    📄 connection.rs
+                                                                                    📄 mod.rs
+                                                                                    📄 playback.rs
+                                                                                    📄 state.rs
                                                                                   📁 tests/
                                                                                     📄 audio_tests.rs
                                                                                     📄 client_tests.rs
@@ -959,6 +984,7 @@ MIT License
                                                                                     📄 opm_ffi_tests.rs
                                                                                     📄 opm_tests.rs
                                                                                     📄 play_json_interactive_tests.rs
+                                                                                    📄 player_tests.rs
                                                                                     📄 resampler_tests.rs
                                                                                     📄 scheduler_tests.rs
                                                                                     📄 server_tests.rs
@@ -987,7 +1013,6 @@ MIT License
                                                                                     📄 mod.rs
                                                                                     📄 mode_test.rs
                                                                                     📄 play_json_test.rs
-                                                                                    📄 row_by_row_test.rs
                                                                                     📄 shared_mutex.rs
                                                                                     📄 step_by_step_test.rs
                                                                                   📄 interactive_tests.rs
@@ -1006,6 +1031,12 @@ MIT License
                                                                                 📖 101.md
                                                                                 📖 102.md
                                                                                 📖 103.md
+                                                                                📖 107.md
+                                                                                📖 110.md
+                                                                                📖 111.md
+                                                                                📖 112.md
+                                                                                📖 113.md
+                                                                                📖 114.md
                                                                                 📖 34.md
                                                                                 📖 36.md
                                                                                 📖 38.md
@@ -1042,10 +1073,17 @@ MIT License
                                                                                 📖 99.md
                                                                               📄 opm.c
                                                                               📄 opm.h
-                                                                              📊 output_ym2151_f64seconds.json
+                                                                              📊 output_ym2151.json
                                                                               📄 setup_ci_environment.sh
                                                                               📁 src/
-                                                                                📄 audio.rs
+                                                                                📁 audio/
+                                                                                  📄 buffers.rs
+                                                                                  📄 commands.rs
+                                                                                  📄 generator.rs
+                                                                                  📄 mod.rs
+                                                                                  📄 player.rs
+                                                                                  📄 scheduler.rs
+                                                                                  📄 stream.rs
                                                                                 📄 audio_config.rs
                                                                                 📁 client/
                                                                                   📄 config.rs
@@ -1055,7 +1093,7 @@ MIT License
                                                                                   📄 mod.rs
                                                                                   📄 server.rs
                                                                                 📄 debug_wav.rs
-                                                                                📄 demo.rs
+                                                                                📄 demo_client_interactive.rs
                                                                                 📄 demo_server_interactive.rs
                                                                                 📄 demo_server_non_interactive.rs
                                                                                 📄 events.rs
@@ -1063,6 +1101,13 @@ MIT License
                                                                                   📄 mod.rs
                                                                                   📄 pipe_windows.rs
                                                                                   📄 protocol.rs
+                                                                                  📁 windows/
+                                                                                    📄 mod.rs
+                                                                                    📄 pipe_factory.rs
+                                                                                    📄 pipe_handle.rs
+                                                                                    📄 pipe_reader.rs
+                                                                                    📄 pipe_writer.rs
+                                                                                    📄 test_logging.rs
                                                                                 📄 lib.rs
                                                                                 📄 logging.rs
                                                                                 📄 main.rs
@@ -1072,7 +1117,12 @@ MIT License
                                                                                 📄 player.rs
                                                                                 📄 resampler.rs
                                                                                 📄 scheduler.rs
-                                                                                📄 server.rs
+                                                                                📁 server/
+                                                                                  📄 command_handler.rs
+                                                                                  📄 connection.rs
+                                                                                  📄 mod.rs
+                                                                                  📄 playback.rs
+                                                                                  📄 state.rs
                                                                                 📁 tests/
                                                                                   📄 audio_tests.rs
                                                                                   📄 client_tests.rs
@@ -1088,6 +1138,7 @@ MIT License
                                                                                   📄 opm_ffi_tests.rs
                                                                                   📄 opm_tests.rs
                                                                                   📄 play_json_interactive_tests.rs
+                                                                                  📄 player_tests.rs
                                                                                   📄 resampler_tests.rs
                                                                                   📄 scheduler_tests.rs
                                                                                   📄 server_tests.rs
@@ -1116,7 +1167,6 @@ MIT License
                                                                                   📄 mod.rs
                                                                                   📄 mode_test.rs
                                                                                   📄 play_json_test.rs
-                                                                                  📄 row_by_row_test.rs
                                                                                   📄 shared_mutex.rs
                                                                                   📄 step_by_step_test.rs
                                                                                 📄 interactive_tests.rs
@@ -1135,6 +1185,12 @@ MIT License
                                                                               📖 101.md
                                                                               📖 102.md
                                                                               📖 103.md
+                                                                              📖 107.md
+                                                                              📖 110.md
+                                                                              📖 111.md
+                                                                              📖 112.md
+                                                                              📖 113.md
+                                                                              📖 114.md
                                                                               📖 34.md
                                                                               📖 36.md
                                                                               📖 38.md
@@ -1171,10 +1227,17 @@ MIT License
                                                                               📖 99.md
                                                                             📄 opm.c
                                                                             📄 opm.h
-                                                                            📊 output_ym2151_f64seconds.json
+                                                                            📊 output_ym2151.json
                                                                             📄 setup_ci_environment.sh
                                                                             📁 src/
-                                                                              📄 audio.rs
+                                                                              📁 audio/
+                                                                                📄 buffers.rs
+                                                                                📄 commands.rs
+                                                                                📄 generator.rs
+                                                                                📄 mod.rs
+                                                                                📄 player.rs
+                                                                                📄 scheduler.rs
+                                                                                📄 stream.rs
                                                                               📄 audio_config.rs
                                                                               📁 client/
                                                                                 📄 config.rs
@@ -1184,7 +1247,7 @@ MIT License
                                                                                 📄 mod.rs
                                                                                 📄 server.rs
                                                                               📄 debug_wav.rs
-                                                                              📄 demo.rs
+                                                                              📄 demo_client_interactive.rs
                                                                               📄 demo_server_interactive.rs
                                                                               📄 demo_server_non_interactive.rs
                                                                               📄 events.rs
@@ -1192,6 +1255,13 @@ MIT License
                                                                                 📄 mod.rs
                                                                                 📄 pipe_windows.rs
                                                                                 📄 protocol.rs
+                                                                                📁 windows/
+                                                                                  📄 mod.rs
+                                                                                  📄 pipe_factory.rs
+                                                                                  📄 pipe_handle.rs
+                                                                                  📄 pipe_reader.rs
+                                                                                  📄 pipe_writer.rs
+                                                                                  📄 test_logging.rs
                                                                               📄 lib.rs
                                                                               📄 logging.rs
                                                                               📄 main.rs
@@ -1201,7 +1271,12 @@ MIT License
                                                                               📄 player.rs
                                                                               📄 resampler.rs
                                                                               📄 scheduler.rs
-                                                                              📄 server.rs
+                                                                              📁 server/
+                                                                                📄 command_handler.rs
+                                                                                📄 connection.rs
+                                                                                📄 mod.rs
+                                                                                📄 playback.rs
+                                                                                📄 state.rs
                                                                               📁 tests/
                                                                                 📄 audio_tests.rs
                                                                                 📄 client_tests.rs
@@ -1217,6 +1292,7 @@ MIT License
                                                                                 📄 opm_ffi_tests.rs
                                                                                 📄 opm_tests.rs
                                                                                 📄 play_json_interactive_tests.rs
+                                                                                📄 player_tests.rs
                                                                                 📄 resampler_tests.rs
                                                                                 📄 scheduler_tests.rs
                                                                                 📄 server_tests.rs
@@ -1245,7 +1321,6 @@ MIT License
                                                                                 📄 mod.rs
                                                                                 📄 mode_test.rs
                                                                                 📄 play_json_test.rs
-                                                                                📄 row_by_row_test.rs
                                                                                 📄 shared_mutex.rs
                                                                                 📄 step_by_step_test.rs
                                                                               📄 interactive_tests.rs
@@ -1264,6 +1339,12 @@ MIT License
                                                                             📖 101.md
                                                                             📖 102.md
                                                                             📖 103.md
+                                                                            📖 107.md
+                                                                            📖 110.md
+                                                                            📖 111.md
+                                                                            📖 112.md
+                                                                            📖 113.md
+                                                                            📖 114.md
                                                                             📖 34.md
                                                                             📖 36.md
                                                                             📖 38.md
@@ -1300,10 +1381,17 @@ MIT License
                                                                             📖 99.md
                                                                           📄 opm.c
                                                                           📄 opm.h
-                                                                          📊 output_ym2151_f64seconds.json
+                                                                          📊 output_ym2151.json
                                                                           📄 setup_ci_environment.sh
                                                                           📁 src/
-                                                                            📄 audio.rs
+                                                                            📁 audio/
+                                                                              📄 buffers.rs
+                                                                              📄 commands.rs
+                                                                              📄 generator.rs
+                                                                              📄 mod.rs
+                                                                              📄 player.rs
+                                                                              📄 scheduler.rs
+                                                                              📄 stream.rs
                                                                             📄 audio_config.rs
                                                                             📁 client/
                                                                               📄 config.rs
@@ -1313,7 +1401,7 @@ MIT License
                                                                               📄 mod.rs
                                                                               📄 server.rs
                                                                             📄 debug_wav.rs
-                                                                            📄 demo.rs
+                                                                            📄 demo_client_interactive.rs
                                                                             📄 demo_server_interactive.rs
                                                                             📄 demo_server_non_interactive.rs
                                                                             📄 events.rs
@@ -1321,6 +1409,13 @@ MIT License
                                                                               📄 mod.rs
                                                                               📄 pipe_windows.rs
                                                                               📄 protocol.rs
+                                                                              📁 windows/
+                                                                                📄 mod.rs
+                                                                                📄 pipe_factory.rs
+                                                                                📄 pipe_handle.rs
+                                                                                📄 pipe_reader.rs
+                                                                                📄 pipe_writer.rs
+                                                                                📄 test_logging.rs
                                                                             📄 lib.rs
                                                                             📄 logging.rs
                                                                             📄 main.rs
@@ -1330,7 +1425,12 @@ MIT License
                                                                             📄 player.rs
                                                                             📄 resampler.rs
                                                                             📄 scheduler.rs
-                                                                            📄 server.rs
+                                                                            📁 server/
+                                                                              📄 command_handler.rs
+                                                                              📄 connection.rs
+                                                                              📄 mod.rs
+                                                                              📄 playback.rs
+                                                                              📄 state.rs
                                                                             📁 tests/
                                                                               📄 audio_tests.rs
                                                                               📄 client_tests.rs
@@ -1346,6 +1446,7 @@ MIT License
                                                                               📄 opm_ffi_tests.rs
                                                                               📄 opm_tests.rs
                                                                               📄 play_json_interactive_tests.rs
+                                                                              📄 player_tests.rs
                                                                               📄 resampler_tests.rs
                                                                               📄 scheduler_tests.rs
                                                                               📄 server_tests.rs
@@ -1374,7 +1475,6 @@ MIT License
                                                                               📄 mod.rs
                                                                               📄 mode_test.rs
                                                                               📄 play_json_test.rs
-                                                                              📄 row_by_row_test.rs
                                                                               📄 shared_mutex.rs
                                                                               📄 step_by_step_test.rs
                                                                             📄 interactive_tests.rs
@@ -1393,6 +1493,12 @@ MIT License
                                                                           📖 101.md
                                                                           📖 102.md
                                                                           📖 103.md
+                                                                          📖 107.md
+                                                                          📖 110.md
+                                                                          📖 111.md
+                                                                          📖 112.md
+                                                                          📖 113.md
+                                                                          📖 114.md
                                                                           📖 34.md
                                                                           📖 36.md
                                                                           📖 38.md
@@ -1429,10 +1535,17 @@ MIT License
                                                                           📖 99.md
                                                                         📄 opm.c
                                                                         📄 opm.h
-                                                                        📊 output_ym2151_f64seconds.json
+                                                                        📊 output_ym2151.json
                                                                         📄 setup_ci_environment.sh
                                                                         📁 src/
-                                                                          📄 audio.rs
+                                                                          📁 audio/
+                                                                            📄 buffers.rs
+                                                                            📄 commands.rs
+                                                                            📄 generator.rs
+                                                                            📄 mod.rs
+                                                                            📄 player.rs
+                                                                            📄 scheduler.rs
+                                                                            📄 stream.rs
                                                                           📄 audio_config.rs
                                                                           📁 client/
                                                                             📄 config.rs
@@ -1442,7 +1555,7 @@ MIT License
                                                                             📄 mod.rs
                                                                             📄 server.rs
                                                                           📄 debug_wav.rs
-                                                                          📄 demo.rs
+                                                                          📄 demo_client_interactive.rs
                                                                           📄 demo_server_interactive.rs
                                                                           📄 demo_server_non_interactive.rs
                                                                           📄 events.rs
@@ -1450,6 +1563,13 @@ MIT License
                                                                             📄 mod.rs
                                                                             📄 pipe_windows.rs
                                                                             📄 protocol.rs
+                                                                            📁 windows/
+                                                                              📄 mod.rs
+                                                                              📄 pipe_factory.rs
+                                                                              📄 pipe_handle.rs
+                                                                              📄 pipe_reader.rs
+                                                                              📄 pipe_writer.rs
+                                                                              📄 test_logging.rs
                                                                           📄 lib.rs
                                                                           📄 logging.rs
                                                                           📄 main.rs
@@ -1459,7 +1579,12 @@ MIT License
                                                                           📄 player.rs
                                                                           📄 resampler.rs
                                                                           📄 scheduler.rs
-                                                                          📄 server.rs
+                                                                          📁 server/
+                                                                            📄 command_handler.rs
+                                                                            📄 connection.rs
+                                                                            📄 mod.rs
+                                                                            📄 playback.rs
+                                                                            📄 state.rs
                                                                           📁 tests/
                                                                             📄 audio_tests.rs
                                                                             📄 client_tests.rs
@@ -1475,6 +1600,7 @@ MIT License
                                                                             📄 opm_ffi_tests.rs
                                                                             📄 opm_tests.rs
                                                                             📄 play_json_interactive_tests.rs
+                                                                            📄 player_tests.rs
                                                                             📄 resampler_tests.rs
                                                                             📄 scheduler_tests.rs
                                                                             📄 server_tests.rs
@@ -1503,7 +1629,6 @@ MIT License
                                                                             📄 mod.rs
                                                                             📄 mode_test.rs
                                                                             📄 play_json_test.rs
-                                                                            📄 row_by_row_test.rs
                                                                             📄 shared_mutex.rs
                                                                             📄 step_by_step_test.rs
                                                                           📄 interactive_tests.rs
@@ -1522,6 +1647,12 @@ MIT License
                                                                         📖 101.md
                                                                         📖 102.md
                                                                         📖 103.md
+                                                                        📖 107.md
+                                                                        📖 110.md
+                                                                        📖 111.md
+                                                                        📖 112.md
+                                                                        📖 113.md
+                                                                        📖 114.md
                                                                         📖 34.md
                                                                         📖 36.md
                                                                         📖 38.md
@@ -1558,10 +1689,17 @@ MIT License
                                                                         📖 99.md
                                                                       📄 opm.c
                                                                       📄 opm.h
-                                                                      📊 output_ym2151_f64seconds.json
+                                                                      📊 output_ym2151.json
                                                                       📄 setup_ci_environment.sh
                                                                       📁 src/
-                                                                        📄 audio.rs
+                                                                        📁 audio/
+                                                                          📄 buffers.rs
+                                                                          📄 commands.rs
+                                                                          📄 generator.rs
+                                                                          📄 mod.rs
+                                                                          📄 player.rs
+                                                                          📄 scheduler.rs
+                                                                          📄 stream.rs
                                                                         📄 audio_config.rs
                                                                         📁 client/
                                                                           📄 config.rs
@@ -1571,7 +1709,7 @@ MIT License
                                                                           📄 mod.rs
                                                                           📄 server.rs
                                                                         📄 debug_wav.rs
-                                                                        📄 demo.rs
+                                                                        📄 demo_client_interactive.rs
                                                                         📄 demo_server_interactive.rs
                                                                         📄 demo_server_non_interactive.rs
                                                                         📄 events.rs
@@ -1579,6 +1717,13 @@ MIT License
                                                                           📄 mod.rs
                                                                           📄 pipe_windows.rs
                                                                           📄 protocol.rs
+                                                                          📁 windows/
+                                                                            📄 mod.rs
+                                                                            📄 pipe_factory.rs
+                                                                            📄 pipe_handle.rs
+                                                                            📄 pipe_reader.rs
+                                                                            📄 pipe_writer.rs
+                                                                            📄 test_logging.rs
                                                                         📄 lib.rs
                                                                         📄 logging.rs
                                                                         📄 main.rs
@@ -1588,7 +1733,12 @@ MIT License
                                                                         📄 player.rs
                                                                         📄 resampler.rs
                                                                         📄 scheduler.rs
-                                                                        📄 server.rs
+                                                                        📁 server/
+                                                                          📄 command_handler.rs
+                                                                          📄 connection.rs
+                                                                          📄 mod.rs
+                                                                          📄 playback.rs
+                                                                          📄 state.rs
                                                                         📁 tests/
                                                                           📄 audio_tests.rs
                                                                           📄 client_tests.rs
@@ -1604,6 +1754,7 @@ MIT License
                                                                           📄 opm_ffi_tests.rs
                                                                           📄 opm_tests.rs
                                                                           📄 play_json_interactive_tests.rs
+                                                                          📄 player_tests.rs
                                                                           📄 resampler_tests.rs
                                                                           📄 scheduler_tests.rs
                                                                           📄 server_tests.rs
@@ -1632,7 +1783,6 @@ MIT License
                                                                           📄 mod.rs
                                                                           📄 mode_test.rs
                                                                           📄 play_json_test.rs
-                                                                          📄 row_by_row_test.rs
                                                                           📄 shared_mutex.rs
                                                                           📄 step_by_step_test.rs
                                                                         📄 interactive_tests.rs
@@ -1651,6 +1801,12 @@ MIT License
                                                                       📖 101.md
                                                                       📖 102.md
                                                                       📖 103.md
+                                                                      📖 107.md
+                                                                      📖 110.md
+                                                                      📖 111.md
+                                                                      📖 112.md
+                                                                      📖 113.md
+                                                                      📖 114.md
                                                                       📖 34.md
                                                                       📖 36.md
                                                                       📖 38.md
@@ -1687,10 +1843,17 @@ MIT License
                                                                       📖 99.md
                                                                     📄 opm.c
                                                                     📄 opm.h
-                                                                    📊 output_ym2151_f64seconds.json
+                                                                    📊 output_ym2151.json
                                                                     📄 setup_ci_environment.sh
                                                                     📁 src/
-                                                                      📄 audio.rs
+                                                                      📁 audio/
+                                                                        📄 buffers.rs
+                                                                        📄 commands.rs
+                                                                        📄 generator.rs
+                                                                        📄 mod.rs
+                                                                        📄 player.rs
+                                                                        📄 scheduler.rs
+                                                                        📄 stream.rs
                                                                       📄 audio_config.rs
                                                                       📁 client/
                                                                         📄 config.rs
@@ -1700,7 +1863,7 @@ MIT License
                                                                         📄 mod.rs
                                                                         📄 server.rs
                                                                       📄 debug_wav.rs
-                                                                      📄 demo.rs
+                                                                      📄 demo_client_interactive.rs
                                                                       📄 demo_server_interactive.rs
                                                                       📄 demo_server_non_interactive.rs
                                                                       📄 events.rs
@@ -1708,6 +1871,13 @@ MIT License
                                                                         📄 mod.rs
                                                                         📄 pipe_windows.rs
                                                                         📄 protocol.rs
+                                                                        📁 windows/
+                                                                          📄 mod.rs
+                                                                          📄 pipe_factory.rs
+                                                                          📄 pipe_handle.rs
+                                                                          📄 pipe_reader.rs
+                                                                          📄 pipe_writer.rs
+                                                                          📄 test_logging.rs
                                                                       📄 lib.rs
                                                                       📄 logging.rs
                                                                       📄 main.rs
@@ -1717,7 +1887,12 @@ MIT License
                                                                       📄 player.rs
                                                                       📄 resampler.rs
                                                                       📄 scheduler.rs
-                                                                      📄 server.rs
+                                                                      📁 server/
+                                                                        📄 command_handler.rs
+                                                                        📄 connection.rs
+                                                                        📄 mod.rs
+                                                                        📄 playback.rs
+                                                                        📄 state.rs
                                                                       📁 tests/
                                                                         📄 audio_tests.rs
                                                                         📄 client_tests.rs
@@ -1733,6 +1908,7 @@ MIT License
                                                                         📄 opm_ffi_tests.rs
                                                                         📄 opm_tests.rs
                                                                         📄 play_json_interactive_tests.rs
+                                                                        📄 player_tests.rs
                                                                         📄 resampler_tests.rs
                                                                         📄 scheduler_tests.rs
                                                                         📄 server_tests.rs
@@ -1761,7 +1937,6 @@ MIT License
                                                                         📄 mod.rs
                                                                         📄 mode_test.rs
                                                                         📄 play_json_test.rs
-                                                                        📄 row_by_row_test.rs
                                                                         📄 shared_mutex.rs
                                                                         📄 step_by_step_test.rs
                                                                       📄 interactive_tests.rs
@@ -1780,6 +1955,12 @@ MIT License
                                                                     📖 101.md
                                                                     📖 102.md
                                                                     📖 103.md
+                                                                    📖 107.md
+                                                                    📖 110.md
+                                                                    📖 111.md
+                                                                    📖 112.md
+                                                                    📖 113.md
+                                                                    📖 114.md
                                                                     📖 34.md
                                                                     📖 36.md
                                                                     📖 38.md
@@ -1816,10 +1997,17 @@ MIT License
                                                                     📖 99.md
                                                                   📄 opm.c
                                                                   📄 opm.h
-                                                                  📊 output_ym2151_f64seconds.json
+                                                                  📊 output_ym2151.json
                                                                   📄 setup_ci_environment.sh
                                                                   📁 src/
-                                                                    📄 audio.rs
+                                                                    📁 audio/
+                                                                      📄 buffers.rs
+                                                                      📄 commands.rs
+                                                                      📄 generator.rs
+                                                                      📄 mod.rs
+                                                                      📄 player.rs
+                                                                      📄 scheduler.rs
+                                                                      📄 stream.rs
                                                                     📄 audio_config.rs
                                                                     📁 client/
                                                                       📄 config.rs
@@ -1829,7 +2017,7 @@ MIT License
                                                                       📄 mod.rs
                                                                       📄 server.rs
                                                                     📄 debug_wav.rs
-                                                                    📄 demo.rs
+                                                                    📄 demo_client_interactive.rs
                                                                     📄 demo_server_interactive.rs
                                                                     📄 demo_server_non_interactive.rs
                                                                     📄 events.rs
@@ -1837,6 +2025,13 @@ MIT License
                                                                       📄 mod.rs
                                                                       📄 pipe_windows.rs
                                                                       📄 protocol.rs
+                                                                      📁 windows/
+                                                                        📄 mod.rs
+                                                                        📄 pipe_factory.rs
+                                                                        📄 pipe_handle.rs
+                                                                        📄 pipe_reader.rs
+                                                                        📄 pipe_writer.rs
+                                                                        📄 test_logging.rs
                                                                     📄 lib.rs
                                                                     📄 logging.rs
                                                                     📄 main.rs
@@ -1846,7 +2041,12 @@ MIT License
                                                                     📄 player.rs
                                                                     📄 resampler.rs
                                                                     📄 scheduler.rs
-                                                                    📄 server.rs
+                                                                    📁 server/
+                                                                      📄 command_handler.rs
+                                                                      📄 connection.rs
+                                                                      📄 mod.rs
+                                                                      📄 playback.rs
+                                                                      📄 state.rs
                                                                     📁 tests/
                                                                       📄 audio_tests.rs
                                                                       📄 client_tests.rs
@@ -1862,6 +2062,7 @@ MIT License
                                                                       📄 opm_ffi_tests.rs
                                                                       📄 opm_tests.rs
                                                                       📄 play_json_interactive_tests.rs
+                                                                      📄 player_tests.rs
                                                                       📄 resampler_tests.rs
                                                                       📄 scheduler_tests.rs
                                                                       📄 server_tests.rs
@@ -1890,7 +2091,6 @@ MIT License
                                                                       📄 mod.rs
                                                                       📄 mode_test.rs
                                                                       📄 play_json_test.rs
-                                                                      📄 row_by_row_test.rs
                                                                       📄 shared_mutex.rs
                                                                       📄 step_by_step_test.rs
                                                                     📄 interactive_tests.rs
@@ -1909,6 +2109,12 @@ MIT License
                                                                   📖 101.md
                                                                   📖 102.md
                                                                   📖 103.md
+                                                                  📖 107.md
+                                                                  📖 110.md
+                                                                  📖 111.md
+                                                                  📖 112.md
+                                                                  📖 113.md
+                                                                  📖 114.md
                                                                   📖 34.md
                                                                   📖 36.md
                                                                   📖 38.md
@@ -1945,10 +2151,17 @@ MIT License
                                                                   📖 99.md
                                                                 📄 opm.c
                                                                 📄 opm.h
-                                                                📊 output_ym2151_f64seconds.json
+                                                                📊 output_ym2151.json
                                                                 📄 setup_ci_environment.sh
                                                                 📁 src/
-                                                                  📄 audio.rs
+                                                                  📁 audio/
+                                                                    📄 buffers.rs
+                                                                    📄 commands.rs
+                                                                    📄 generator.rs
+                                                                    📄 mod.rs
+                                                                    📄 player.rs
+                                                                    📄 scheduler.rs
+                                                                    📄 stream.rs
                                                                   📄 audio_config.rs
                                                                   📁 client/
                                                                     📄 config.rs
@@ -1958,7 +2171,7 @@ MIT License
                                                                     📄 mod.rs
                                                                     📄 server.rs
                                                                   📄 debug_wav.rs
-                                                                  📄 demo.rs
+                                                                  📄 demo_client_interactive.rs
                                                                   📄 demo_server_interactive.rs
                                                                   📄 demo_server_non_interactive.rs
                                                                   📄 events.rs
@@ -1966,6 +2179,13 @@ MIT License
                                                                     📄 mod.rs
                                                                     📄 pipe_windows.rs
                                                                     📄 protocol.rs
+                                                                    📁 windows/
+                                                                      📄 mod.rs
+                                                                      📄 pipe_factory.rs
+                                                                      📄 pipe_handle.rs
+                                                                      📄 pipe_reader.rs
+                                                                      📄 pipe_writer.rs
+                                                                      📄 test_logging.rs
                                                                   📄 lib.rs
                                                                   📄 logging.rs
                                                                   📄 main.rs
@@ -1975,7 +2195,12 @@ MIT License
                                                                   📄 player.rs
                                                                   📄 resampler.rs
                                                                   📄 scheduler.rs
-                                                                  📄 server.rs
+                                                                  📁 server/
+                                                                    📄 command_handler.rs
+                                                                    📄 connection.rs
+                                                                    📄 mod.rs
+                                                                    📄 playback.rs
+                                                                    📄 state.rs
                                                                   📁 tests/
                                                                     📄 audio_tests.rs
                                                                     📄 client_tests.rs
@@ -1991,6 +2216,7 @@ MIT License
                                                                     📄 opm_ffi_tests.rs
                                                                     📄 opm_tests.rs
                                                                     📄 play_json_interactive_tests.rs
+                                                                    📄 player_tests.rs
                                                                     📄 resampler_tests.rs
                                                                     📄 scheduler_tests.rs
                                                                     📄 server_tests.rs
@@ -2019,7 +2245,6 @@ MIT License
                                                                     📄 mod.rs
                                                                     📄 mode_test.rs
                                                                     📄 play_json_test.rs
-                                                                    📄 row_by_row_test.rs
                                                                     📄 shared_mutex.rs
                                                                     📄 step_by_step_test.rs
                                                                   📄 interactive_tests.rs
@@ -2038,6 +2263,12 @@ MIT License
                                                                 📖 101.md
                                                                 📖 102.md
                                                                 📖 103.md
+                                                                📖 107.md
+                                                                📖 110.md
+                                                                📖 111.md
+                                                                📖 112.md
+                                                                📖 113.md
+                                                                📖 114.md
                                                                 📖 34.md
                                                                 📖 36.md
                                                                 📖 38.md
@@ -2074,10 +2305,17 @@ MIT License
                                                                 📖 99.md
                                                               📄 opm.c
                                                               📄 opm.h
-                                                              📊 output_ym2151_f64seconds.json
+                                                              📊 output_ym2151.json
                                                               📄 setup_ci_environment.sh
                                                               📁 src/
-                                                                📄 audio.rs
+                                                                📁 audio/
+                                                                  📄 buffers.rs
+                                                                  📄 commands.rs
+                                                                  📄 generator.rs
+                                                                  📄 mod.rs
+                                                                  📄 player.rs
+                                                                  📄 scheduler.rs
+                                                                  📄 stream.rs
                                                                 📄 audio_config.rs
                                                                 📁 client/
                                                                   📄 config.rs
@@ -2087,7 +2325,7 @@ MIT License
                                                                   📄 mod.rs
                                                                   📄 server.rs
                                                                 📄 debug_wav.rs
-                                                                📄 demo.rs
+                                                                📄 demo_client_interactive.rs
                                                                 📄 demo_server_interactive.rs
                                                                 📄 demo_server_non_interactive.rs
                                                                 📄 events.rs
@@ -2095,6 +2333,13 @@ MIT License
                                                                   📄 mod.rs
                                                                   📄 pipe_windows.rs
                                                                   📄 protocol.rs
+                                                                  📁 windows/
+                                                                    📄 mod.rs
+                                                                    📄 pipe_factory.rs
+                                                                    📄 pipe_handle.rs
+                                                                    📄 pipe_reader.rs
+                                                                    📄 pipe_writer.rs
+                                                                    📄 test_logging.rs
                                                                 📄 lib.rs
                                                                 📄 logging.rs
                                                                 📄 main.rs
@@ -2104,7 +2349,12 @@ MIT License
                                                                 📄 player.rs
                                                                 📄 resampler.rs
                                                                 📄 scheduler.rs
-                                                                📄 server.rs
+                                                                📁 server/
+                                                                  📄 command_handler.rs
+                                                                  📄 connection.rs
+                                                                  📄 mod.rs
+                                                                  📄 playback.rs
+                                                                  📄 state.rs
                                                                 📁 tests/
                                                                   📄 audio_tests.rs
                                                                   📄 client_tests.rs
@@ -2120,6 +2370,7 @@ MIT License
                                                                   📄 opm_ffi_tests.rs
                                                                   📄 opm_tests.rs
                                                                   📄 play_json_interactive_tests.rs
+                                                                  📄 player_tests.rs
                                                                   📄 resampler_tests.rs
                                                                   📄 scheduler_tests.rs
                                                                   📄 server_tests.rs
@@ -2148,7 +2399,6 @@ MIT License
                                                                   📄 mod.rs
                                                                   📄 mode_test.rs
                                                                   📄 play_json_test.rs
-                                                                  📄 row_by_row_test.rs
                                                                   📄 shared_mutex.rs
                                                                   📄 step_by_step_test.rs
                                                                 📄 interactive_tests.rs
@@ -2167,6 +2417,12 @@ MIT License
                                                               📖 101.md
                                                               📖 102.md
                                                               📖 103.md
+                                                              📖 107.md
+                                                              📖 110.md
+                                                              📖 111.md
+                                                              📖 112.md
+                                                              📖 113.md
+                                                              📖 114.md
                                                               📖 34.md
                                                               📖 36.md
                                                               📖 38.md
@@ -2203,10 +2459,17 @@ MIT License
                                                               📖 99.md
                                                             📄 opm.c
                                                             📄 opm.h
-                                                            📊 output_ym2151_f64seconds.json
+                                                            📊 output_ym2151.json
                                                             📄 setup_ci_environment.sh
                                                             📁 src/
-                                                              📄 audio.rs
+                                                              📁 audio/
+                                                                📄 buffers.rs
+                                                                📄 commands.rs
+                                                                📄 generator.rs
+                                                                📄 mod.rs
+                                                                📄 player.rs
+                                                                📄 scheduler.rs
+                                                                📄 stream.rs
                                                               📄 audio_config.rs
                                                               📁 client/
                                                                 📄 config.rs
@@ -2216,7 +2479,7 @@ MIT License
                                                                 📄 mod.rs
                                                                 📄 server.rs
                                                               📄 debug_wav.rs
-                                                              📄 demo.rs
+                                                              📄 demo_client_interactive.rs
                                                               📄 demo_server_interactive.rs
                                                               📄 demo_server_non_interactive.rs
                                                               📄 events.rs
@@ -2224,6 +2487,13 @@ MIT License
                                                                 📄 mod.rs
                                                                 📄 pipe_windows.rs
                                                                 📄 protocol.rs
+                                                                📁 windows/
+                                                                  📄 mod.rs
+                                                                  📄 pipe_factory.rs
+                                                                  📄 pipe_handle.rs
+                                                                  📄 pipe_reader.rs
+                                                                  📄 pipe_writer.rs
+                                                                  📄 test_logging.rs
                                                               📄 lib.rs
                                                               📄 logging.rs
                                                               📄 main.rs
@@ -2233,7 +2503,12 @@ MIT License
                                                               📄 player.rs
                                                               📄 resampler.rs
                                                               📄 scheduler.rs
-                                                              📄 server.rs
+                                                              📁 server/
+                                                                📄 command_handler.rs
+                                                                📄 connection.rs
+                                                                📄 mod.rs
+                                                                📄 playback.rs
+                                                                📄 state.rs
                                                               📁 tests/
                                                                 📄 audio_tests.rs
                                                                 📄 client_tests.rs
@@ -2249,6 +2524,7 @@ MIT License
                                                                 📄 opm_ffi_tests.rs
                                                                 📄 opm_tests.rs
                                                                 📄 play_json_interactive_tests.rs
+                                                                📄 player_tests.rs
                                                                 📄 resampler_tests.rs
                                                                 📄 scheduler_tests.rs
                                                                 📄 server_tests.rs
@@ -2277,7 +2553,6 @@ MIT License
                                                                 📄 mod.rs
                                                                 📄 mode_test.rs
                                                                 📄 play_json_test.rs
-                                                                📄 row_by_row_test.rs
                                                                 📄 shared_mutex.rs
                                                                 📄 step_by_step_test.rs
                                                               📄 interactive_tests.rs
@@ -2296,6 +2571,12 @@ MIT License
                                                             📖 101.md
                                                             📖 102.md
                                                             📖 103.md
+                                                            📖 107.md
+                                                            📖 110.md
+                                                            📖 111.md
+                                                            📖 112.md
+                                                            📖 113.md
+                                                            📖 114.md
                                                             📖 34.md
                                                             📖 36.md
                                                             📖 38.md
@@ -2332,10 +2613,17 @@ MIT License
                                                             📖 99.md
                                                           📄 opm.c
                                                           📄 opm.h
-                                                          📊 output_ym2151_f64seconds.json
+                                                          📊 output_ym2151.json
                                                           📄 setup_ci_environment.sh
                                                           📁 src/
-                                                            📄 audio.rs
+                                                            📁 audio/
+                                                              📄 buffers.rs
+                                                              📄 commands.rs
+                                                              📄 generator.rs
+                                                              📄 mod.rs
+                                                              📄 player.rs
+                                                              📄 scheduler.rs
+                                                              📄 stream.rs
                                                             📄 audio_config.rs
                                                             📁 client/
                                                               📄 config.rs
@@ -2345,7 +2633,7 @@ MIT License
                                                               📄 mod.rs
                                                               📄 server.rs
                                                             📄 debug_wav.rs
-                                                            📄 demo.rs
+                                                            📄 demo_client_interactive.rs
                                                             📄 demo_server_interactive.rs
                                                             📄 demo_server_non_interactive.rs
                                                             📄 events.rs
@@ -2353,6 +2641,13 @@ MIT License
                                                               📄 mod.rs
                                                               📄 pipe_windows.rs
                                                               📄 protocol.rs
+                                                              📁 windows/
+                                                                📄 mod.rs
+                                                                📄 pipe_factory.rs
+                                                                📄 pipe_handle.rs
+                                                                📄 pipe_reader.rs
+                                                                📄 pipe_writer.rs
+                                                                📄 test_logging.rs
                                                             📄 lib.rs
                                                             📄 logging.rs
                                                             📄 main.rs
@@ -2362,7 +2657,12 @@ MIT License
                                                             📄 player.rs
                                                             📄 resampler.rs
                                                             📄 scheduler.rs
-                                                            📄 server.rs
+                                                            📁 server/
+                                                              📄 command_handler.rs
+                                                              📄 connection.rs
+                                                              📄 mod.rs
+                                                              📄 playback.rs
+                                                              📄 state.rs
                                                             📁 tests/
                                                               📄 audio_tests.rs
                                                               📄 client_tests.rs
@@ -2378,6 +2678,7 @@ MIT License
                                                               📄 opm_ffi_tests.rs
                                                               📄 opm_tests.rs
                                                               📄 play_json_interactive_tests.rs
+                                                              📄 player_tests.rs
                                                               📄 resampler_tests.rs
                                                               📄 scheduler_tests.rs
                                                               📄 server_tests.rs
@@ -2406,7 +2707,6 @@ MIT License
                                                               📄 mod.rs
                                                               📄 mode_test.rs
                                                               📄 play_json_test.rs
-                                                              📄 row_by_row_test.rs
                                                               📄 shared_mutex.rs
                                                               📄 step_by_step_test.rs
                                                             📄 interactive_tests.rs
@@ -2425,6 +2725,12 @@ MIT License
                                                           📖 101.md
                                                           📖 102.md
                                                           📖 103.md
+                                                          📖 107.md
+                                                          📖 110.md
+                                                          📖 111.md
+                                                          📖 112.md
+                                                          📖 113.md
+                                                          📖 114.md
                                                           📖 34.md
                                                           📖 36.md
                                                           📖 38.md
@@ -2461,10 +2767,17 @@ MIT License
                                                           📖 99.md
                                                         📄 opm.c
                                                         📄 opm.h
-                                                        📊 output_ym2151_f64seconds.json
+                                                        📊 output_ym2151.json
                                                         📄 setup_ci_environment.sh
                                                         📁 src/
-                                                          📄 audio.rs
+                                                          📁 audio/
+                                                            📄 buffers.rs
+                                                            📄 commands.rs
+                                                            📄 generator.rs
+                                                            📄 mod.rs
+                                                            📄 player.rs
+                                                            📄 scheduler.rs
+                                                            📄 stream.rs
                                                           📄 audio_config.rs
                                                           📁 client/
                                                             📄 config.rs
@@ -2474,7 +2787,7 @@ MIT License
                                                             📄 mod.rs
                                                             📄 server.rs
                                                           📄 debug_wav.rs
-                                                          📄 demo.rs
+                                                          📄 demo_client_interactive.rs
                                                           📄 demo_server_interactive.rs
                                                           📄 demo_server_non_interactive.rs
                                                           📄 events.rs
@@ -2482,6 +2795,13 @@ MIT License
                                                             📄 mod.rs
                                                             📄 pipe_windows.rs
                                                             📄 protocol.rs
+                                                            📁 windows/
+                                                              📄 mod.rs
+                                                              📄 pipe_factory.rs
+                                                              📄 pipe_handle.rs
+                                                              📄 pipe_reader.rs
+                                                              📄 pipe_writer.rs
+                                                              📄 test_logging.rs
                                                           📄 lib.rs
                                                           📄 logging.rs
                                                           📄 main.rs
@@ -2491,7 +2811,12 @@ MIT License
                                                           📄 player.rs
                                                           📄 resampler.rs
                                                           📄 scheduler.rs
-                                                          📄 server.rs
+                                                          📁 server/
+                                                            📄 command_handler.rs
+                                                            📄 connection.rs
+                                                            📄 mod.rs
+                                                            📄 playback.rs
+                                                            📄 state.rs
                                                           📁 tests/
                                                             📄 audio_tests.rs
                                                             📄 client_tests.rs
@@ -2507,6 +2832,7 @@ MIT License
                                                             📄 opm_ffi_tests.rs
                                                             📄 opm_tests.rs
                                                             📄 play_json_interactive_tests.rs
+                                                            📄 player_tests.rs
                                                             📄 resampler_tests.rs
                                                             📄 scheduler_tests.rs
                                                             📄 server_tests.rs
@@ -2535,7 +2861,6 @@ MIT License
                                                             📄 mod.rs
                                                             📄 mode_test.rs
                                                             📄 play_json_test.rs
-                                                            📄 row_by_row_test.rs
                                                             📄 shared_mutex.rs
                                                             📄 step_by_step_test.rs
                                                           📄 interactive_tests.rs
@@ -2554,6 +2879,12 @@ MIT License
                                                         📖 101.md
                                                         📖 102.md
                                                         📖 103.md
+                                                        📖 107.md
+                                                        📖 110.md
+                                                        📖 111.md
+                                                        📖 112.md
+                                                        📖 113.md
+                                                        📖 114.md
                                                         📖 34.md
                                                         📖 36.md
                                                         📖 38.md
@@ -2590,10 +2921,17 @@ MIT License
                                                         📖 99.md
                                                       📄 opm.c
                                                       📄 opm.h
-                                                      📊 output_ym2151_f64seconds.json
+                                                      📊 output_ym2151.json
                                                       📄 setup_ci_environment.sh
                                                       📁 src/
-                                                        📄 audio.rs
+                                                        📁 audio/
+                                                          📄 buffers.rs
+                                                          📄 commands.rs
+                                                          📄 generator.rs
+                                                          📄 mod.rs
+                                                          📄 player.rs
+                                                          📄 scheduler.rs
+                                                          📄 stream.rs
                                                         📄 audio_config.rs
                                                         📁 client/
                                                           📄 config.rs
@@ -2603,7 +2941,7 @@ MIT License
                                                           📄 mod.rs
                                                           📄 server.rs
                                                         📄 debug_wav.rs
-                                                        📄 demo.rs
+                                                        📄 demo_client_interactive.rs
                                                         📄 demo_server_interactive.rs
                                                         📄 demo_server_non_interactive.rs
                                                         📄 events.rs
@@ -2611,6 +2949,13 @@ MIT License
                                                           📄 mod.rs
                                                           📄 pipe_windows.rs
                                                           📄 protocol.rs
+                                                          📁 windows/
+                                                            📄 mod.rs
+                                                            📄 pipe_factory.rs
+                                                            📄 pipe_handle.rs
+                                                            📄 pipe_reader.rs
+                                                            📄 pipe_writer.rs
+                                                            📄 test_logging.rs
                                                         📄 lib.rs
                                                         📄 logging.rs
                                                         📄 main.rs
@@ -2620,7 +2965,12 @@ MIT License
                                                         📄 player.rs
                                                         📄 resampler.rs
                                                         📄 scheduler.rs
-                                                        📄 server.rs
+                                                        📁 server/
+                                                          📄 command_handler.rs
+                                                          📄 connection.rs
+                                                          📄 mod.rs
+                                                          📄 playback.rs
+                                                          📄 state.rs
                                                         📁 tests/
                                                           📄 audio_tests.rs
                                                           📄 client_tests.rs
@@ -2636,6 +2986,7 @@ MIT License
                                                           📄 opm_ffi_tests.rs
                                                           📄 opm_tests.rs
                                                           📄 play_json_interactive_tests.rs
+                                                          📄 player_tests.rs
                                                           📄 resampler_tests.rs
                                                           📄 scheduler_tests.rs
                                                           📄 server_tests.rs
@@ -2664,7 +3015,6 @@ MIT License
                                                           📄 mod.rs
                                                           📄 mode_test.rs
                                                           📄 play_json_test.rs
-                                                          📄 row_by_row_test.rs
                                                           📄 shared_mutex.rs
                                                           📄 step_by_step_test.rs
                                                         📄 interactive_tests.rs
@@ -2683,6 +3033,12 @@ MIT License
                                                       📖 101.md
                                                       📖 102.md
                                                       📖 103.md
+                                                      📖 107.md
+                                                      📖 110.md
+                                                      📖 111.md
+                                                      📖 112.md
+                                                      📖 113.md
+                                                      📖 114.md
                                                       📖 34.md
                                                       📖 36.md
                                                       📖 38.md
@@ -2719,10 +3075,17 @@ MIT License
                                                       📖 99.md
                                                     📄 opm.c
                                                     📄 opm.h
-                                                    📊 output_ym2151_f64seconds.json
+                                                    📊 output_ym2151.json
                                                     📄 setup_ci_environment.sh
                                                     📁 src/
-                                                      📄 audio.rs
+                                                      📁 audio/
+                                                        📄 buffers.rs
+                                                        📄 commands.rs
+                                                        📄 generator.rs
+                                                        📄 mod.rs
+                                                        📄 player.rs
+                                                        📄 scheduler.rs
+                                                        📄 stream.rs
                                                       📄 audio_config.rs
                                                       📁 client/
                                                         📄 config.rs
@@ -2732,7 +3095,7 @@ MIT License
                                                         📄 mod.rs
                                                         📄 server.rs
                                                       📄 debug_wav.rs
-                                                      📄 demo.rs
+                                                      📄 demo_client_interactive.rs
                                                       📄 demo_server_interactive.rs
                                                       📄 demo_server_non_interactive.rs
                                                       📄 events.rs
@@ -2740,6 +3103,13 @@ MIT License
                                                         📄 mod.rs
                                                         📄 pipe_windows.rs
                                                         📄 protocol.rs
+                                                        📁 windows/
+                                                          📄 mod.rs
+                                                          📄 pipe_factory.rs
+                                                          📄 pipe_handle.rs
+                                                          📄 pipe_reader.rs
+                                                          📄 pipe_writer.rs
+                                                          📄 test_logging.rs
                                                       📄 lib.rs
                                                       📄 logging.rs
                                                       📄 main.rs
@@ -2749,7 +3119,12 @@ MIT License
                                                       📄 player.rs
                                                       📄 resampler.rs
                                                       📄 scheduler.rs
-                                                      📄 server.rs
+                                                      📁 server/
+                                                        📄 command_handler.rs
+                                                        📄 connection.rs
+                                                        📄 mod.rs
+                                                        📄 playback.rs
+                                                        📄 state.rs
                                                       📁 tests/
                                                         📄 audio_tests.rs
                                                         📄 client_tests.rs
@@ -2765,6 +3140,7 @@ MIT License
                                                         📄 opm_ffi_tests.rs
                                                         📄 opm_tests.rs
                                                         📄 play_json_interactive_tests.rs
+                                                        📄 player_tests.rs
                                                         📄 resampler_tests.rs
                                                         📄 scheduler_tests.rs
                                                         📄 server_tests.rs
@@ -2793,7 +3169,6 @@ MIT License
                                                         📄 mod.rs
                                                         📄 mode_test.rs
                                                         📄 play_json_test.rs
-                                                        📄 row_by_row_test.rs
                                                         📄 shared_mutex.rs
                                                         📄 step_by_step_test.rs
                                                       📄 interactive_tests.rs
@@ -2812,6 +3187,12 @@ MIT License
                                                     📖 101.md
                                                     📖 102.md
                                                     📖 103.md
+                                                    📖 107.md
+                                                    📖 110.md
+                                                    📖 111.md
+                                                    📖 112.md
+                                                    📖 113.md
+                                                    📖 114.md
                                                     📖 34.md
                                                     📖 36.md
                                                     📖 38.md
@@ -2848,10 +3229,17 @@ MIT License
                                                     📖 99.md
                                                   📄 opm.c
                                                   📄 opm.h
-                                                  📊 output_ym2151_f64seconds.json
+                                                  📊 output_ym2151.json
                                                   📄 setup_ci_environment.sh
                                                   📁 src/
-                                                    📄 audio.rs
+                                                    📁 audio/
+                                                      📄 buffers.rs
+                                                      📄 commands.rs
+                                                      📄 generator.rs
+                                                      📄 mod.rs
+                                                      📄 player.rs
+                                                      📄 scheduler.rs
+                                                      📄 stream.rs
                                                     📄 audio_config.rs
                                                     📁 client/
                                                       📄 config.rs
@@ -2861,7 +3249,7 @@ MIT License
                                                       📄 mod.rs
                                                       📄 server.rs
                                                     📄 debug_wav.rs
-                                                    📄 demo.rs
+                                                    📄 demo_client_interactive.rs
                                                     📄 demo_server_interactive.rs
                                                     📄 demo_server_non_interactive.rs
                                                     📄 events.rs
@@ -2869,6 +3257,13 @@ MIT License
                                                       📄 mod.rs
                                                       📄 pipe_windows.rs
                                                       📄 protocol.rs
+                                                      📁 windows/
+                                                        📄 mod.rs
+                                                        📄 pipe_factory.rs
+                                                        📄 pipe_handle.rs
+                                                        📄 pipe_reader.rs
+                                                        📄 pipe_writer.rs
+                                                        📄 test_logging.rs
                                                     📄 lib.rs
                                                     📄 logging.rs
                                                     📄 main.rs
@@ -2878,7 +3273,12 @@ MIT License
                                                     📄 player.rs
                                                     📄 resampler.rs
                                                     📄 scheduler.rs
-                                                    📄 server.rs
+                                                    📁 server/
+                                                      📄 command_handler.rs
+                                                      📄 connection.rs
+                                                      📄 mod.rs
+                                                      📄 playback.rs
+                                                      📄 state.rs
                                                     📁 tests/
                                                       📄 audio_tests.rs
                                                       📄 client_tests.rs
@@ -2894,6 +3294,7 @@ MIT License
                                                       📄 opm_ffi_tests.rs
                                                       📄 opm_tests.rs
                                                       📄 play_json_interactive_tests.rs
+                                                      📄 player_tests.rs
                                                       📄 resampler_tests.rs
                                                       📄 scheduler_tests.rs
                                                       📄 server_tests.rs
@@ -2922,7 +3323,6 @@ MIT License
                                                       📄 mod.rs
                                                       📄 mode_test.rs
                                                       📄 play_json_test.rs
-                                                      📄 row_by_row_test.rs
                                                       📄 shared_mutex.rs
                                                       📄 step_by_step_test.rs
                                                     📄 interactive_tests.rs
@@ -2941,6 +3341,12 @@ MIT License
                                                   📖 101.md
                                                   📖 102.md
                                                   📖 103.md
+                                                  📖 107.md
+                                                  📖 110.md
+                                                  📖 111.md
+                                                  📖 112.md
+                                                  📖 113.md
+                                                  📖 114.md
                                                   📖 34.md
                                                   📖 36.md
                                                   📖 38.md
@@ -2977,10 +3383,17 @@ MIT License
                                                   📖 99.md
                                                 📄 opm.c
                                                 📄 opm.h
-                                                📊 output_ym2151_f64seconds.json
+                                                📊 output_ym2151.json
                                                 📄 setup_ci_environment.sh
                                                 📁 src/
-                                                  📄 audio.rs
+                                                  📁 audio/
+                                                    📄 buffers.rs
+                                                    📄 commands.rs
+                                                    📄 generator.rs
+                                                    📄 mod.rs
+                                                    📄 player.rs
+                                                    📄 scheduler.rs
+                                                    📄 stream.rs
                                                   📄 audio_config.rs
                                                   📁 client/
                                                     📄 config.rs
@@ -2990,7 +3403,7 @@ MIT License
                                                     📄 mod.rs
                                                     📄 server.rs
                                                   📄 debug_wav.rs
-                                                  📄 demo.rs
+                                                  📄 demo_client_interactive.rs
                                                   📄 demo_server_interactive.rs
                                                   📄 demo_server_non_interactive.rs
                                                   📄 events.rs
@@ -2998,6 +3411,13 @@ MIT License
                                                     📄 mod.rs
                                                     📄 pipe_windows.rs
                                                     📄 protocol.rs
+                                                    📁 windows/
+                                                      📄 mod.rs
+                                                      📄 pipe_factory.rs
+                                                      📄 pipe_handle.rs
+                                                      📄 pipe_reader.rs
+                                                      📄 pipe_writer.rs
+                                                      📄 test_logging.rs
                                                   📄 lib.rs
                                                   📄 logging.rs
                                                   📄 main.rs
@@ -3007,7 +3427,12 @@ MIT License
                                                   📄 player.rs
                                                   📄 resampler.rs
                                                   📄 scheduler.rs
-                                                  📄 server.rs
+                                                  📁 server/
+                                                    📄 command_handler.rs
+                                                    📄 connection.rs
+                                                    📄 mod.rs
+                                                    📄 playback.rs
+                                                    📄 state.rs
                                                   📁 tests/
                                                     📄 audio_tests.rs
                                                     📄 client_tests.rs
@@ -3023,6 +3448,7 @@ MIT License
                                                     📄 opm_ffi_tests.rs
                                                     📄 opm_tests.rs
                                                     📄 play_json_interactive_tests.rs
+                                                    📄 player_tests.rs
                                                     📄 resampler_tests.rs
                                                     📄 scheduler_tests.rs
                                                     📄 server_tests.rs
@@ -3051,7 +3477,6 @@ MIT License
                                                     📄 mod.rs
                                                     📄 mode_test.rs
                                                     📄 play_json_test.rs
-                                                    📄 row_by_row_test.rs
                                                     📄 shared_mutex.rs
                                                     📄 step_by_step_test.rs
                                                   📄 interactive_tests.rs
@@ -3070,6 +3495,12 @@ MIT License
                                                 📖 101.md
                                                 📖 102.md
                                                 📖 103.md
+                                                📖 107.md
+                                                📖 110.md
+                                                📖 111.md
+                                                📖 112.md
+                                                📖 113.md
+                                                📖 114.md
                                                 📖 34.md
                                                 📖 36.md
                                                 📖 38.md
@@ -3106,10 +3537,17 @@ MIT License
                                                 📖 99.md
                                               📄 opm.c
                                               📄 opm.h
-                                              📊 output_ym2151_f64seconds.json
+                                              📊 output_ym2151.json
                                               📄 setup_ci_environment.sh
                                               📁 src/
-                                                📄 audio.rs
+                                                📁 audio/
+                                                  📄 buffers.rs
+                                                  📄 commands.rs
+                                                  📄 generator.rs
+                                                  📄 mod.rs
+                                                  📄 player.rs
+                                                  📄 scheduler.rs
+                                                  📄 stream.rs
                                                 📄 audio_config.rs
                                                 📁 client/
                                                   📄 config.rs
@@ -3119,7 +3557,7 @@ MIT License
                                                   📄 mod.rs
                                                   📄 server.rs
                                                 📄 debug_wav.rs
-                                                📄 demo.rs
+                                                📄 demo_client_interactive.rs
                                                 📄 demo_server_interactive.rs
                                                 📄 demo_server_non_interactive.rs
                                                 📄 events.rs
@@ -3127,6 +3565,13 @@ MIT License
                                                   📄 mod.rs
                                                   📄 pipe_windows.rs
                                                   📄 protocol.rs
+                                                  📁 windows/
+                                                    📄 mod.rs
+                                                    📄 pipe_factory.rs
+                                                    📄 pipe_handle.rs
+                                                    📄 pipe_reader.rs
+                                                    📄 pipe_writer.rs
+                                                    📄 test_logging.rs
                                                 📄 lib.rs
                                                 📄 logging.rs
                                                 📄 main.rs
@@ -3136,7 +3581,12 @@ MIT License
                                                 📄 player.rs
                                                 📄 resampler.rs
                                                 📄 scheduler.rs
-                                                📄 server.rs
+                                                📁 server/
+                                                  📄 command_handler.rs
+                                                  📄 connection.rs
+                                                  📄 mod.rs
+                                                  📄 playback.rs
+                                                  📄 state.rs
                                                 📁 tests/
                                                   📄 audio_tests.rs
                                                   📄 client_tests.rs
@@ -3152,6 +3602,7 @@ MIT License
                                                   📄 opm_ffi_tests.rs
                                                   📄 opm_tests.rs
                                                   📄 play_json_interactive_tests.rs
+                                                  📄 player_tests.rs
                                                   📄 resampler_tests.rs
                                                   📄 scheduler_tests.rs
                                                   📄 server_tests.rs
@@ -3180,7 +3631,6 @@ MIT License
                                                   📄 mod.rs
                                                   📄 mode_test.rs
                                                   📄 play_json_test.rs
-                                                  📄 row_by_row_test.rs
                                                   📄 shared_mutex.rs
                                                   📄 step_by_step_test.rs
                                                 📄 interactive_tests.rs
@@ -3199,6 +3649,12 @@ MIT License
                                               📖 101.md
                                               📖 102.md
                                               📖 103.md
+                                              📖 107.md
+                                              📖 110.md
+                                              📖 111.md
+                                              📖 112.md
+                                              📖 113.md
+                                              📖 114.md
                                               📖 34.md
                                               📖 36.md
                                               📖 38.md
@@ -3235,10 +3691,17 @@ MIT License
                                               📖 99.md
                                             📄 opm.c
                                             📄 opm.h
-                                            📊 output_ym2151_f64seconds.json
+                                            📊 output_ym2151.json
                                             📄 setup_ci_environment.sh
                                             📁 src/
-                                              📄 audio.rs
+                                              📁 audio/
+                                                📄 buffers.rs
+                                                📄 commands.rs
+                                                📄 generator.rs
+                                                📄 mod.rs
+                                                📄 player.rs
+                                                📄 scheduler.rs
+                                                📄 stream.rs
                                               📄 audio_config.rs
                                               📁 client/
                                                 📄 config.rs
@@ -3248,7 +3711,7 @@ MIT License
                                                 📄 mod.rs
                                                 📄 server.rs
                                               📄 debug_wav.rs
-                                              📄 demo.rs
+                                              📄 demo_client_interactive.rs
                                               📄 demo_server_interactive.rs
                                               📄 demo_server_non_interactive.rs
                                               📄 events.rs
@@ -3256,6 +3719,13 @@ MIT License
                                                 📄 mod.rs
                                                 📄 pipe_windows.rs
                                                 📄 protocol.rs
+                                                📁 windows/
+                                                  📄 mod.rs
+                                                  📄 pipe_factory.rs
+                                                  📄 pipe_handle.rs
+                                                  📄 pipe_reader.rs
+                                                  📄 pipe_writer.rs
+                                                  📄 test_logging.rs
                                               📄 lib.rs
                                               📄 logging.rs
                                               📄 main.rs
@@ -3265,7 +3735,12 @@ MIT License
                                               📄 player.rs
                                               📄 resampler.rs
                                               📄 scheduler.rs
-                                              📄 server.rs
+                                              📁 server/
+                                                📄 command_handler.rs
+                                                📄 connection.rs
+                                                📄 mod.rs
+                                                📄 playback.rs
+                                                📄 state.rs
                                               📁 tests/
                                                 📄 audio_tests.rs
                                                 📄 client_tests.rs
@@ -3281,6 +3756,7 @@ MIT License
                                                 📄 opm_ffi_tests.rs
                                                 📄 opm_tests.rs
                                                 📄 play_json_interactive_tests.rs
+                                                📄 player_tests.rs
                                                 📄 resampler_tests.rs
                                                 📄 scheduler_tests.rs
                                                 📄 server_tests.rs
@@ -3309,7 +3785,6 @@ MIT License
                                                 📄 mod.rs
                                                 📄 mode_test.rs
                                                 📄 play_json_test.rs
-                                                📄 row_by_row_test.rs
                                                 📄 shared_mutex.rs
                                                 📄 step_by_step_test.rs
                                               📄 interactive_tests.rs
@@ -3322,12 +3797,19 @@ MIT License
                                           📄 _config.yml
                                           📄 build.rs
                                           📁 generated-docs/
+                                            📖 development-status-generated-prompt.md
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
                                             📖 100.md
                                             📖 101.md
                                             📖 102.md
                                             📖 103.md
+                                            📖 107.md
+                                            📖 110.md
+                                            📖 111.md
+                                            📖 112.md
+                                            📖 113.md
+                                            📖 114.md
                                             📖 34.md
                                             📖 36.md
                                             📖 38.md
@@ -3364,10 +3846,17 @@ MIT License
                                             📖 99.md
                                           📄 opm.c
                                           📄 opm.h
-                                          📊 output_ym2151_f64seconds.json
+                                          📊 output_ym2151.json
                                           📄 setup_ci_environment.sh
                                           📁 src/
-                                            📄 audio.rs
+                                            📁 audio/
+                                              📄 buffers.rs
+                                              📄 commands.rs
+                                              📄 generator.rs
+                                              📄 mod.rs
+                                              📄 player.rs
+                                              📄 scheduler.rs
+                                              📄 stream.rs
                                             📄 audio_config.rs
                                             📁 client/
                                               📄 config.rs
@@ -3377,7 +3866,7 @@ MIT License
                                               📄 mod.rs
                                               📄 server.rs
                                             📄 debug_wav.rs
-                                            📄 demo.rs
+                                            📄 demo_client_interactive.rs
                                             📄 demo_server_interactive.rs
                                             📄 demo_server_non_interactive.rs
                                             📄 events.rs
@@ -3385,6 +3874,13 @@ MIT License
                                               📄 mod.rs
                                               📄 pipe_windows.rs
                                               📄 protocol.rs
+                                              📁 windows/
+                                                📄 mod.rs
+                                                📄 pipe_factory.rs
+                                                📄 pipe_handle.rs
+                                                📄 pipe_reader.rs
+                                                📄 pipe_writer.rs
+                                                📄 test_logging.rs
                                             📄 lib.rs
                                             📄 logging.rs
                                             📄 main.rs
@@ -3394,7 +3890,12 @@ MIT License
                                             📄 player.rs
                                             📄 resampler.rs
                                             📄 scheduler.rs
-                                            📄 server.rs
+                                            📁 server/
+                                              📄 command_handler.rs
+                                              📄 connection.rs
+                                              📄 mod.rs
+                                              📄 playback.rs
+                                              📄 state.rs
                                             📁 tests/
                                               📄 audio_tests.rs
                                               📄 client_tests.rs
@@ -3410,6 +3911,7 @@ MIT License
                                               📄 opm_ffi_tests.rs
                                               📄 opm_tests.rs
                                               📄 play_json_interactive_tests.rs
+                                              📄 player_tests.rs
                                               📄 resampler_tests.rs
                                               📄 scheduler_tests.rs
                                               📄 server_tests.rs
@@ -3438,7 +3940,6 @@ MIT License
                                               📄 mod.rs
                                               📄 mode_test.rs
                                               📄 play_json_test.rs
-                                              📄 row_by_row_test.rs
                                               📄 shared_mutex.rs
                                               📄 step_by_step_test.rs
                                             📄 interactive_tests.rs
@@ -3458,6 +3959,12 @@ MIT License
                                           📖 101.md
                                           📖 102.md
                                           📖 103.md
+                                          📖 107.md
+                                          📖 110.md
+                                          📖 111.md
+                                          📖 112.md
+                                          📖 113.md
+                                          📖 114.md
                                           📖 34.md
                                           📖 36.md
                                           📖 38.md
@@ -3494,10 +4001,17 @@ MIT License
                                           📖 99.md
                                         📄 opm.c
                                         📄 opm.h
-                                        📊 output_ym2151_f64seconds.json
+                                        📊 output_ym2151.json
                                         📄 setup_ci_environment.sh
                                         📁 src/
-                                          📄 audio.rs
+                                          📁 audio/
+                                            📄 buffers.rs
+                                            📄 commands.rs
+                                            📄 generator.rs
+                                            📄 mod.rs
+                                            📄 player.rs
+                                            📄 scheduler.rs
+                                            📄 stream.rs
                                           📄 audio_config.rs
                                           📁 client/
                                             📄 config.rs
@@ -3507,7 +4021,7 @@ MIT License
                                             📄 mod.rs
                                             📄 server.rs
                                           📄 debug_wav.rs
-                                          📄 demo.rs
+                                          📄 demo_client_interactive.rs
                                           📄 demo_server_interactive.rs
                                           📄 demo_server_non_interactive.rs
                                           📄 events.rs
@@ -3515,6 +4029,13 @@ MIT License
                                             📄 mod.rs
                                             📄 pipe_windows.rs
                                             📄 protocol.rs
+                                            📁 windows/
+                                              📄 mod.rs
+                                              📄 pipe_factory.rs
+                                              📄 pipe_handle.rs
+                                              📄 pipe_reader.rs
+                                              📄 pipe_writer.rs
+                                              📄 test_logging.rs
                                           📄 lib.rs
                                           📄 logging.rs
                                           📄 main.rs
@@ -3524,7 +4045,12 @@ MIT License
                                           📄 player.rs
                                           📄 resampler.rs
                                           📄 scheduler.rs
-                                          📄 server.rs
+                                          📁 server/
+                                            📄 command_handler.rs
+                                            📄 connection.rs
+                                            📄 mod.rs
+                                            📄 playback.rs
+                                            📄 state.rs
                                           📁 tests/
                                             📄 audio_tests.rs
                                             📄 client_tests.rs
@@ -3540,6 +4066,7 @@ MIT License
                                             📄 opm_ffi_tests.rs
                                             📄 opm_tests.rs
                                             📄 play_json_interactive_tests.rs
+                                            📄 player_tests.rs
                                             📄 resampler_tests.rs
                                             📄 scheduler_tests.rs
                                             📄 server_tests.rs
@@ -3568,7 +4095,6 @@ MIT License
                                             📄 mod.rs
                                             📄 mode_test.rs
                                             📄 play_json_test.rs
-                                            📄 row_by_row_test.rs
                                             📄 shared_mutex.rs
                                             📄 step_by_step_test.rs
                                           📄 interactive_tests.rs
@@ -3588,6 +4114,12 @@ MIT License
                                         📖 101.md
                                         📖 102.md
                                         📖 103.md
+                                        📖 107.md
+                                        📖 110.md
+                                        📖 111.md
+                                        📖 112.md
+                                        📖 113.md
+                                        📖 114.md
                                         📖 34.md
                                         📖 36.md
                                         📖 38.md
@@ -3624,10 +4156,17 @@ MIT License
                                         📖 99.md
                                       📄 opm.c
                                       📄 opm.h
-                                      📊 output_ym2151_f64seconds.json
+                                      📊 output_ym2151.json
                                       📄 setup_ci_environment.sh
                                       📁 src/
-                                        📄 audio.rs
+                                        📁 audio/
+                                          📄 buffers.rs
+                                          📄 commands.rs
+                                          📄 generator.rs
+                                          📄 mod.rs
+                                          📄 player.rs
+                                          📄 scheduler.rs
+                                          📄 stream.rs
                                         📄 audio_config.rs
                                         📁 client/
                                           📄 config.rs
@@ -3637,7 +4176,7 @@ MIT License
                                           📄 mod.rs
                                           📄 server.rs
                                         📄 debug_wav.rs
-                                        📄 demo.rs
+                                        📄 demo_client_interactive.rs
                                         📄 demo_server_interactive.rs
                                         📄 demo_server_non_interactive.rs
                                         📄 events.rs
@@ -3645,6 +4184,13 @@ MIT License
                                           📄 mod.rs
                                           📄 pipe_windows.rs
                                           📄 protocol.rs
+                                          📁 windows/
+                                            📄 mod.rs
+                                            📄 pipe_factory.rs
+                                            📄 pipe_handle.rs
+                                            📄 pipe_reader.rs
+                                            📄 pipe_writer.rs
+                                            📄 test_logging.rs
                                         📄 lib.rs
                                         📄 logging.rs
                                         📄 main.rs
@@ -3654,7 +4200,12 @@ MIT License
                                         📄 player.rs
                                         📄 resampler.rs
                                         📄 scheduler.rs
-                                        📄 server.rs
+                                        📁 server/
+                                          📄 command_handler.rs
+                                          📄 connection.rs
+                                          📄 mod.rs
+                                          📄 playback.rs
+                                          📄 state.rs
                                         📁 tests/
                                           📄 audio_tests.rs
                                           📄 client_tests.rs
@@ -3670,6 +4221,7 @@ MIT License
                                           📄 opm_ffi_tests.rs
                                           📄 opm_tests.rs
                                           📄 play_json_interactive_tests.rs
+                                          📄 player_tests.rs
                                           📄 resampler_tests.rs
                                           📄 scheduler_tests.rs
                                           📄 server_tests.rs
@@ -3698,7 +4250,6 @@ MIT License
                                           📄 mod.rs
                                           📄 mode_test.rs
                                           📄 play_json_test.rs
-                                          📄 row_by_row_test.rs
                                           📄 shared_mutex.rs
                                           📄 step_by_step_test.rs
                                         📄 interactive_tests.rs
@@ -3718,6 +4269,12 @@ MIT License
                                       📖 101.md
                                       📖 102.md
                                       📖 103.md
+                                      📖 107.md
+                                      📖 110.md
+                                      📖 111.md
+                                      📖 112.md
+                                      📖 113.md
+                                      📖 114.md
                                       📖 34.md
                                       📖 36.md
                                       📖 38.md
@@ -3754,10 +4311,17 @@ MIT License
                                       📖 99.md
                                     📄 opm.c
                                     📄 opm.h
-                                    📊 output_ym2151_f64seconds.json
+                                    📊 output_ym2151.json
                                     📄 setup_ci_environment.sh
                                     📁 src/
-                                      📄 audio.rs
+                                      📁 audio/
+                                        📄 buffers.rs
+                                        📄 commands.rs
+                                        📄 generator.rs
+                                        📄 mod.rs
+                                        📄 player.rs
+                                        📄 scheduler.rs
+                                        📄 stream.rs
                                       📄 audio_config.rs
                                       📁 client/
                                         📄 config.rs
@@ -3767,7 +4331,7 @@ MIT License
                                         📄 mod.rs
                                         📄 server.rs
                                       📄 debug_wav.rs
-                                      📄 demo.rs
+                                      📄 demo_client_interactive.rs
                                       📄 demo_server_interactive.rs
                                       📄 demo_server_non_interactive.rs
                                       📄 events.rs
@@ -3775,6 +4339,13 @@ MIT License
                                         📄 mod.rs
                                         📄 pipe_windows.rs
                                         📄 protocol.rs
+                                        📁 windows/
+                                          📄 mod.rs
+                                          📄 pipe_factory.rs
+                                          📄 pipe_handle.rs
+                                          📄 pipe_reader.rs
+                                          📄 pipe_writer.rs
+                                          📄 test_logging.rs
                                       📄 lib.rs
                                       📄 logging.rs
                                       📄 main.rs
@@ -3784,7 +4355,12 @@ MIT License
                                       📄 player.rs
                                       📄 resampler.rs
                                       📄 scheduler.rs
-                                      📄 server.rs
+                                      📁 server/
+                                        📄 command_handler.rs
+                                        📄 connection.rs
+                                        📄 mod.rs
+                                        📄 playback.rs
+                                        📄 state.rs
                                       📁 tests/
                                         📄 audio_tests.rs
                                         📄 client_tests.rs
@@ -3800,6 +4376,7 @@ MIT License
                                         📄 opm_ffi_tests.rs
                                         📄 opm_tests.rs
                                         📄 play_json_interactive_tests.rs
+                                        📄 player_tests.rs
                                         📄 resampler_tests.rs
                                         📄 scheduler_tests.rs
                                         📄 server_tests.rs
@@ -3828,7 +4405,6 @@ MIT License
                                         📄 mod.rs
                                         📄 mode_test.rs
                                         📄 play_json_test.rs
-                                        📄 row_by_row_test.rs
                                         📄 shared_mutex.rs
                                         📄 step_by_step_test.rs
                                       📄 interactive_tests.rs
@@ -3848,6 +4424,12 @@ MIT License
                                     📖 101.md
                                     📖 102.md
                                     📖 103.md
+                                    📖 107.md
+                                    📖 110.md
+                                    📖 111.md
+                                    📖 112.md
+                                    📖 113.md
+                                    📖 114.md
                                     📖 34.md
                                     📖 36.md
                                     📖 38.md
@@ -3884,10 +4466,17 @@ MIT License
                                     📖 99.md
                                   📄 opm.c
                                   📄 opm.h
-                                  📊 output_ym2151_f64seconds.json
+                                  📊 output_ym2151.json
                                   📄 setup_ci_environment.sh
                                   📁 src/
-                                    📄 audio.rs
+                                    📁 audio/
+                                      📄 buffers.rs
+                                      📄 commands.rs
+                                      📄 generator.rs
+                                      📄 mod.rs
+                                      📄 player.rs
+                                      📄 scheduler.rs
+                                      📄 stream.rs
                                     📄 audio_config.rs
                                     📁 client/
                                       📄 config.rs
@@ -3897,7 +4486,7 @@ MIT License
                                       📄 mod.rs
                                       📄 server.rs
                                     📄 debug_wav.rs
-                                    📄 demo.rs
+                                    📄 demo_client_interactive.rs
                                     📄 demo_server_interactive.rs
                                     📄 demo_server_non_interactive.rs
                                     📄 events.rs
@@ -3905,6 +4494,13 @@ MIT License
                                       📄 mod.rs
                                       📄 pipe_windows.rs
                                       📄 protocol.rs
+                                      📁 windows/
+                                        📄 mod.rs
+                                        📄 pipe_factory.rs
+                                        📄 pipe_handle.rs
+                                        📄 pipe_reader.rs
+                                        📄 pipe_writer.rs
+                                        📄 test_logging.rs
                                     📄 lib.rs
                                     📄 logging.rs
                                     📄 main.rs
@@ -3914,7 +4510,12 @@ MIT License
                                     📄 player.rs
                                     📄 resampler.rs
                                     📄 scheduler.rs
-                                    📄 server.rs
+                                    📁 server/
+                                      📄 command_handler.rs
+                                      📄 connection.rs
+                                      📄 mod.rs
+                                      📄 playback.rs
+                                      📄 state.rs
                                     📁 tests/
                                       📄 audio_tests.rs
                                       📄 client_tests.rs
@@ -3930,6 +4531,7 @@ MIT License
                                       📄 opm_ffi_tests.rs
                                       📄 opm_tests.rs
                                       📄 play_json_interactive_tests.rs
+                                      📄 player_tests.rs
                                       📄 resampler_tests.rs
                                       📄 scheduler_tests.rs
                                       📄 server_tests.rs
@@ -3958,7 +4560,6 @@ MIT License
                                       📄 mod.rs
                                       📄 mode_test.rs
                                       📄 play_json_test.rs
-                                      📄 row_by_row_test.rs
                                       📄 shared_mutex.rs
                                       📄 step_by_step_test.rs
                                     📄 interactive_tests.rs
@@ -3978,6 +4579,12 @@ MIT License
                                   📖 101.md
                                   📖 102.md
                                   📖 103.md
+                                  📖 107.md
+                                  📖 110.md
+                                  📖 111.md
+                                  📖 112.md
+                                  📖 113.md
+                                  📖 114.md
                                   📖 34.md
                                   📖 36.md
                                   📖 38.md
@@ -4014,10 +4621,17 @@ MIT License
                                   📖 99.md
                                 📄 opm.c
                                 📄 opm.h
-                                📊 output_ym2151_f64seconds.json
+                                📊 output_ym2151.json
                                 📄 setup_ci_environment.sh
                                 📁 src/
-                                  📄 audio.rs
+                                  📁 audio/
+                                    📄 buffers.rs
+                                    📄 commands.rs
+                                    📄 generator.rs
+                                    📄 mod.rs
+                                    📄 player.rs
+                                    📄 scheduler.rs
+                                    📄 stream.rs
                                   📄 audio_config.rs
                                   📁 client/
                                     📄 config.rs
@@ -4027,7 +4641,7 @@ MIT License
                                     📄 mod.rs
                                     📄 server.rs
                                   📄 debug_wav.rs
-                                  📄 demo.rs
+                                  📄 demo_client_interactive.rs
                                   📄 demo_server_interactive.rs
                                   📄 demo_server_non_interactive.rs
                                   📄 events.rs
@@ -4035,6 +4649,13 @@ MIT License
                                     📄 mod.rs
                                     📄 pipe_windows.rs
                                     📄 protocol.rs
+                                    📁 windows/
+                                      📄 mod.rs
+                                      📄 pipe_factory.rs
+                                      📄 pipe_handle.rs
+                                      📄 pipe_reader.rs
+                                      📄 pipe_writer.rs
+                                      📄 test_logging.rs
                                   📄 lib.rs
                                   📄 logging.rs
                                   📄 main.rs
@@ -4044,7 +4665,12 @@ MIT License
                                   📄 player.rs
                                   📄 resampler.rs
                                   📄 scheduler.rs
-                                  📄 server.rs
+                                  📁 server/
+                                    📄 command_handler.rs
+                                    📄 connection.rs
+                                    📄 mod.rs
+                                    📄 playback.rs
+                                    📄 state.rs
                                   📁 tests/
                                     📄 audio_tests.rs
                                     📄 client_tests.rs
@@ -4060,6 +4686,7 @@ MIT License
                                     📄 opm_ffi_tests.rs
                                     📄 opm_tests.rs
                                     📄 play_json_interactive_tests.rs
+                                    📄 player_tests.rs
                                     📄 resampler_tests.rs
                                     📄 scheduler_tests.rs
                                     📄 server_tests.rs
@@ -4088,7 +4715,6 @@ MIT License
                                     📄 mod.rs
                                     📄 mode_test.rs
                                     📄 play_json_test.rs
-                                    📄 row_by_row_test.rs
                                     📄 shared_mutex.rs
                                     📄 step_by_step_test.rs
                                   📄 interactive_tests.rs
@@ -4108,6 +4734,12 @@ MIT License
                                 📖 101.md
                                 📖 102.md
                                 📖 103.md
+                                📖 107.md
+                                📖 110.md
+                                📖 111.md
+                                📖 112.md
+                                📖 113.md
+                                📖 114.md
                                 📖 34.md
                                 📖 36.md
                                 📖 38.md
@@ -4144,10 +4776,17 @@ MIT License
                                 📖 99.md
                               📄 opm.c
                               📄 opm.h
-                              📊 output_ym2151_f64seconds.json
+                              📊 output_ym2151.json
                               📄 setup_ci_environment.sh
                               📁 src/
-                                📄 audio.rs
+                                📁 audio/
+                                  📄 buffers.rs
+                                  📄 commands.rs
+                                  📄 generator.rs
+                                  📄 mod.rs
+                                  📄 player.rs
+                                  📄 scheduler.rs
+                                  📄 stream.rs
                                 📄 audio_config.rs
                                 📁 client/
                                   📄 config.rs
@@ -4157,7 +4796,7 @@ MIT License
                                   📄 mod.rs
                                   📄 server.rs
                                 📄 debug_wav.rs
-                                📄 demo.rs
+                                📄 demo_client_interactive.rs
                                 📄 demo_server_interactive.rs
                                 📄 demo_server_non_interactive.rs
                                 📄 events.rs
@@ -4165,6 +4804,13 @@ MIT License
                                   📄 mod.rs
                                   📄 pipe_windows.rs
                                   📄 protocol.rs
+                                  📁 windows/
+                                    📄 mod.rs
+                                    📄 pipe_factory.rs
+                                    📄 pipe_handle.rs
+                                    📄 pipe_reader.rs
+                                    📄 pipe_writer.rs
+                                    📄 test_logging.rs
                                 📄 lib.rs
                                 📄 logging.rs
                                 📄 main.rs
@@ -4174,7 +4820,12 @@ MIT License
                                 📄 player.rs
                                 📄 resampler.rs
                                 📄 scheduler.rs
-                                📄 server.rs
+                                📁 server/
+                                  📄 command_handler.rs
+                                  📄 connection.rs
+                                  📄 mod.rs
+                                  📄 playback.rs
+                                  📄 state.rs
                                 📁 tests/
                                   📄 audio_tests.rs
                                   📄 client_tests.rs
@@ -4190,6 +4841,7 @@ MIT License
                                   📄 opm_ffi_tests.rs
                                   📄 opm_tests.rs
                                   📄 play_json_interactive_tests.rs
+                                  📄 player_tests.rs
                                   📄 resampler_tests.rs
                                   📄 scheduler_tests.rs
                                   📄 server_tests.rs
@@ -4218,7 +4870,6 @@ MIT License
                                   📄 mod.rs
                                   📄 mode_test.rs
                                   📄 play_json_test.rs
-                                  📄 row_by_row_test.rs
                                   📄 shared_mutex.rs
                                   📄 step_by_step_test.rs
                                 📄 interactive_tests.rs
@@ -4238,6 +4889,12 @@ MIT License
                               📖 101.md
                               📖 102.md
                               📖 103.md
+                              📖 107.md
+                              📖 110.md
+                              📖 111.md
+                              📖 112.md
+                              📖 113.md
+                              📖 114.md
                               📖 34.md
                               📖 36.md
                               📖 38.md
@@ -4274,10 +4931,17 @@ MIT License
                               📖 99.md
                             📄 opm.c
                             📄 opm.h
-                            📊 output_ym2151_f64seconds.json
+                            📊 output_ym2151.json
                             📄 setup_ci_environment.sh
                             📁 src/
-                              📄 audio.rs
+                              📁 audio/
+                                📄 buffers.rs
+                                📄 commands.rs
+                                📄 generator.rs
+                                📄 mod.rs
+                                📄 player.rs
+                                📄 scheduler.rs
+                                📄 stream.rs
                               📄 audio_config.rs
                               📁 client/
                                 📄 config.rs
@@ -4287,7 +4951,7 @@ MIT License
                                 📄 mod.rs
                                 📄 server.rs
                               📄 debug_wav.rs
-                              📄 demo.rs
+                              📄 demo_client_interactive.rs
                               📄 demo_server_interactive.rs
                               📄 demo_server_non_interactive.rs
                               📄 events.rs
@@ -4295,6 +4959,13 @@ MIT License
                                 📄 mod.rs
                                 📄 pipe_windows.rs
                                 📄 protocol.rs
+                                📁 windows/
+                                  📄 mod.rs
+                                  📄 pipe_factory.rs
+                                  📄 pipe_handle.rs
+                                  📄 pipe_reader.rs
+                                  📄 pipe_writer.rs
+                                  📄 test_logging.rs
                               📄 lib.rs
                               📄 logging.rs
                               📄 main.rs
@@ -4304,7 +4975,12 @@ MIT License
                               📄 player.rs
                               📄 resampler.rs
                               📄 scheduler.rs
-                              📄 server.rs
+                              📁 server/
+                                📄 command_handler.rs
+                                📄 connection.rs
+                                📄 mod.rs
+                                📄 playback.rs
+                                📄 state.rs
                               📁 tests/
                                 📄 audio_tests.rs
                                 📄 client_tests.rs
@@ -4320,6 +4996,7 @@ MIT License
                                 📄 opm_ffi_tests.rs
                                 📄 opm_tests.rs
                                 📄 play_json_interactive_tests.rs
+                                📄 player_tests.rs
                                 📄 resampler_tests.rs
                                 📄 scheduler_tests.rs
                                 📄 server_tests.rs
@@ -4348,7 +5025,6 @@ MIT License
                                 📄 mod.rs
                                 📄 mode_test.rs
                                 📄 play_json_test.rs
-                                📄 row_by_row_test.rs
                                 📄 shared_mutex.rs
                                 📄 step_by_step_test.rs
                               📄 interactive_tests.rs
@@ -4368,6 +5044,12 @@ MIT License
                             📖 101.md
                             📖 102.md
                             📖 103.md
+                            📖 107.md
+                            📖 110.md
+                            📖 111.md
+                            📖 112.md
+                            📖 113.md
+                            📖 114.md
                             📖 34.md
                             📖 36.md
                             📖 38.md
@@ -4404,10 +5086,17 @@ MIT License
                             📖 99.md
                           📄 opm.c
                           📄 opm.h
-                          📊 output_ym2151_f64seconds.json
+                          📊 output_ym2151.json
                           📄 setup_ci_environment.sh
                           📁 src/
-                            📄 audio.rs
+                            📁 audio/
+                              📄 buffers.rs
+                              📄 commands.rs
+                              📄 generator.rs
+                              📄 mod.rs
+                              📄 player.rs
+                              📄 scheduler.rs
+                              📄 stream.rs
                             📄 audio_config.rs
                             📁 client/
                               📄 config.rs
@@ -4417,7 +5106,7 @@ MIT License
                               📄 mod.rs
                               📄 server.rs
                             📄 debug_wav.rs
-                            📄 demo.rs
+                            📄 demo_client_interactive.rs
                             📄 demo_server_interactive.rs
                             📄 demo_server_non_interactive.rs
                             📄 events.rs
@@ -4425,6 +5114,13 @@ MIT License
                               📄 mod.rs
                               📄 pipe_windows.rs
                               📄 protocol.rs
+                              📁 windows/
+                                📄 mod.rs
+                                📄 pipe_factory.rs
+                                📄 pipe_handle.rs
+                                📄 pipe_reader.rs
+                                📄 pipe_writer.rs
+                                📄 test_logging.rs
                             📄 lib.rs
                             📄 logging.rs
                             📄 main.rs
@@ -4434,7 +5130,12 @@ MIT License
                             📄 player.rs
                             📄 resampler.rs
                             📄 scheduler.rs
-                            📄 server.rs
+                            📁 server/
+                              📄 command_handler.rs
+                              📄 connection.rs
+                              📄 mod.rs
+                              📄 playback.rs
+                              📄 state.rs
                             📁 tests/
                               📄 audio_tests.rs
                               📄 client_tests.rs
@@ -4450,6 +5151,7 @@ MIT License
                               📄 opm_ffi_tests.rs
                               📄 opm_tests.rs
                               📄 play_json_interactive_tests.rs
+                              📄 player_tests.rs
                               📄 resampler_tests.rs
                               📄 scheduler_tests.rs
                               📄 server_tests.rs
@@ -4478,7 +5180,6 @@ MIT License
                               📄 mod.rs
                               📄 mode_test.rs
                               📄 play_json_test.rs
-                              📄 row_by_row_test.rs
                               📄 shared_mutex.rs
                               📄 step_by_step_test.rs
                             📄 interactive_tests.rs
@@ -4498,6 +5199,12 @@ MIT License
                           📖 101.md
                           📖 102.md
                           📖 103.md
+                          📖 107.md
+                          📖 110.md
+                          📖 111.md
+                          📖 112.md
+                          📖 113.md
+                          📖 114.md
                           📖 34.md
                           📖 36.md
                           📖 38.md
@@ -4534,10 +5241,17 @@ MIT License
                           📖 99.md
                         📄 opm.c
                         📄 opm.h
-                        📊 output_ym2151_f64seconds.json
+                        📊 output_ym2151.json
                         📄 setup_ci_environment.sh
                         📁 src/
-                          📄 audio.rs
+                          📁 audio/
+                            📄 buffers.rs
+                            📄 commands.rs
+                            📄 generator.rs
+                            📄 mod.rs
+                            📄 player.rs
+                            📄 scheduler.rs
+                            📄 stream.rs
                           📄 audio_config.rs
                           📁 client/
                             📄 config.rs
@@ -4547,7 +5261,7 @@ MIT License
                             📄 mod.rs
                             📄 server.rs
                           📄 debug_wav.rs
-                          📄 demo.rs
+                          📄 demo_client_interactive.rs
                           📄 demo_server_interactive.rs
                           📄 demo_server_non_interactive.rs
                           📄 events.rs
@@ -4555,6 +5269,13 @@ MIT License
                             📄 mod.rs
                             📄 pipe_windows.rs
                             📄 protocol.rs
+                            📁 windows/
+                              📄 mod.rs
+                              📄 pipe_factory.rs
+                              📄 pipe_handle.rs
+                              📄 pipe_reader.rs
+                              📄 pipe_writer.rs
+                              📄 test_logging.rs
                           📄 lib.rs
                           📄 logging.rs
                           📄 main.rs
@@ -4564,7 +5285,12 @@ MIT License
                           📄 player.rs
                           📄 resampler.rs
                           📄 scheduler.rs
-                          📄 server.rs
+                          📁 server/
+                            📄 command_handler.rs
+                            📄 connection.rs
+                            📄 mod.rs
+                            📄 playback.rs
+                            📄 state.rs
                           📁 tests/
                             📄 audio_tests.rs
                             📄 client_tests.rs
@@ -4580,6 +5306,7 @@ MIT License
                             📄 opm_ffi_tests.rs
                             📄 opm_tests.rs
                             📄 play_json_interactive_tests.rs
+                            📄 player_tests.rs
                             📄 resampler_tests.rs
                             📄 scheduler_tests.rs
                             📄 server_tests.rs
@@ -4608,7 +5335,6 @@ MIT License
                             📄 mod.rs
                             📄 mode_test.rs
                             📄 play_json_test.rs
-                            📄 row_by_row_test.rs
                             📄 shared_mutex.rs
                             📄 step_by_step_test.rs
                           📄 interactive_tests.rs
@@ -4628,6 +5354,12 @@ MIT License
                         📖 101.md
                         📖 102.md
                         📖 103.md
+                        📖 107.md
+                        📖 110.md
+                        📖 111.md
+                        📖 112.md
+                        📖 113.md
+                        📖 114.md
                         📖 34.md
                         📖 36.md
                         📖 38.md
@@ -4664,10 +5396,17 @@ MIT License
                         📖 99.md
                       📄 opm.c
                       📄 opm.h
-                      📊 output_ym2151_f64seconds.json
+                      📊 output_ym2151.json
                       📄 setup_ci_environment.sh
                       📁 src/
-                        📄 audio.rs
+                        📁 audio/
+                          📄 buffers.rs
+                          📄 commands.rs
+                          📄 generator.rs
+                          📄 mod.rs
+                          📄 player.rs
+                          📄 scheduler.rs
+                          📄 stream.rs
                         📄 audio_config.rs
                         📁 client/
                           📄 config.rs
@@ -4677,7 +5416,7 @@ MIT License
                           📄 mod.rs
                           📄 server.rs
                         📄 debug_wav.rs
-                        📄 demo.rs
+                        📄 demo_client_interactive.rs
                         📄 demo_server_interactive.rs
                         📄 demo_server_non_interactive.rs
                         📄 events.rs
@@ -4685,6 +5424,13 @@ MIT License
                           📄 mod.rs
                           📄 pipe_windows.rs
                           📄 protocol.rs
+                          📁 windows/
+                            📄 mod.rs
+                            📄 pipe_factory.rs
+                            📄 pipe_handle.rs
+                            📄 pipe_reader.rs
+                            📄 pipe_writer.rs
+                            📄 test_logging.rs
                         📄 lib.rs
                         📄 logging.rs
                         📄 main.rs
@@ -4694,7 +5440,12 @@ MIT License
                         📄 player.rs
                         📄 resampler.rs
                         📄 scheduler.rs
-                        📄 server.rs
+                        📁 server/
+                          📄 command_handler.rs
+                          📄 connection.rs
+                          📄 mod.rs
+                          📄 playback.rs
+                          📄 state.rs
                         📁 tests/
                           📄 audio_tests.rs
                           📄 client_tests.rs
@@ -4710,6 +5461,7 @@ MIT License
                           📄 opm_ffi_tests.rs
                           📄 opm_tests.rs
                           📄 play_json_interactive_tests.rs
+                          📄 player_tests.rs
                           📄 resampler_tests.rs
                           📄 scheduler_tests.rs
                           📄 server_tests.rs
@@ -4738,7 +5490,6 @@ MIT License
                           📄 mod.rs
                           📄 mode_test.rs
                           📄 play_json_test.rs
-                          📄 row_by_row_test.rs
                           📄 shared_mutex.rs
                           📄 step_by_step_test.rs
                         📄 interactive_tests.rs
@@ -4758,6 +5509,12 @@ MIT License
                       📖 101.md
                       📖 102.md
                       📖 103.md
+                      📖 107.md
+                      📖 110.md
+                      📖 111.md
+                      📖 112.md
+                      📖 113.md
+                      📖 114.md
                       📖 34.md
                       📖 36.md
                       📖 38.md
@@ -4794,10 +5551,17 @@ MIT License
                       📖 99.md
                     📄 opm.c
                     📄 opm.h
-                    📊 output_ym2151_f64seconds.json
+                    📊 output_ym2151.json
                     📄 setup_ci_environment.sh
                     📁 src/
-                      📄 audio.rs
+                      📁 audio/
+                        📄 buffers.rs
+                        📄 commands.rs
+                        📄 generator.rs
+                        📄 mod.rs
+                        📄 player.rs
+                        📄 scheduler.rs
+                        📄 stream.rs
                       📄 audio_config.rs
                       📁 client/
                         📄 config.rs
@@ -4807,7 +5571,7 @@ MIT License
                         📄 mod.rs
                         📄 server.rs
                       📄 debug_wav.rs
-                      📄 demo.rs
+                      📄 demo_client_interactive.rs
                       📄 demo_server_interactive.rs
                       📄 demo_server_non_interactive.rs
                       📄 events.rs
@@ -4815,6 +5579,13 @@ MIT License
                         📄 mod.rs
                         📄 pipe_windows.rs
                         📄 protocol.rs
+                        📁 windows/
+                          📄 mod.rs
+                          📄 pipe_factory.rs
+                          📄 pipe_handle.rs
+                          📄 pipe_reader.rs
+                          📄 pipe_writer.rs
+                          📄 test_logging.rs
                       📄 lib.rs
                       📄 logging.rs
                       📄 main.rs
@@ -4824,7 +5595,12 @@ MIT License
                       📄 player.rs
                       📄 resampler.rs
                       📄 scheduler.rs
-                      📄 server.rs
+                      📁 server/
+                        📄 command_handler.rs
+                        📄 connection.rs
+                        📄 mod.rs
+                        📄 playback.rs
+                        📄 state.rs
                       📁 tests/
                         📄 audio_tests.rs
                         📄 client_tests.rs
@@ -4840,6 +5616,7 @@ MIT License
                         📄 opm_ffi_tests.rs
                         📄 opm_tests.rs
                         📄 play_json_interactive_tests.rs
+                        📄 player_tests.rs
                         📄 resampler_tests.rs
                         📄 scheduler_tests.rs
                         📄 server_tests.rs
@@ -4868,7 +5645,6 @@ MIT License
                         📄 mod.rs
                         📄 mode_test.rs
                         📄 play_json_test.rs
-                        📄 row_by_row_test.rs
                         📄 shared_mutex.rs
                         📄 step_by_step_test.rs
                       📄 interactive_tests.rs
@@ -4888,6 +5664,12 @@ MIT License
                     📖 101.md
                     📖 102.md
                     📖 103.md
+                    📖 107.md
+                    📖 110.md
+                    📖 111.md
+                    📖 112.md
+                    📖 113.md
+                    📖 114.md
                     📖 34.md
                     📖 36.md
                     📖 38.md
@@ -4924,10 +5706,17 @@ MIT License
                     📖 99.md
                   📄 opm.c
                   📄 opm.h
-                  📊 output_ym2151_f64seconds.json
+                  📊 output_ym2151.json
                   📄 setup_ci_environment.sh
                   📁 src/
-                    📄 audio.rs
+                    📁 audio/
+                      📄 buffers.rs
+                      📄 commands.rs
+                      📄 generator.rs
+                      📄 mod.rs
+                      📄 player.rs
+                      📄 scheduler.rs
+                      📄 stream.rs
                     📄 audio_config.rs
                     📁 client/
                       📄 config.rs
@@ -4937,7 +5726,7 @@ MIT License
                       📄 mod.rs
                       📄 server.rs
                     📄 debug_wav.rs
-                    📄 demo.rs
+                    📄 demo_client_interactive.rs
                     📄 demo_server_interactive.rs
                     📄 demo_server_non_interactive.rs
                     📄 events.rs
@@ -4945,6 +5734,13 @@ MIT License
                       📄 mod.rs
                       📄 pipe_windows.rs
                       📄 protocol.rs
+                      📁 windows/
+                        📄 mod.rs
+                        📄 pipe_factory.rs
+                        📄 pipe_handle.rs
+                        📄 pipe_reader.rs
+                        📄 pipe_writer.rs
+                        📄 test_logging.rs
                     📄 lib.rs
                     📄 logging.rs
                     📄 main.rs
@@ -4954,7 +5750,12 @@ MIT License
                     📄 player.rs
                     📄 resampler.rs
                     📄 scheduler.rs
-                    📄 server.rs
+                    📁 server/
+                      📄 command_handler.rs
+                      📄 connection.rs
+                      📄 mod.rs
+                      📄 playback.rs
+                      📄 state.rs
                     📁 tests/
                       📄 audio_tests.rs
                       📄 client_tests.rs
@@ -4970,6 +5771,7 @@ MIT License
                       📄 opm_ffi_tests.rs
                       📄 opm_tests.rs
                       📄 play_json_interactive_tests.rs
+                      📄 player_tests.rs
                       📄 resampler_tests.rs
                       📄 scheduler_tests.rs
                       📄 server_tests.rs
@@ -4998,7 +5800,6 @@ MIT License
                       📄 mod.rs
                       📄 mode_test.rs
                       📄 play_json_test.rs
-                      📄 row_by_row_test.rs
                       📄 shared_mutex.rs
                       📄 step_by_step_test.rs
                     📄 interactive_tests.rs
@@ -5018,6 +5819,12 @@ MIT License
                   📖 101.md
                   📖 102.md
                   📖 103.md
+                  📖 107.md
+                  📖 110.md
+                  📖 111.md
+                  📖 112.md
+                  📖 113.md
+                  📖 114.md
                   📖 34.md
                   📖 36.md
                   📖 38.md
@@ -5054,10 +5861,17 @@ MIT License
                   📖 99.md
                 📄 opm.c
                 📄 opm.h
-                📊 output_ym2151_f64seconds.json
+                📊 output_ym2151.json
                 📄 setup_ci_environment.sh
                 📁 src/
-                  📄 audio.rs
+                  📁 audio/
+                    📄 buffers.rs
+                    📄 commands.rs
+                    📄 generator.rs
+                    📄 mod.rs
+                    📄 player.rs
+                    📄 scheduler.rs
+                    📄 stream.rs
                   📄 audio_config.rs
                   📁 client/
                     📄 config.rs
@@ -5067,7 +5881,7 @@ MIT License
                     📄 mod.rs
                     📄 server.rs
                   📄 debug_wav.rs
-                  📄 demo.rs
+                  📄 demo_client_interactive.rs
                   📄 demo_server_interactive.rs
                   📄 demo_server_non_interactive.rs
                   📄 events.rs
@@ -5075,6 +5889,13 @@ MIT License
                     📄 mod.rs
                     📄 pipe_windows.rs
                     📄 protocol.rs
+                    📁 windows/
+                      📄 mod.rs
+                      📄 pipe_factory.rs
+                      📄 pipe_handle.rs
+                      📄 pipe_reader.rs
+                      📄 pipe_writer.rs
+                      📄 test_logging.rs
                   📄 lib.rs
                   📄 logging.rs
                   📄 main.rs
@@ -5084,7 +5905,12 @@ MIT License
                   📄 player.rs
                   📄 resampler.rs
                   📄 scheduler.rs
-                  📄 server.rs
+                  📁 server/
+                    📄 command_handler.rs
+                    📄 connection.rs
+                    📄 mod.rs
+                    📄 playback.rs
+                    📄 state.rs
                   📁 tests/
                     📄 audio_tests.rs
                     📄 client_tests.rs
@@ -5100,6 +5926,7 @@ MIT License
                     📄 opm_ffi_tests.rs
                     📄 opm_tests.rs
                     📄 play_json_interactive_tests.rs
+                    📄 player_tests.rs
                     📄 resampler_tests.rs
                     📄 scheduler_tests.rs
                     📄 server_tests.rs
@@ -5128,7 +5955,6 @@ MIT License
                     📄 mod.rs
                     📄 mode_test.rs
                     📄 play_json_test.rs
-                    📄 row_by_row_test.rs
                     📄 shared_mutex.rs
                     📄 step_by_step_test.rs
                   📄 interactive_tests.rs
@@ -5148,6 +5974,12 @@ MIT License
                 📖 101.md
                 📖 102.md
                 📖 103.md
+                📖 107.md
+                📖 110.md
+                📖 111.md
+                📖 112.md
+                📖 113.md
+                📖 114.md
                 📖 34.md
                 📖 36.md
                 📖 38.md
@@ -5184,10 +6016,17 @@ MIT License
                 📖 99.md
               📄 opm.c
               📄 opm.h
-              📊 output_ym2151_f64seconds.json
+              📊 output_ym2151.json
               📄 setup_ci_environment.sh
               📁 src/
-                📄 audio.rs
+                📁 audio/
+                  📄 buffers.rs
+                  📄 commands.rs
+                  📄 generator.rs
+                  📄 mod.rs
+                  📄 player.rs
+                  📄 scheduler.rs
+                  📄 stream.rs
                 📄 audio_config.rs
                 📁 client/
                   📄 config.rs
@@ -5197,7 +6036,7 @@ MIT License
                   📄 mod.rs
                   📄 server.rs
                 📄 debug_wav.rs
-                📄 demo.rs
+                📄 demo_client_interactive.rs
                 📄 demo_server_interactive.rs
                 📄 demo_server_non_interactive.rs
                 📄 events.rs
@@ -5205,6 +6044,13 @@ MIT License
                   📄 mod.rs
                   📄 pipe_windows.rs
                   📄 protocol.rs
+                  📁 windows/
+                    📄 mod.rs
+                    📄 pipe_factory.rs
+                    📄 pipe_handle.rs
+                    📄 pipe_reader.rs
+                    📄 pipe_writer.rs
+                    📄 test_logging.rs
                 📄 lib.rs
                 📄 logging.rs
                 📄 main.rs
@@ -5214,7 +6060,12 @@ MIT License
                 📄 player.rs
                 📄 resampler.rs
                 📄 scheduler.rs
-                📄 server.rs
+                📁 server/
+                  📄 command_handler.rs
+                  📄 connection.rs
+                  📄 mod.rs
+                  📄 playback.rs
+                  📄 state.rs
                 📁 tests/
                   📄 audio_tests.rs
                   📄 client_tests.rs
@@ -5230,6 +6081,7 @@ MIT License
                   📄 opm_ffi_tests.rs
                   📄 opm_tests.rs
                   📄 play_json_interactive_tests.rs
+                  📄 player_tests.rs
                   📄 resampler_tests.rs
                   📄 scheduler_tests.rs
                   📄 server_tests.rs
@@ -5258,7 +6110,6 @@ MIT License
                   📄 mod.rs
                   📄 mode_test.rs
                   📄 play_json_test.rs
-                  📄 row_by_row_test.rs
                   📄 shared_mutex.rs
                   📄 step_by_step_test.rs
                 📄 interactive_tests.rs
@@ -5278,6 +6129,12 @@ MIT License
               📖 101.md
               📖 102.md
               📖 103.md
+              📖 107.md
+              📖 110.md
+              📖 111.md
+              📖 112.md
+              📖 113.md
+              📖 114.md
               📖 34.md
               📖 36.md
               📖 38.md
@@ -5314,10 +6171,17 @@ MIT License
               📖 99.md
             📄 opm.c
             📄 opm.h
-            📊 output_ym2151_f64seconds.json
+            📊 output_ym2151.json
             📄 setup_ci_environment.sh
             📁 src/
-              📄 audio.rs
+              📁 audio/
+                📄 buffers.rs
+                📄 commands.rs
+                📄 generator.rs
+                📄 mod.rs
+                📄 player.rs
+                📄 scheduler.rs
+                📄 stream.rs
               📄 audio_config.rs
               📁 client/
                 📄 config.rs
@@ -5327,7 +6191,7 @@ MIT License
                 📄 mod.rs
                 📄 server.rs
               📄 debug_wav.rs
-              📄 demo.rs
+              📄 demo_client_interactive.rs
               📄 demo_server_interactive.rs
               📄 demo_server_non_interactive.rs
               📄 events.rs
@@ -5335,6 +6199,13 @@ MIT License
                 📄 mod.rs
                 📄 pipe_windows.rs
                 📄 protocol.rs
+                📁 windows/
+                  📄 mod.rs
+                  📄 pipe_factory.rs
+                  📄 pipe_handle.rs
+                  📄 pipe_reader.rs
+                  📄 pipe_writer.rs
+                  📄 test_logging.rs
               📄 lib.rs
               📄 logging.rs
               📄 main.rs
@@ -5344,7 +6215,12 @@ MIT License
               📄 player.rs
               📄 resampler.rs
               📄 scheduler.rs
-              📄 server.rs
+              📁 server/
+                📄 command_handler.rs
+                📄 connection.rs
+                📄 mod.rs
+                📄 playback.rs
+                📄 state.rs
               📁 tests/
                 📄 audio_tests.rs
                 📄 client_tests.rs
@@ -5360,6 +6236,7 @@ MIT License
                 📄 opm_ffi_tests.rs
                 📄 opm_tests.rs
                 📄 play_json_interactive_tests.rs
+                📄 player_tests.rs
                 📄 resampler_tests.rs
                 📄 scheduler_tests.rs
                 📄 server_tests.rs
@@ -5388,7 +6265,6 @@ MIT License
                 📄 mod.rs
                 📄 mode_test.rs
                 📄 play_json_test.rs
-                📄 row_by_row_test.rs
                 📄 shared_mutex.rs
                 📄 step_by_step_test.rs
               📄 interactive_tests.rs
@@ -5408,6 +6284,12 @@ MIT License
             📖 101.md
             📖 102.md
             📖 103.md
+            📖 107.md
+            📖 110.md
+            📖 111.md
+            📖 112.md
+            📖 113.md
+            📖 114.md
             📖 34.md
             📖 36.md
             📖 38.md
@@ -5444,10 +6326,17 @@ MIT License
             📖 99.md
           📄 opm.c
           📄 opm.h
-          📊 output_ym2151_f64seconds.json
+          📊 output_ym2151.json
           📄 setup_ci_environment.sh
           📁 src/
-            📄 audio.rs
+            📁 audio/
+              📄 buffers.rs
+              📄 commands.rs
+              📄 generator.rs
+              📄 mod.rs
+              📄 player.rs
+              📄 scheduler.rs
+              📄 stream.rs
             📄 audio_config.rs
             📁 client/
               📄 config.rs
@@ -5457,7 +6346,7 @@ MIT License
               📄 mod.rs
               📄 server.rs
             📄 debug_wav.rs
-            📄 demo.rs
+            📄 demo_client_interactive.rs
             📄 demo_server_interactive.rs
             📄 demo_server_non_interactive.rs
             📄 events.rs
@@ -5465,6 +6354,13 @@ MIT License
               📄 mod.rs
               📄 pipe_windows.rs
               📄 protocol.rs
+              📁 windows/
+                📄 mod.rs
+                📄 pipe_factory.rs
+                📄 pipe_handle.rs
+                📄 pipe_reader.rs
+                📄 pipe_writer.rs
+                📄 test_logging.rs
             📄 lib.rs
             📄 logging.rs
             📄 main.rs
@@ -5474,7 +6370,12 @@ MIT License
             📄 player.rs
             📄 resampler.rs
             📄 scheduler.rs
-            📄 server.rs
+            📁 server/
+              📄 command_handler.rs
+              📄 connection.rs
+              📄 mod.rs
+              📄 playback.rs
+              📄 state.rs
             📁 tests/
               📄 audio_tests.rs
               📄 client_tests.rs
@@ -5490,6 +6391,7 @@ MIT License
               📄 opm_ffi_tests.rs
               📄 opm_tests.rs
               📄 play_json_interactive_tests.rs
+              📄 player_tests.rs
               📄 resampler_tests.rs
               📄 scheduler_tests.rs
               📄 server_tests.rs
@@ -5518,7 +6420,6 @@ MIT License
               📄 mod.rs
               📄 mode_test.rs
               📄 play_json_test.rs
-              📄 row_by_row_test.rs
               📄 shared_mutex.rs
               📄 step_by_step_test.rs
             📄 interactive_tests.rs
@@ -5538,6 +6439,12 @@ MIT License
           📖 101.md
           📖 102.md
           📖 103.md
+          📖 107.md
+          📖 110.md
+          📖 111.md
+          📖 112.md
+          📖 113.md
+          📖 114.md
           📖 34.md
           📖 36.md
           📖 38.md
@@ -5574,10 +6481,17 @@ MIT License
           📖 99.md
         📄 opm.c
         📄 opm.h
-        📊 output_ym2151_f64seconds.json
+        📊 output_ym2151.json
         📄 setup_ci_environment.sh
         📁 src/
-          📄 audio.rs
+          📁 audio/
+            📄 buffers.rs
+            📄 commands.rs
+            📄 generator.rs
+            📄 mod.rs
+            📄 player.rs
+            📄 scheduler.rs
+            📄 stream.rs
           📄 audio_config.rs
           📁 client/
             📄 config.rs
@@ -5587,7 +6501,7 @@ MIT License
             📄 mod.rs
             📄 server.rs
           📄 debug_wav.rs
-          📄 demo.rs
+          📄 demo_client_interactive.rs
           📄 demo_server_interactive.rs
           📄 demo_server_non_interactive.rs
           📄 events.rs
@@ -5595,6 +6509,13 @@ MIT License
             📄 mod.rs
             📄 pipe_windows.rs
             📄 protocol.rs
+            📁 windows/
+              📄 mod.rs
+              📄 pipe_factory.rs
+              📄 pipe_handle.rs
+              📄 pipe_reader.rs
+              📄 pipe_writer.rs
+              📄 test_logging.rs
           📄 lib.rs
           📄 logging.rs
           📄 main.rs
@@ -5604,7 +6525,12 @@ MIT License
           📄 player.rs
           📄 resampler.rs
           📄 scheduler.rs
-          📄 server.rs
+          📁 server/
+            📄 command_handler.rs
+            📄 connection.rs
+            📄 mod.rs
+            📄 playback.rs
+            📄 state.rs
           📁 tests/
             📄 audio_tests.rs
             📄 client_tests.rs
@@ -5620,6 +6546,7 @@ MIT License
             📄 opm_ffi_tests.rs
             📄 opm_tests.rs
             📄 play_json_interactive_tests.rs
+            📄 player_tests.rs
             📄 resampler_tests.rs
             📄 scheduler_tests.rs
             📄 server_tests.rs
@@ -5648,7 +6575,6 @@ MIT License
             📄 mod.rs
             📄 mode_test.rs
             📄 play_json_test.rs
-            📄 row_by_row_test.rs
             📄 shared_mutex.rs
             📄 step_by_step_test.rs
           📄 interactive_tests.rs
@@ -5668,6 +6594,12 @@ MIT License
         📖 101.md
         📖 102.md
         📖 103.md
+        📖 107.md
+        📖 110.md
+        📖 111.md
+        📖 112.md
+        📖 113.md
+        📖 114.md
         📖 34.md
         📖 36.md
         📖 38.md
@@ -5704,10 +6636,17 @@ MIT License
         📖 99.md
       📄 opm.c
       📄 opm.h
-      📊 output_ym2151_f64seconds.json
+      📊 output_ym2151.json
       📄 setup_ci_environment.sh
       📁 src/
-        📄 audio.rs
+        📁 audio/
+          📄 buffers.rs
+          📄 commands.rs
+          📄 generator.rs
+          📄 mod.rs
+          📄 player.rs
+          📄 scheduler.rs
+          📄 stream.rs
         📄 audio_config.rs
         📁 client/
           📄 config.rs
@@ -5717,7 +6656,7 @@ MIT License
           📄 mod.rs
           📄 server.rs
         📄 debug_wav.rs
-        📄 demo.rs
+        📄 demo_client_interactive.rs
         📄 demo_server_interactive.rs
         📄 demo_server_non_interactive.rs
         📄 events.rs
@@ -5725,6 +6664,13 @@ MIT License
           📄 mod.rs
           📄 pipe_windows.rs
           📄 protocol.rs
+          📁 windows/
+            📄 mod.rs
+            📄 pipe_factory.rs
+            📄 pipe_handle.rs
+            📄 pipe_reader.rs
+            📄 pipe_writer.rs
+            📄 test_logging.rs
         📄 lib.rs
         📄 logging.rs
         📄 main.rs
@@ -5734,7 +6680,12 @@ MIT License
         📄 player.rs
         📄 resampler.rs
         📄 scheduler.rs
-        📄 server.rs
+        📁 server/
+          📄 command_handler.rs
+          📄 connection.rs
+          📄 mod.rs
+          📄 playback.rs
+          📄 state.rs
         📁 tests/
           📄 audio_tests.rs
           📄 client_tests.rs
@@ -5750,6 +6701,7 @@ MIT License
           📄 opm_ffi_tests.rs
           📄 opm_tests.rs
           📄 play_json_interactive_tests.rs
+          📄 player_tests.rs
           📄 resampler_tests.rs
           📄 scheduler_tests.rs
           📄 server_tests.rs
@@ -5778,7 +6730,6 @@ MIT License
           📄 mod.rs
           📄 mode_test.rs
           📄 play_json_test.rs
-          📄 row_by_row_test.rs
           📄 shared_mutex.rs
           📄 step_by_step_test.rs
         📄 interactive_tests.rs
@@ -5798,6 +6749,12 @@ MIT License
       📖 101.md
       📖 102.md
       📖 103.md
+      📖 107.md
+      📖 110.md
+      📖 111.md
+      📖 112.md
+      📖 113.md
+      📖 114.md
       📖 34.md
       📖 36.md
       📖 38.md
@@ -5834,10 +6791,17 @@ MIT License
       📖 99.md
     📄 opm.c
     📄 opm.h
-    📊 output_ym2151_f64seconds.json
+    📊 output_ym2151.json
     📄 setup_ci_environment.sh
     📁 src/
-      📄 audio.rs
+      📁 audio/
+        📄 buffers.rs
+        📄 commands.rs
+        📄 generator.rs
+        📄 mod.rs
+        📄 player.rs
+        📄 scheduler.rs
+        📄 stream.rs
       📄 audio_config.rs
       📁 client/
         📄 config.rs
@@ -5847,7 +6811,7 @@ MIT License
         📄 mod.rs
         📄 server.rs
       📄 debug_wav.rs
-      📄 demo.rs
+      📄 demo_client_interactive.rs
       📄 demo_server_interactive.rs
       📄 demo_server_non_interactive.rs
       📄 events.rs
@@ -5855,6 +6819,13 @@ MIT License
         📄 mod.rs
         📄 pipe_windows.rs
         📄 protocol.rs
+        📁 windows/
+          📄 mod.rs
+          📄 pipe_factory.rs
+          📄 pipe_handle.rs
+          📄 pipe_reader.rs
+          📄 pipe_writer.rs
+          📄 test_logging.rs
       📄 lib.rs
       📄 logging.rs
       📄 main.rs
@@ -5864,7 +6835,12 @@ MIT License
       📄 player.rs
       📄 resampler.rs
       📄 scheduler.rs
-      📄 server.rs
+      📁 server/
+        📄 command_handler.rs
+        📄 connection.rs
+        📄 mod.rs
+        📄 playback.rs
+        📄 state.rs
       📁 tests/
         📄 audio_tests.rs
         📄 client_tests.rs
@@ -5880,6 +6856,7 @@ MIT License
         📄 opm_ffi_tests.rs
         📄 opm_tests.rs
         📄 play_json_interactive_tests.rs
+        📄 player_tests.rs
         📄 resampler_tests.rs
         📄 scheduler_tests.rs
         📄 server_tests.rs
@@ -5908,7 +6885,6 @@ MIT License
         📄 mod.rs
         📄 mode_test.rs
         📄 play_json_test.rs
-        📄 row_by_row_test.rs
         📄 shared_mutex.rs
         📄 step_by_step_test.rs
       📄 interactive_tests.rs
@@ -5928,6 +6904,12 @@ MIT License
     📖 101.md
     📖 102.md
     📖 103.md
+    📖 107.md
+    📖 110.md
+    📖 111.md
+    📖 112.md
+    📖 113.md
+    📖 114.md
     📖 34.md
     📖 36.md
     📖 38.md
@@ -5964,10 +6946,17 @@ MIT License
     📖 99.md
   📄 opm.c
   📄 opm.h
-  📊 output_ym2151_f64seconds.json
+  📊 output_ym2151.json
   📄 setup_ci_environment.sh
   📁 src/
-    📄 audio.rs
+    📁 audio/
+      📄 buffers.rs
+      📄 commands.rs
+      📄 generator.rs
+      📄 mod.rs
+      📄 player.rs
+      📄 scheduler.rs
+      📄 stream.rs
     📄 audio_config.rs
     📁 client/
       📄 config.rs
@@ -5977,7 +6966,7 @@ MIT License
       📄 mod.rs
       📄 server.rs
     📄 debug_wav.rs
-    📄 demo.rs
+    📄 demo_client_interactive.rs
     📄 demo_server_interactive.rs
     📄 demo_server_non_interactive.rs
     📄 events.rs
@@ -5985,6 +6974,13 @@ MIT License
       📄 mod.rs
       📄 pipe_windows.rs
       📄 protocol.rs
+      📁 windows/
+        📄 mod.rs
+        📄 pipe_factory.rs
+        📄 pipe_handle.rs
+        📄 pipe_reader.rs
+        📄 pipe_writer.rs
+        📄 test_logging.rs
     📄 lib.rs
     📄 logging.rs
     📄 main.rs
@@ -5994,7 +6990,12 @@ MIT License
     📄 player.rs
     📄 resampler.rs
     📄 scheduler.rs
-    📄 server.rs
+    📁 server/
+      📄 command_handler.rs
+      📄 connection.rs
+      📄 mod.rs
+      📄 playback.rs
+      📄 state.rs
     📁 tests/
       📄 audio_tests.rs
       📄 client_tests.rs
@@ -6010,6 +7011,7 @@ MIT License
       📄 opm_ffi_tests.rs
       📄 opm_tests.rs
       📄 play_json_interactive_tests.rs
+      📄 player_tests.rs
       📄 resampler_tests.rs
       📄 scheduler_tests.rs
       📄 server_tests.rs
@@ -6038,7 +7040,6 @@ MIT License
       📄 mod.rs
       📄 mode_test.rs
       📄 play_json_test.rs
-      📄 row_by_row_test.rs
       📄 shared_mutex.rs
       📄 step_by_step_test.rs
     📄 interactive_tests.rs
@@ -6058,6 +7059,12 @@ MIT License
   📖 101.md
   📖 102.md
   📖 103.md
+  📖 107.md
+  📖 110.md
+  📖 111.md
+  📖 112.md
+  📖 113.md
+  📖 114.md
   📖 34.md
   📖 36.md
   📖 38.md
@@ -6094,10 +7101,17 @@ MIT License
   📖 99.md
 📄 opm.c
 📄 opm.h
-📊 output_ym2151_f64seconds.json
+📊 output_ym2151.json
 📄 setup_ci_environment.sh
 📁 src/
-  📄 audio.rs
+  📁 audio/
+    📄 buffers.rs
+    📄 commands.rs
+    📄 generator.rs
+    📄 mod.rs
+    📄 player.rs
+    📄 scheduler.rs
+    📄 stream.rs
   📄 audio_config.rs
   📁 client/
     📄 config.rs
@@ -6107,7 +7121,7 @@ MIT License
     📄 mod.rs
     📄 server.rs
   📄 debug_wav.rs
-  📄 demo.rs
+  📄 demo_client_interactive.rs
   📄 demo_server_interactive.rs
   📄 demo_server_non_interactive.rs
   📄 events.rs
@@ -6115,6 +7129,13 @@ MIT License
     📄 mod.rs
     📄 pipe_windows.rs
     📄 protocol.rs
+    📁 windows/
+      📄 mod.rs
+      📄 pipe_factory.rs
+      📄 pipe_handle.rs
+      📄 pipe_reader.rs
+      📄 pipe_writer.rs
+      📄 test_logging.rs
   📄 lib.rs
   📄 logging.rs
   📄 main.rs
@@ -6124,7 +7145,12 @@ MIT License
   📄 player.rs
   📄 resampler.rs
   📄 scheduler.rs
-  📄 server.rs
+  📁 server/
+    📄 command_handler.rs
+    📄 connection.rs
+    📄 mod.rs
+    📄 playback.rs
+    📄 state.rs
   📁 tests/
     📄 audio_tests.rs
     📄 client_tests.rs
@@ -6140,6 +7166,7 @@ MIT License
     📄 opm_ffi_tests.rs
     📄 opm_tests.rs
     📄 play_json_interactive_tests.rs
+    📄 player_tests.rs
     📄 resampler_tests.rs
     📄 scheduler_tests.rs
     📄 server_tests.rs
@@ -6168,7 +7195,6 @@ MIT License
     📄 mod.rs
     📄 mode_test.rs
     📄 play_json_test.rs
-    📄 row_by_row_test.rs
     📄 shared_mutex.rs
     📄 step_by_step_test.rs
   📄 interactive_tests.rs
@@ -6217,33 +7243,33 @@ _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_sourc
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/output_ym2151_f64seconds.json
+_codeql_detected_source_root/output_ym2151.json
 issue-notes/100.md
-output_ym2151_f64seconds.json
+output_ym2151.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -6255,4 +7281,4 @@ output_ym2151_f64seconds.json
 
 
 ---
-Generated at: 2025-11-21 07:01:49 JST
+Generated at: 2025-11-22 07:01:50 JST

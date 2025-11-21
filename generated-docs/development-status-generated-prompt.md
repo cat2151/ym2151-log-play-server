@@ -1,4 +1,4 @@
-Last updated: 2025-11-21
+Last updated: 2025-11-22
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -194,6 +194,7 @@ Last updated: 2025-11-21
 - .github/actions-tmp/package.json
 - .github/actions-tmp/src/main.js
 - .github/copilot-instructions.md
+- .github/workflows/build_windows.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-translate-readme.yml
@@ -211,6 +212,12 @@ Last updated: 2025-11-21
 - issue-notes/101.md
 - issue-notes/102.md
 - issue-notes/103.md
+- issue-notes/107.md
+- issue-notes/110.md
+- issue-notes/111.md
+- issue-notes/112.md
+- issue-notes/113.md
+- issue-notes/114.md
 - issue-notes/34.md
 - issue-notes/36.md
 - issue-notes/38.md
@@ -248,9 +255,14 @@ Last updated: 2025-11-21
 - opm.c
 - opm.h
 - output_ym2151.json
-- output_ym2151_f64seconds.json
 - setup_ci_environment.sh
-- src/audio.rs
+- src/audio/buffers.rs
+- src/audio/commands.rs
+- src/audio/generator.rs
+- src/audio/mod.rs
+- src/audio/player.rs
+- src/audio/scheduler.rs
+- src/audio/stream.rs
 - src/audio_config.rs
 - src/client/config.rs
 - src/client/core.rs
@@ -259,13 +271,19 @@ Last updated: 2025-11-21
 - src/client/mod.rs
 - src/client/server.rs
 - src/debug_wav.rs
-- src/demo.rs
+- src/demo_client_interactive.rs
 - src/demo_server_interactive.rs
 - src/demo_server_non_interactive.rs
 - src/events.rs
 - src/ipc/mod.rs
 - src/ipc/pipe_windows.rs
 - src/ipc/protocol.rs
+- src/ipc/windows/mod.rs
+- src/ipc/windows/pipe_factory.rs
+- src/ipc/windows/pipe_handle.rs
+- src/ipc/windows/pipe_reader.rs
+- src/ipc/windows/pipe_writer.rs
+- src/ipc/windows/test_logging.rs
 - src/lib.rs
 - src/logging.rs
 - src/main.rs
@@ -275,7 +293,11 @@ Last updated: 2025-11-21
 - src/player.rs
 - src/resampler.rs
 - src/scheduler.rs
-- src/server.rs
+- src/server/command_handler.rs
+- src/server/connection.rs
+- src/server/mod.rs
+- src/server/playback.rs
+- src/server/state.rs
 - src/tests/audio_tests.rs
 - src/tests/client_tests.rs
 - src/tests/debug_wav_tests.rs
@@ -290,6 +312,7 @@ Last updated: 2025-11-21
 - src/tests/opm_ffi_tests.rs
 - src/tests/opm_tests.rs
 - src/tests/play_json_interactive_tests.rs
+- src/tests/player_tests.rs
 - src/tests/resampler_tests.rs
 - src/tests/scheduler_tests.rs
 - src/tests/server_tests.rs
@@ -314,7 +337,6 @@ Last updated: 2025-11-21
 - tests/interactive/mod.rs
 - tests/interactive/mode_test.rs
 - tests/interactive/play_json_test.rs
-- tests/interactive/row_by_row_test.rs
 - tests/interactive/shared_mutex.rs
 - tests/interactive/step_by_step_test.rs
 - tests/interactive_tests.rs
@@ -326,42 +348,61 @@ Last updated: 2025-11-21
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-## [Issue #102](../issue-notes/102.md): JSONフォーマットを f64 seconds に統一する
-[issue-notes/102.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/102.md)
+## [Issue #113](../issue-notes/113.md): issue 103 「Nuked-OPMスレッドへの Windows MMCSS Pro Audio の実装と、 cpal audio_thread_priority フィーチャー有効化、を併用し、オーディオドロップアウトのリスクを低減させる」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー
+[issue-notes/113.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/113.md)
 
 ...
 ラベル: 
---- issue-notes/102.md の内容 ---
+--- issue-notes/113.md の内容 ---
 
 ```markdown
-# issue JSONフォーマットを f64 seconds に統一する #102
-[issues #102](https://github.com/cat2151/ym2151-log-play-server/issues/102)
+# issue issue 103 「Nuked-OPMスレッドへの Windows MMCSS Pro Audio の実装と、 cpal audio_thread_priority フィーチャー有効化、を併用し、オーディオドロップアウトのリスクを低減させる」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #113
+[issues #113](https://github.com/cat2151/ym2151-log-play-server/issues/113)
 
-# 影響範囲ざっくり
-- smf-to-ym2151log
-- ym2151-tone-editor
-- cat-play-mml（GitHubからの再installだけでOK？）
-- cat-edit-mml（GitHubからの再installだけでOK？）
-# メリット
-- ミス防止
-    - わかりやすい
-        - sample単位だと、55930Hzか48000Hzかなどのミスもありうる
-            - ミス考慮のコストが必要になる
-                - 変換が1つ増えればそのぶん、ミスのリスクは増える、その対策コストが増える
-                    - 無意識にミスしやすくなるし、全体品質も無意識に下がるので、
-                        - こういったシンプル化の積み重ねが重要
-        - WebAudioと同じ単位、挙動も類似しているので、わかりやすい
-# いつやる？
-- 別issueの、
-    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 同一時刻レジスタ書き込み時の2sample delayを最終段で行う
-    - [issues #101](https://github.com/cat2151/ym2151-log-play-server/issues/101) 最終段でのevent listのデータ形式は、addr data pairとする
-    - を実装したあと
-# close条件
-- 以下のアプリがエラーなくJSONを出力して、それが鳴ること
-    - smf-to-ym2151log
-    - ym2151-tone-editor
-    - cat-play-mml（GitHubからの再installだけでOK？）
-    - cat-edit-mml（GitHubからの再installだけでOK？）
+
+
+```
+
+## [Issue #112](../issue-notes/112.md): issue 100 の「同一時刻レジスタ書き込み時の2sample delay を最終段でのみ行う」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー
+[issue-notes/112.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/112.md)
+
+...
+ラベル: 
+--- issue-notes/112.md の内容 ---
+
+```markdown
+# issue issue 100 の「同一時刻レジスタ書き込み時の2sample delay を最終段でのみ行う」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #112
+[issues #112](https://github.com/cat2151/ym2151-log-play-server/issues/112)
+
+
+
+```
+
+## [Issue #111](../issue-notes/111.md): issue 101 の「最終段でのevent listのデータ形式は、addr data pairとする」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー
+[issue-notes/111.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/111.md)
+
+...
+ラベル: 
+--- issue-notes/111.md の内容 ---
+
+```markdown
+# issue issue 101 の「最終段でのevent listのデータ形式は、addr data pairとする #」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #111
+[issues #111](https://github.com/cat2151/ym2151-log-play-server/issues/111)
+
+
+
+```
+
+## [Issue #110](../issue-notes/110.md): issue 102 の「JSONフォーマットを f64 seconds に統一する」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー
+[issue-notes/110.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/110.md)
+
+...
+ラベル: 
+--- issue-notes/110.md の内容 ---
+
+```markdown
+# issue issue 102 の「JSONフォーマットを f64 seconds に統一する」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #110
+[issues #110](https://github.com/cat2151/ym2151-log-play-server/issues/110)
 
 
 
@@ -429,6 +470,102 @@ Last updated: 2025-11-21
 ```
 
 ## ドキュメントで言及されているファイルの内容
+### .github/actions-tmp/issue-notes/10.md
+```md
+# issue callgraph を他projectから使いやすくする #10
+[issues #10](https://github.com/cat2151/github-actions/issues/10)
+
+# ブレインストーミング
+- 洗い出し
+    - 他projectから使う場合の問題を洗い出す、今見えている範囲で、手早く、このnoteに可視化する
+    - 洗い出したものは、一部は別issueに切り分ける
+- close条件
+    - [x] まずは4つそれぞれを個別のdirに切り分けてtest greenとなること、とするつもり
+        - 別issueに切り分けるつもり
+- 切り分け
+    - 別dirに切り分ける
+        - [x] 課題、`codeql-queries/` が `.github/` 配下にある。対策、`.github_automation/callgraph/codeql-queries/` とする
+        - [x] 課題、scriptも、`.github/`配下にある。対策、移動する
+        - 方法、agentを試し、ハルシネーションで時間が取られるなら人力に切り替える
+- test
+    - local WSL + act でtestする
+- 名前
+    - [x] 課題、名前 enhanced が不要。対策、名前から enhanced を削除してymlなどもそれぞれ同期して修正すべし
+- docs
+    - [x] call導入手順を書く
+
+# 状況
+- 実際に他project tonejs-mml-to-json リポジトリにて使うことができている
+    - その際に発生した運用ミスは、
+        - call導入手順のメンテを行ったので、改善された、と判断する
+
+# closeとする
+
+```
+
+### .github/actions-tmp/issue-notes/11.md
+```md
+# issue translate を他projectから使いやすくする #11
+[issues #11](https://github.com/cat2151/github-actions/issues/11)
+
+# ブレインストーミング
+- 課題、個別dirへの移動が必要。
+    - scripts
+- 課題、promptをハードコーディングでなく、promptsに切り出す。
+    - さらに、呼び出し元ymlから任意のpromptsを指定できるようにする。
+- 済、課題、README以外のtranslateも可能にするか検討する
+    - 対策、シンプル優先でREADME決め打ちにする
+        - 理由、README以外の用途となると、複数ファイルをどうGemini APIにわたすか？等、仕様が爆発的にふくらんでいくリスクがある
+        - README以外の用途が明確でないうちは、README決め打ちにするほうがよい
+- docs
+    - call導入手順を書く
+
+# 状況
+- 上記のうち、別dirへの切り分け等は実施済みのはず
+- どうする？
+    - それをここに可視化する。
+
+```
+
+### .github/actions-tmp/issue-notes/12.md
+```md
+# issue project-summary を他projectから使いやすくする #12
+[issues #12](https://github.com/cat2151/github-actions/issues/12)
+
+# 保留、別projectでの検証待ちのもの
+- promptsをcall側ymlで指定可能にする
+  - 保留の理由
+    - YAGNI原則
+      - 現状の共通workflow側のpromptsで問題ないうちは、保留とする
+        - そのままで使える可能性が高い見込み
+      - 検証が必要
+      - 別promptsを実際に書く必要が出たときに、追加実装をする
+# 課題、 docs/ をメンテする
+- 対象は、 daily-summary-setup.md
+- call-daily-project-summary.yml の導入手順を書く
+- どうする？
+  - 次の日次バッチでagent用promptを生成させる
+- 結果
+  - 生成させた
+  - 導入手順をメンテさせた
+  - 人力でさらにメンテした
+  - これでOKと判断する。
+  - あとは必要に応じてissue起票すればよい、今すぐのissue起票は不要（YAGNI原則）、と判断する
+
+# closeとする
+
+```
+
+### .github/actions-tmp/issue-notes/13.md
+```md
+# issue issue-note を他projectから使いやすくする #13
+[issues #13](https://github.com/cat2151/github-actions/issues/13)
+
+- docs
+    - call導入手順を書く
+
+```
+
 ### .github/actions-tmp/issue-notes/2.md
 ```md
 # issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
@@ -602,6 +739,85 @@ jobs:
 
 ```
 
+### .github/actions-tmp/issue-notes/3.md
+```md
+# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
+[issues #3](https://github.com/cat2151/github-actions/issues/3)
+
+- 前提
+  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
+  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+
+- prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlはまだ共通ワークフロー化されず、
+呼び出し元からコピーされたままの状態です。
+このymlファイル名のまま、
+中身を共通ワークフロー化してください。
+呼び出し元ymlは別途書きますので気にしないでください。
+まずplanしてください
+```
+
+- plan 生成結果
+```
+共通ワークフロー化のためのplanは以下の通りです。
+
+1. 目的
+現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
+2. 主な変更点
+on: トリガーを workflow_call に変更（直接イベントで起動しない）。
+必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
+github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
+既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
+3. 具体的な修正内容
+on: issues: → on: workflow_call: に変更。
+inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
+スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
+github-script ステップも同様にinputsを参照。
+必要に応じて secrets も workflow_call で受け取れるようにする。
+4. ファイル名・配置
+ファイル名はそのまま issue-note.yml。
+配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
+5. 呼び出し元への影響
+呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
+このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+```
+
+- userがplanレビューし、OKを出した
+- agentに生成結果ymlをレビューさせた、OKとなった
+  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
+-  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
+```
+原因の分析：
+
+呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
+共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
+しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
+エラーの本質的な原因：
+
+actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
+script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
+そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
+正しい書き方：
+
+actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
+例（修正版）：
+
+このように、inputs の値を env で渡し、script 内では process.env で参照してください。
+
+まとめ：
+
+actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
+env: で値を渡し、process.env で参照するのが正しい
+修正が必要です。修正版のワークフローが必要な場合はお知らせください。
+```
+
+- test green
+- closeとする
+
+```
+
 ### .github/actions-tmp/issue-notes/8.md
 ```md
 # issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
@@ -679,36 +895,37 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
-### issue-notes/102.md
+### issue-notes/110.md
 ```md
-# issue JSONフォーマットを f64 seconds に統一する #102
-[issues #102](https://github.com/cat2151/ym2151-log-play-server/issues/102)
+# issue issue 102 の「JSONフォーマットを f64 seconds に統一する」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #110
+[issues #110](https://github.com/cat2151/ym2151-log-play-server/issues/110)
 
-# 影響範囲ざっくり
-- smf-to-ym2151log
-- ym2151-tone-editor
-- cat-play-mml（GitHubからの再installだけでOK？）
-- cat-edit-mml（GitHubからの再installだけでOK？）
-# メリット
-- ミス防止
-    - わかりやすい
-        - sample単位だと、55930Hzか48000Hzかなどのミスもありうる
-            - ミス考慮のコストが必要になる
-                - 変換が1つ増えればそのぶん、ミスのリスクは増える、その対策コストが増える
-                    - 無意識にミスしやすくなるし、全体品質も無意識に下がるので、
-                        - こういったシンプル化の積み重ねが重要
-        - WebAudioと同じ単位、挙動も類似しているので、わかりやすい
-# いつやる？
-- 別issueの、
-    - [issues #100](https://github.com/cat2151/ym2151-log-play-server/issues/100) 同一時刻レジスタ書き込み時の2sample delayを最終段で行う
-    - [issues #101](https://github.com/cat2151/ym2151-log-play-server/issues/101) 最終段でのevent listのデータ形式は、addr data pairとする
-    - を実装したあと
-# close条件
-- 以下のアプリがエラーなくJSONを出力して、それが鳴ること
-    - smf-to-ym2151log
-    - ym2151-tone-editor
-    - cat-play-mml（GitHubからの再installだけでOK？）
-    - cat-edit-mml（GitHubからの再installだけでOK？）
+
+
+```
+
+### issue-notes/111.md
+```md
+# issue issue 101 の「最終段でのevent listのデータ形式は、addr data pairとする #」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #111
+[issues #111](https://github.com/cat2151/ym2151-log-play-server/issues/111)
+
+
+
+```
+
+### issue-notes/112.md
+```md
+# issue issue 100 の「同一時刻レジスタ書き込み時の2sample delay を最終段でのみ行う」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #112
+[issues #112](https://github.com/cat2151/ym2151-log-play-server/issues/112)
+
+
+
+```
+
+### issue-notes/113.md
+```md
+# issue issue 103 「Nuked-OPMスレッドへの Windows MMCSS Pro Audio の実装と、 cpal audio_thread_priority フィーチャー有効化、を併用し、オーディオドロップアウトのリスクを低減させる」に実装漏れと実装誤りがあり、codeとtest codeがビルドエラー #113
+[issues #113](https://github.com/cat2151/ym2151-log-play-server/issues/113)
 
 
 
@@ -765,33 +982,67 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-7aa3b63 Merge pull request #106 from cat2151/copilot/update-event-list-data-format
-64b6580 Fix is_complete to check pending_data_write
-69ca5ac Update interactive mode tests for addr-data pair format
-5ee74db Change ProcessedEvent to store addr-data pairs instead of individual port writes
-eb45bb6 Initial plan
-6eb18d3 Merge pull request #105 from cat2151/copilot/fix-two-sample-delay
-ad6d1af Improve 2-sample delay logic to handle consecutive writes properly
-2721314 Fix syntax errors in player.rs
-ce18aab Remove 2-sample delays from intermediate stages and implement final-stage delay
-fa90991 Initial plan
+dac0301 今なにをinstall中かわかりやすくした
+faf1330 demo client interactiveで2回目以降の音が崩れないよう修正
+2b97c0c demo client interactiveを実態どおりにrename
+fbcf59e Clippy warning対処した
+5b8673f audio.rsをリファクタリングしてソース分割した。あわせてcargo fmtをかけた
+c9fc96d pipe_windows.rsをリファクタリング。code規模が大きくなりハルシネーションリスクが高まっていたので、ソース分割した
+4a34533 player.rsをリファクタリングし、test codeを他同様にtests/に移動することで、ハルシネーション対策とした
+8f2e361 #103 をlocal windowsでagentに修正させた
+543782c buildとClippyのwarningが出ていたのでagentに修正させた
+18a8bd0 Enhance Windows build workflow with caching
 
 ### 変更されたファイル:
-Cargo.lock
-Cargo.toml
-issue-notes/101.md
-issue-notes/102.md
-issue-notes/103.md
+install-ym2151-tools.rs
 src/audio.rs
+src/audio/buffers.rs
+src/audio/commands.rs
+src/audio/generator.rs
+src/audio/mod.rs
+src/audio/player.rs
+src/audio/scheduler.rs
+src/audio/stream.rs
+src/client/core.rs
+src/client/interactive.rs
+src/client/server.rs
+src/demo_client_interactive.rs
+src/demo_server_interactive.rs
+src/demo_server_non_interactive.rs
+src/ipc/mod.rs
+src/ipc/pipe_windows.rs
+src/ipc/windows/mod.rs
+src/ipc/windows/pipe_factory.rs
+src/ipc/windows/pipe_handle.rs
+src/ipc/windows/pipe_reader.rs
+src/ipc/windows/pipe_writer.rs
+src/ipc/windows/test_logging.rs
 src/lib.rs
+src/main.rs
 src/mmcss.rs
 src/player.rs
+src/server/command_handler.rs
+src/server/connection.rs
+src/tests/client_tests.rs
+src/tests/demo_server_interactive_tests.rs
+src/tests/demo_server_non_interactive_tests.rs
+src/tests/events_tests.rs
 src/tests/mmcss_tests.rs
 src/tests/mod.rs
-tests/clear_schedule_test.rs
+src/tests/play_json_interactive_tests.rs
+src/tests/player_tests.rs
+src/tests/wav_writer_tests.rs
+tests/client_test.rs
 tests/events_processing_test.rs
+tests/feature_demonstration_test.rs
+tests/integration_test.rs
+tests/interactive/mod.rs
 tests/interactive/mode_test.rs
+tests/interactive/play_json_test.rs
+tests/interactive/shared_mutex.rs
+tests/interactive/step_by_step_test.rs
+tests/server_basic_test.rs
 
 
 ---
-Generated at: 2025-11-21 07:01:49 JST
+Generated at: 2025-11-22 07:01:49 JST
