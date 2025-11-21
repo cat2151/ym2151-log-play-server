@@ -123,11 +123,17 @@ fn test_play_json_interactive_integration() -> Result<()> {
         Ok(_) => {
             println!("✅ インテグレーションテスト完了: play_json_interactive成功");
             Ok(())
-        },
-        Err(e) if e.to_string().contains("Failed to connect") || e.to_string().contains("指定されたファイルが見つかりません") => {
-            println!("⏭️  インテグレーションテストスキップ: サーバー接続問題 - {}", e);
+        }
+        Err(e)
+            if e.to_string().contains("Failed to connect")
+                || e.to_string().contains("指定されたファイルが見つかりません") =>
+        {
+            println!(
+                "⏭️  インテグレーションテストスキップ: サーバー接続問題 - {}",
+                e
+            );
             Ok(()) // Skip test gracefully
-        },
+        }
         Err(e) => {
             println!("❌ インテグレーションテスト失敗: {}", e);
             Err(e) // Actual test failure

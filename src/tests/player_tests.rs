@@ -221,9 +221,7 @@ fn test_total_samples() {
 
 #[test]
 fn test_empty_event_log() {
-    let log = EventLog {
-        events: vec![],
-    };
+    let log = EventLog { events: vec![] };
 
     let player = Player::new(log);
 
@@ -315,9 +313,7 @@ fn test_clear_schedule() {
 
 #[test]
 fn test_clear_schedule_non_interactive_mode() {
-    let log = EventLog {
-        events: vec![],
-    };
+    let log = EventLog { events: vec![] };
     let player = Player::new(log);
 
     // clear_schedule should do nothing in non-interactive mode

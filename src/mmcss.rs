@@ -5,17 +5,17 @@
 //! audio dropouts and glitches by giving real-time priority to audio threads.
 
 #[cfg(windows)]
-use windows::Win32::System::Threading::{
-    AvSetMmThreadCharacteristicsW, AvRevertMmThreadCharacteristics,
-};
-#[cfg(windows)]
-use windows::Win32::Foundation::HANDLE;
-#[cfg(windows)]
-use windows::core::PCWSTR;
-#[cfg(windows)]
 use std::ffi::OsStr;
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
+#[cfg(windows)]
+use windows::core::PCWSTR;
+#[cfg(windows)]
+use windows::Win32::Foundation::HANDLE;
+#[cfg(windows)]
+use windows::Win32::System::Threading::{
+    AvRevertMmThreadCharacteristics, AvSetMmThreadCharacteristicsW,
+};
 
 /// RAII wrapper for MMCSS thread characteristics
 ///
@@ -42,10 +42,7 @@ impl MmcssHandle {
 
             let mut task_index = 0u32;
 
-            match AvSetMmThreadCharacteristicsW(
-                PCWSTR(task_name.as_ptr()),
-                &mut task_index,
-            ) {
+            match AvSetMmThreadCharacteristicsW(PCWSTR(task_name.as_ptr()), &mut task_index) {
                 Ok(handle) => {
                     crate::logging::log_verbose(&format!(
                         "MMCSS Pro Audio priority enabled for generator thread (handle: {:?}, index: {})",

@@ -1,9 +1,9 @@
 use clap::{Parser, Subcommand};
-use ym2151_log_play_server::logging;
 use ym2151_log_play_server::client;
 use ym2151_log_play_server::demo;
 use ym2151_log_play_server::demo_server_interactive;
 use ym2151_log_play_server::demo_server_non_interactive;
+use ym2151_log_play_server::logging;
 use ym2151_log_play_server::server::Server;
 
 /// YM2151 Log Player - Rust implementation
@@ -185,7 +185,10 @@ fn main() {
                 }
             } else if demo_non_interactive {
                 // Run non-interactive demo mode
-                match demo_server_non_interactive::run_server_demo_non_interactive(verbose, low_quality_resampling) {
+                match demo_server_non_interactive::run_server_demo_non_interactive(
+                    verbose,
+                    low_quality_resampling,
+                ) {
                     Ok(_) => {
                         std::process::exit(0);
                     }
@@ -231,57 +234,60 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        eprintln!("❌ エラー: インタラクティブモードデモの実行に失敗しました: {}", e);
+                        eprintln!(
+                            "❌ エラー: インタラクティブモードデモの実行に失敗しました: {}",
+                            e
+                        );
                         std::process::exit(1);
                     }
                 }
             } else if stop {
-                    match client::stop_playback() {
+                match client::stop_playback() {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
+                    }
+                }
+            } else if shutdown {
+                match client::shutdown_server() {
+                    Ok(_) => {
+                        std::process::exit(0);
+                    }
+                    Err(e) => {
+                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
+                        eprintln!("   サーバーが起動しているか確認してください");
+                        std::process::exit(1);
+                    }
+                }
+            } else if let Some(json_path) = json_file {
+                // Read JSON file content
+                match std::fs::read_to_string(&json_path) {
+                    Ok(json_content) => match client::send_json(&json_content) {
                         Ok(_) => {
                             std::process::exit(0);
                         }
                         Err(e) => {
-                            eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
+                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
                             eprintln!("   サーバーが起動しているか確認してください");
                             std::process::exit(1);
                         }
+                    },
+                    Err(e) => {
+                        eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
+                        std::process::exit(1);
                     }
-                } else if shutdown {
-                    match client::shutdown_server() {
-                        Ok(_) => {
-                            std::process::exit(0);
-                        }
-                        Err(e) => {
-                            eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
-                            eprintln!("   サーバーが起動しているか確認してください");
-                            std::process::exit(1);
-                        }
-                    }
-                } else if let Some(json_path) = json_file {
-                    // Read JSON file content
-                    match std::fs::read_to_string(&json_path) {
-                        Ok(json_content) => match client::send_json(&json_content) {
-                            Ok(_) => {
-                                std::process::exit(0);
-                            }
-                            Err(e) => {
-                                eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
-                                eprintln!("   サーバーが起動しているか確認してください");
-                                std::process::exit(1);
-                            }
-                        },
-                        Err(e) => {
-                            eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
-                            std::process::exit(1);
-                        }
-                    }
-                } else {
-                    eprintln!("❌ エラー: client コマンドには引数が必要です");
-                    eprintln!(
+                }
+            } else {
+                eprintln!("❌ エラー: client コマンドには引数が必要です");
+                eprintln!(
                         "   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください"
                     );
-                    std::process::exit(1);
-                }
+                std::process::exit(1);
+            }
         }
     }
 }

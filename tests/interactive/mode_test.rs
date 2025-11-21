@@ -4,8 +4,8 @@
 //! register writes can be streamed continuously to the server.
 
 use ym2151_log_play_server::player::Player;
-use ym2151_log_play_server::scheduler;
 use ym2151_log_play_server::resampler::OPM_SAMPLE_RATE;
+use ym2151_log_play_server::scheduler;
 
 #[test]
 fn test_interactive_player_creation() {
@@ -113,9 +113,7 @@ fn test_protocol_interactive_commands() {
             {"time": 50.0 / OPM_SAMPLE_RATE as f64, "addr": "0x08", "data": "0x78"}
         ]
     });
-    let cmd = Command::PlayJsonInInteractive {
-        data: json_value,
-    };
+    let cmd = Command::PlayJsonInInteractive { data: json_value };
     let binary = cmd.to_binary().unwrap();
     let parsed = Command::from_binary(&binary).unwrap();
     assert_eq!(cmd, parsed);

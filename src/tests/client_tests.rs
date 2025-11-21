@@ -96,9 +96,9 @@ fn test_play_json_interactive_parses_valid_json() {
     let error_msg = result.unwrap_err().to_string();
     // Error should be about sending to server, not JSON parsing
     assert!(
-        error_msg.contains("Failed to send") ||
-        error_msg.contains("Failed to connect") ||
-        error_msg.contains("server")
+        error_msg.contains("Failed to send")
+            || error_msg.contains("Failed to connect")
+            || error_msg.contains("server")
     );
 }
 
@@ -113,10 +113,10 @@ fn test_play_json_interactive_rejects_invalid_json() {
     println!("Error message: {}", error_msg);
     // In new implementation, error comes from conversion function
     assert!(
-        error_msg.contains("Failed to parse JSON") ||
-        error_msg.contains("Failed to convert JSON") ||
-        error_msg.contains("Failed to parse converted JSON") ||
-        error_msg.contains("timing from samples")
+        error_msg.contains("Failed to parse JSON")
+            || error_msg.contains("Failed to convert JSON")
+            || error_msg.contains("Failed to parse converted JSON")
+            || error_msg.contains("timing from samples")
     );
 }
 
@@ -137,13 +137,13 @@ fn test_play_json_interactive_validates_event_log() {
     // In new implementation, validation happens in conversion or server-side
     // Client-side may fail on conversion, JSON parse or connection errors
     assert!(
-        error_msg.contains("Failed to send") ||
-        error_msg.contains("Failed to connect") ||
-        error_msg.contains("server") ||
-        error_msg.contains("validation") ||
-        error_msg.contains("Invalid") ||
-        error_msg.contains("convert") ||
-        error_msg.contains("timing")
+        error_msg.contains("Failed to send")
+            || error_msg.contains("Failed to connect")
+            || error_msg.contains("server")
+            || error_msg.contains("validation")
+            || error_msg.contains("Invalid")
+            || error_msg.contains("convert")
+            || error_msg.contains("timing")
     );
 }
 
@@ -156,5 +156,8 @@ fn test_play_json_interactive_empty_events() {
 
     // Empty events should be valid JSON and succeed (no events to send)
     let result = play_json_interactive(json_data);
-    assert!(result.is_ok(), "Empty events should succeed without server connection");
+    assert!(
+        result.is_ok(),
+        "Empty events should succeed without server connection"
+    );
 }

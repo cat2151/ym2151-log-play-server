@@ -92,9 +92,7 @@ fn test_server_startup_automated() {
     let server = Server::new();
 
     // Start server in a separate thread
-    let server_handle = thread::spawn(move || {
-        server.run()
-    });
+    let server_handle = thread::spawn(move || server.run());
 
     // Give server time to start (500ms is enough for this compact server)
     thread::sleep(Duration::from_millis(500));
@@ -102,9 +100,7 @@ fn test_server_startup_automated() {
     // Send shutdown command using binary protocol
     let result = NamedPipe::connect_default().and_then(|mut writer| {
         let cmd = Command::Shutdown;
-        let binary_data = cmd
-            .to_binary()
-            .map_err(std::io::Error::other)?;
+        let binary_data = cmd.to_binary().map_err(std::io::Error::other)?;
         writer.write_binary(&binary_data)
     });
 
@@ -120,7 +116,8 @@ fn test_server_startup_automated() {
     assert!(server_result.is_ok(), "Server thread panicked");
 
     eprintln!("✅ test_server_startup_automated: テスト完了");
-}#[test]
+}
+#[test]
 fn test_server_requirements_met() {
     // This meta-test verifies that server requirements are met:
     // ✅ 1. src/server.rs created (this file imports it)

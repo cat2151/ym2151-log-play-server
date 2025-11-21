@@ -5,7 +5,7 @@ fn test_load_simple_fixture() {
     let log =
         EventLog::from_file("tests/fixtures/simple.json").expect("Failed to load simple.json");
 
-        assert_eq!(log.events.len(), 3);
+    assert_eq!(log.events.len(), 3);
     assert!(log.validate());
 }
 
@@ -14,7 +14,7 @@ fn test_load_complex_fixture() {
     let log =
         EventLog::from_file("tests/fixtures/complex.json").expect("Failed to load complex.json");
 
-        assert_eq!(log.events.len(), 5); // Updated for current implementation (addr-data pair implementation removed)
+    assert_eq!(log.events.len(), 5); // Updated for current implementation (addr-data pair implementation removed)
     assert!(log.validate());
 
     for event in &log.events {

@@ -41,20 +41,17 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
         // Start server
-        client::ensure_server_ready("ym2151-log-play-server")
-            .expect("Should prepare server");
+        client::ensure_server_ready("ym2151-log-play-server").expect("Should prepare server");
 
         std::thread::sleep(std::time::Duration::from_millis(1000));
 
         // Start interactive mode
-        client::start_interactive()
-            .expect("Should start interactive mode");
+        client::start_interactive().expect("Should start interactive mode");
 
         std::thread::sleep(std::time::Duration::from_millis(500));
 
         // Stop interactive mode immediately
-        client::stop_interactive()
-            .expect("Should stop interactive mode");
+        client::stop_interactive().expect("Should stop interactive mode");
 
         // Clean up
         let _ = client::shutdown_server();
@@ -81,14 +78,12 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Start server
-        client::ensure_server_ready("ym2151-log-play-server")
-            .expect("Should prepare server");
+        client::ensure_server_ready("ym2151-log-play-server").expect("Should prepare server");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Start interactive mode
-        client::start_interactive()
-            .expect("Should start interactive mode");
+        client::start_interactive().expect("Should start interactive mode");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 
@@ -96,14 +91,12 @@ mod interactive_step_tests {
         let json_data = r#"{"events": [
             {"time": 0, "addr": "0x08", "data": "0x00"}
         ]}"#;
-        client::play_json_interactive(json_data)
-            .expect("Should write first register successfully");
+        client::play_json_interactive(json_data).expect("Should write first register successfully");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Stop interactive mode
-        client::stop_interactive()
-            .expect("Should stop interactive mode");
+        client::stop_interactive().expect("Should stop interactive mode");
 
         // Clean up
         let _ = client::shutdown_server();
@@ -131,14 +124,12 @@ mod interactive_step_tests {
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Start server
-        client::ensure_server_ready("ym2151-log-play-server")
-            .expect("Should prepare server");
+        client::ensure_server_ready("ym2151-log-play-server").expect("Should prepare server");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         // Start interactive mode
-        client::start_interactive()
-            .expect("Should start interactive mode");
+        client::start_interactive().expect("Should start interactive mode");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 
@@ -146,8 +137,7 @@ mod interactive_step_tests {
         let json_data = r#"{"events": [
             {"time": 0, "addr": "0x08", "data": "0x00"}
         ]}"#;
-        client::play_json_interactive(json_data)
-            .expect("Should write first register successfully");
+        client::play_json_interactive(json_data).expect("Should write first register successfully");
 
         std::thread::sleep(std::time::Duration::from_millis(100));
 

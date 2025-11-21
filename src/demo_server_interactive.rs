@@ -25,8 +25,6 @@ const RESCHEDULE_COUNT: usize = 5;
 /// Interval between each re-scheduling (seconds)
 const RESCHEDULE_INTERVAL_SEC: f64 = 1.1;
 
-
-
 /// Buffer time added to total duration (seconds)
 const DURATION_BUFFER_SEC: f64 = 1.5;
 
@@ -64,7 +62,10 @@ fn schedule_all_events(
 
         if verbose
             && (i < VERBOSE_EVENT_DISPLAY_COUNT
-                || i >= event_log.events.len().saturating_sub(VERBOSE_EVENT_DISPLAY_COUNT))
+                || i >= event_log
+                    .events
+                    .len()
+                    .saturating_sub(VERBOSE_EVENT_DISPLAY_COUNT))
         {
             let prefix = if i < VERBOSE_EVENT_DISPLAY_COUNT {
                 "📝 [デバッグ] "
@@ -77,9 +78,18 @@ fn schedule_all_events(
             let data_elapsed_sec = crate::scheduler::samples_to_sec(data_time);
 
             // Format time values with trailing zeros trimmed
-            let time_str = format!("{:.6}", event.time).trim_end_matches('0').trim_end_matches('.').to_string();
-            let addr_time_str = format!("{:.6}", addr_elapsed_sec).trim_end_matches('0').trim_end_matches('.').to_string();
-            let data_time_str = format!("{:.6}", data_elapsed_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+            let time_str = format!("{:.6}", event.time)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string();
+            let addr_time_str = format!("{:.6}", addr_elapsed_sec)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string();
+            let data_time_str = format!("{:.6}", data_elapsed_sec)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string();
 
             logging::log_always(&format!(
                 "{}イベント{}: time={}秒, スケジュール=addr:{}samples({}秒), data:{}samples({}秒), addr=0x{:02x}, data=0x{:02x}",
@@ -127,11 +137,13 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         .with_context(|| format!("JSONファイルの読み込みに失敗: {}", DEMO_F64_JSON_FILE))?;
 
     // Parse the JSON to validate it
-    let event_log = EventLog::from_json_str(&json_content)
-        .with_context(|| "JSONファイルの解析に失敗")?;
+    let event_log =
+        EventLog::from_json_str(&json_content).with_context(|| "JSONファイルの解析に失敗")?;
 
     if !event_log.validate() {
-        return Err(anyhow::anyhow!("無効なJSONファイルです: バリデーション失敗"));
+        return Err(anyhow::anyhow!(
+            "無効なJSONファイルです: バリデーション失敗"
+        ));
     }
 
     logging::log_always(&format!(
@@ -145,7 +157,8 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
     logging::log_always("🎵 サーバー内部でインタラクティブモードを開始中...");
 
     // Start interactive mode internally
-    let audio_player = server.start_interactive_mode_demo()
+    let audio_player = server
+        .start_interactive_mode_demo()
         .with_context(|| "インタラクティブモードの開始に失敗")?;
 
     logging::log_always("✅ インタラクティブモード開始完了");
@@ -154,7 +167,9 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
     let start_time = std::time::Instant::now();
 
     // Wait for audio system to stabilize
-    std::thread::sleep(std::time::Duration::from_millis(AUDIO_STABILIZATION_WAIT_MS));
+    std::thread::sleep(std::time::Duration::from_millis(
+        AUDIO_STABILIZATION_WAIT_MS,
+    ));
 
     logging::log_always(&format!(
         "🎶 デモ演奏を開始します... ({}回の再スケジューリング、{:.1}秒間隔)",
@@ -172,7 +187,11 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
             round + 1,
             RESCHEDULE_COUNT,
             event_log.events.len(),
-            if round == 0 { 0.0 } else { RESCHEDULE_INTERVAL_SEC },
+            if round == 0 {
+                0.0
+            } else {
+                RESCHEDULE_INTERVAL_SEC
+            },
             current_audio_elapsed
         ));
 
@@ -236,16 +255,14 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
 
         // Wait for next round (except for last round)
         if round < RESCHEDULE_COUNT - 1 {
-            logging::log_always(&format!(
-                "⏳ {:.1}秒待機中...",
-                RESCHEDULE_INTERVAL_SEC
-            ));
+            logging::log_always(&format!("⏳ {:.1}秒待機中...", RESCHEDULE_INTERVAL_SEC));
             thread::sleep(Duration::from_secs_f64(RESCHEDULE_INTERVAL_SEC));
         }
     }
 
     // Calculate total duration and wait
-    let max_event_time = event_log.events
+    let max_event_time = event_log
+        .events
         .iter()
         .map(|e| e.time)
         .fold(0.0f64, |a, b| a.max(b));
@@ -268,7 +285,9 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         thread::sleep(Duration::from_millis(500));
         elapsed = start_time.elapsed();
 
-        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS) && elapsed.as_millis() % 1000 < 500 {
+        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS)
+            && elapsed.as_millis() % 1000 < 500
+        {
             if let Some(audio_elapsed) = audio_player.get_audio_elapsed_sec() {
                 logging::log_verbose(&format!(
                     "⏰ 経過時間: {:.1}秒 / {:.1}秒 (音声基準: {:.1}秒)",
@@ -311,7 +330,10 @@ mod tests {
         // It's more of a documentation test to show expected file location
         let path = std::path::Path::new(DEMO_F64_JSON_FILE);
         if path.exists() {
-            assert!(path.is_file(), "Demo file path should point to a file, not a directory");
+            assert!(
+                path.is_file(),
+                "Demo file path should point to a file, not a directory"
+            );
         }
         // Note: We don't fail the test if the file doesn't exist,
         // as it might not be available in all test environments

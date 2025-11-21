@@ -196,8 +196,8 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
     log_client("✅ JSONデータのパースが完了しました");
 
     // Parse the converted JSON to check if it has any events
-    let json_value: serde_json::Value = serde_json::from_str(&converted_json)
-        .context("Failed to parse converted JSON")?;
+    let json_value: serde_json::Value =
+        serde_json::from_str(&converted_json).context("Failed to parse converted JSON")?;
 
     // Check if events array is empty
     if let Some(events) = json_value.get("events") {

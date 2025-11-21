@@ -11,8 +11,8 @@ mod shared_mutex;
 
 // Import test modules
 mod mode_test;
-mod step_by_step_test;
 mod play_json_test;
+mod step_by_step_test;
 // mod row_by_row_test;  // File does not exist yet
 
 // Re-export any public test utilities if needed

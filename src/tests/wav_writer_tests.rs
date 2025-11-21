@@ -99,7 +99,8 @@ fn test_generate_wav_from_simple_events() {
 
     let _ = std::fs::remove_file(temp_path_str);
 
-    let log = EventLog::from_file("tests/fixtures/simple.json").expect("Failed to load simple.json");
+    let log =
+        EventLog::from_file("tests/fixtures/simple.json").expect("Failed to load simple.json");
 
     let player = Player::new(log);
     let result = generate_wav(player, temp_path_str);

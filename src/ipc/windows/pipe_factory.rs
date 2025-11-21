@@ -8,8 +8,7 @@ use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_NONE, OPEN_EXISTING, PIPE_ACCESS_DUPLEX,
 };
 use windows::Win32::System::Pipes::{
-    CreateNamedPipeW, PIPE_READMODE_BYTE, PIPE_TYPE_BYTE,
-    PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
+    CreateNamedPipeW, PIPE_READMODE_BYTE, PIPE_TYPE_BYTE, PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
 };
 
 /// Create a Windows named pipe at the specified path

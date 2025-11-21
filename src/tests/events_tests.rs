@@ -10,7 +10,7 @@ fn test_parse_simple_json() {
     }"#;
 
     let log: EventLog = serde_json::from_str(json).unwrap();
-        assert_eq!(log.events.len(), 2);
+    assert_eq!(log.events.len(), 2);
 
     assert_eq!(log.events[0].time, 0.0);
     assert_eq!(log.events[0].addr, 0x08);
@@ -55,7 +55,7 @@ fn test_empty_events_list() {
     }"#;
 
     let log: EventLog = serde_json::from_str(json).unwrap();
-        assert_eq!(log.events.len(), 0);
+    assert_eq!(log.events.len(), 0);
 }
 
 #[test]
@@ -156,7 +156,7 @@ fn test_from_json_str() {
     }"#;
 
     let log = EventLog::from_json_str(json).unwrap();
-        assert_eq!(log.events.len(), 2);
+    assert_eq!(log.events.len(), 2);
     assert_eq!(log.events[0].time, 0.0);
     assert_eq!(log.events[1].addr, 0x20);
 }
@@ -194,7 +194,7 @@ fn test_json_string_vs_file_workflow() {
     }"#;
 
     let log_from_string = EventLog::from_json_str(json_string).unwrap();
-        assert!(log_from_string.validate());
+    assert!(log_from_string.validate());
 
     // Scenario 2: Both methods should produce identical results
     // (We can't test file loading in this test without creating temp files,

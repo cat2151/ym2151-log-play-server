@@ -45,11 +45,13 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         .with_context(|| format!("JSONファイルの読み込みに失敗: {}", DEMO_JSON_FILE))?;
 
     // Parse the JSON to validate it
-    let event_log = EventLog::from_json_str(&json_content)
-        .with_context(|| "JSONファイルの解析に失敗")?;
+    let event_log =
+        EventLog::from_json_str(&json_content).with_context(|| "JSONファイルの解析に失敗")?;
 
     if !event_log.validate() {
-        return Err(anyhow::anyhow!("無効なJSONファイルです: バリデーション失敗"));
+        return Err(anyhow::anyhow!(
+            "無効なJSONファイルです: バリデーション失敗"
+        ));
     }
 
     logging::log_always(&format!(
@@ -59,7 +61,8 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
 
     // Calculate total duration before creating player (to avoid move)
     let sample_rate = 55930.0; // OPM sample rate
-    let max_event_time_samples = event_log.events
+    let max_event_time_samples = event_log
+        .events
         .iter()
         .map(|e| e.time)
         .fold(0.0f64, |a, b| a.max(b));
@@ -101,7 +104,9 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         thread::sleep(Duration::from_millis(500));
         elapsed = start_time.elapsed();
 
-        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS) && elapsed.as_millis() % 1000 < 500 {
+        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS)
+            && elapsed.as_millis() % 1000 < 500
+        {
             logging::log_verbose(&format!(
                 "⏰ 経過時間: {:.1}秒 / {:.1}秒",
                 elapsed.as_secs_f64(),

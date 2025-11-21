@@ -24,4 +24,6 @@ pub use pipe_writer::PipeWriter;
 
 // Re-export test functions when in test mode
 #[cfg(test)]
-pub use test_logging::{set_client_context as test_set_client_context, set_server_context as test_set_server_context};
+pub use test_logging::{
+    set_client_context as test_set_client_context, set_server_context as test_set_server_context,
+};

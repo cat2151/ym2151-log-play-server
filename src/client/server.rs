@@ -148,11 +148,14 @@ pub fn is_server_running() -> bool {
         Ok(_) => {
             log_client("✅ [Server存在チェック] サーバーが起動していることを確認しました");
             true
-        },
+        }
         Err(e) => {
-            log_client(&format!("❌ [Server存在チェック] サーバーが起動していません: {:?}", e));
+            log_client(&format!(
+                "❌ [Server存在チェック] サーバーが起動していません: {:?}",
+                e
+            ));
             false
-        },
+        }
     }
 }
 
@@ -250,7 +253,10 @@ fn wait_for_server_ready(timeout: Duration) -> Result<()> {
     let start_time = std::time::Instant::now();
     let poll_interval = Duration::from_millis(100);
 
-    log_client(&format!("⏳ [Ready Check] サーバー起動確認を開始 (timeout: {:.1}s)", timeout.as_secs_f32()));
+    log_client(&format!(
+        "⏳ [Ready Check] サーバー起動確認を開始 (timeout: {:.1}s)",
+        timeout.as_secs_f32()
+    ));
 
     loop {
         if start_time.elapsed() > timeout {

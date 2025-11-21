@@ -94,7 +94,10 @@ mod feature_demonstrations {
         println!("🎮 Interactive Mode Demo");
 
         let player = Player::new_interactive();
-        assert!(player.is_interactive(), "Player should be in interactive mode");
+        assert!(
+            player.is_interactive(),
+            "Player should be in interactive mode"
+        );
         assert!(!player.is_complete(), "Interactive mode never completes");
 
         println!("📝 Sending register writes...");
@@ -132,7 +135,10 @@ mod feature_demonstrations {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert!(!q.is_empty(), "Interactive mode should have scheduled events");
+            assert!(
+                !q.is_empty(),
+                "Interactive mode should have scheduled events"
+            );
         }
 
         println!("✅ Interactive mode demo functionality verified!");
@@ -162,7 +168,7 @@ mod feature_demonstrations {
         }"#;
 
         let log1 = EventLog::from_json_str(json1).unwrap();
-                assert!(log1.validate(), "First JSON should be valid");
+        assert!(log1.validate(), "First JSON should be valid");
 
         println!("📝 Parsing second melody JSON (seamlessly continues)...");
 
@@ -175,7 +181,7 @@ mod feature_demonstrations {
         }"#;
 
         let log2 = EventLog::from_json_str(json2).unwrap();
-                assert!(log2.validate(), "Second JSON should be valid");
+        assert!(log2.validate(), "Second JSON should be valid");
 
         println!("📝 Parsing third melody JSON (seamlessly continues)...");
 
@@ -187,7 +193,7 @@ mod feature_demonstrations {
         }"#;
 
         let log3 = EventLog::from_json_str(json3).unwrap();
-                assert!(log3.validate(), "Third JSON should be valid");
+        assert!(log3.validate(), "Third JSON should be valid");
 
         // Demonstrate that these could be played in interactive mode
         let player = Player::new_interactive();
@@ -221,11 +227,23 @@ mod feature_demonstrations {
         println!("🎮 Time Conversion Demo");
 
         // Demonstrate sec_to_samples conversion
-        assert_eq!(scheduler::sec_to_samples(1.0), 55930, "1.0 sec should be 55930 samples");
-        assert_eq!(scheduler::sec_to_samples(0.050), 2797, "0.05 sec should be 2797 samples");
+        assert_eq!(
+            scheduler::sec_to_samples(1.0),
+            55930,
+            "1.0 sec should be 55930 samples"
+        );
+        assert_eq!(
+            scheduler::sec_to_samples(0.050),
+            2797,
+            "0.05 sec should be 2797 samples"
+        );
 
         let one_sample_sec = 1.0 / 55930.0;
-        assert_eq!(scheduler::sec_to_samples(one_sample_sec), 1, "One sample duration should convert to 1");
+        assert_eq!(
+            scheduler::sec_to_samples(one_sample_sec),
+            1,
+            "One sample duration should convert to 1"
+        );
 
         // Note: schedule_event function was removed as it was unused in production code
         // Production code uses direct sec_to_samples conversion without latency buffer
@@ -250,6 +268,9 @@ mod non_windows_demonstrations {
         // - Player and audio generation
         // - WAV file output
 
-        assert!(true, "Non-Windows platforms supported for basic functionality");
+        assert!(
+            true,
+            "Non-Windows platforms supported for basic functionality"
+        );
     }
 }

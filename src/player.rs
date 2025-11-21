@@ -193,7 +193,10 @@ impl Player {
                             };
 
                             // Find the correct position to insert (maintain sorted order)
-                            let insert_pos = queue.iter().position(|e| e.time > self.next_available_write_time).unwrap_or(queue.len());
+                            let insert_pos = queue
+                                .iter()
+                                .position(|e| e.time > self.next_available_write_time)
+                                .unwrap_or(queue.len());
                             queue.insert(insert_pos, deferred_event);
                             continue;
                         }
@@ -271,14 +274,23 @@ impl Player {
         // Key on: any of bit3-7 is 1 (data value 8 or higher)
 
         let samples_sec = self.samples_played as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
-        let samples_str = format!("{:.6}", samples_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+        let samples_str = format!("{:.6}", samples_sec)
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_string();
 
         let scheduled_sec = scheduled_time as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
-        let scheduled_str = format!("{:.6}", scheduled_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+        let scheduled_str = format!("{:.6}", scheduled_sec)
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_string();
 
         let delay_samples = self.samples_played.saturating_sub(scheduled_time);
         let delay_sec = delay_samples as f64 / crate::resampler::OPM_SAMPLE_RATE as f64;
-        let delay_str = format!("{:.6}", delay_sec).trim_end_matches('0').trim_end_matches('.').to_string();
+        let delay_str = format!("{:.6}", delay_sec)
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_string();
 
         // Check if bit3-7 are all 0 (key off condition)
         if key_data & 0xF8 == 0 {

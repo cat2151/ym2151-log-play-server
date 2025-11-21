@@ -74,7 +74,10 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         .context("Failed to send command to server")?;
 
     log_client(&format!("✅ {} コマンド送信完了", debug_tag));
-    log_client(&format!("⏳ {} サーバーからのレスポンス待機中...", debug_tag));
+    log_client(&format!(
+        "⏳ {} サーバーからのレスポンス待機中...",
+        debug_tag
+    ));
 
     // Read binary response from server
     let response_data = writer

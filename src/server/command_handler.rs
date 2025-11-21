@@ -65,7 +65,11 @@ impl CommandHandler {
         self.shutdown_flag.store(true, Ordering::Relaxed);
     }
 
-    fn handle_play_json(&self, data: serde_json::Value, audio_player: &mut Option<AudioPlayer>) -> Response {
+    fn handle_play_json(
+        &self,
+        data: serde_json::Value,
+        audio_player: &mut Option<AudioPlayer>,
+    ) -> Response {
         logging::log_verbose("🎵 JSON データを読み込み中...");
 
         // Stop any existing playback
@@ -77,7 +81,10 @@ impl CommandHandler {
         let json_result = serde_json::to_string(&data);
 
         match json_result {
-            Ok(json_str) => match self.playback_manager.load_and_start_playback(&json_str, true) {
+            Ok(json_str) => match self
+                .playback_manager
+                .load_and_start_playback(&json_str, true)
+            {
                 Ok(player) => {
                     *audio_player = Some(player);
                     logging::log_verbose("✅ JSON データから音声再生を開始しました");

@@ -57,8 +57,7 @@ mod client_integration_tests {
         thread::sleep(Duration::from_millis(200));
 
         // Send JSON data from client
-        let json_data =
-            r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
+        let json_data = r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
         let result = ym2151_log_play_server::client::send_json(json_data);
         assert!(result.is_ok());
 

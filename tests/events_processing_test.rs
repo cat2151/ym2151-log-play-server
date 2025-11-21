@@ -117,7 +117,10 @@ fn test_delay_samples() {
     let mut buffer = vec![0i16; 4];
     player.generate_samples(&mut buffer);
 
-    assert!(player.is_complete(), "Should be complete after pending data write");
+    assert!(
+        player.is_complete(),
+        "Should be complete after pending data write"
+    );
 }
 
 #[test]
@@ -183,9 +186,7 @@ fn test_complete_playback() {
 
 #[test]
 fn test_empty_log() {
-    let log = EventLog {
-        events: vec![],
-    };
+    let log = EventLog { events: vec![] };
 
     let player = Player::new(log);
 

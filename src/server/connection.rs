@@ -90,7 +90,10 @@ impl ConnectionManager {
                 let command = match Command::from_binary(&binary_data) {
                     Ok(cmd) => cmd,
                     Err(e) => {
-                        logging::log_always(&format!("⚠️  警告: コマンドの解析に失敗しました: {}", e));
+                        logging::log_always(&format!(
+                            "⚠️  警告: コマンドの解析に失敗しました: {}",
+                            e
+                        ));
                         let response = Response::Error {
                             message: format!("Parse error: {}", e),
                         };
@@ -119,13 +122,17 @@ impl ConnectionManager {
                     logging::log_always("✅ シャットダウン完了");
                     return Ok(()); // 外側のループも抜けて終了
                 } else {
-                    self.command_handler.handle_command(command, &mut audio_player)
+                    self.command_handler
+                        .handle_command(command, &mut audio_player)
                 };
 
                 // レスポンスを送信
                 if let Ok(response_binary) = response.to_binary() {
                     if let Err(e) = writer.write_binary(&response_binary) {
-                        logging::log_always(&format!("⚠️  警告: レスポンス送信に失敗しました: {}", e));
+                        logging::log_always(&format!(
+                            "⚠️  警告: レスポンス送信に失敗しました: {}",
+                            e
+                        ));
                         break; // 書き込みに失敗したら接続を閉じる
                     }
                 } else {
@@ -162,10 +169,14 @@ impl ConnectionManager {
                             ));
                         }
                         Ok(_) => {
-                            logging::log_verbose("📩 コマンドを受信しました: PlayJson (空のイベント配列)");
+                            logging::log_verbose(
+                                "📩 コマンドを受信しました: PlayJson (空のイベント配列)",
+                            );
                         }
                         Err(_) => {
-                            logging::log_verbose("📩 コマンドを受信しました: PlayJson (解析エラー)");
+                            logging::log_verbose(
+                                "📩 コマンドを受信しました: PlayJson (解析エラー)",
+                            );
                         }
                     }
                 } else {

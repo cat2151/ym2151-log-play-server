@@ -36,7 +36,10 @@ fn test_mmcss_handle_multiple_creation() {
 fn test_mmcss_returns_none_on_non_windows() {
     // On non-Windows platforms, MMCSS should always return None
     let handle = MmcssHandle::set_pro_audio_priority();
-    assert!(handle.is_none(), "MMCSS should return None on non-Windows platforms");
+    assert!(
+        handle.is_none(),
+        "MMCSS should return None on non-Windows platforms"
+    );
 }
 
 #[test]
@@ -47,7 +50,7 @@ fn test_mmcss_handle_scope() {
         // Handle should be alive here
     }
     // Handle should be dropped here
-    
+
     // Create another one after the first is dropped
     let _handle2 = MmcssHandle::set_pro_audio_priority();
     // Test passes if we get here without panicking

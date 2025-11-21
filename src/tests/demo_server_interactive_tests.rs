@@ -36,7 +36,7 @@ fn test_interactive_demo_json_parsing() {
     }"#;
 
     let event_log = EventLog::from_json_str(sample_json).expect("Should parse sample JSON");
-        assert!(event_log.validate());
+    assert!(event_log.validate());
     assert_eq!(event_log.events.len(), 2);
     assert_eq!(event_log.events[0].time, 0.0);
     assert_eq!(event_log.events[1].time, 0.5);
