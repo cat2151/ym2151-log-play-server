@@ -1,4 +1,4 @@
-//! Demo functionality for showcasing interactive mode capabilities
+//! Client interactive demo functionality for showcasing interactive mode capabilities
 //!
 //! This module provides demonstration functions that show how to use the
 //! interactive mode for continuous playback with JSON data.
@@ -26,9 +26,9 @@ const DEMO_INTERVAL_SECONDS: f64 = 1.0;
 /// # Examples
 ///
 /// ```no_run
-/// use ym2151_log_play_server::demo;
+/// use ym2151_log_play_server::demo_client_interactive;
 ///
-/// demo::run_interactive_demo(true)?; // With verbose output
+/// demo_client_interactive::run_interactive_demo(true)?; // With verbose output
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn run_interactive_demo(verbose: bool) -> Result<()> {

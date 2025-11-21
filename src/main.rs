@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use ym2151_log_play_server::client;
-use ym2151_log_play_server::demo;
+use ym2151_log_play_server::demo_client_interactive;
 use ym2151_log_play_server::demo_server_interactive;
 use ym2151_log_play_server::demo_server_non_interactive;
 use ym2151_log_play_server::logging;
@@ -229,7 +229,7 @@ fn main() {
 
             // Handle different client commands
             if demo_interactive_mode {
-                match demo::run_interactive_demo(verbose) {
+                match demo_client_interactive::run_interactive_demo(verbose) {
                     Ok(_) => {
                         std::process::exit(0);
                     }

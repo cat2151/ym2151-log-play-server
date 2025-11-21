@@ -2,7 +2,7 @@ pub mod audio;
 pub mod audio_config;
 pub mod client;
 pub mod debug_wav;
-pub mod demo;
+pub mod demo_client_interactive;
 pub mod demo_server_interactive;
 pub mod demo_server_non_interactive;
 pub mod events;
