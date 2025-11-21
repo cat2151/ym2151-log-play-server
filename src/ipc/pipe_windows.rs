@@ -53,7 +53,7 @@ mod test_logging {
     static CLIENT_LOG: Mutex<()> = Mutex::new(());
 
     thread_local! {
-        static PIPE_CONTEXT: RefCell<PipeContext> = RefCell::new(PipeContext::Unknown);
+        static PIPE_CONTEXT: RefCell<PipeContext> = const { RefCell::new(PipeContext::Unknown) };
     }
 
     #[derive(Clone, Copy, PartialEq, Eq)]

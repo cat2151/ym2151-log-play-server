@@ -101,7 +101,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         thread::sleep(Duration::from_millis(500));
         elapsed = start_time.elapsed();
 
-        if elapsed.as_secs() % DEMO_INTERVAL_SECONDS == 0 && elapsed.as_millis() % 1000 < 500 {
+        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS) && elapsed.as_millis() % 1000 < 500 {
             logging::log_verbose(&format!(
                 "⏰ 経過時間: {:.1}秒 / {:.1}秒",
                 elapsed.as_secs_f64(),

@@ -104,7 +104,7 @@ fn test_server_startup_automated() {
         let cmd = Command::Shutdown;
         let binary_data = cmd
             .to_binary()
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+            .map_err(std::io::Error::other)?;
         writer.write_binary(&binary_data)
     });
 

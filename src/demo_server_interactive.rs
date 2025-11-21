@@ -200,9 +200,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         }
 
         if verbose && round == 0 {
-            logging::log_always(&format!(
-                "🕐 [デバッグ] タイミング情報:"
-            ));
+            logging::log_always("🕐 [デバッグ] タイミング情報:");
             logging::log_always(&format!(
                 "   - 音声開始からの経過時間: {:.6}秒",
                 current_audio_elapsed
@@ -217,9 +215,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
                 "   - 音声安定化待機: {}ms",
                 AUDIO_STABILIZATION_WAIT_MS
             ));
-            logging::log_always(&format!(
-                "   - タイムスタンプの種類: 音声ストリーム基準 (連続時間)"
-            ));
+            logging::log_always("   - タイムスタンプの種類: 音声ストリーム基準 (連続時間)");
             logging::log_always(&format!(
                 "   - OPMサンプルレート: {}Hz",
                 crate::resampler::OPM_SAMPLE_RATE
@@ -272,7 +268,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         thread::sleep(Duration::from_millis(500));
         elapsed = start_time.elapsed();
 
-        if elapsed.as_secs() % DEMO_INTERVAL_SECONDS == 0 && elapsed.as_millis() % 1000 < 500 {
+        if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS) && elapsed.as_millis() % 1000 < 500 {
             if let Some(audio_elapsed) = audio_player.get_audio_elapsed_sec() {
                 logging::log_verbose(&format!(
                     "⏰ 経過時間: {:.1}秒 / {:.1}秒 (音声基準: {:.1}秒)",

@@ -13,7 +13,9 @@ use anyhow::Result;
 use command_handler::CommandHandler;
 use connection::ConnectionManager;
 use playback::PlaybackManager;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
+#[cfg(test)]
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
 
 /// Main server structure

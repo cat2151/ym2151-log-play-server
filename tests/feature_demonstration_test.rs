@@ -35,7 +35,7 @@ mod feature_demonstrations {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert!(q.len() > 0, "Phrase 1 should have scheduled events");
+            assert!(!q.is_empty(), "Phrase 1 should have scheduled events");
         }
 
         println!("🗑️ Change of plan! Clearing scheduled events for phrase 1...");
@@ -60,7 +60,7 @@ mod feature_demonstrations {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert!(q.len() > 0, "Phrase 2 should have scheduled events");
+            assert!(!q.is_empty(), "Phrase 2 should have scheduled events");
         }
 
         // Demonstrate multiple clear and schedule operations
@@ -132,7 +132,7 @@ mod feature_demonstrations {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert!(q.len() > 0, "Interactive mode should have scheduled events");
+            assert!(!q.is_empty(), "Interactive mode should have scheduled events");
         }
 
         println!("✅ Interactive mode demo functionality verified!");
@@ -202,7 +202,7 @@ mod feature_demonstrations {
         {
             let queue = player.get_event_queue();
             let q = queue.lock().unwrap();
-            assert!(q.len() > 0, "Events from JSON should be scheduled");
+            assert!(!q.is_empty(), "Events from JSON should be scheduled");
         }
 
         println!("✅ play_json_interactive demo functionality verified!");

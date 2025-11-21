@@ -223,6 +223,7 @@ impl AudioResampler {
 
             // Interleave and convert back to i16
             let output_frames = output[0].len();
+            #[allow(clippy::needless_range_loop)]
             for i in 0..output_frames {
                 let left_sample = (output[0][i] * 32768.0).clamp(-32768.0, 32767.0) as i16;
                 let right_sample = (output[1][i] * 32768.0).clamp(-32768.0, 32767.0) as i16;
