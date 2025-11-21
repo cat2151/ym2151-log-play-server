@@ -14,6 +14,7 @@ mod mmcss_tests;
 mod opm_ffi_tests;
 mod opm_tests;
 mod play_json_interactive_tests;
+mod player_tests;
 mod resampler_tests;
 mod scheduler_tests;
 mod server_tests;
