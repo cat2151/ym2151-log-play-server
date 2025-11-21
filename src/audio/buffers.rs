@@ -5,12 +5,18 @@
 
 use std::sync::{Arc, Mutex};
 
+/// Type alias for a thread-safe audio buffer
+pub type AudioBuffer = Arc<Mutex<Vec<i16>>>;
+
+/// Type alias for a pair of audio buffer handles (55kHz, 48kHz)
+pub type AudioBufferHandles = (AudioBuffer, AudioBuffer);
+
 /// Buffer manager for WAV file generation and audio debugging
 pub struct WavBuffers {
     /// Buffer for 55930 Hz samples (OPM native rate)
-    buffer_55k: Arc<Mutex<Vec<i16>>>,
+    buffer_55k: AudioBuffer,
     /// Buffer for 48000 Hz samples (resampled output rate)
-    buffer_48k: Arc<Mutex<Vec<i16>>>,
+    buffer_48k: AudioBuffer,
 }
 
 impl WavBuffers {
@@ -23,7 +29,7 @@ impl WavBuffers {
     }
 
     /// Get clones of the buffer handles for sharing with threads
-    pub fn get_handles(&self) -> (Arc<Mutex<Vec<i16>>>, Arc<Mutex<Vec<i16>>>) {
+    pub fn get_handles(&self) -> AudioBufferHandles {
         (self.buffer_55k.clone(), self.buffer_48k.clone())
     }
 

@@ -68,7 +68,7 @@ impl MmcssHandle {
 impl Drop for MmcssHandle {
     fn drop(&mut self) {
         unsafe {
-            if self.task_handle.0 != std::ptr::null_mut() {
+            if !self.task_handle.0.is_null() {
                 if let Err(e) = AvRevertMmThreadCharacteristics(self.task_handle) {
                     crate::logging::log_verbose(&format!(
                         "Warning: Failed to revert MMCSS characteristics: {}",
