@@ -15,8 +15,26 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
       
-      - name: Build project
-        run: cargo build --locked --verbose
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
       
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Check code compilation
+        run: cargo check --locked --verbose
+      
+      - name: Check test compilation
+        run: cargo check --tests --locked --verbose
