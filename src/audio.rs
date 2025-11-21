@@ -348,8 +348,7 @@ impl AudioPlayer {
     ) -> Result<()> {
         // Set MMCSS Pro Audio priority for this thread on Windows
         // This handle will automatically revert priority when dropped
-        // TODO: Re-enable after MMCSS implementation stabilization
-        // let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
+        let _mmcss_handle = crate::mmcss::MmcssHandle::set_pro_audio_priority();
 
         let mut resampler = AudioResampler::with_quality(resampling_quality)
             .context("Failed to initialize resampler")?;

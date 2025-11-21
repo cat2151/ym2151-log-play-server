@@ -5,7 +5,7 @@
 //! audio dropouts and glitches by giving real-time priority to audio threads.
 
 #[cfg(windows)]
-use windows::Win32::Media::Audio::{
+use windows::Win32::System::Threading::{
     AvSetMmThreadCharacteristicsW, AvRevertMmThreadCharacteristics,
 };
 #[cfg(windows)]
@@ -23,7 +23,7 @@ use std::os::windows::ffi::OsStrExt;
 /// When dropped, it automatically reverts the thread characteristics.
 #[cfg(windows)]
 pub struct MmcssHandle {
-    task_handle: isize,
+    task_handle: HANDLE,
 }
 
 #[cfg(windows)]
@@ -39,9 +39,9 @@ impl MmcssHandle {
                 .encode_wide()
                 .chain(std::iter::once(0))
                 .collect();
-            
+
             let mut task_index = 0u32;
-            
+
             match AvSetMmThreadCharacteristicsW(
                 PCWSTR(task_name.as_ptr()),
                 &mut task_index,
@@ -52,7 +52,7 @@ impl MmcssHandle {
                         handle, task_index
                     ));
                     Some(MmcssHandle {
-                        task_handle: handle.0,
+                        task_handle: handle,
                     })
                 }
                 Err(e) => {
@@ -71,9 +71,8 @@ impl MmcssHandle {
 impl Drop for MmcssHandle {
     fn drop(&mut self) {
         unsafe {
-            if self.task_handle != 0 {
-                let handle = HANDLE(self.task_handle);
-                if let Err(e) = AvRevertMmThreadCharacteristics(handle) {
+            if self.task_handle.0 != std::ptr::null_mut() {
+                if let Err(e) = AvRevertMmThreadCharacteristics(self.task_handle) {
                     crate::logging::log_verbose(&format!(
                         "Warning: Failed to revert MMCSS characteristics: {}",
                         e
