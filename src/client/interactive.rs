@@ -99,6 +99,8 @@ pub fn get_interactive_mode_state() -> Result<bool> {
     let response = Response::from_binary(&response_bytes)
         .map_err(|e| anyhow::anyhow!("Failed to parse response: {}", e))?;
 
+    log_verbose_client(&format!("response interactive mode state: {:?}", response));
+
     match response {
         Response::InteractiveModeState { is_interactive } => Ok(is_interactive),
         Response::Error { message } => Err(anyhow::anyhow!("Server error: {}", message)),

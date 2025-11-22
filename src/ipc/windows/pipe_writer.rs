@@ -1,3 +1,4 @@
+use crate::client::config;
 use std::io;
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
 use windows::Win32::Storage::FileSystem::{FlushFileBuffers, ReadFile, WriteFile};
@@ -145,6 +146,8 @@ impl PipeWriter {
         let mut result = Vec::with_capacity(4 + len);
         result.extend_from_slice(&len_bytes);
         result.extend_from_slice(&data);
+
+        config::log_verbose_client(&format!("✅ [CLIENT] 受信内容: {:?}", result));
 
         #[cfg(test)]
         log_client(&format!(

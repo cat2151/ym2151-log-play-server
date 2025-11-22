@@ -60,6 +60,13 @@ impl CommandHandler {
     fn handle_get_interactive_mode_state(&self) -> Response {
         let state = self.state.lock().unwrap();
         let is_interactive = *state == ServerState::Interactive;
+
+        let fn_name = std::any::type_name::<Self>();
+        logging::log_verbose_server(&format!(
+            "🔍 [{}] インタラクティブモード: {}, state: {:?}",
+            fn_name, is_interactive, state
+        ));
+
         Response::InteractiveModeState { is_interactive }
     }
 
