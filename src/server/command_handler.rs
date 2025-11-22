@@ -217,7 +217,7 @@ impl CommandHandler {
         let state = self.state.lock().unwrap();
         if *state != ServerState::Interactive {
             Response::Error {
-                message: "Not in interactive mode".to_string(),
+                message: format!("Not in interactive mode (current state: {:?})", *state),
             }
         } else {
             drop(state); // Release lock before clearing
@@ -246,7 +246,7 @@ impl CommandHandler {
                 *state
             ));
             Response::Error {
-                message: "Not in interactive mode".to_string(),
+                message: format!("Not in interactive mode (current state: {:?})", *state),
             }
         } else {
             drop(state);

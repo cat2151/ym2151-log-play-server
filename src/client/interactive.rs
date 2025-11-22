@@ -2,8 +2,8 @@
 //!
 //! This module handles interactive mode operations for real-time YM2151 control.
 
-use super::config::log_verbose_client;
 use super::config::log_always_client;
+use super::config::log_verbose_client;
 use super::core::send_command_interactive;
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
