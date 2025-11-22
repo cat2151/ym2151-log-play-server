@@ -68,9 +68,9 @@ fn schedule_all_events(
                     .saturating_sub(VERBOSE_EVENT_DISPLAY_COUNT))
         {
             let prefix = if i < VERBOSE_EVENT_DISPLAY_COUNT {
-                "📝 [デバッグ] "
+                "📝 "
             } else {
-                "📝 [デバッグ/最後] "
+                "📝 [最後] "
             };
 
             // Convert sample times to audio elapsed time
@@ -129,7 +129,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
     logging::log_always(&format!("📄 使用ファイル: {}", DEMO_F64_JSON_FILE));
 
     if verbose {
-        logging::log_always("🔍 [デバッグ] verboseモードが有効です");
+        logging::log_always("🔍 verboseモードが有効です");
     }
 
     // Read the demo JSON file
@@ -219,7 +219,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         }
 
         if verbose && round == 0 {
-            logging::log_always("🕐 [デバッグ] タイミング情報:");
+            logging::log_always("🕐 タイミング情報:");
             logging::log_always(&format!(
                 "   - 音声開始からの経過時間: {:.6}秒",
                 current_audio_elapsed

@@ -136,13 +136,13 @@ impl CommandHandler {
     fn handle_start_interactive(&self, audio_player: &mut Option<AudioPlayer>) -> Response {
         logging::log_verbose("🎮 インタラクティブモードを開始中...");
         logging::log_verbose(&format!(
-            "🔍 [デバッグ] 現在のサーバー状態: {:?}",
+            "🔍現在のサーバー状態: {:?}",
             *self.state.lock().unwrap()
         ));
 
         // Stop any existing playback
         if let Some(mut player) = audio_player.take() {
-            logging::log_verbose("⏹️  [デバッグ] 既存の再生を停止中...");
+            logging::log_verbose("⏹️ 既存の再生を停止中...");
             player.stop();
         }
 
@@ -150,20 +150,20 @@ impl CommandHandler {
         {
             let mut tracker = self.time_tracker.lock().unwrap();
             tracker.reset();
-            logging::log_verbose("🕐 [デバッグ] タイムトラッカーをリセットしました");
+            logging::log_verbose("🕐タイムトラッカーをリセットしました");
         }
 
         // Start interactive mode
-        logging::log_verbose("🎵 [デバッグ] インタラクティブオーディオプレーヤーを作成中...");
+        logging::log_verbose("🎵インタラクティブオーディオプレーヤーを作成中...");
         match self.playback_manager.start_interactive_mode() {
             Ok(player) => {
                 *audio_player = Some(player);
                 logging::log_verbose("✅ インタラクティブモードを開始しました");
-                logging::log_verbose("🔊 [デバッグ] 音声ストリーミング開始");
+                logging::log_verbose("🔊音声ストリーミング開始");
 
                 let mut state = self.state.lock().unwrap();
                 *state = ServerState::Interactive;
-                logging::log_verbose(&format!("📊 [デバッグ] サーバー状態を更新: {:?}", *state));
+                logging::log_verbose(&format!("📊サーバー状態を更新: {:?}", *state));
 
                 Response::Ok
             }
@@ -193,21 +193,21 @@ impl CommandHandler {
     fn handle_stop_interactive(&self, audio_player: &mut Option<AudioPlayer>) -> Response {
         logging::log_verbose("⏹️  インタラクティブモードを停止中...");
         logging::log_verbose(&format!(
-            "🔍 [デバッグ] 現在のサーバー状態: {:?}",
+            "🔍現在のサーバー状態: {:?}",
             *self.state.lock().unwrap()
         ));
 
         if let Some(mut player) = audio_player.take() {
-            logging::log_verbose("🔊 [デバッグ] オーディオプレーヤーを停止中...");
+            logging::log_verbose("🔊オーディオプレーヤーを停止中...");
             player.stop();
-            logging::log_verbose("✅ [デバッグ] オーディオプレーヤー停止完了");
+            logging::log_verbose("✅オーディオプレーヤー停止完了");
         } else {
-            logging::log_verbose("⚠️  [デバッグ] 停止するオーディオプレーヤーがありません");
+            logging::log_verbose("⚠️ 停止するオーディオプレーヤーがありません");
         }
 
         let mut state = self.state.lock().unwrap();
         *state = ServerState::Stopped;
-        logging::log_verbose(&format!("📊 [デバッグ] サーバー状態を更新: {:?}", *state));
+        logging::log_verbose(&format!("📊サーバー状態を更新: {:?}", *state));
 
         logging::log_verbose("✅ インタラクティブモードを停止しました");
         Response::Ok

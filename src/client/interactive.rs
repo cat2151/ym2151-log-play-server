@@ -24,7 +24,7 @@ pub fn start_interactive() -> Result<()> {
 
     log_client("🎮 [インタラクティブモード] 開始要求を送信中...");
     log_client(&format!(
-        "🔌 [デバッグ][インタラクティブ] パイプパス: {}",
+        "🔌 パイプパス: {}",
         crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
     ));
     let result = send_command_interactive(Command::StartInteractive);

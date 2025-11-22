@@ -33,7 +33,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
     logging::log_always(&format!("📄 使用ファイル: {}", DEMO_JSON_FILE));
 
     if verbose {
-        logging::log_always("🔍 [デバッグ] verboseモードが有効です");
+        logging::log_always("🔍 verboseモードが有効です");
     }
 
     if low_quality_resampling {

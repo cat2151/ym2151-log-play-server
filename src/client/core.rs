@@ -26,9 +26,9 @@ pub fn send_command_interactive(command: Command) -> Result<()> {
 
 fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
     let debug_tag = if is_interactive {
-        "[デバッグ][インタラクティブ]"
+        "[インタラクティブ]"
     } else {
-        "[デバッグ]"
+        ""
     };
 
     // Retry loop for connection
