@@ -17,7 +17,8 @@ impl ConnectionManager {
         Self { command_handler }
     }
 
-    /// Run the main connection loop
+    /// Run the main connection loop in atomic mode
+    /// Each connection processes exactly one command and then closes
     #[cfg(target_os = "windows")]
     pub fn run(&self) -> Result<()> {
         logging::log_always("🚀 YM2151サーバーを起動中...");
@@ -25,6 +26,7 @@ impl ConnectionManager {
             "   名前付きパイプ: {}",
             crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
         ));
+        logging::log_always("   モード: アトミック（1接続=1コマンド）");
 
         let mut audio_player: Option<AudioPlayer> = None;
 
@@ -53,7 +55,7 @@ impl ConnectionManager {
             let mut reader = match connection_pipe.open_read() {
                 Ok(r) => r,
                 Err(e) => {
-                    logging::log_always(&format!(
+                    logging::log_verbose(&format!(
                         "⚠️  警告: パイプの読み取りオープンに失敗しました: {}",
                         e
                     ));
@@ -68,7 +70,7 @@ impl ConnectionManager {
             let mut writer = match connection_pipe.open_write() {
                 Ok(w) => w,
                 Err(e) => {
-                    logging::log_always(&format!(
+                    logging::log_verbose(&format!(
                         "⚠️  警告: パイプの書き込みオープンに失敗しました: {}",
                         e
                     ));
@@ -76,73 +78,70 @@ impl ConnectionManager {
                 }
             };
 
-            // 一つのクライアント接続からの複数メッセージを処理
-            loop {
-                // Read binary command from client
-                let binary_data = match reader.read_binary() {
-                    Ok(data) => data,
-                    Err(e) => {
-                        logging::log_verbose(&format!("📞 クライアントが切断されました: {}", e));
-                        break; // 内側のループを抜けて新しい接続を待機
-                    }
-                };
+            // アトミックモード: 1コマンドだけ処理
+            // Read binary command from client
+            let binary_data = match reader.read_binary() {
+                Ok(data) => data,
+                Err(e) => {
+                    logging::log_verbose(&format!("📞 コマンド読み取りエラー: {}", e));
+                    continue; // 次の接続を待機
+                }
+            };
 
-                let command = match Command::from_binary(&binary_data) {
-                    Ok(cmd) => cmd,
-                    Err(e) => {
-                        logging::log_always(&format!(
-                            "⚠️  警告: コマンドの解析に失敗しました: {}",
-                            e
-                        ));
-                        let response = Response::Error {
-                            message: format!("Parse error: {}", e),
-                        };
-                        if let Ok(response_binary) = response.to_binary() {
-                            let _ = writer.write_binary(&response_binary);
-                        }
-                        continue;
-                    }
-                };
-
-                // Log command content
-                self.log_command(&command);
-
-                // Handle shutdown specially
-                let response = if matches!(command, Command::Shutdown) {
-                    logging::log_always("🛑 シャットダウン要求を受信しました");
-                    if let Some(mut player) = audio_player.take() {
-                        player.stop();
-                    }
-                    self.command_handler.request_shutdown();
-
-                    // シャットダウンレスポンスを送信
-                    if let Ok(response_binary) = Response::Ok.to_binary() {
+            let command = match Command::from_binary(&binary_data) {
+                Ok(cmd) => cmd,
+                Err(e) => {
+                    logging::log_always(&format!(
+                        "⚠️  警告: コマンドの解析に失敗しました: {}",
+                        e
+                    ));
+                    let response = Response::Error {
+                        message: format!("Parse error: {}", e),
+                    };
+                    if let Ok(response_binary) = response.to_binary() {
                         let _ = writer.write_binary(&response_binary);
                     }
-                    logging::log_always("✅ シャットダウン完了");
-                    return Ok(()); // 外側のループも抜けて終了
-                } else {
-                    self.command_handler
-                        .handle_command(command, &mut audio_player)
-                };
-
-                // レスポンスを送信
-                if let Ok(response_binary) = response.to_binary() {
-                    if let Err(e) = writer.write_binary(&response_binary) {
-                        logging::log_always(&format!(
-                            "⚠️  警告: レスポンス送信に失敗しました: {}",
-                            e
-                        ));
-                        break; // 書き込みに失敗したら接続を閉じる
-                    }
-                } else {
-                    logging::log_always("⚠️  警告: レスポンスのシリアライズに失敗しました");
-                    break;
+                    continue; // 次の接続を待機
                 }
+            };
 
-                logging::log_verbose(&format!("📤 レスポンスを送信しました: {:?}", response));
+            // Log command content
+            self.log_command(&command);
+
+            // Handle shutdown specially
+            let response = if matches!(command, Command::Shutdown) {
+                logging::log_always("🛑 シャットダウン要求を受信しました");
+                if let Some(mut player) = audio_player.take() {
+                    player.stop();
+                }
+                self.command_handler.request_shutdown();
+
+                // シャットダウンレスポンスを送信
+                if let Ok(response_binary) = Response::Ok.to_binary() {
+                    let _ = writer.write_binary(&response_binary);
+                }
+                logging::log_always("✅ シャットダウン完了");
+                return Ok(()); // ループを抜けて終了
+            } else {
+                self.command_handler
+                    .handle_command(command, &mut audio_player)
+            };
+
+            // レスポンスを送信
+            if let Ok(response_binary) = response.to_binary() {
+                if let Err(e) = writer.write_binary(&response_binary) {
+                    logging::log_verbose(&format!(
+                        "⚠️  警告: レスポンス送信に失敗しました: {}",
+                        e
+                    ));
+                }
+            } else {
+                logging::log_verbose("⚠️  警告: レスポンスのシリアライズに失敗しました");
             }
 
+            logging::log_verbose(&format!("📤 レスポンスを送信しました: {:?}", response));
+
+            // 接続は自動的にクローズされる（スコープ外）
             logging::log_verbose("🔄 次の接続を待機中...");
         }
 

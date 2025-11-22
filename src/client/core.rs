@@ -6,6 +6,13 @@ use super::config::log_client;
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
+use std::thread;
+use std::time::Duration;
+
+/// Maximum number of connection retry attempts
+const MAX_RETRY_ATTEMPTS: u32 = 3;
+/// Delay between retry attempts in milliseconds
+const RETRY_DELAY_MS: u64 = 50;
 
 /// Send a standard command to the server
 pub fn send_command(command: Command) -> Result<()> {
@@ -24,97 +31,137 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         "[デバッグ]"
     };
 
-    log_client(&format!(
-        "🔌 {} パイプ接続を試行中: {}",
-        debug_tag,
-        crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
-    ));
+    // Retry loop for connection
+    let mut last_error = None;
+    for attempt in 1..=MAX_RETRY_ATTEMPTS {
+        if attempt > 1 {
+            log_client(&format!(
+                "🔄 {} 再試行 {}/{}...",
+                debug_tag, attempt, MAX_RETRY_ATTEMPTS
+            ));
+            thread::sleep(Duration::from_millis(RETRY_DELAY_MS));
+        }
 
-    let mut writer = NamedPipe::connect_default().context(
+        log_client(&format!(
+            "🔌 {} パイプ接続を試行中: {}",
+            debug_tag,
+            crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
+        ));
+
+        let mut writer = match NamedPipe::connect_default() {
+            Ok(w) => {
+                log_client(&format!("✅ {} パイプ接続成功", debug_tag));
+                w
+            }
+            Err(e) => {
+                log_client(&format!(
+                    "⚠️  {} パイプ接続失敗 (試行 {}/{}): {}",
+                    debug_tag, attempt, MAX_RETRY_ATTEMPTS, e
+                ));
+                last_error = Some(e);
+                continue; // Retry
+            }
+        };
+
+        // Connection successful, proceed with command
+        // Serialize command to binary format
+        let binary_data = command
+            .to_binary()
+            .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+        log_client(&format!(
+            "📤 {} コマンドをバイナリ化しました ({}バイト)",
+            debug_tag,
+            binary_data.len()
+        ));
+
+        // Display command info
+        match &command {
+            Command::PlayJson { .. } => {
+                log_client("⏳ サーバーにJSON送信中...");
+            }
+            Command::PlayJsonInInteractive { .. } => {
+                log_client("⏳ インタラクティブモードにJSON送信中...");
+            }
+            Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
+            Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
+            Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
+            Command::StartInteractive => log_client("⏳ インタラクティブモード開始要求を送信中..."),
+            Command::StopInteractive => log_client("⏳ インタラクティブモード停止要求を送信中..."),
+            _ => {}
+        }
+
+        // Send command via binary protocol
+        if let Err(e) = writer.write_binary(&binary_data) {
+            log_client(&format!("⚠️  {} コマンド送信失敗: {}", debug_tag, e));
+            last_error = Some(e);
+            continue; // Retry
+        }
+
+        log_client(&format!("✅ {} コマンド送信完了", debug_tag));
+        log_client(&format!(
+            "⏳ {} サーバーからのレスポンス待機中...",
+            debug_tag
+        ));
+
+        // Read binary response from server
+        let response_data = match writer.read_binary_response() {
+            Ok(data) => data,
+            Err(e) => {
+                log_client(&format!("⚠️  {} レスポンス読み取り失敗: {}", debug_tag, e));
+                last_error = Some(e);
+                continue; // Retry
+            }
+        };
+
+        log_client(&format!(
+            "✅ {} レスポンス受信完了 ({}バイト)",
+            debug_tag,
+            response_data.len()
+        ));
+
+        // Parse binary response
+        let response = Response::from_binary(&response_data)
+            .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
+
+        match response {
+            Response::Ok => match &command {
+                Command::PlayJson { .. } => {
+                    log_client("✅ JSON送信で演奏開始しました");
+                }
+                Command::PlayJsonInInteractive { .. } => {
+                    log_client("✅ インタラクティブモードでJSON処理完了");
+                }
+                Command::Stop => log_client("✅ 演奏停止しました"),
+                Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
+                Command::ClearSchedule => log_client("✅ スケジュールをクリアしました"),
+                _ => {} // Other commands don't have custom success logging
+            },
+            Response::Error { message } => {
+                log_client(&format!("❌ サーバーエラー: {}", message));
+                return Err(anyhow::anyhow!("Server returned error: {}", message));
+            }
+            _ => {} // Handle other response types (like ServerTime) without error
+        }
+
+        return Ok(()); // Success
+    }
+
+    // All retries failed
+    Err(last_error.unwrap_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Failed to connect to server after all retries",
+        )
+    }))
+    .context(
         r"Failed to connect to server. Is the server running? \
          サーバーが起動していることを確認してください。\
          \n💡 ヒント: 以下を確認してください:\
          \n  1. サーバーが起動しているか (ym2151-log-play-server server)\
          \n  2. パイプパスが正しいか (\\.\pipe\ym2151-log-play-server)\
          \n  3. 他のプロセスがパイプを使用していないか",
-    )?;
-
-    log_client(&format!("✅ {} パイプ接続成功", debug_tag));
-
-    // Serialize command to binary format
-    let binary_data = command
-        .to_binary()
-        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
-
-    log_client(&format!(
-        "📤 {} コマンドをバイナリ化しました ({}バイト)",
-        debug_tag,
-        binary_data.len()
-    ));
-
-    // Display command info
-    match &command {
-        Command::PlayJson { .. } => {
-            log_client("⏳ サーバーにJSON送信中...");
-        }
-        Command::PlayJsonInInteractive { .. } => {
-            log_client("⏳ インタラクティブモードにJSON送信中...");
-        }
-        Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
-        Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
-        Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
-        Command::StartInteractive => log_client("⏳ インタラクティブモード開始要求を送信中..."),
-        Command::StopInteractive => log_client("⏳ インタラクティブモード停止要求を送信中..."),
-        _ => {}
-    }
-
-    // Send command via binary protocol
-    writer
-        .write_binary(&binary_data)
-        .context("Failed to send command to server")?;
-
-    log_client(&format!("✅ {} コマンド送信完了", debug_tag));
-    log_client(&format!(
-        "⏳ {} サーバーからのレスポンス待機中...",
-        debug_tag
-    ));
-
-    // Read binary response from server
-    let response_data = writer
-        .read_binary_response()
-        .context("Failed to read response from server")?;
-
-    log_client(&format!(
-        "✅ {} レスポンス受信完了 ({}バイト)",
-        debug_tag,
-        response_data.len()
-    ));
-
-    // Parse binary response
-    let response = Response::from_binary(&response_data)
-        .map_err(|e| anyhow::anyhow!("Failed to parse server response: {}", e))?;
-
-    match response {
-        Response::Ok => match &command {
-            Command::PlayJson { .. } => {
-                log_client("✅ JSON送信で演奏開始しました");
-            }
-            Command::PlayJsonInInteractive { .. } => {
-                log_client("✅ インタラクティブモードでJSON処理完了");
-            }
-            Command::Stop => log_client("✅ 演奏停止しました"),
-            Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
-            Command::ClearSchedule => log_client("✅ スケジュールをクリアしました"),
-            _ => {} // Other commands don't have custom success logging
-        },
-        Response::Error { message } => {
-            log_client(&format!("❌ サーバーエラー: {}", message));
-            return Err(anyhow::anyhow!("Server returned error: {}", message));
-        }
-        _ => {} // Handle other response types (like ServerTime) without error
-    }
-
-    Ok(())
+    )
 }
 
 /// Basic playback control functions
