@@ -91,8 +91,8 @@ pub use json::send_json;
 
 // Interactive mode functionality
 pub use interactive::{
-    clear_schedule, get_server_time, play_json_interactive, start_interactive, stop_interactive,
-    get_interactive_mode_state,
+    clear_schedule, get_interactive_mode_state, get_server_time, play_json_interactive,
+    start_interactive, stop_interactive,
 };
 
 // Server management functionality

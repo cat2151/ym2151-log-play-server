@@ -47,9 +47,7 @@ impl CommandHandler {
             Command::PlayJsonInInteractive { data } => {
                 self.handle_play_json_in_interactive(data, audio_player)
             }
-            Command::GetInteractiveModeState => {
-                self.handle_get_interactive_mode_state()
-            }
+            Command::GetInteractiveModeState => self.handle_get_interactive_mode_state(),
             Command::Shutdown => {
                 // Shutdown is handled specially in the connection loop
                 // This should not be reached

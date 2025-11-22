@@ -48,7 +48,9 @@ pub fn start_interactive() -> Result<()> {
             }
             Ok(false) => {
                 if start.elapsed() >= timeout {
-                    log_client("❌ [インタラクティブモード] サーバーがモード切替に失敗しました (timeout)");
+                    log_client(
+                        "❌ [インタラクティブモード] サーバーがモード切替に失敗しました (timeout)",
+                    );
                     eprintln!("[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)");
                     std::process::exit(1);
                 }
@@ -56,7 +58,10 @@ pub fn start_interactive() -> Result<()> {
             }
             Err(e) => {
                 if start.elapsed() >= timeout {
-                    log_client(&format!("❌ [インタラクティブモード] サーバー状態取得失敗: {} (timeout)", e));
+                    log_client(&format!(
+                        "❌ [インタラクティブモード] サーバー状態取得失敗: {} (timeout)",
+                        e
+                    ));
                     eprintln!("[ERROR] サーバー状態取得失敗: {} (timeout)", e);
                     std::process::exit(1);
                 }

@@ -234,10 +234,10 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        eprintln!(
+                        logging::log_always(&format!(
                             "❌ エラー: インタラクティブモードデモの実行に失敗しました: {}",
                             e
-                        );
+                        ));
                         std::process::exit(1);
                     }
                 }
@@ -247,8 +247,8 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        eprintln!("❌ エラー: 停止要求の送信に失敗しました: {}", e);
-                        eprintln!("   サーバーが起動しているか確認してください");
+                        logging::log_always(&format!("❌ エラー: 演奏停止に失敗しました: {}", e));
+                        logging::log_always("   サーバーが起動しているか確認してください");
                         std::process::exit(1);
                     }
                 }
@@ -258,8 +258,11 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        eprintln!("❌ エラー: サーバーシャットダウンに失敗しました: {}", e);
-                        eprintln!("   サーバーが起動しているか確認してください");
+                        logging::log_always(&format!(
+                            "❌ エラー: サーバーのシャットダウンに失敗しました: {}",
+                            e
+                        ));
+                        logging::log_always("   サーバーが起動しているか確認してください");
                         std::process::exit(1);
                     }
                 }
@@ -271,21 +274,26 @@ fn main() {
                             std::process::exit(0);
                         }
                         Err(e) => {
-                            eprintln!("❌ エラー: 演奏要求の送信に失敗しました: {}", e);
-                            eprintln!("   サーバーが起動しているか確認してください");
+                            logging::log_always(&format!(
+                                "❌ エラー: JSONファイルの送信に失敗しました: {}",
+                                e
+                            ));
+                            logging::log_always("   サーバーが起動しているか確認してください");
                             std::process::exit(1);
                         }
                     },
                     Err(e) => {
-                        eprintln!("❌ エラー: JSONファイルの読み込みに失敗しました: {}", e);
+                        logging::log_always(&format!(
+                            "❌ エラー: JSONファイルの読み込みに失敗しました: {}",
+                            e
+                        ));
+                        logging::log_always(&format!("   ファイルパス: {}", json_path));
                         std::process::exit(1);
                     }
                 }
             } else {
-                eprintln!("❌ エラー: client コマンドには引数が必要です");
-                eprintln!(
-                        "   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください"
-                    );
+                logging::log_always("❌ エラー: client コマンドには引数が必要です");
+                logging::log_always("   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください");
                 std::process::exit(1);
             }
         }

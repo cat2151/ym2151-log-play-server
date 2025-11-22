@@ -91,10 +91,7 @@ impl ConnectionManager {
             let command = match Command::from_binary(&binary_data) {
                 Ok(cmd) => cmd,
                 Err(e) => {
-                    logging::log_always(&format!(
-                        "⚠️  警告: コマンドの解析に失敗しました: {}",
-                        e
-                    ));
+                    logging::log_always(&format!("⚠️  警告: コマンドの解析に失敗しました: {}", e));
                     let response = Response::Error {
                         message: format!("Parse error: {}", e),
                     };
@@ -130,10 +127,7 @@ impl ConnectionManager {
             // レスポンスを送信
             if let Ok(response_binary) = response.to_binary() {
                 if let Err(e) = writer.write_binary(&response_binary) {
-                    logging::log_verbose(&format!(
-                        "⚠️  警告: レスポンス送信に失敗しました: {}",
-                        e
-                    ));
+                    logging::log_verbose(&format!("⚠️  警告: レスポンス送信に失敗しました: {}", e));
                 }
             } else {
                 logging::log_verbose("⚠️  警告: レスポンスのシリアライズに失敗しました");
