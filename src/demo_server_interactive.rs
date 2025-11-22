@@ -43,7 +43,7 @@ fn schedule_all_events(
 ) -> Result<()> {
     // Show initial queue state
     if let Some(queue_count) = audio_player.get_scheduled_event_count() {
-        logging::log_always(&format!(
+        logging::log_always_server(&format!(
             "📊 スケジュール開始前: キューに{}個のイベント",
             queue_count
         ));
@@ -91,7 +91,7 @@ fn schedule_all_events(
                 .trim_end_matches('.')
                 .to_string();
 
-            logging::log_always(&format!(
+            logging::log_always_server(&format!(
                 "{}イベント{}: time={}秒, スケジュール=addr:{}samples({}秒), data:{}samples({}秒), addr=0x{:02x}, data=0x{:02x}",
                 prefix, i, time_str, addr_time, addr_time_str, data_time, data_time_str, event.addr, event.data
             ));
@@ -100,14 +100,14 @@ fn schedule_all_events(
 
     // Show final queue state
     if let Some(queue_count) = audio_player.get_scheduled_event_count() {
-        logging::log_always(&format!(
+        logging::log_always_server(&format!(
             "📊 スケジュール完了後: キューに{}個のイベント ({}個追加)",
             queue_count,
             event_log.events.len()
         ));
     }
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "📝 {}個のイベントをスケジュールしました",
         event_log.events.len()
     ));
@@ -125,11 +125,11 @@ fn schedule_all_events(
 ///
 /// This is intended for server-side testing and demonstration purposes.
 pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()> {
-    logging::log_always("🎮 サーバーデモモード（インタラクティブ）を開始します...");
-    logging::log_always(&format!("📄 使用ファイル: {}", DEMO_F64_JSON_FILE));
+    logging::log_always_server("🎮 サーバーデモモード（インタラクティブ）を開始します...");
+    logging::log_always_server(&format!("📄 使用ファイル: {}", DEMO_F64_JSON_FILE));
 
     if verbose {
-        logging::log_always("🔍 verboseモードが有効です");
+        logging::log_always_server("🔍 verboseモードが有効です");
     }
 
     // Read the demo JSON file
@@ -146,7 +146,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         ));
     }
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "✅ JSONファイルを読み込み完了: {}個のイベント",
         event_log.events.len()
     ));
@@ -154,14 +154,14 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
     // Create server instance
     let server = Server::new_with_resampling_quality(low_quality_resampling);
 
-    logging::log_always("🎵 サーバー内部でインタラクティブモードを開始中...");
+    logging::log_always_server("🎵 サーバー内部でインタラクティブモードを開始中...");
 
     // Start interactive mode internally
     let audio_player = server
         .start_interactive_mode_demo()
         .with_context(|| "インタラクティブモードの開始に失敗")?;
 
-    logging::log_always("✅ インタラクティブモード開始完了");
+    logging::log_always_server("✅ インタラクティブモード開始完了");
 
     // Get initial server time for scheduling
     let start_time = std::time::Instant::now();
@@ -171,7 +171,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         AUDIO_STABILIZATION_WAIT_MS,
     ));
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "🎶 デモ演奏を開始します... ({}回の再スケジューリング、{:.1}秒間隔)",
         RESCHEDULE_COUNT, RESCHEDULE_INTERVAL_SEC
     ));
@@ -182,7 +182,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
             .get_audio_elapsed_sec()
             .ok_or_else(|| anyhow::anyhow!("音声経過時間の取得に失敗"))?;
 
-        logging::log_always(&format!(
+        logging::log_always_server(&format!(
             "🔄 ラウンド {}/{}: {}個のイベントを{:.1}秒後にスケジュール (音声経過時間: {:.6}秒)",
             round + 1,
             RESCHEDULE_COUNT,
@@ -199,7 +199,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         if round > 0 {
             // Show queue state before clearing
             if let Some(queue_count) = audio_player.get_scheduled_event_count() {
-                logging::log_always(&format!(
+                logging::log_always_server(&format!(
                     "🧹 スケジュールクリア前: キューに{}個のイベント",
                     queue_count
                 ));
@@ -209,33 +209,33 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
 
             // Show queue state after clearing
             if let Some(queue_count) = audio_player.get_scheduled_event_count() {
-                logging::log_always(&format!(
+                logging::log_always_server(&format!(
                     "🧹 スケジュールクリア後: キューに{}個のイベント",
                     queue_count
                 ));
             } else {
-                logging::log_always("🧹 前回のスケジュールをクリアしました");
+                logging::log_always_server("🧹 前回のスケジュールをクリアしました");
             }
         }
 
         if verbose && round == 0 {
-            logging::log_always("🕐 タイミング情報:");
-            logging::log_always(&format!(
+            logging::log_always_server("🕐 タイミング情報:");
+            logging::log_always_server(&format!(
                 "   - 音声開始からの経過時間: {:.6}秒",
                 current_audio_elapsed
             ));
-            logging::log_always(&format!(
+            logging::log_always_server(&format!(
                 "   - 未来オフセット: {:.3}秒 ({}ms, {}samples)",
                 FUTURE_SCHEDULING_OFFSET_SEC,
                 (FUTURE_SCHEDULING_OFFSET_SEC * 1000.0) as u32,
                 crate::scheduler::sec_to_samples(FUTURE_SCHEDULING_OFFSET_SEC)
             ));
-            logging::log_always(&format!(
+            logging::log_always_server(&format!(
                 "   - 音声安定化待機: {}ms",
                 AUDIO_STABILIZATION_WAIT_MS
             ));
-            logging::log_always("   - タイムスタンプの種類: 音声ストリーム基準 (連続時間)");
-            logging::log_always(&format!(
+            logging::log_always_server("   - タイムスタンプの種類: 音声ストリーム基準 (連続時間)");
+            logging::log_always_server(&format!(
                 "   - OPMサンプルレート: {}Hz",
                 crate::resampler::OPM_SAMPLE_RATE
             ));
@@ -243,7 +243,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
                 let first_scheduled_samples = crate::scheduler::sec_to_samples(
                     current_audio_elapsed + FUTURE_SCHEDULING_OFFSET_SEC + first_event.time,
                 );
-                logging::log_always(&format!(
+                logging::log_always_server(&format!(
                     "   - 最初のイベント: time={:.6}秒, scheduled_samples={}",
                     first_event.time, first_scheduled_samples
                 ));
@@ -255,7 +255,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
 
         // Wait for next round (except for last round)
         if round < RESCHEDULE_COUNT - 1 {
-            logging::log_always(&format!("⏳ {:.1}秒待機中...", RESCHEDULE_INTERVAL_SEC));
+            logging::log_always_server(&format!("⏳ {:.1}秒待機中...", RESCHEDULE_INTERVAL_SEC));
             thread::sleep(Duration::from_secs_f64(RESCHEDULE_INTERVAL_SEC));
         }
     }
@@ -269,7 +269,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
 
     let total_duration = Duration::from_secs_f64(max_event_time + DURATION_BUFFER_SEC); // Add buffer
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "⏱️  演奏時間: {:.1}秒 (最大イベント時刻: {:.1}秒 + バッファ: {:.1}秒)",
         total_duration.as_secs_f64(),
         max_event_time,
@@ -277,7 +277,7 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
     ));
 
     // Keep the demo running
-    logging::log_always("🎵 演奏中... (Ctrl+C で終了)");
+    logging::log_always_server("🎵 演奏中... (Ctrl+C で終了)");
 
     // Simple loop to keep the demo alive
     let mut elapsed = Duration::ZERO;
@@ -289,14 +289,14 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
             && elapsed.as_millis() % 1000 < 500
         {
             if let Some(audio_elapsed) = audio_player.get_audio_elapsed_sec() {
-                logging::log_verbose(&format!(
+                logging::log_verbose_server(&format!(
                     "⏰ 経過時間: {:.1}秒 / {:.1}秒 (音声基準: {:.1}秒)",
                     elapsed.as_secs_f64(),
                     total_duration.as_secs_f64(),
                     audio_elapsed
                 ));
             } else {
-                logging::log_verbose(&format!(
+                logging::log_verbose_server(&format!(
                     "⏰ 経過時間: {:.1}秒 / {:.1}秒",
                     elapsed.as_secs_f64(),
                     total_duration.as_secs_f64()
@@ -305,11 +305,11 @@ pub fn run_server_demo(verbose: bool, low_quality_resampling: bool) -> Result<()
         }
     }
 
-    logging::log_always("✅ デモ演奏が完了しました");
+    logging::log_always_server("✅ デモ演奏が完了しました");
 
     // Clean up
     drop(audio_player);
-    logging::log_always("🧹 リソースのクリーンアップ完了");
+    logging::log_always_server("🧹 リソースのクリーンアップ完了");
 
     Ok(())
 }

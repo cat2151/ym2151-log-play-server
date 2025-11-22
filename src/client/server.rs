@@ -3,7 +3,7 @@
 //! This module handles server lifecycle management including checking if the server
 //! is running, starting the server, and installing server applications.
 
-use super::config::log_client;
+use super::config::log_verbose_client;
 use crate::ipc::pipe_windows::NamedPipe;
 use anyhow::{Context, Result};
 use std::process::Command as ProcessCommand;
@@ -47,36 +47,36 @@ use std::time::Duration;
 /// - Failed to start the server
 /// - Server doesn't become ready within a reasonable timeout
 pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
-    log_client("🔍 サーバーの状態を確認中...");
+    log_verbose_client("🔍 サーバーの状態を確認中...");
 
     // Check if server is already running by sending a STOP command
     // This is a lightweight check that doesn't affect playback
     if is_server_running() {
-        log_client("✅ サーバーは既に起動しています");
+        log_verbose_client("✅ サーバーは既に起動しています");
         return Ok(());
     }
 
-    log_client("⚙️  サーバーが起動していません。起動準備中...");
+    log_verbose_client("⚙️  サーバーが起動していません。起動準備中...");
 
     // Determine the server path based on context
     #[cfg(all(windows, test))]
     let server_path = {
         // In test builds, try to find the binary in test context first
         if let Some(test_binary) = get_test_binary_path(server_app_name) {
-            log_client(&format!("🧪 テストコンテキストを検出: {:?}", test_binary));
+            log_verbose_client(&format!("🧪 テストコンテキストを検出: {:?}", test_binary));
             test_binary.to_string_lossy().to_string()
         } else if is_app_in_path(server_app_name) {
             // Use the app from PATH
             server_app_name.to_string()
         } else {
             // Not in test context and not in PATH, install it
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "📦 {} が見つかりません。cargo経由でインストール中...",
                 server_app_name
             ));
             install_app_via_cargo(server_app_name)
                 .with_context(|| format!("Failed to install {}", server_app_name))?;
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "✅ {} のインストールが完了しました",
                 server_app_name
             ));
@@ -92,13 +92,13 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
             server_app_name.to_string()
         } else {
             // Not in PATH, install it
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "📦 {} が見つかりません。cargo経由でインストール中...",
                 server_app_name
             ));
             install_app_via_cargo(server_app_name)
                 .with_context(|| format!("Failed to install {}", server_app_name))?;
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "✅ {} のインストールが完了しました",
                 server_app_name
             ));
@@ -110,13 +110,13 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
     let server_path = {
         // On non-Windows platforms, use the original logic
         if !is_app_in_path(server_app_name) {
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "📦 {} が見つかりません。cargo経由でインストール中...",
                 server_app_name
             ));
             install_app_via_cargo(server_app_name)
                 .with_context(|| format!("Failed to install {}", server_app_name))?;
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "✅ {} のインストールが完了しました",
                 server_app_name
             ));
@@ -125,32 +125,32 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
     };
 
     // Start the server in background mode
-    log_client("🚀 サーバーを起動中...");
+    log_verbose_client("🚀 サーバーを起動中...");
     start_server(&server_path)
         .with_context(|| format!("Failed to start server: {}", server_app_name))?;
 
     // Poll the server until it's ready (max 10 seconds)
-    log_client("⏳ サーバーの起動完了を待機中...");
+    log_verbose_client("⏳ サーバーの起動完了を待機中...");
     wait_for_server_ready(Duration::from_secs(10))
         .context("Server failed to become ready within timeout")?;
 
-    log_client("✅ サーバーが起動し、コマンド受付可能になりました");
+    log_verbose_client("✅ サーバーが起動し、コマンド受付可能になりました");
     Ok(())
 }
 
 /// Check if the server is currently running
 pub fn is_server_running() -> bool {
-    log_client("🔍 [Server存在チェック] サーバーへの接続を試行中...");
+    log_verbose_client("🔍 [Server存在チェック] サーバーへの接続を試行中...");
 
     // Try to connect to the server
     // If successful, the server is running
     match NamedPipe::connect_default() {
         Ok(_) => {
-            log_client("✅ [Server存在チェック] サーバーが起動していることを確認しました");
+            log_verbose_client("✅ [Server存在チェック] サーバーが起動していることを確認しました");
             true
         }
         Err(e) => {
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "❌ [Server存在チェック] サーバーが起動していません: {:?}",
                 e
             ));
@@ -192,7 +192,7 @@ fn get_test_binary_path(binary_name: &str) -> Option<std::path::PathBuf> {
 
     // Check if the binary exists
     if path.exists() {
-        log_client(&format!("🔍 テストバイナリを検出: {:?}", path));
+        log_verbose_client(&format!("🔍 テストバイナリを検出: {:?}", path));
         return Some(path);
     }
 
@@ -200,11 +200,11 @@ fn get_test_binary_path(binary_name: &str) -> Option<std::path::PathBuf> {
     path.pop();
     path.push(binary_name);
     if path.exists() {
-        log_client(&format!("🔍 テストバイナリを検出: {:?}", path));
+        log_verbose_client(&format!("🔍 テストバイナリを検出: {:?}", path));
         return Some(path);
     }
 
-    log_client(&format!(
+    log_verbose_client(&format!(
         "⚠️  テストバイナリが見つかりません: {} (検索場所: {:?})",
         binary_name, path
     ));
@@ -253,14 +253,14 @@ fn wait_for_server_ready(timeout: Duration) -> Result<()> {
     let start_time = std::time::Instant::now();
     let poll_interval = Duration::from_millis(100);
 
-    log_client(&format!(
+    log_verbose_client(&format!(
         "⏳ [Ready Check] サーバー起動確認を開始 (timeout: {:.1}s)",
         timeout.as_secs_f32()
     ));
 
     loop {
         if start_time.elapsed() > timeout {
-            log_client("❌ [Ready Check] タイムアウト: サーバーが起動しませんでした");
+            log_verbose_client("❌ [Ready Check] タイムアウト: サーバーが起動しませんでした");
             return Err(anyhow::anyhow!(
                 "Timeout waiting for server to become ready"
             ));
@@ -271,7 +271,7 @@ fn wait_for_server_ready(timeout: Duration) -> Result<()> {
         if is_server_running() {
             // Give the server a moment to fully initialize
             thread::sleep(Duration::from_millis(50));
-            log_client("✅ [Ready Check] サーバー起動確認完了");
+            log_verbose_client("✅ [Ready Check] サーバー起動確認完了");
             return Ok(());
         }
 

@@ -78,7 +78,7 @@ impl CommandHandler {
         data: serde_json::Value,
         audio_player: &mut Option<AudioPlayer>,
     ) -> Response {
-        logging::log_verbose("🎵 JSON データを読み込み中...");
+        logging::log_verbose_server("🎵 JSON データを読み込み中...");
 
         // Stop any existing playback
         if let Some(mut player) = audio_player.take() {
@@ -95,7 +95,7 @@ impl CommandHandler {
             {
                 Ok(player) => {
                     *audio_player = Some(player);
-                    logging::log_verbose("✅ JSON データから音声再生を開始しました");
+                    logging::log_verbose_server("✅ JSON データから音声再生を開始しました");
 
                     let mut state = self.state.lock().unwrap();
                     *state = ServerState::Playing;
@@ -103,14 +103,14 @@ impl CommandHandler {
                     Response::Ok
                 }
                 Err(e) => {
-                    logging::log_always(&format!("❌ 音声再生の開始に失敗しました: {}", e));
+                    logging::log_always_server(&format!("❌ 音声再生の開始に失敗しました: {}", e));
                     Response::Error {
                         message: format!("Failed to start playback: {}", e),
                     }
                 }
             },
             Err(e) => {
-                logging::log_always(&format!("❌ JSONシリアライズに失敗しました: {}", e));
+                logging::log_always_server(&format!("❌ JSONシリアライズに失敗しました: {}", e));
                 Response::Error {
                     message: format!("Failed to serialize JSON: {}", e),
                 }
@@ -119,7 +119,7 @@ impl CommandHandler {
     }
 
     fn handle_stop(&self, audio_player: &mut Option<AudioPlayer>) -> Response {
-        logging::log_verbose("⏹️  音声再生を停止中...");
+        logging::log_verbose_server("⏹️  音声再生を停止中...");
         if let Some(mut player) = audio_player.take() {
             player.stop();
         }
@@ -127,20 +127,20 @@ impl CommandHandler {
         let mut state = self.state.lock().unwrap();
         *state = ServerState::Stopped;
 
-        logging::log_verbose("✅ 音声再生を停止しました");
+        logging::log_verbose_server("✅ 音声再生を停止しました");
         Response::Ok
     }
 
     fn handle_start_interactive(&self, audio_player: &mut Option<AudioPlayer>) -> Response {
-        logging::log_verbose("🎮 インタラクティブモードを開始中...");
-        logging::log_verbose(&format!(
+        logging::log_verbose_server("🎮 インタラクティブモードを開始中...");
+        logging::log_verbose_server(&format!(
             "🔍現在のサーバー状態: {:?}",
             *self.state.lock().unwrap()
         ));
 
         // Stop any existing playback
         if let Some(mut player) = audio_player.take() {
-            logging::log_verbose("⏹️ 既存の再生を停止中...");
+            logging::log_verbose_server("⏹️ 既存の再生を停止中...");
             player.stop();
         }
 
@@ -148,32 +148,34 @@ impl CommandHandler {
         {
             let mut tracker = self.time_tracker.lock().unwrap();
             tracker.reset();
-            logging::log_verbose("🕐タイムトラッカーをリセットしました");
+            logging::log_verbose_server("🕐タイムトラッカーをリセットしました");
         }
 
         // Start interactive mode
-        logging::log_verbose("🎵インタラクティブオーディオプレーヤーを作成中...");
+        logging::log_verbose_server("🎵インタラクティブオーディオプレーヤーを作成中...");
         match self.playback_manager.start_interactive_mode() {
             Ok(player) => {
                 *audio_player = Some(player);
-                logging::log_verbose("✅ インタラクティブモードを開始しました");
-                logging::log_verbose("🔊音声ストリーミング開始");
+                logging::log_verbose_server("✅ インタラクティブモードを開始しました");
+                logging::log_verbose_server("🔊音声ストリーミング開始");
 
                 let mut state = self.state.lock().unwrap();
                 *state = ServerState::Interactive;
-                logging::log_verbose(&format!("📊サーバー状態を更新: {:?}", *state));
+                logging::log_verbose_server(&format!("📊サーバー状態を更新: {:?}", *state));
 
                 Response::Ok
             }
             Err(e) => {
-                logging::log_always(&format!(
+                logging::log_always_server(&format!(
                     "❌ インタラクティブモードの開始に失敗しました: {}",
                     e
                 ));
-                logging::log_always("💡 [デバッグ情報] 以下を確認してください:");
-                logging::log_always("   1. 音声デバイスが利用可能か");
-                logging::log_always("   2. 他のアプリケーションが音声デバイスを使用していないか");
-                logging::log_always("   3. システムの音量設定");
+                logging::log_always_server("💡 [デバッグ情報] 以下を確認してください:");
+                logging::log_always_server("   1. 音声デバイスが利用可能か");
+                logging::log_always_server(
+                    "   2. 他のアプリケーションが音声デバイスを使用していないか",
+                );
+                logging::log_always_server("   3. システムの音量設定");
                 Response::Error {
                     message: format!("Failed to start interactive mode: {}", e),
                 }
@@ -184,30 +186,30 @@ impl CommandHandler {
     fn handle_get_server_time(&self) -> Response {
         let tracker = self.time_tracker.lock().unwrap();
         let time_sec = tracker.elapsed_sec();
-        logging::log_verbose(&format!("⏰ サーバー時刻を取得: {:.6} 秒", time_sec));
+        logging::log_verbose_server(&format!("⏰ サーバー時刻を取得: {:.6} 秒", time_sec));
         Response::ServerTime { time_sec }
     }
 
     fn handle_stop_interactive(&self, audio_player: &mut Option<AudioPlayer>) -> Response {
-        logging::log_verbose("⏹️  インタラクティブモードを停止中...");
-        logging::log_verbose(&format!(
+        logging::log_verbose_server("⏹️  インタラクティブモードを停止中...");
+        logging::log_verbose_server(&format!(
             "🔍現在のサーバー状態: {:?}",
             *self.state.lock().unwrap()
         ));
 
         if let Some(mut player) = audio_player.take() {
-            logging::log_verbose("🔊オーディオプレーヤーを停止中...");
+            logging::log_verbose_server("🔊オーディオプレーヤーを停止中...");
             player.stop();
-            logging::log_verbose("✅オーディオプレーヤー停止完了");
+            logging::log_verbose_server("✅オーディオプレーヤー停止完了");
         } else {
-            logging::log_verbose("⚠️ 停止するオーディオプレーヤーがありません");
+            logging::log_verbose_server("⚠️ 停止するオーディオプレーヤーがありません");
         }
 
         let mut state = self.state.lock().unwrap();
         *state = ServerState::Stopped;
-        logging::log_verbose(&format!("📊サーバー状態を更新: {:?}", *state));
+        logging::log_verbose_server(&format!("📊サーバー状態を更新: {:?}", *state));
 
-        logging::log_verbose("✅ インタラクティブモードを停止しました");
+        logging::log_verbose_server("✅ インタラクティブモードを停止しました");
         Response::Ok
     }
 
@@ -222,7 +224,7 @@ impl CommandHandler {
 
             if let Some(ref player_ref) = audio_player {
                 player_ref.clear_schedule();
-                logging::log_verbose("🗑️  スケジュール済みイベントをクリアしました");
+                logging::log_verbose_server("🗑️  スケジュール済みイベントをクリアしました");
                 Response::Ok
             } else {
                 Response::Error {
@@ -239,7 +241,7 @@ impl CommandHandler {
     ) -> Response {
         let state = self.state.lock().unwrap();
         if *state != ServerState::Interactive {
-            logging::log_always(&format!(
+            logging::log_always_server(&format!(
                 "⚠️  インタラクティブモードではありません。現在の状態: {:?}",
                 *state
             ));
@@ -254,13 +256,13 @@ impl CommandHandler {
 
             match json_result {
                 Ok(json_str) => {
-                    logging::log_verbose("🎵 インタラクティブモードでJSONを処理中...");
+                    logging::log_verbose_server("🎵 インタラクティブモードでJSONを処理中...");
 
                     // Parse the JSON event log (time in seconds)
                     match EventLog::from_json_str(&json_str) {
                         Ok(event_log) => {
                             if !event_log.validate() {
-                                logging::log_always("❌ 無効なイベントログです");
+                                logging::log_always_server("❌ 無効なイベントログです");
                                 Response::Error {
                                     message: "Invalid event log: validation failed".to_string(),
                                 }
@@ -271,7 +273,7 @@ impl CommandHandler {
                                     tracker.elapsed_sec()
                                 };
 
-                                logging::log_verbose(&format!(
+                                logging::log_verbose_server(&format!(
                                     "📝 {}個のイベントをスケジュール中...",
                                     event_log.events.len()
                                 ));
@@ -293,20 +295,23 @@ impl CommandHandler {
                                     success_count += 1;
                                 }
 
-                                logging::log_verbose(&format!(
+                                logging::log_verbose_server(&format!(
                                     "✅ {}個のイベントを正常にスケジュールしました",
                                     success_count
                                 ));
                                 Response::Ok
                             } else {
-                                logging::log_always("⚠️  音声プレーヤーがありません");
+                                logging::log_always_server("⚠️  音声プレーヤーがありません");
                                 Response::Error {
                                     message: "No audio player found".to_string(),
                                 }
                             }
                         }
                         Err(e) => {
-                            logging::log_always(&format!("❌ JSONの解析に失敗しました: {}", e));
+                            logging::log_always_server(&format!(
+                                "❌ JSONの解析に失敗しました: {}",
+                                e
+                            ));
                             Response::Error {
                                 message: format!("Failed to parse JSON: {}", e),
                             }
@@ -314,7 +319,10 @@ impl CommandHandler {
                     }
                 }
                 Err(e) => {
-                    logging::log_always(&format!("❌ JSONシリアライズに失敗しました: {}", e));
+                    logging::log_always_server(&format!(
+                        "❌ JSONシリアライズに失敗しました: {}",
+                        e
+                    ));
                     Response::Error {
                         message: format!("Failed to serialize JSON: {}", e),
                     }

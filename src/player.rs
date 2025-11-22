@@ -294,12 +294,12 @@ impl Player {
 
         // Check if bit3-7 are all 0 (key off condition)
         if key_data & 0xF8 == 0 {
-            logging::log_verbose(&format!(
+            logging::log_verbose_server(&format!(
                 "🎹 Key OFF実行: 実行={}秒({}samples), 予定={}秒({}samples), 遅延={}秒({}samples) - data=0x{:02x}",
                 samples_str, self.samples_played, scheduled_str, scheduled_time, delay_str, delay_samples, key_data
             ));
         } else {
-            logging::log_verbose(&format!(
+            logging::log_verbose_server(&format!(
                 "🎹 Key ON実行: 実行={}秒({}samples), 予定={}秒({}samples), 遅延={}秒({}samples) - data=0x{:02x}",
                 samples_str, self.samples_played, scheduled_str, scheduled_time, delay_str, delay_samples, key_data
             ));

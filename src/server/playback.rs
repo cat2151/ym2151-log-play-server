@@ -34,7 +34,7 @@ impl PlaybackManager {
 
         let player = Player::new(log.clone());
         // Pass the event log to AudioPlayer if in verbose mode
-        let event_log = if logging::is_verbose() {
+        let event_log = if logging::is_server_verbose() {
             Some(log)
         } else {
             None

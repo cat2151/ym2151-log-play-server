@@ -42,8 +42,8 @@ pub fn run_interactive_demo(verbose: bool) -> Result<()> {
     let json_content = std::fs::read_to_string(DEMO_JSON_FILE)
         .map_err(|e| anyhow::anyhow!("JSONファイルの読み込みに失敗: {}: {}", DEMO_JSON_FILE, e))?;
 
-    client::log_client("インタラクティブモードデモを開始します...");
-    client::log_client(&format!(
+    client::log_verbose_client("インタラクティブモードデモを開始します...");
+    client::log_verbose_client(&format!(
         "ファイル: {} を {}秒間隔で {}回演奏",
         DEMO_JSON_FILE, DEMO_INTERVAL_SECONDS, DEMO_REPEAT_COUNT
     ));
@@ -53,7 +53,7 @@ pub fn run_interactive_demo(verbose: bool) -> Result<()> {
 
     // Repeat playback
     for i in 1..=DEMO_REPEAT_COUNT {
-        client::log_client(&format!("演奏回数: {}/{}", i, DEMO_REPEAT_COUNT));
+        client::log_verbose_client(&format!("演奏回数: {}/{}", i, DEMO_REPEAT_COUNT));
 
         // Clear schedule before playing
         client::clear_schedule()?; // 備忘、これがないと前の演奏と衝突して音が崩れたりするので
@@ -70,7 +70,7 @@ pub fn run_interactive_demo(verbose: bool) -> Result<()> {
     // Stop interactive mode
     client::stop_interactive()?;
 
-    client::log_client("インタラクティブモードデモが完了しました");
+    client::log_verbose_client("インタラクティブモードデモが完了しました");
 
     Ok(())
 }

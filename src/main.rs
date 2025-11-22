@@ -167,7 +167,7 @@ fn main() {
             logging::init(verbose);
 
             if demo_interactive && demo_non_interactive {
-                logging::log_always("❌ エラー: --demo-interactive と --demo-non-interactive は同時に使用できません");
+                logging::log_always_server("❌ エラー: --demo-interactive と --demo-non-interactive は同時に使用できません");
                 std::process::exit(1);
             } else if demo_interactive {
                 // Run server demo mode
@@ -176,7 +176,7 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: サーバーデモモードの実行に失敗しました: {}",
                             e
                         ));
@@ -193,7 +193,7 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: 非インタラクティブデモモードの実行に失敗しました: {}",
                             e
                         ));
@@ -208,7 +208,7 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: サーバーの起動に失敗しました: {}",
                             e
                         ));
@@ -234,7 +234,7 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: インタラクティブモードデモの実行に失敗しました: {}",
                             e
                         ));
@@ -247,8 +247,11 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!("❌ エラー: 演奏停止に失敗しました: {}", e));
-                        logging::log_always("   サーバーが起動しているか確認してください");
+                        logging::log_always_server(&format!(
+                            "❌ エラー: 演奏停止に失敗しました: {}",
+                            e
+                        ));
+                        logging::log_always_server("   サーバーが起動しているか確認してください");
                         std::process::exit(1);
                     }
                 }
@@ -258,11 +261,11 @@ fn main() {
                         std::process::exit(0);
                     }
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: サーバーのシャットダウンに失敗しました: {}",
                             e
                         ));
-                        logging::log_always("   サーバーが起動しているか確認してください");
+                        logging::log_always_server("   サーバーが起動しているか確認してください");
                         std::process::exit(1);
                     }
                 }
@@ -274,26 +277,28 @@ fn main() {
                             std::process::exit(0);
                         }
                         Err(e) => {
-                            logging::log_always(&format!(
+                            logging::log_always_server(&format!(
                                 "❌ エラー: JSONファイルの送信に失敗しました: {}",
                                 e
                             ));
-                            logging::log_always("   サーバーが起動しているか確認してください");
+                            logging::log_always_server(
+                                "   サーバーが起動しているか確認してください",
+                            );
                             std::process::exit(1);
                         }
                     },
                     Err(e) => {
-                        logging::log_always(&format!(
+                        logging::log_always_server(&format!(
                             "❌ エラー: JSONファイルの読み込みに失敗しました: {}",
                             e
                         ));
-                        logging::log_always(&format!("   ファイルパス: {}", json_path));
+                        logging::log_always_server(&format!("   ファイルパス: {}", json_path));
                         std::process::exit(1);
                     }
                 }
             } else {
-                logging::log_always("❌ エラー: client コマンドには引数が必要です");
-                logging::log_always("   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください");
+                logging::log_always_server("❌ エラー: client コマンドには引数が必要です");
+                logging::log_always_server("   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください");
                 std::process::exit(1);
             }
         }

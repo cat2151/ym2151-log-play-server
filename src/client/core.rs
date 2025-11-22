@@ -2,7 +2,7 @@
 //!
 //! This module provides basic client-server communication functionality.
 
-use super::config::log_client;
+use super::config::log_verbose_client;
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
 use anyhow::{Context, Result};
@@ -35,14 +35,14 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
     let mut last_error = None;
     for attempt in 1..=MAX_RETRY_ATTEMPTS {
         if attempt > 1 {
-            log_client(&format!(
+            log_verbose_client(&format!(
                 "🔄 {} 再試行 {}/{}...",
                 debug_tag, attempt, MAX_RETRY_ATTEMPTS
             ));
             thread::sleep(Duration::from_millis(RETRY_DELAY_MS));
         }
 
-        log_client(&format!(
+        log_verbose_client(&format!(
             "🔌 {} パイプ接続を試行中: {}",
             debug_tag,
             crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
@@ -50,11 +50,11 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
 
         let mut writer = match NamedPipe::connect_default() {
             Ok(w) => {
-                log_client(&format!("✅ {} パイプ接続成功", debug_tag));
+                log_verbose_client(&format!("✅ {} パイプ接続成功", debug_tag));
                 w
             }
             Err(e) => {
-                log_client(&format!(
+                log_verbose_client(&format!(
                     "⚠️  {} パイプ接続失敗 (試行 {}/{}): {}",
                     debug_tag, attempt, MAX_RETRY_ATTEMPTS, e
                 ));
@@ -69,7 +69,7 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
             .to_binary()
             .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
 
-        log_client(&format!(
+        log_verbose_client(&format!(
             "📤 {} コマンドをバイナリ化しました ({}バイト)",
             debug_tag,
             binary_data.len()
@@ -78,28 +78,32 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         // Display command info
         match &command {
             Command::PlayJson { .. } => {
-                log_client("⏳ サーバーにJSON送信中...");
+                log_verbose_client("⏳ サーバーにJSON送信中...");
             }
             Command::PlayJsonInInteractive { .. } => {
-                log_client("⏳ インタラクティブモードにJSON送信中...");
+                log_verbose_client("⏳ インタラクティブモードにJSON送信中...");
             }
-            Command::Stop => log_client("⏳ サーバーに停止要求を送信中..."),
-            Command::Shutdown => log_client("⏳ サーバーにシャットダウン要求を送信中..."),
-            Command::ClearSchedule => log_client("⏳ スケジュールクリア要求を送信中..."),
-            Command::StartInteractive => log_client("⏳ インタラクティブモード開始要求を送信中..."),
-            Command::StopInteractive => log_client("⏳ インタラクティブモード停止要求を送信中..."),
+            Command::Stop => log_verbose_client("⏳ サーバーに停止要求を送信中..."),
+            Command::Shutdown => log_verbose_client("⏳ サーバーにシャットダウン要求を送信中..."),
+            Command::ClearSchedule => log_verbose_client("⏳ スケジュールクリア要求を送信中..."),
+            Command::StartInteractive => {
+                log_verbose_client("⏳ インタラクティブモード開始要求を送信中...")
+            }
+            Command::StopInteractive => {
+                log_verbose_client("⏳ インタラクティブモード停止要求を送信中...")
+            }
             _ => {}
         }
 
         // Send command via binary protocol
         if let Err(e) = writer.write_binary(&binary_data) {
-            log_client(&format!("⚠️  {} コマンド送信失敗: {}", debug_tag, e));
+            log_verbose_client(&format!("⚠️  {} コマンド送信失敗: {}", debug_tag, e));
             last_error = Some(e);
             continue; // Retry
         }
 
-        log_client(&format!("✅ {} コマンド送信完了", debug_tag));
-        log_client(&format!(
+        log_verbose_client(&format!("✅ {} コマンド送信完了", debug_tag));
+        log_verbose_client(&format!(
             "⏳ {} サーバーからのレスポンス待機中...",
             debug_tag
         ));
@@ -108,13 +112,13 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         let response_data = match writer.read_binary_response() {
             Ok(data) => data,
             Err(e) => {
-                log_client(&format!("⚠️  {} レスポンス読み取り失敗: {}", debug_tag, e));
+                log_verbose_client(&format!("⚠️  {} レスポンス読み取り失敗: {}", debug_tag, e));
                 last_error = Some(e);
                 continue; // Retry
             }
         };
 
-        log_client(&format!(
+        log_verbose_client(&format!(
             "✅ {} レスポンス受信完了 ({}バイト)",
             debug_tag,
             response_data.len()
@@ -127,18 +131,18 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         match response {
             Response::Ok => match &command {
                 Command::PlayJson { .. } => {
-                    log_client("✅ JSON送信で演奏開始しました");
+                    log_verbose_client("✅ JSON送信で演奏開始しました");
                 }
                 Command::PlayJsonInInteractive { .. } => {
-                    log_client("✅ インタラクティブモードでJSON処理完了");
+                    log_verbose_client("✅ インタラクティブモードでJSON処理完了");
                 }
-                Command::Stop => log_client("✅ 演奏停止しました"),
-                Command::Shutdown => log_client("✅ サーバーをシャットダウンしました"),
-                Command::ClearSchedule => log_client("✅ スケジュールをクリアしました"),
+                Command::Stop => log_verbose_client("✅ 演奏停止しました"),
+                Command::Shutdown => log_verbose_client("✅ サーバーをシャットダウンしました"),
+                Command::ClearSchedule => log_verbose_client("✅ スケジュールをクリアしました"),
                 _ => {} // Other commands don't have custom success logging
             },
             Response::Error { message } => {
-                log_client(&format!("❌ サーバーエラー: {}", message));
+                log_verbose_client(&format!("❌ サーバーエラー: {}", message));
                 return Err(anyhow::anyhow!("Server returned error: {}", message));
             }
             _ => {} // Handle other response types (like ServerTime) without error

@@ -34,7 +34,7 @@ impl AudioStream {
             .ok_or_else(|| anyhow::anyhow!("No output device available"))?;
 
         // Device info respects verbose flag to avoid TUI disruption
-        logging::log_verbose(&format!(
+        logging::log_verbose_server(&format!(
             "Using audio device: {}",
             device.name().unwrap_or_else(|_| "Unknown".to_string())
         ));
@@ -46,7 +46,7 @@ impl AudioStream {
         };
 
         // Log the actual buffer size configuration
-        logging::log_verbose(&format!(
+        logging::log_verbose_server(&format!(
             "Audio buffer size configured: {:?}",
             CPAL_BUFFER_SIZE
         ));
@@ -62,7 +62,7 @@ impl AudioStream {
                 },
                 |err| {
                     // Audio stream errors should always be logged
-                    logging::log_always(&format!("Audio stream error: {}", err));
+                    logging::log_always_server(&format!("Audio stream error: {}", err));
                 },
                 None,
             )
@@ -85,7 +85,7 @@ impl AudioStream {
         // Log buffer size on first callback (for debugging)
         static FIRST_CALLBACK: std::sync::Once = std::sync::Once::new();
         FIRST_CALLBACK.call_once(|| {
-            logging::log_verbose(&format!(
+            logging::log_verbose_server(&format!(
                 "Actual audio callback buffer size: {} samples",
                 data.len()
             ));

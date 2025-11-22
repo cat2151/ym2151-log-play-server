@@ -44,7 +44,7 @@ impl MmcssHandle {
 
             match AvSetMmThreadCharacteristicsW(PCWSTR(task_name.as_ptr()), &mut task_index) {
                 Ok(handle) => {
-                    crate::logging::log_verbose(&format!(
+                    crate::logging::log_verbose_server(&format!(
                         "MMCSS Pro Audio priority enabled for generator thread (handle: {:?}, index: {})",
                         handle, task_index
                     ));
@@ -53,7 +53,7 @@ impl MmcssHandle {
                     })
                 }
                 Err(e) => {
-                    crate::logging::log_verbose(&format!(
+                    crate::logging::log_verbose_server(&format!(
                         "Warning: Failed to enable MMCSS Pro Audio priority: {}",
                         e
                     ));
@@ -70,12 +70,12 @@ impl Drop for MmcssHandle {
         unsafe {
             if !self.task_handle.0.is_null() {
                 if let Err(e) = AvRevertMmThreadCharacteristics(self.task_handle) {
-                    crate::logging::log_verbose(&format!(
+                    crate::logging::log_verbose_server(&format!(
                         "Warning: Failed to revert MMCSS characteristics: {}",
                         e
                     ));
                 } else {
-                    crate::logging::log_verbose("MMCSS Pro Audio priority reverted");
+                    crate::logging::log_verbose_server("MMCSS Pro Audio priority reverted");
                 }
             }
         }

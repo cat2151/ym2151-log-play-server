@@ -29,15 +29,15 @@ pub const DEMO_INTERVAL_SECONDS: u64 = 2;
 ///
 /// This is intended for production audio testing without interaction.
 pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bool) -> Result<()> {
-    logging::log_always("🎮 非インタラクティブデモモードを開始します...");
-    logging::log_always(&format!("📄 使用ファイル: {}", DEMO_JSON_FILE));
+    logging::log_always_server("🎮 非インタラクティブデモモードを開始します...");
+    logging::log_always_server(&format!("📄 使用ファイル: {}", DEMO_JSON_FILE));
 
     if verbose {
-        logging::log_always("🔍 verboseモードが有効です");
+        logging::log_always_server("🔍 verboseモードが有効です");
     }
 
     if low_quality_resampling {
-        logging::log_always("🔧 低品質リサンプリングモードが有効です");
+        logging::log_always_server("🔧 低品質リサンプリングモードが有効です");
     }
 
     // Read the demo JSON file
@@ -54,7 +54,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         ));
     }
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "✅ JSONファイルを読み込み完了: {}個のイベント",
         event_log.events.len()
     ));
@@ -82,19 +82,19 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
     let audio_player = AudioPlayer::new_with_quality(player, Some(event_log), resampling_quality)
         .with_context(|| "音声プレイヤーの作成に失敗")?;
 
-    logging::log_always("✅ 音声プレイヤーを作成しました");
+    logging::log_always_server("✅ 音声プレイヤーを作成しました");
 
     // Calculate total duration for playback
     let total_duration = Duration::from_secs_f64(max_event_time_sec + 3.0); // Add 3 seconds buffer
 
-    logging::log_always(&format!(
+    logging::log_always_server(&format!(
         "⏱️  演奏時間: {:.1}秒 (最大イベント時刻: {:.1}秒 + バッファ: 3.0秒)",
         total_duration.as_secs_f64(),
         max_event_time_sec
     ));
 
     // Start playback
-    logging::log_always("🎵 演奏を開始します... (Ctrl+C で終了)");
+    logging::log_always_server("🎵 演奏を開始します... (Ctrl+C で終了)");
 
     let start_time = std::time::Instant::now();
 
@@ -107,7 +107,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         if elapsed.as_secs().is_multiple_of(DEMO_INTERVAL_SECONDS)
             && elapsed.as_millis() % 1000 < 500
         {
-            logging::log_verbose(&format!(
+            logging::log_verbose_server(&format!(
                 "⏰ 経過時間: {:.1}秒 / {:.1}秒",
                 elapsed.as_secs_f64(),
                 total_duration.as_secs_f64()
@@ -115,11 +115,11 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         }
     }
 
-    logging::log_always("✅ デモ演奏が完了しました");
+    logging::log_always_server("✅ デモ演奏が完了しました");
 
     // Clean up happens automatically when audio_player is dropped
     drop(audio_player);
-    logging::log_always("🧹 リソースのクリーンアップ完了");
+    logging::log_always_server("🧹 リソースのクリーンアップ完了");
 
     Ok(())
 }

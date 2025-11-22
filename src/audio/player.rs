@@ -110,7 +110,7 @@ impl AudioPlayer {
                 resampling_quality,
             ) {
                 // Sample generation errors should always be logged
-                crate::logging::log_always(&format!("Sample generation error: {}", e));
+                crate::logging::log_always_server(&format!("Sample generation error: {}", e));
             }
         });
 

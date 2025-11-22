@@ -28,7 +28,7 @@ fn test_log_client_verbose_mode() {
     init_client(true);
 
     // This should not panic in verbose mode
-    log_client("Test message in verbose mode");
+    log_verbose_client("Test message in verbose mode");
 }
 
 #[cfg(windows)]
@@ -38,7 +38,7 @@ fn test_log_client_non_verbose_mode() {
     init_client(false);
 
     // This should not panic in non-verbose mode
-    log_client("Test message in non-verbose mode");
+    log_verbose_client("Test message in non-verbose mode");
 }
 
 #[cfg(windows)]

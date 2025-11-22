@@ -38,7 +38,7 @@ impl Server {
             ResamplingQuality::HighQuality
         };
 
-        logging::log_always(&format!(
+        logging::log_always_server(&format!(
             "🎵 リサンプリング品質: {}",
             match quality {
                 ResamplingQuality::Linear => "低品質 (線形補間)",

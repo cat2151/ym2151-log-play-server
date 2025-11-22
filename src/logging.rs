@@ -29,7 +29,7 @@ pub fn init(verbose: bool) {
 }
 
 /// Check if verbose mode is enabled
-pub fn is_verbose() -> bool {
+pub fn is_server_verbose() -> bool {
     *VERBOSE.lock().unwrap()
 }
 
@@ -55,10 +55,10 @@ fn eprint_with_timestamp(message: &str) {
 /// - Server startup/shutdown
 /// - Critical errors
 /// - Important state changes
-pub fn log_always(message: &str) {
+pub fn log_always_server(message: &str) {
     write_to_log(message);
 
-    if is_verbose() {
+    if is_server_verbose() {
         eprint_with_timestamp(message); // 備忘、非verbose時に表示しないのは、TUIからserverが起動されたり、TUIがclientとしてふるまったりするので、表示崩れさせない用
     }
 }
@@ -69,8 +69,8 @@ pub fn log_always(message: &str) {
 /// - Routine operations (receive, playback)
 /// - Debug information
 /// - Non-critical status updates
-pub fn log_verbose(message: &str) {
-    if is_verbose() {
+pub fn log_verbose_server(message: &str) {
+    if is_server_verbose() {
         write_to_log(message); // 備忘、logにも記録する。でないと「printとlogを交互に見ないとわからず混乱」がありうる。logだけ見ればすべてわかるようにする。
         eprint_with_timestamp(message);
     }

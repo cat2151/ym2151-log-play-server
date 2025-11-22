@@ -81,7 +81,7 @@ pub mod server;
 // This maintains backward compatibility while organizing code by responsibility
 
 // Configuration functions
-pub use config::{init_client, is_client_verbose, log_client};
+pub use config::{init_client, is_client_verbose, log_verbose_client};
 
 // Core client communication
 pub use core::{send_command, shutdown_server, stop_playback};

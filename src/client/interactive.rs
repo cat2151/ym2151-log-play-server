@@ -2,7 +2,8 @@
 //!
 //! This module handles interactive mode operations for real-time YM2151 control.
 
-use super::config::log_client;
+use super::config::log_verbose_client;
+use super::config::log_always_client;
 use super::core::send_command_interactive;
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
@@ -22,14 +23,14 @@ use anyhow::{Context, Result};
 pub fn start_interactive() -> Result<()> {
     use std::{thread, time::Duration};
 
-    log_client("🎮 [インタラクティブモード] 開始要求を送信中...");
-    log_client(&format!(
+    log_verbose_client("🎮 [インタラクティブモード] 開始要求を送信中...");
+    log_verbose_client(&format!(
         "🔌 パイプパス: {}",
         crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
     ));
     let result = send_command_interactive(Command::StartInteractive);
     if result.is_err() {
-        log_client("❌ [インタラクティブモード] 開始に失敗しました");
+        log_verbose_client("❌ [インタラクティブモード] 開始に失敗しました");
         return result;
     }
 
@@ -40,7 +41,7 @@ pub fn start_interactive() -> Result<()> {
         match get_interactive_mode_state() {
             Ok(true) => {
                 let elapsed_sec = start.elapsed().as_secs_f64();
-                log_client(&format!(
+                log_verbose_client(&format!(
                     "✅ [インタラクティブモード] 正常に開始しました (切替所要: {:.6}秒)",
                     elapsed_sec
                 ));
@@ -48,21 +49,21 @@ pub fn start_interactive() -> Result<()> {
             }
             Ok(false) => {
                 if start.elapsed() >= timeout {
-                    log_client(
+                    log_verbose_client(
                         "❌ [インタラクティブモード] サーバーがモード切替に失敗しました (timeout)",
                     );
-                    eprintln!("[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)");
+                    log_always_client("[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)");
                     std::process::exit(1);
                 }
                 thread::sleep(Duration::from_millis(1));
             }
             Err(e) => {
                 if start.elapsed() >= timeout {
-                    log_client(&format!(
+                    log_verbose_client(&format!(
                         "❌ [インタラクティブモード] サーバー状態取得失敗: {} (timeout)",
                         e
                     ));
-                    eprintln!("[ERROR] サーバー状態取得失敗: {} (timeout)", e);
+                    log_always_client(&format!("[ERROR] サーバー状態取得失敗: {} (timeout)", e));
                     std::process::exit(1);
                 }
                 thread::sleep(Duration::from_millis(1));
@@ -90,7 +91,7 @@ pub fn get_interactive_mode_state() -> Result<bool> {
         .to_binary()
         .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
 
-    log_client("🔍 インタラクティブモード状態を取得中...");
+    log_verbose_client("🔍 インタラクティブモード状態を取得中...");
 
     writer.write_binary(&binary_data)?;
 
@@ -127,7 +128,7 @@ pub fn get_server_time() -> Result<f64> {
         .to_binary()
         .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
 
-    log_client("⏳ サーバー時刻を取得中...");
+    log_verbose_client("⏳ サーバー時刻を取得中...");
 
     writer
         .write_binary(&binary_data)
@@ -142,11 +143,11 @@ pub fn get_server_time() -> Result<f64> {
 
     match response {
         Response::ServerTime { time_sec } => {
-            log_client(&format!("✅ サーバー時刻: {:.6} 秒", time_sec));
+            log_verbose_client(&format!("✅ サーバー時刻: {:.6} 秒", time_sec));
             Ok(time_sec)
         }
         Response::Error { message } => {
-            log_client(&format!("❌ サーバーエラー: {}", message));
+            log_verbose_client(&format!("❌ サーバーエラー: {}", message));
             Err(anyhow::anyhow!("Server returned error: {}", message))
         }
         _ => Err(anyhow::anyhow!(
@@ -166,10 +167,10 @@ pub fn get_server_time() -> Result<f64> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn stop_interactive() -> Result<()> {
-    log_client("⏹️  [インタラクティブモード] 停止要求を送信中...");
+    log_verbose_client("⏹️  [インタラクティブモード] 停止要求を送信中...");
     let result = send_command_interactive(Command::StopInteractive);
     if result.is_ok() {
-        log_client("✅ [インタラクティブモード] 正常に停止しました");
+        log_verbose_client("✅ [インタラクティブモード] 正常に停止しました");
     }
     result
 }
@@ -258,13 +259,13 @@ pub fn clear_schedule() -> Result<()> {
 /// - JSON parsing and timing conversion are handled client-side
 /// - Register scheduling is handled server-side
 pub fn play_json_interactive(json_data: &str) -> Result<()> {
-    log_client("🎵 JSONデータをパース中...");
+    log_verbose_client("🎵 JSONデータをパース中...");
 
     // TODO: Re-implement JSON time conversion from samples to seconds
     // For now, assume the input JSON already has time in f64 seconds format
     let converted_json = json_data.to_string();
 
-    log_client("✅ JSONデータのパースが完了しました");
+    log_verbose_client("✅ JSONデータのパースが完了しました");
 
     // Parse the converted JSON to check if it has any events
     let json_value: serde_json::Value =
@@ -274,17 +275,17 @@ pub fn play_json_interactive(json_data: &str) -> Result<()> {
     if let Some(events) = json_value.get("events") {
         if let Some(events_array) = events.as_array() {
             if events_array.is_empty() {
-                log_client("ℹ️  イベント数が0です。処理をスキップします。");
+                log_verbose_client("ℹ️  イベント数が0です。処理をスキップします。");
                 return Ok(());
             }
         }
     }
 
-    log_client("🎵 変換されたJSONをインタラクティブモードに送信中...");
+    log_verbose_client("🎵 変換されたJSONをインタラクティブモードに送信中...");
 
     send_command_interactive(Command::PlayJsonInInteractive { data: json_value })
         .with_context(|| "Failed to send converted JSON data to interactive mode")?;
 
-    log_client("✅ 変換されたJSONデータをサーバーに送信しました");
+    log_verbose_client("✅ 変換されたJSONデータをサーバーに送信しました");
     Ok(())
 }

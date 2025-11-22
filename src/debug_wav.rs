@@ -45,7 +45,7 @@ use anyhow::{Context, Result};
 ///
 /// Returns true if verbose logging is enabled.
 pub fn is_debug_wav_enabled() -> bool {
-    logging::is_verbose()
+    logging::is_server_verbose()
 }
 
 /// Generate post-playback WAV buffers at both 55930Hz and 48000Hz.

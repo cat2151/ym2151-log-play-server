@@ -57,8 +57,8 @@ pub fn run_generator_thread(
 
     let playback_start_time = Instant::now();
 
-    logging::log_verbose("▶  Playing sequence...");
-    logging::log_verbose(&format!(
+    logging::log_verbose_server("▶  Playing sequence...");
+    logging::log_verbose_server(&format!(
         "  Duration: {:.2} seconds",
         total_samples as f64 / OPM_SAMPLE_RATE as f64
     ));
@@ -68,29 +68,29 @@ pub fn run_generator_thread(
     loop {
         // Check for stop command
         if let Ok(AudioCommand::Stop) = command_rx.try_recv() {
-            logging::log_verbose("Stopping audio playback...");
+            logging::log_verbose_server("Stopping audio playback...");
             break;
         }
 
         // Check if playback should continue
         if !player.should_continue_tail() {
             let elapsed = playback_start_time.elapsed();
-            logging::log_verbose("■  Playback complete");
-            logging::log_verbose(&format!(
+            logging::log_verbose_server("■  Playback complete");
+            logging::log_verbose_server(&format!(
                 "  Wall-clock time: {:.2} seconds",
                 elapsed.as_secs_f64()
             ));
 
             if let Some((tail_samples, _)) = player.tail_info() {
                 let tail_ms = tail_samples as f64 / OPM_SAMPLE_RATE as f64 * 1000.0;
-                logging::log_verbose(&format!(
+                logging::log_verbose_server(&format!(
                     "  演奏データの余韻{}ms 波形生成 OK",
                     tail_ms as u32
                 ));
             }
 
             // Save 4 WAV files if verbose mode and event_log is available
-            if logging::is_verbose() {
+            if logging::is_server_verbose() {
                 if let Some(log) = event_log {
                     save_debug_wav_files(
                         &wav_buffer_55k,
@@ -106,7 +106,7 @@ pub fn run_generator_thread(
 
         // Report when entering tail generation
         if !tail_reported && player.is_complete() {
-            logging::log_verbose("  演奏データ終了、余韻を生成中...");
+            logging::log_verbose_server("  演奏データ終了、余韻を生成中...");
             tail_reported = true;
         }
 
@@ -153,7 +153,7 @@ fn save_debug_wav_files(
     event_log: &EventLog,
     resampling_quality: crate::resampler::ResamplingQuality,
 ) {
-    logging::log_verbose("\n4つのWAVファイルを保存中...");
+    logging::log_verbose_server("\n4つのWAVファイルを保存中...");
 
     // Get realtime buffers
     let realtime_55k = wav_buffer_55k.lock().unwrap().clone();
@@ -166,13 +166,16 @@ fn save_debug_wav_files(
             if let Err(e) =
                 debug_wav::save_debug_wav_files(&realtime_55k, &realtime_48k, &post_55k, &post_48k)
             {
-                logging::log_always(&format!("⚠️  警告: WAVファイルの保存に失敗しました: {}", e));
+                logging::log_always_server(&format!(
+                    "⚠️  警告: WAVファイルの保存に失敗しました: {}",
+                    e
+                ));
             } else {
-                logging::log_verbose("✅ 4つのWAVファイルの保存が完了しました");
+                logging::log_verbose_server("✅ 4つのWAVファイルの保存が完了しました");
             }
         }
         Err(e) => {
-            logging::log_always(&format!(
+            logging::log_always_server(&format!(
                 "⚠️  警告: post-playbackバッファの生成に失敗しました: {}",
                 e
             ));

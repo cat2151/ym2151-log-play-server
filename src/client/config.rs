@@ -2,7 +2,12 @@
 //!
 //! This module handles client-side configuration such as verbose mode.
 
+use std::fs::OpenOptions;
+use std::io::Write;
 use std::sync::Mutex;
+
+/// Log file path
+const LOG_FILE: &str = "ym2151-client.log";
 
 /// Global verbose flag for client operations
 static CLIENT_VERBOSE: Mutex<bool> = Mutex::new(false);
@@ -41,9 +46,33 @@ pub fn is_client_verbose() -> bool {
     *CLIENT_VERBOSE.lock().unwrap()
 }
 
-/// Print a message to stderr only if verbose mode is enabled
-pub fn log_client(message: &str) {
+/// Write a message to the log file
+fn write_to_log(message: &str) {
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(LOG_FILE) {
+        let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+        if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {
+            eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
+        }
+    }
+}
+
+fn eprint_with_timestamp(message: &str) {
+    let timestamp = chrono::Local::now().format("%H:%M:%S%.3f"); // 備忘、時刻があれば最低限わかる。カラム数を減らして、狭い分割terminalでも読みやすくする用。
+    eprintln!("[{}] {}", timestamp, message);
+}
+
+pub fn log_always_client(message: &str) {
+    write_to_log(message);
+
     if is_client_verbose() {
-        eprintln!("{}", message);
+        eprint_with_timestamp(message); // 備忘、非verbose時に表示しないのは、TUIからserverが起動されたり、TUIがclientとしてふるまったりするので、表示崩れさせない用
+    }
+}
+
+/// Print a message to stderr only if verbose mode is enabled
+pub fn log_verbose_client(message: &str) {
+    if is_client_verbose() {
+        write_to_log(message);
+        eprint_with_timestamp(message);
     }
 }
