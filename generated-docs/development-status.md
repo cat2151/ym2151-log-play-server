@@ -1,51 +1,51 @@
-Last updated: 2025-11-22
+Last updated: 2025-11-23
 
 # Development Status
 
 ## 現在のIssues
-- 現在、[Issue #110](../issue-notes/110.md), [Issue #111](../issue-notes/111.md), [Issue #112](../issue-notes/112.md), [Issue #113](../issue-notes/113.md) の複数のビルドエラーがプロジェクトの進行を妨げています。
-- これらのエラーは、JSONフォーマットの統一、イベントリストのデータ形式、およびオーディオスレッド最適化 ([Issue #100](../issue-notes/100.md), [Issue #101](../issue-notes/101.md), [Issue #102](../issue-notes/102.md), [Issue #103](../issue-notes/103.md) への対応) の実装漏れと誤りに起因しています。
-- 特に、クライアントのインタラクティブモードでの音の破損 ([Issue #98](../issue-notes/98.md), [Issue #96](../issue-notes/96.md)) は、同一サンプル時刻へのレジスタ書き込みが原因であり、根本的なオーディオイベント処理の見直しが急務です。
+- [Issue #117](../issue-notes/117.md) は、client側のdemo interactive modeでフレーズ開始タイミングがブレる問題で、時刻指定と名前付きパイプの遅延が原因と分析されています。
+- [Issue #96](../issue-notes/96.md) は、インタラクティブモードで音が鳴らない問題が指摘されており、サーバー単体での動作確認と関連する[Issue #98](https://github.com/cat2151/ym2151-log-play-server/issues/98)の解決がクローズ条件です。
+- 両Issueは `ym2151 tone editor` でのインタラクティブモードの動作確認を最終的な目標としていますが、まずは本プロジェクト内で問題を切り分けて解決する必要があります。
 
 ## 次の一手候補
-1. [Issue #112](../issue-notes/112.md) のビルドエラーを修正し、同一時刻レジスタ書き込み時の2サンプルディレイを実装する
-   - 最初の小さな一歩: `src/scheduler.rs`および関連テストファイルで発生しているビルドエラーを特定し、`Cargo check`が通る状態にする。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/scheduler.rs`, `src/player.rs`, `src/audio/scheduler.rs`, `src/audio/player.rs`, `src/tests/scheduler_tests.rs`, `src/tests/player_tests.rs`
+1.  サーバーデモインタラクティブモードでの音鳴り検証とログ強化 [Issue #96](../issue-notes/96.md)
+    -   最初の小さな一歩: `src/demo_server_interactive.rs` にて、インタラクティブモードでの音再生が成功したか失敗したか、および内部スケジューラの状態を詳細にログ出力する機能を追加する。
+    -   Agent実行プロンプ:
+        ```
+        対象ファイル: `src/demo_server_interactive.rs`, `src/server/playback.rs`, `src/logging.rs`
 
-     実行内容: [Issue #112](../issue-notes/112.md) で報告されているビルドエラーを修正し、[Issue #100](../issue-notes/100.md) の方針に従い「同一時刻レジスタ書き込み時の2サンプルディレイを最終段でのみ行う」実装を完了させる。既存のテストケースが成功するように修正、または新規テストを追加する。
+        実行内容: `src/demo_server_interactive.rs` のインタラクティブモード実行パスにおいて、音を生成・再生する `src/server/playback.rs` の`Playback`構造体のメソッド呼び出し前後で、イベント（コマンド受信、スケジューリング、オーディオバッファへの書き込み、再生開始など）のタイムスタンプと結果を`src/logging.rs`を通じて詳細にログ出力する処理を追加してください。特に、実際に音が鳴るべきタイミングと、データが処理されるタイミングの差異を追跡できるようにしてください。
 
-     確認事項: `Cargo check`および`Cargo test`がエラーなく完了すること。また、以前のコミットログ (`faf1330`, `5b8673f`, `c9fc96d`, `4a34533`, `8f2e361`) と関連するファイルの変更点をレビューし、既存のリファクタリングが壊れていないことを確認する。
+        確認事項: 既存のログフォーマットやレベルとの整合性を保ち、デバッグに必要な情報が追加されることを確認してください。また、ログ出力がパフォーマンスに与える影響が最小限であることを考慮してください。
 
-     期待する出力: ビルドエラーが解消され、`Cargo check`と`Cargo test`が成功することを示す出力。修正されたソースコード。
-     ```
+        期待する出力: `src/demo_server_interactive.rs` が実行された際に、インタラクティブモードにおける音の再生サイクル（コマンド受信から再生まで）の詳細なタイムスタンプ付きログが出力されるように変更されたコード。
+        ```
 
-2. [Issue #113](../issue-notes/113.md) のビルドエラーを修正し、MMCSS Pro Audioとcpal audio_thread_priorityを有効化する
-   - 最初の小さな一歩: `src/mmcss.rs`および関連ファイルで発生しているビルドエラーを特定し、`Cargo check`が通る状態にする。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/mmcss.rs`, `src/lib.rs`, `src/main.rs`, `src/audio/mod.rs`, `src/tests/mmcss_tests.rs`
+2.  クライアント・サーバー間のメッセージ送受信タイミング詳細ログ追加 [Issue #117](../issue-notes/117.md)
+    -   最初の小さな一歩: `src/client/interactive.rs` がメッセージを送信する直前と、`src/server/command_handler.rs` がメッセージを受信した直後に、タイムスタンプを付与した詳細なログを出力する機能を追加する。
+    -   Agent実行プロンプ:
+        ```
+        対象ファイル: `src/client/interactive.rs`, `src/server/command_handler.rs`, `src/ipc/protocol.rs`, `src/logging.rs`
 
-     実行内容: [Issue #113](../issue-notes/113.md) で報告されているビルドエラーを修正し、[Issue #103](../issue-notes/103.md) の方針に従い「Nuked-OPMスレッドへの Windows MMCSS Pro Audio の実装と、cpal audio_thread_priority フィーチャー有効化」を完了させる。
+        実行内容: `src/client/interactive.rs` がコマンドを `src/ipc/protocol.rs` 経由で送信する直前、および `src/server/command_handler.rs` がコマンドを `src/ipc/protocol.rs` 経由で受信した直後に、現在の時刻（マイクロ秒単位まで）と送信/受信したコマンドの種類を`src/logging.rs`を用いてログに出力するように変更してください。これにより、クライアントとサーバー間のIPCレイテンシを測定可能にしてください。
 
-     確認事項: `Cargo check`および`Cargo test`がエラーなく完了すること。Windows環境でMMCSSが正しく機能し、cpalのオーディオスレッド優先度が意図通りに設定されていることを確認する。
+        確認事項: 既存の通信プロトコルやメッセージフォーマットを変更しないこと。ログ出力がパフォーマンスに与える影響が最小限であることを確認してください。また、`src/demo_client_interactive.rs` と `src/demo_server_interactive.rs` を使って検証可能であることを確認してください。
 
-     期待する出力: ビルドエラーが解消され、`Cargo check`と`Cargo test`が成功することを示す出力。修正されたソースコード。
-     ```
+        期待する出力: クライアントとサーバー間のインタラクティブなコマンド送受信パスにおいて、それぞれのエンドポイントでの時刻情報を含むログが出力されるように変更されたコード。
+        ```
 
-3. [Issue #111](../issue-notes/111.md) のビルドエラーを修正し、最終段でのイベントリスト形式をaddr data pairに統一する
-   - 最初の小さな一歩: [Issue #111](../issue-notes/111.md) に関連する`src/audio/generator.rs`や`src/audio/buffers.rs`などのファイルで発生しているビルドエラーを特定し、`Cargo check`が通る状態にする。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `src/audio/buffers.rs`, `src/audio/commands.rs`, `src/audio/generator.rs`, `src/audio/stream.rs`, `src/player.rs`, `src/scheduler.rs`, `src/tests/audio_tests.rs`, `src/tests/player_tests.rs`, `src/tests/scheduler_tests.rs`
+3.  インタラクティブモード切り替え後のサーバー状態詳細ロギング追加 [Issue #96](../issue-notes/96.md)
+    -   最初の小さな一歩: `src/server/command_handler.rs` 内でインタラクティブモードへの切り替えが完了した際に、サーバーの現在の再生状態、スケジューラの状態、およびインタラクティブモードが有効になっているかどうかのフラグを詳細にログ出力する。
+    -   Agent実行プロンプ:
+        ```
+        対象ファイル: `src/server/command_handler.rs`, `src/server/state.rs`, `src/logging.rs`
 
-     実行内容: [Issue #111](../issue-notes/111.md) で報告されているビルドエラーを修正し、[Issue #101](../issue-notes/101.md) の方針に従い「最終段でのevent listのデータ形式は、addr data pairとする」実装を完了させる。
+        実行内容: `src/server/command_handler.rs` の `handle_command` メソッド内で `ClientCommand::SetInteractiveMode` コマンドが処理され、サーバーがインタラクティブモードに切り替わった直後、`src/server/state.rs` に保持されているサーバーの内部状態（例: `is_interactive_mode`, `current_playback_status`, スケジューラ内のイベント数など）を`src/logging.rs`を用いて詳細にログ出力するように変更してください。これにより、モード切り替えが正しく反映されているかを検証しやすくしてください。
 
-     確認事項: `Cargo check`および`Cargo test`がエラーなく完了すること。イベントリストが `(addr, data)` ペアとして正しく処理され、後続のオーディオ生成ロジックに渡されていることを確認する。
+        確認事項: 既存のコマンド処理ロジックに影響を与えないこと。ログ出力が過剰にならないよう、必要な情報に限定してください。`src/client/interactive.rs` からモード切り替えコマンドを送信するシナリオでテスト可能であることを確認してください。
 
-     期待する出力: ビルドエラーが解消され、`Cargo check`と`Cargo test`が成功することを示す出力。修正されたソースコード。
-     ```
+        期待する出力: インタラクティブモード切り替え完了時に、サーバーの内部状態を詳細に報告するログが出力されるように変更されたコード。
+        ```
 
 ---
-Generated at: 2025-11-22 07:02:14 JST
+Generated at: 2025-11-23 07:02:07 JST
