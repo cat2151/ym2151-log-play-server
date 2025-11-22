@@ -20,18 +20,50 @@ use anyhow::{Context, Result};
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn start_interactive() -> Result<()> {
+    use std::{thread, time::Duration};
+
     log_client("🎮 [インタラクティブモード] 開始要求を送信中...");
     log_client(&format!(
         "🔌 [デバッグ][インタラクティブ] パイプパス: {}",
         crate::ipc::pipe_windows::DEFAULT_PIPE_PATH
     ));
     let result = send_command_interactive(Command::StartInteractive);
-    if result.is_ok() {
-        log_client("✅ [インタラクティブモード] 正常に開始しました");
-    } else {
+    if result.is_err() {
         log_client("❌ [インタラクティブモード] 開始に失敗しました");
+        return result;
     }
-    result
+
+    // インタラクティブモードへ切り替わるまで最大1秒間待機
+    let timeout = Duration::from_secs(1);
+    let start = std::time::Instant::now();
+    loop {
+        match get_interactive_mode_state() {
+            Ok(true) => {
+                let elapsed_sec = start.elapsed().as_secs_f64();
+                log_client(&format!(
+                    "✅ [インタラクティブモード] 正常に開始しました (切替所要: {:.6}秒)",
+                    elapsed_sec
+                ));
+                return Ok(());
+            }
+            Ok(false) => {
+                if start.elapsed() >= timeout {
+                    log_client("❌ [インタラクティブモード] サーバーがモード切替に失敗しました (timeout)");
+                    eprintln!("[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)");
+                    std::process::exit(1);
+                }
+                thread::sleep(Duration::from_millis(1));
+            }
+            Err(e) => {
+                if start.elapsed() >= timeout {
+                    log_client(&format!("❌ [インタラクティブモード] サーバー状態取得失敗: {} (timeout)", e));
+                    eprintln!("[ERROR] サーバー状態取得失敗: {} (timeout)", e);
+                    std::process::exit(1);
+                }
+                thread::sleep(Duration::from_millis(1));
+            }
+        }
+    }
 }
 
 /// Get whether the server is currently in interactive mode
