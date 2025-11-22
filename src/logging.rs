@@ -43,6 +43,11 @@ fn write_to_log(message: &str) {
     }
 }
 
+fn eprint_with_timestamp(message: &str) {
+    let timestamp = chrono::Local::now().format("%H:%M:%S%.3f"); // 備忘、時刻があれば最低限わかる。カラム数を減らして、狭い分割terminalでも読みやすくする用。
+    eprintln!("[{}] {}", timestamp, message);
+}
+
 /// Log a message that should always be logged to file.
 /// Prints to stderr only if verbose mode is enabled.
 ///
@@ -54,12 +59,11 @@ pub fn log_always(message: &str) {
     write_to_log(message);
 
     if is_verbose() {
-        eprintln!("{}", message);
+        eprint_with_timestamp(message); // 備忘、非verbose時に表示しないのは、TUIからserverが起動されたり、TUIがclientとしてふるまったりするので、表示崩れさせない用
     }
 }
 
 /// Log a message only if verbose mode is enabled.
-/// Does not write to log file.
 ///
 /// Use this for:
 /// - Routine operations (receive, playback)
@@ -67,6 +71,7 @@ pub fn log_always(message: &str) {
 /// - Non-critical status updates
 pub fn log_verbose(message: &str) {
     if is_verbose() {
-        eprintln!("{}", message);
+        write_to_log(message); // 備忘、logにも記録する。でないと「printとlogを交互に見ないとわからず混乱」がありうる。logだけ見ればすべてわかるようにする。
+        eprint_with_timestamp(message);
     }
 }
