@@ -34,6 +34,40 @@ pub fn start_interactive() -> Result<()> {
     result
 }
 
+/// Get whether the server is currently in interactive mode
+///
+/// Returns true if the server is in interactive mode, false otherwise.
+/// # Example
+/// ```no_run
+/// # use ym2151_log_play_server::client::interactive;
+/// let is_interactive = interactive::get_interactive_mode_state()?;
+/// println!("Is interactive: {}", is_interactive);
+/// # Ok::<(), anyhow::Error>(())
+/// ```
+pub fn get_interactive_mode_state() -> Result<bool> {
+    let mut writer = NamedPipe::connect_default()
+        .context("Failed to connect to server. Is the server running?")?;
+
+    let command = Command::GetInteractiveModeState;
+    let binary_data = command
+        .to_binary()
+        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+    log_client("🔍 インタラクティブモード状態を取得中...");
+
+    writer.write_binary(&binary_data)?;
+
+    let response_bytes = writer.read_binary_response()?;
+    let response = Response::from_binary(&response_bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to parse response: {}", e))?;
+
+    match response {
+        Response::InteractiveModeState { is_interactive } => Ok(is_interactive),
+        Response::Error { message } => Err(anyhow::anyhow!("Server error: {}", message)),
+        _ => Err(anyhow::anyhow!("Unexpected response type")),
+    }
+}
+
 /// Get the current server time in seconds
 ///
 /// Returns the current time in the server's time coordinate system (f64 seconds).
