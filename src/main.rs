@@ -28,7 +28,7 @@ enum Commands {
         #[arg(long)]
         low_quality_resampling: bool,
 
-        /// インタラクティブデモモード (output_ym2151_f64seconds.jsonを使用してサーバー単体テスト)
+        /// インタラクティブデモモード (output_ym2151.jsonを使用してサーバー単体テスト)
         #[arg(long)]
         demo_interactive: bool,
 
@@ -56,7 +56,7 @@ enum Commands {
 
         /// インタラクティブモードデモ（output_ym2151.jsonを1秒ごとに5回繰り返し演奏）
         #[arg(long)]
-        demo_interactive_mode: bool,
+        demo_interactive: bool,
     },
 }
 
@@ -138,7 +138,7 @@ fn main() {
                         "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
                     );
                     eprintln!(
-                        "  --demo-interactive        インタラクティブデモモード (output_ym2151_f64seconds.jsonを使用してサーバー単体テスト)"
+                        "  --demo-interactive        インタラクティブデモモード (output_ym2151.jsonを使用してサーバー単体テスト)"
                     );
                     eprintln!(
                         "  --demo-non-interactive    非インタラクティブデモモード (output_ym2151.jsonを使用して音響テスト)"
@@ -222,13 +222,13 @@ fn main() {
             verbose,
             stop,
             shutdown,
-            demo_interactive_mode,
+            demo_interactive,
         } => {
             // Initialize client with verbose flag
             client::init_client(verbose);
 
             // Handle different client commands
-            if demo_interactive_mode {
+            if demo_interactive {
                 match demo_client_interactive::run_interactive_demo(verbose) {
                     Ok(_) => {
                         std::process::exit(0);
@@ -298,7 +298,7 @@ fn main() {
                 }
             } else {
                 logging::log_always_server("❌ エラー: client コマンドには引数が必要です");
-                logging::log_always_server("   --stop, --shutdown, --demo-interactive-mode を使用するか、JSONファイルを指定してください");
+                logging::log_always_server("   --stop, --shutdown, --demo-interactive を使用するか、JSONファイルを指定してください");
                 std::process::exit(1);
             }
         }

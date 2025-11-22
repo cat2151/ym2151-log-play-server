@@ -4,7 +4,7 @@ use crate::demo_server_interactive::*;
 
 #[test]
 fn test_interactive_demo_constants() {
-    assert_eq!(DEMO_F64_JSON_FILE, "output_ym2151_f64seconds.json");
+    assert_eq!(DEMO_F64_JSON_FILE, "output_ym2151.json");
     assert_eq!(DEMO_INTERVAL_SECONDS, 2);
 }
 

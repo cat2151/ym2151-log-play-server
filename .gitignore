@@ -20,19 +20,17 @@ target
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-
 # Added by cargo
-
 /target
 
 # Output files
 output.wav
-output_pass2.json
 test_*.json
 test_syntax
 
-# Server log file
+# Server or Client log file
 ym2151-server.log
+ym2151-client.log
 
 # Test log files (cfg(test) only)
 test_server.log

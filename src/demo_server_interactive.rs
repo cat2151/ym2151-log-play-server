@@ -14,7 +14,7 @@ use crate::logging;
 use crate::server::Server;
 
 /// Demo file to use for interactive server-side testing
-pub const DEMO_F64_JSON_FILE: &str = "output_ym2151_f64seconds.json";
+pub const DEMO_F64_JSON_FILE: &str = "output_ym2151.json";
 
 /// Demo configuration
 pub const DEMO_INTERVAL_SECONDS: u64 = 2;
@@ -118,7 +118,7 @@ fn schedule_all_events(
 /// Run server demo mode with interactive functionality
 ///
 /// This function demonstrates server functionality by:
-/// 1. Reading the demo JSON file (output_ym2151_f64seconds.json)
+/// 1. Reading the demo JSON file (output_ym2151.json)
 /// 2. Starting the server in interactive mode internally
 /// 3. Playing the JSON content with real-time event scheduling
 /// 4. Providing a way to test server functionality without client communication
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_demo_constants() {
-        assert_eq!(DEMO_F64_JSON_FILE, "output_ym2151_f64seconds.json");
+        assert_eq!(DEMO_F64_JSON_FILE, "output_ym2151.json");
         assert_eq!(DEMO_INTERVAL_SECONDS, 2);
     }
 
