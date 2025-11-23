@@ -29,7 +29,7 @@ impl ConnectionManager {
         logging::log_always_server("   モード: アトミック（1接続=1コマンド）");
 
         let mut audio_player: Option<AudioPlayer> = None;
-        logging::log_always_server("🎵 サーバーが起動しました。クライアントからの接続を待機中...");
+        logging::log_always_server("🎵 サーバーが起動しました");
 
         loop {
             if self.command_handler.is_shutdown_requested() {
@@ -48,6 +48,9 @@ impl ConnectionManager {
     #[cfg(target_os = "windows")]
     fn handle_connection_once(&self, audio_player: &mut Option<AudioPlayer>) -> Result<bool> {
         // 各接続ごとに新しいパイプを作成
+
+        logging::log_verbose_server("💬 パイプを作成します...");
+
         let connection_pipe = match NamedPipe::create() {
             Ok(p) => p,
             Err(e) => {
@@ -60,7 +63,7 @@ impl ConnectionManager {
             }
         };
 
-        logging::log_verbose_server("💬 クライアント接続を待機中...");
+        logging::log_verbose_server("💬 パイプを作成しました。クライアント接続を待機中...");
 
         let mut reader = match connection_pipe.open_read() {
             Ok(r) => r,

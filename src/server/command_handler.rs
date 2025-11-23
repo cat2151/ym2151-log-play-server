@@ -37,6 +37,14 @@ impl CommandHandler {
         command: Command,
         audio_player: &mut Option<AudioPlayer>,
     ) -> Response {
+        let state = self.state.lock().unwrap();
+        logging::log_verbose_server(&format!(
+            "💡 [{}] 現在のサーバー状態: {:?}",
+            std::any::type_name::<Self>(),
+            *state
+        ));
+        drop(state); // Release lock before handling command
+
         match command {
             Command::PlayJson { data } => self.handle_play_json(data, audio_player),
             Command::Stop => self.handle_stop(audio_player),
