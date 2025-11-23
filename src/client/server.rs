@@ -165,7 +165,7 @@ pub fn is_server_running_with_retry() -> bool {
                     return false;
                 }
                 std::thread::sleep(std::time::Duration::from_millis(wait_ms));
-                wait_ms ^= 2;
+                wait_ms *= 2;
             }
         }
     }

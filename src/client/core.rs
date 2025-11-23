@@ -37,7 +37,7 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
             log_verbose_client(&format!("🔄 {} 再試行...", debug_tag));
             log_verbose_client(&format!("⏳ {} バックオフ待機: {}ms", debug_tag, delay));
             thread::sleep(Duration::from_millis(delay));
-            delay ^= 2;
+            delay *= 2;
         }
         if delay >= RETRY_MAX_WAIT_MS {
             log_verbose_client(&format!(

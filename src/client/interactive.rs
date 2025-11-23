@@ -95,7 +95,7 @@ pub fn get_server_state_with_retry() -> Result<String> {
                     ));
                 }
                 std::thread::sleep(std::time::Duration::from_millis(wait_ms));
-                wait_ms ^= 2;
+                wait_ms *= 2;
             }
         }
     }
