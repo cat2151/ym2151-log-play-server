@@ -108,6 +108,32 @@ pub fn get_interactive_mode_state() -> Result<bool> {
     }
 }
 
+pub fn get_server_state() -> Result<String> {
+    let mut writer = NamedPipe::connect_default()
+        .context("Failed to connect to server. Is the server running?")?;
+
+    let command = Command::GetServerState;
+    let binary_data = command
+        .to_binary()
+        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+
+    log_verbose_client("🔍 サーバー状態を取得中...");
+
+    writer.write_binary(&binary_data)?;
+
+    let response_bytes = writer.read_binary_response()?;
+    let response = Response::from_binary(&response_bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to parse response: {}", e))?;
+
+    log_verbose_client(&format!("response server state: {:?}", response));
+
+    match response {
+        Response::ServerState { state } => Ok(state),
+        Response::Error { message } => Err(anyhow::anyhow!("Server error: {}", message)),
+        _ => Err(anyhow::anyhow!("Unexpected response type")),
+    }
+}
+
 /// Get the current server time in seconds
 ///
 /// Returns the current time in the server's time coordinate system (f64 seconds).
