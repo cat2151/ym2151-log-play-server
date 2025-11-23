@@ -58,7 +58,7 @@ fn test_is_server_running_when_not_running() {
     let _ = shutdown_server(); // Ignore result - server might not be running
 
     // When server is not running, should return false
-    let result = is_server_running();
+    let result = is_server_running_with_retry();
     // On Linux this will be false since we can't test Windows named pipes
     // On Windows without server, this should also be false
     assert!(!result || cfg!(windows));

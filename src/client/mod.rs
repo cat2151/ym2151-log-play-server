@@ -96,7 +96,7 @@ pub use interactive::{
 };
 
 // Server management functionality
-pub use server::{ensure_server_ready, is_app_in_path, is_server_running};
+pub use server::{ensure_server_ready, is_app_in_path, is_server_running_with_retry};
 
 // Test helpers (only available in test builds)
 #[cfg(all(test, windows))]

@@ -7,8 +7,6 @@ use super::config::log_verbose_client;
 use crate::ipc::pipe_windows::NamedPipe;
 use anyhow::{Context, Result};
 use std::process::Command as ProcessCommand;
-use std::thread;
-use std::time::Duration;
 
 /// Ensure the server is running and ready to accept commands
 ///
@@ -49,16 +47,13 @@ use std::time::Duration;
 pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
     log_verbose_client("🔍 サーバーの状態を確認中...");
 
-    // Check if server is already running by sending a STOP command
-    // This is a lightweight check that doesn't affect playback
-    if is_server_running() {
+    if is_server_running_with_retry() {
         log_verbose_client("✅ サーバーは既に起動しています");
         return Ok(());
     }
 
     log_verbose_client("⚙️  サーバーが起動していません。起動準備中...");
 
-    // Determine the server path based on context
     #[cfg(all(windows, test))]
     let server_path = {
         // In test builds, try to find the binary in test context first
@@ -129,32 +124,48 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
     start_server(&server_path)
         .with_context(|| format!("Failed to start server: {}", server_app_name))?;
 
-    // Poll the server until it's ready (max 10 seconds)
     log_verbose_client("⏳ サーバーの起動完了を待機中...");
-    wait_for_server_ready(Duration::from_secs(10))
-        .context("Server failed to become ready within timeout")?;
+    if !is_server_running_with_retry() {
+        return Err(anyhow::anyhow!(
+            "Server failed to become ready within timeout"
+        ));
+    }
 
     log_verbose_client("✅ サーバーが起動し、コマンド受付可能になりました");
     Ok(())
 }
 
 /// Check if the server is currently running
-pub fn is_server_running() -> bool {
+pub fn is_server_running_with_retry() -> bool {
+    // 前提として、当関数は「サーバーが起動しているにも関わらずfalseをreturnするリスク」が常にある。connect_defaultが非決定論的ふるまいのため。race conditionにより、サーバーがpipeをcreateする直前でconnect_defaultがErrとなる可能性が常にあるため。リスク対策として指数関数的バックオフを利用しており、処理速度を犠牲にするほどにリスクを低減できる。匙加減は今後検証でチューニング予定。
+    const INITIAL_WAIT_MS: u64 = 1;
+    const MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
     log_verbose_client("🔍 [Server存在チェック] サーバーへの接続を試行中...");
 
-    // Try to connect to the server
-    // If successful, the server is running
-    match NamedPipe::connect_default() {
-        Ok(_) => {
-            log_verbose_client("✅ [Server存在チェック] サーバーが起動していることを確認しました");
-            true
-        }
-        Err(e) => {
-            log_verbose_client(&format!(
-                "❌ [Server存在チェック] サーバーが起動していません: {:?}",
-                e
-            ));
-            false
+    let mut wait_ms = INITIAL_WAIT_MS;
+    loop {
+        match NamedPipe::connect_default() {
+            Ok(_) => {
+                log_verbose_client(
+                    "✅ [Server存在チェック] サーバーが起動していることを確認しました",
+                );
+                return true;
+            }
+            Err(e) => {
+                log_verbose_client(&format!(
+                    "❌ [Server存在チェック] サーバーが起動していないか、起動していてもrace conditionです: {:?}",
+                    e
+                ));
+                if wait_ms >= MAX_WAIT_MS {
+                    log_verbose_client(&format!(
+                        "❌ [Server存在チェック] 最大待機時間({}ms)を超過。おそらくサーバーが起動していません。",
+                        MAX_WAIT_MS
+                    ));
+                    return false;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(wait_ms));
+                wait_ms = std::cmp::min(wait_ms * 2, MAX_WAIT_MS);
+            }
         }
     }
 }
@@ -246,37 +257,6 @@ fn start_server(server_path: &str) -> Result<()> {
         .context("Failed to spawn server process")?;
 
     Ok(())
-}
-
-/// Wait for the server to become ready by polling with STOP commands
-fn wait_for_server_ready(timeout: Duration) -> Result<()> {
-    let start_time = std::time::Instant::now();
-    let poll_interval = Duration::from_millis(100);
-
-    log_verbose_client(&format!(
-        "⏳ [Ready Check] サーバー起動確認を開始 (timeout: {:.1}s)",
-        timeout.as_secs_f32()
-    ));
-
-    loop {
-        if start_time.elapsed() > timeout {
-            log_verbose_client("❌ [Ready Check] タイムアウト: サーバーが起動しませんでした");
-            return Err(anyhow::anyhow!(
-                "Timeout waiting for server to become ready"
-            ));
-        }
-
-        // Try to send a STOP command
-        // If successful, the server is ready
-        if is_server_running() {
-            // Give the server a moment to fully initialize
-            thread::sleep(Duration::from_millis(50));
-            log_verbose_client("✅ [Ready Check] サーバー起動確認完了");
-            return Ok(());
-        }
-
-        thread::sleep(poll_interval);
-    }
 }
 
 // Test-only helper functions
