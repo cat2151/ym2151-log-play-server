@@ -9,10 +9,10 @@ use anyhow::{Context, Result};
 use std::thread;
 use std::time::Duration;
 
-/// Maximum number of connection retry attempts
-const MAX_RETRY_ATTEMPTS: u32 = 3;
-/// Delay between retry attempts in milliseconds
-const RETRY_DELAY_MS: u64 = 50;
+/// Initial delay for exponential backoff (ms)
+const RETRY_INITIAL_DELAY_MS: u64 = 1;
+/// Maximum delay for exponential backoff (ms)
+const RETRY_MAX_DELAY_MS: u64 = 50;
 
 /// Send a standard command to the server
 pub fn send_command(command: Command) -> Result<()> {
@@ -31,15 +31,22 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
         ""
     };
 
-    // Retry loop for connection
+    // Retry loop for connection (exponential backoff)
     let mut last_error = None;
-    for attempt in 1..=MAX_RETRY_ATTEMPTS {
-        if attempt > 1 {
+    let mut delay = RETRY_INITIAL_DELAY_MS;
+    loop {
+        if delay != RETRY_INITIAL_DELAY_MS {
+            log_verbose_client(&format!("🔄 {} 再試行...", debug_tag));
+            log_verbose_client(&format!("⏳ {} バックオフ待機: {}ms", debug_tag, delay));
+            thread::sleep(Duration::from_millis(delay));
+            delay = std::cmp::min(delay * 2, RETRY_MAX_DELAY_MS);
+        }
+        if delay > RETRY_MAX_DELAY_MS {
             log_verbose_client(&format!(
-                "🔄 {} 再試行 {}/{}...",
-                debug_tag, attempt, MAX_RETRY_ATTEMPTS
+                "⚠️  {} 最大バックオフ時間に到達しました",
+                debug_tag
             ));
-            thread::sleep(Duration::from_millis(RETRY_DELAY_MS));
+            break;
         }
 
         log_verbose_client(&format!(
@@ -54,10 +61,7 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
                 w
             }
             Err(e) => {
-                log_verbose_client(&format!(
-                    "⚠️  {} パイプ接続失敗 (試行 {}/{}): {}",
-                    debug_tag, attempt, MAX_RETRY_ATTEMPTS, e
-                ));
+                log_verbose_client(&format!("⚠️  {} パイプ接続失敗: {}", debug_tag, e));
                 last_error = Some(e);
                 continue; // Retry
             }
