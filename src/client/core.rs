@@ -9,10 +9,8 @@ use anyhow::{Context, Result};
 use std::thread;
 use std::time::Duration;
 
-/// Initial delay for exponential backoff (ms)
-const RETRY_INITIAL_DELAY_MS: u64 = 1;
-/// Maximum delay for exponential backoff (ms)
-const RETRY_MAX_DELAY_MS: u64 = 50;
+const RETRY_INITIAL_WAIT_MS: u64 = 1;
+const RETRY_MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
 
 /// Send a standard command to the server
 pub fn send_command(command: Command) -> Result<()> {
@@ -33,15 +31,15 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
 
     // Retry loop for connection (exponential backoff)
     let mut last_error = None;
-    let mut delay = RETRY_INITIAL_DELAY_MS;
+    let mut delay = RETRY_INITIAL_WAIT_MS;
     loop {
-        if delay != RETRY_INITIAL_DELAY_MS {
+        if delay != RETRY_INITIAL_WAIT_MS {
             log_verbose_client(&format!("🔄 {} 再試行...", debug_tag));
             log_verbose_client(&format!("⏳ {} バックオフ待機: {}ms", debug_tag, delay));
             thread::sleep(Duration::from_millis(delay));
             delay ^= 2;
         }
-        if delay > RETRY_MAX_DELAY_MS {
+        if delay >= RETRY_MAX_WAIT_MS {
             log_verbose_client(&format!(
                 "⚠️  {} 最大バックオフ時間に到達しました",
                 debug_tag

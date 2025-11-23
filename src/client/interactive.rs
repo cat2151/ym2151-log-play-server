@@ -10,6 +10,9 @@ use crate::ipc::protocol::{Command, Response};
 use crate::server::ServerState;
 use anyhow::{Context, Result};
 
+const RETRY_INITIAL_WAIT_MS: u64 = 1;
+const RETRY_MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
+
 /// Start interactive mode on the server
 ///
 /// In interactive mode, the server continuously streams audio and accepts
@@ -73,10 +76,7 @@ pub fn get_interactive_mode_state_with_retry() -> Result<bool> {
 
 pub fn get_server_state_with_retry() -> Result<String> {
     // 前提として、race conditionにより、低確率でエラーの可能性がついてまわる。今後、MAX_WAIT_MSでチューニング予定。
-    const INITIAL_WAIT_MS: u64 = 1;
-    const MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
-
-    let mut wait_ms = INITIAL_WAIT_MS;
+    let mut wait_ms = RETRY_INITIAL_WAIT_MS;
     loop {
         match get_server_state() {
             Ok(state) => {
@@ -84,18 +84,18 @@ pub fn get_server_state_with_retry() -> Result<String> {
             }
             Err(_) => {
                 log_verbose_client(&format!("race condition. retrying...",));
-                if wait_ms >= MAX_WAIT_MS {
+                if wait_ms >= RETRY_MAX_WAIT_MS {
                     log_verbose_client(&format!(
                         "timeout. MAX_WAIT_MSをより大きい数字にするか検討してください: {}",
-                        MAX_WAIT_MS
+                        RETRY_MAX_WAIT_MS
                     ));
                     return Err(anyhow::anyhow!(
                         "timeout reached while getting server state after retries: {}",
-                        MAX_WAIT_MS
+                        RETRY_MAX_WAIT_MS
                     ));
                 }
                 std::thread::sleep(std::time::Duration::from_millis(wait_ms));
-                wait_ms = std::cmp::min(wait_ms * 2, MAX_WAIT_MS);
+                wait_ms ^= 2;
             }
         }
     }

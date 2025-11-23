@@ -8,6 +8,9 @@ use crate::ipc::pipe_windows::NamedPipe;
 use anyhow::{Context, Result};
 use std::process::Command as ProcessCommand;
 
+const RETRY_INITIAL_WAIT_MS: u64 = 1;
+const RETRY_MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
+
 /// Ensure the server is running and ready to accept commands
 ///
 /// This function ensures that the YM2151 server is running and ready to accept
@@ -138,11 +141,9 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
 /// Check if the server is currently running
 pub fn is_server_running_with_retry() -> bool {
     // 前提として、当関数は「サーバーが起動しているにも関わらずfalseをreturnするリスク」が常にある。connect_defaultが非決定論的ふるまいのため。race conditionにより、サーバーがpipeをcreateする直前でconnect_defaultがErrとなる可能性が常にあるため。リスク対策として指数関数的バックオフを利用しており、処理速度を犠牲にするほどにリスクを低減できる。匙加減は今後検証でチューニング予定。
-    const INITIAL_WAIT_MS: u64 = 1;
-    const MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
     log_verbose_client("🔍 [Server存在チェック] サーバーへの接続を試行中...");
 
-    let mut wait_ms = INITIAL_WAIT_MS;
+    let mut wait_ms = RETRY_INITIAL_WAIT_MS;
     loop {
         match NamedPipe::connect_default() {
             Ok(_) => {
@@ -156,15 +157,15 @@ pub fn is_server_running_with_retry() -> bool {
                     "❌ [Server存在チェック] サーバーが起動していないか、起動していてもrace conditionです: {:?}",
                     e
                 ));
-                if wait_ms >= MAX_WAIT_MS {
+                if wait_ms >= RETRY_MAX_WAIT_MS {
                     log_verbose_client(&format!(
                         "❌ [Server存在チェック] 最大待機時間({}ms)を超過。おそらくサーバーが起動していません。",
-                        MAX_WAIT_MS
+                        RETRY_MAX_WAIT_MS
                     ));
                     return false;
                 }
                 std::thread::sleep(std::time::Duration::from_millis(wait_ms));
-                wait_ms = std::cmp::min(wait_ms * 2, MAX_WAIT_MS);
+                wait_ms ^= 2;
             }
         }
     }
