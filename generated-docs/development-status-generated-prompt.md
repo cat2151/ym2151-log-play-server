@@ -1,4 +1,4 @@
-Last updated: 2025-11-23
+Last updated: 2025-11-24
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -207,7 +207,6 @@ Last updated: 2025-11-23
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
-- generated-docs/project-overview-generated-prompt.md
 - install-ym2151-tools.rs
 - issue-notes/100.md
 - issue-notes/101.md
@@ -218,6 +217,9 @@ Last updated: 2025-11-23
 - issue-notes/113.md
 - issue-notes/116.md
 - issue-notes/117.md
+- issue-notes/118.md
+- issue-notes/119.md
+- issue-notes/120.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -318,6 +320,109 @@ Last updated: 2025-11-23
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
+## [Issue #120](../issue-notes/120.md): server commandのうち、clear scheduleを廃止し、play json interactiveはデフォルトでwith clear scheduleにする（そのjsonの先頭sample時刻より未来のscheduleだけ削除する。キーリピート問題対策用）
+[issue-notes/120.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/120.md)
+
+...
+ラベル: 
+--- issue-notes/120.md の内容 ---
+
+```markdown
+# issue server commandのうち、clear scheduleを廃止し、play json with clear scheduleにする（そのjsonのsample時刻より過去のscheduleだけ削除する） #120
+[issues #120](https://github.com/cat2151/ym2151-log-play-server/issues/120)
+
+
+
+```
+
+## [Issue #119](../issue-notes/119.md): server commandのうち、get interactive modeは不要になったので削除し、シンプル化する
+[issue-notes/119.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/119.md)
+
+...
+ラベル: 
+--- issue-notes/119.md の内容 ---
+
+```markdown
+# issue server commandのうち、get interactive modeは不要になったので削除し、シンプル化する #119
+[issues #119](https://github.com/cat2151/ym2151-log-play-server/issues/119)
+
+
+
+```
+
+## [Issue #118](../issue-notes/118.md): agentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない
+[issue-notes/118.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/118.md)
+
+...
+ラベル: 
+--- issue-notes/118.md の内容 ---
+
+```markdown
+# issue agentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない #118
+[issues #118](https://github.com/cat2151/ym2151-log-play-server/issues/118)
+
+# 何が困るの？
+- 開発体験が悪い
+  - ほかのprojectの事例
+    - PRをいくつか、検証なしで受け入れ
+    - 結果、そのまま使える
+      - 分析、TDDで品質担保されており、ハルシネーションはほぼない
+        - Windows用codeがないマルチプラットフォームprojectなので、agentがTDDしておりcode品質が高い
+      - 開発体験が良い
+  - このprojectの事例
+    - PRをいくつか、検証なしで受け入れ
+    - 結果、ビルドが通らない
+      - 複数のPRすべてがハルシネーション
+      - userが修正時、複数PRのバグが混ざっており切り分けコストがかかる
+      - 開発体験が悪い
+    - 分析、このprojectのWindows用codeの品質は低い
+      - 規模が大きくなってくるにつれ、指数関数的に品質低下が起こっている感触がある
+      - ハルシネーションがどんどん増えている
+
+# 対策案
+- cargo check target ～gnu
+  - WSLで動作確認済み
+  - GitHub Copilot Coding Agentでも実施できる可能性がある
+
+# 方法の案
+## まずGitHub Actions
+- 上記をworkflow作成し、GitHub Actions Linux Runnerで動作確認する
+- logでcargo check finished目視確認または、より効率的な確認
+
+# 草稿
+- ゴール
+    - GitHubのLinux Runner上での GitHub Copilot Coding Agent によるTDDにおいて、以下をPRコメントに書くこと
+        - ※大前提。GitHub Linux Runner上での話である。現状、GitHub Copilot Coding Agent はそれしか使えないので。Windows Runnerは使えない。
+        - 最低限、Rustのコンパイルチェックで、
+            - Windows版コンパイルがエラーとwarningのない状態
+            - （code、unit test、統合testすべて）
+            - をTDDで実現できるか？
+            - その方法は？
+                - cargo check target gnuを使う？
+                - crossを使う？
+                - cargo-xwinを使う？
+                - ほかに方法は？
+            - agentへのprompt指示だけで実現可能か？
+                - そのpromptは？
+            - これをweb調査してまとめること
+        - もしどうしようもないなら、
+            - 一つのPRにつき毎回、userがWindows版の手動ビルドを
+                - するしかない？
+                - ※今回、3つのPRを「userがWindows版の手動ビルドをせず」受け入れた結果、
+                    - 3つともハルシネーションによる認識誤りによるバグや実装漏れがあった
+                    - ビルドが通らない、testがfailed、
+                        - ビルドを通した以降もバグっている、
+                            - という低品質codeだった
+                - つまりGitHub Copilot Coding Agentの自律的なactionではどうにもならない？
+                    - ※もしCI/CDでGitHub Actionsで、Windows版のコンパイルが通るかチェックしたところで、それをagentが自律的にactionしてTDDで修正できない、というフローなら、手間をかけてやる意味が薄い
+                        - それは結局、運用として、userが手動でそれをチェックしてlocalでagentをkickする、がマストになってしまい、userの手間がかかる点では大差ないので
+            - これをweb調査してまとめること
+
+# 状況
+- 検討中
+
+```
+
 ## [Issue #117](../issue-notes/117.md): client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる
 [issue-notes/117.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/117.md)
 
@@ -349,35 +454,6 @@ Last updated: 2025-11-23
         - 通常モードとインタラクティブモードで音が鳴ること
         - 問題あれば、どのような問題があるか？をissueに可視化すること
 
-
-```
-
-## [Issue #96](../issue-notes/96.md): インタラクティブモードで音が鳴らない
-[issue-notes/96.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/96.md)
-
-...
-ラベル: 
---- issue-notes/96.md の内容 ---
-
-```markdown
-# issue インタラクティブモードで音が鳴らない #96
-[issues #96](https://github.com/cat2151/ym2151-log-play-server/issues/96)
-
-# 課題
-- 事象がわかりづらい
-# 対策
-- 切り分ける
-    - サーバ側だけで動かして切り分ける
-        - サーバ側だけで動くdemo interactive modeを作る
-            - 別issue参照
-# close条件
-- 別issueの
-    - [issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98) client側のdemo interactive modeで音が崩れる
-    - が解決すること
-- ym2151 tone editorでインタラクティブモードを使って音が鳴ること
-    - ※今はym2151 tone editor側は、デフォルトは、
-        - 安全優先で、非インタラクティブモードで運用している。
-            - optionでインタラクティブモードで動かすと鳴らない、という状況
 
 ```
 
@@ -422,6 +498,144 @@ Last updated: 2025-11-23
 
 ```
 
+### .github/actions-tmp/issue-notes/18.md
+```md
+# issue DevelopmentStatusGenerator.cjs 内に、Geminiに与えるpromptがハードコーディングされてしまっている #18
+[issues #18](https://github.com/cat2151/github-actions/issues/18)
+
+# 何が困るの？
+- project把握しづらい。どこにpromptが書いてあるのか、把握しづらい。
+- prompts/ にほかのpromptがあるため、方針がブレていると、読みづらい。
+- 備忘、いくらテンプレートリテラルとプレースホルダーで密結合しているからとはいえ、ハードコーディングはNG。
+    - それらはreplaceを使う等で楽に切り出しできるので。
+
+# 問題のcjsの場所は？
+- ファイルパス : .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+- 関数 : generateDevelopmentStatus
+
+# 結果
+- Geminiに生成させたpromptを、agentに投げて、リファクタリングさせてみた
+- ハルシネーションした。使い物にならなかった
+- 人力でやる
+
+# 結果
+- test green
+
+# closeとする
+
+
+```
+
+### .github/actions-tmp/issue-notes/19.md
+```md
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
+[issues #19](https://github.com/cat2151/github-actions/issues/19)
+
+# 何が困るの？
+- issue解決に向けての次の一手の内容が実態に即していないことが多い。
+
+# 対策案
+- issue-notes/ 配下のmdファイルの内容を参照させる
+
+# 備考
+- さらにmd内に書かれているfileも、project内をcjsに検索させて添付させると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #20](https://github.com/cat2151/github-actions/issues/20)
+- さらにproject overviewでGeminiがまとめたmdも、Geminiに与えると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #21](https://github.com/cat2151/github-actions/issues/21)
+- さらに、Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
+    - [issues #22](https://github.com/cat2151/github-actions/issues/22)
+
+# close条件
+- issues #22 がcloseされること。
+- commitされたpromptを確認し、issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できること。
+
+# 状況
+- 課題、実装したがtestができていない
+- 対策、issues #22 が実装されれば、testができる
+- 対策、issues #22 のcloseを待つ
+
+# 状況
+- issues #22 がcloseされた
+- testできるようになった
+- commitされたpromptを確認した。issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できた
+
+# closeする
+
+```
+
+### .github/actions-tmp/issue-notes/20.md
+```md
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
+[issues #20](https://github.com/cat2151/github-actions/issues/20)
+
+# 何が困るの？
+- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
+
+# 案
+## outputのimage
+- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
+    - 軸は、projectのfilename一覧である。
+        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
+- 方向性
+    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
+    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
+- 備考
+    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
+        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
+## 実現方法の案
+- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
+    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
+- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
+- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
+- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
+- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
+## 備忘
+- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
+
+# どうする？
+- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
+- 投げた、実装させた、レビューして人力リファクタリングした
+- testする
+
+# 結果
+- バグ
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+    - issue-notesで言及されていないfileまで添付されてしまっている
+- 分析
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+        - 原因
+            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
+            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
+            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
+                - 20.md が置換対象となってしまったため。
+        - 対策案
+            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
+                - つまり文中やcode中のプレースホルダーは置換対象外とする。
+            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
+    - issue-notesで言及されていないfileまで添付されてしまっている
+        - 原因
+            - promptに、既にprojectの全file listが書き込まれたあとなので、
+                - issue-noteで言及されていなくても、
+                - promptの全file listを対象に検索してしまっている
+        - 対策案の候補
+            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
+            - file添付の対象を変更し、promptでなく、issue-notesとする
+                - これが範囲が絞られているので安全である、と考える
+        - 備忘
+            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
+
+# どうする？
+- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
+- で実装した。
+- testする
+
+# 結果
+- test green
+
+# closeとする
+
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 # issue issue note生成できるかのtest用 #7
@@ -429,6 +643,99 @@ Last updated: 2025-11-23
 
 - 生成できた
 - closeとする
+
+```
+
+### .github/actions-tmp/issue-notes/8.md
+```md
+# issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
+[issues #8](https://github.com/cat2151/github-actions/issues/8)
+
+# これまでの課題
+- 以下が決め打ちになっていた
+```
+  const allowedFiles = [
+    'src/main.js',
+    'src/mml2json.js',
+    'src/play.js'
+  ];
+```
+
+# 対策
+- 呼び出し元ymlで指定できるようにする
+
+# agent
+- agentにやらせることができれば楽なので、初手agentを試した
+- 失敗
+    - ハルシネーションしてscriptを大量破壊した
+- 分析
+    - 修正対象scriptはagentが生成したもの
+    - 低品質な生成結果でありソースが巨大
+    - ハルシネーションで破壊されやすいソース
+    - AIの生成したソースは、必ずしもAIフレンドリーではない
+
+# 人力リファクタリング
+- 低品質コードを、最低限agentが扱えて、ハルシネーションによる大量破壊を防止できる内容、にする
+- 手短にやる
+    - そもそもビジュアライズは、agentに雑に指示してやらせたもので、
+    - 今後別のビジュアライザを選ぶ可能性も高い
+    - 今ここで手間をかけすぎてコンコルド効果（サンクコストバイアス）を増やすのは、project群をトータルで俯瞰して見たとき、損
+- 対象
+    - allowedFiles のあるソース
+        - callgraph-utils.cjs
+            - たかだか300行未満のソースである
+            - この程度でハルシネーションされるのは予想外
+            - やむなし、リファクタリングでソース分割を進める
+
+# agentに修正させる
+## prompt
+```
+allowedFilesを引数で受け取るようにしたいです。
+ないならエラー。
+最終的に呼び出し元すべてに波及して修正したいです。
+
+呼び出し元をたどってエントリポイントも見つけて、
+エントリポイントにおいては、
+引数で受け取ったjsonファイル名 allowedFiles.js から
+jsonファイル allowedFiles.jsonの内容をreadして
+変数 allowedFilesに格納、
+後続処理に引き渡す、としたいです。
+
+まずplanしてください。
+planにおいては、修正対象のソースファイル名と関数名を、呼び出し元を遡ってすべて特定し、listしてください。
+```
+
+# 修正が順調にできた
+- コマンドライン引数から受け取る作りになっていなかったので、そこだけ指示して修正させた
+- yml側は人力で修正した
+
+# 他のリポジトリから呼び出した場合にバグらないよう修正する
+- 気付いた
+    - 共通ワークフローとして他のリポジトリから使った場合はバグるはず。
+        - ymlから、共通ワークフロー側リポジトリのcheckoutが漏れているので。
+- 他のyml同様に修正する
+- あわせて全体にymlをリファクタリングし、修正しやすくし、今後のyml読み書きの学びにしやすくする
+
+# local WSL + act : test green
+
+# closeとする
+- もし生成されたhtmlがNGの場合は、別issueとするつもり
+
+```
+
+### .github/actions-tmp/issue-notes/9.md
+```md
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
+
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+
+# test green
+
+# closeとする
 
 ```
 
@@ -460,68 +767,113 @@ Last updated: 2025-11-23
 
 ```
 
-### issue-notes/96.md
+### issue-notes/118.md
 ```md
-# issue インタラクティブモードで音が鳴らない #96
-[issues #96](https://github.com/cat2151/ym2151-log-play-server/issues/96)
+# issue agentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない #118
+[issues #118](https://github.com/cat2151/ym2151-log-play-server/issues/118)
 
-# 課題
-- 事象がわかりづらい
-# 対策
-- 切り分ける
-    - サーバ側だけで動かして切り分ける
-        - サーバ側だけで動くdemo interactive modeを作る
-            - 別issue参照
-# close条件
-- 別issueの
-    - [issues #98](https://github.com/cat2151/ym2151-log-play-server/issues/98) client側のdemo interactive modeで音が崩れる
-    - が解決すること
-- ym2151 tone editorでインタラクティブモードを使って音が鳴ること
-    - ※今はym2151 tone editor側は、デフォルトは、
-        - 安全優先で、非インタラクティブモードで運用している。
-            - optionでインタラクティブモードで動かすと鳴らない、という状況
+# 何が困るの？
+- 開発体験が悪い
+  - ほかのprojectの事例
+    - PRをいくつか、検証なしで受け入れ
+    - 結果、そのまま使える
+      - 分析、TDDで品質担保されており、ハルシネーションはほぼない
+        - Windows用codeがないマルチプラットフォームprojectなので、agentがTDDしておりcode品質が高い
+      - 開発体験が良い
+  - このprojectの事例
+    - PRをいくつか、検証なしで受け入れ
+    - 結果、ビルドが通らない
+      - 複数のPRすべてがハルシネーション
+      - userが修正時、複数PRのバグが混ざっており切り分けコストがかかる
+      - 開発体験が悪い
+    - 分析、このprojectのWindows用codeの品質は低い
+      - 規模が大きくなってくるにつれ、指数関数的に品質低下が起こっている感触がある
+      - ハルシネーションがどんどん増えている
+
+# 対策案
+- cargo check target ～gnu
+  - WSLで動作確認済み
+  - GitHub Copilot Coding Agentでも実施できる可能性がある
+
+# 方法の案
+## まずGitHub Actions
+- 上記をworkflow作成し、GitHub Actions Linux Runnerで動作確認する
+- logでcargo check finished目視確認または、より効率的な確認
+
+# 草稿
+- ゴール
+    - GitHubのLinux Runner上での GitHub Copilot Coding Agent によるTDDにおいて、以下をPRコメントに書くこと
+        - ※大前提。GitHub Linux Runner上での話である。現状、GitHub Copilot Coding Agent はそれしか使えないので。Windows Runnerは使えない。
+        - 最低限、Rustのコンパイルチェックで、
+            - Windows版コンパイルがエラーとwarningのない状態
+            - （code、unit test、統合testすべて）
+            - をTDDで実現できるか？
+            - その方法は？
+                - cargo check target gnuを使う？
+                - crossを使う？
+                - cargo-xwinを使う？
+                - ほかに方法は？
+            - agentへのprompt指示だけで実現可能か？
+                - そのpromptは？
+            - これをweb調査してまとめること
+        - もしどうしようもないなら、
+            - 一つのPRにつき毎回、userがWindows版の手動ビルドを
+                - するしかない？
+                - ※今回、3つのPRを「userがWindows版の手動ビルドをせず」受け入れた結果、
+                    - 3つともハルシネーションによる認識誤りによるバグや実装漏れがあった
+                    - ビルドが通らない、testがfailed、
+                        - ビルドを通した以降もバグっている、
+                            - という低品質codeだった
+                - つまりGitHub Copilot Coding Agentの自律的なactionではどうにもならない？
+                    - ※もしCI/CDでGitHub Actionsで、Windows版のコンパイルが通るかチェックしたところで、それをagentが自律的にactionしてTDDで修正できない、というフローなら、手間をかけてやる意味が薄い
+                        - それは結局、運用として、userが手動でそれをチェックしてlocalでagentをkickする、がマストになってしまい、userの手間がかかる点では大差ないので
+            - これをweb調査してまとめること
+
+# 状況
+- 検討中
+
+```
+
+### issue-notes/119.md
+```md
+# issue server commandのうち、get interactive modeは不要になったので削除し、シンプル化する #119
+[issues #119](https://github.com/cat2151/ym2151-log-play-server/issues/119)
+
+
+
+```
+
+### issue-notes/120.md
+```md
+# issue server commandのうち、clear scheduleを廃止し、play json with clear scheduleにする（そのjsonのsample時刻より過去のscheduleだけ削除する） #120
+[issues #120](https://github.com/cat2151/ym2151-log-play-server/issues/120)
+
+
 
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-6d3b94a server、エラー「Not in interactive mode」のときは、stateもエラーメッセージに含むようにした
-0836da1 log改善。client側もprintするものはlogにも出すようにした。これまではprintしかなくてlogとprintを交互に見る必要があって混乱を招いていた
-20d0abd main.rsについて、エラーはlogにも出して、logを読みやすくするようにした。これまでは画面にしか出ないエラーがあり、logをみてもわからず混乱を招いていた。なおコマンドライン引数エラーはシンプル優先でeprintlnのままとした
-8ecf2b0 log改善。print時も時刻を出すようにした。logにはprint内容も含むようにした。
-a54814a printについて[デバッグ]という文言が規則性なくついており混乱を招いていたので、削除
-19fbeba clientがserverにインタラクティブモード切り替えを送信したとき、serverの切り替え完了まで待つようにした
-42a7f9c clientが、serverからインタラクティブモードか？を取得できるようにした
-b8fff62 fix #98, Document countermeasures for issue #100
-951348e Document analysis for issue #117 timing problems
-e74f93d Add issue note for #117 [auto]
+7d8591f shutdownできるよう修正
+75ec2a7 指数バックオフの計算ミス修正
+920a648 Outline goals for GitHub Copilot TDD on Linux Runner
+44635ab Add issue note for #120 [auto]
+3669b13 Add issue note for #119 [auto]
+8695dee Document issues with Windows code quality and TDD
+651c4a6 Update issue notes with TDD strategies and methods
+8ddb41e Add issue note for #118 [auto]
+b44b081 fix #96 Enable sound in interactive mode for ym2151 tone editor
+896600d server verbose log文言修正
 
 ### 変更されたファイル:
-src/audio/generator.rs
-src/audio/player.rs
-src/audio/stream.rs
-src/client/config.rs
+Cargo.lock
+issue-notes/118.md
+issue-notes/119.md
+issue-notes/120.md
 src/client/core.rs
 src/client/interactive.rs
-src/client/mod.rs
 src/client/server.rs
-src/debug_wav.rs
-src/demo_client_interactive.rs
-src/demo_server_interactive.rs
-src/demo_server_non_interactive.rs
-src/ipc/protocol.rs
-src/logging.rs
-src/main.rs
-src/mmcss.rs
-src/player.rs
-src/server/command_handler.rs
-src/server/connection.rs
-src/server/mod.rs
-src/server/playback.rs
-src/tests/client_tests.rs
-src/tests/logging_tests.rs
-tests/logging_test.rs
 
 
 ---
-Generated at: 2025-11-23 07:01:45 JST
+Generated at: 2025-11-24 07:01:47 JST
