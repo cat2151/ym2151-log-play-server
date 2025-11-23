@@ -69,7 +69,7 @@ impl ConnectionManager {
             Ok(r) => r,
             Err(e) => {
                 logging::log_verbose_server(&format!(
-                    "パイプの読み取りオープンに失敗しました。おそらくclientが接続確認してきました（その場合は問題ありません）: {}",
+                    "パイプの読み取りオープンに失敗しました: {}",
                     e
                 ));
                 std::thread::sleep(std::time::Duration::from_millis(100));
@@ -94,7 +94,7 @@ impl ConnectionManager {
         let binary_data = match reader.read_binary() {
             Ok(data) => data,
             Err(e) => {
-                logging::log_verbose_server(&format!("📞 コマンド読み取りエラー: {}", e));
+                logging::log_verbose_server(&format!("📞 コマンド読み取りエラー。おそらくclientが接続確認してきました（その場合は問題ありません）: {}", e));
                 return Ok(false); // 次の接続を待機
             }
         };
