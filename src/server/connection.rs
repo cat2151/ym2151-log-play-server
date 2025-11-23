@@ -69,7 +69,7 @@ impl ConnectionManager {
             Ok(r) => r,
             Err(e) => {
                 logging::log_verbose_server(&format!(
-                    "⚠️  警告: パイプの読み取りオープンに失敗しました: {}",
+                    "パイプの読み取りオープンに失敗しました。おそらくclientが接続確認してきました（その場合は問題ありません）: {}",
                     e
                 ));
                 std::thread::sleep(std::time::Duration::from_millis(100));
