@@ -23,6 +23,7 @@ pub enum Command {
     },
     /// Query if the server is currently in interactive mode
     GetInteractiveModeState,
+    GetServerState,
 }
 
 impl Command {
@@ -79,6 +80,10 @@ pub enum Response {
     /// Interactive mode state response
     InteractiveModeState {
         is_interactive: bool,
+    },
+    /// Server state response
+    ServerState {
+        state: String,
     },
 }
 

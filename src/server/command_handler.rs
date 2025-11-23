@@ -56,6 +56,7 @@ impl CommandHandler {
                 self.handle_play_json_in_interactive(data, audio_player)
             }
             Command::GetInteractiveModeState => self.handle_get_interactive_mode_state(),
+            Command::GetServerState => self.handle_get_server_state(),
             Command::Shutdown => {
                 // Shutdown is handled specially in the connection loop
                 // This should not be reached
@@ -76,6 +77,18 @@ impl CommandHandler {
         ));
 
         Response::InteractiveModeState { is_interactive }
+    }
+
+    fn handle_get_server_state(&self) -> Response {
+        let state = self.state.lock().unwrap();
+        let current_state = state.as_str().to_string();
+
+        let fn_name = std::any::type_name::<Self>();
+        logging::log_verbose_server(&format!("🔍 [{}] サーバー状態: {}", fn_name, current_state));
+
+        Response::ServerState {
+            state: current_state,
+        }
     }
 
     /// Check if shutdown has been requested
