@@ -32,8 +32,11 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
     // Retry loop for connection (exponential backoff)
     let mut last_error = None;
     let mut delay = RETRY_INITIAL_WAIT_MS;
+    let mut first = true;
     loop {
-        if delay != RETRY_INITIAL_WAIT_MS {
+        if first {
+            first = false;
+        } else {
             log_verbose_client(&format!("🔄 {} 再試行...", debug_tag));
             log_verbose_client(&format!("⏳ {} バックオフ待機: {}ms", debug_tag, delay));
             thread::sleep(Duration::from_millis(delay));
