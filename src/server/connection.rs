@@ -47,8 +47,7 @@ impl ConnectionManager {
 
     #[cfg(target_os = "windows")]
     fn handle_connection_once(&self, audio_player: &mut Option<AudioPlayer>) -> Result<bool> {
-        // 各接続ごとに新しいパイプを作成
-
+        // シングルスレッド用、複数クライアントからの接続も可能、シンプル優先、アトミック接続。この関数内で、1回の接続用のcreateからcloseまでのライフサイクルを完結。なおWindows名前付きパイプは1回のcreate～closeにつき、単一クライアントからの接続しか受け付けられないため、このような実装になる。
         logging::log_verbose_server("💬 パイプを作成します...");
 
         let connection_pipe = match NamedPipe::create() {
@@ -65,6 +64,7 @@ impl ConnectionManager {
 
         logging::log_verbose_server("💬 パイプを作成しました。クライアント接続を待機中...");
 
+        // blocking。このopen_readは、呼び出すと、クライアントが接続してくるまではreturnしない。つまりここで1秒～数分の待ち時間もありうる。
         let mut reader = match connection_pipe.open_read() {
             Ok(r) => r,
             Err(e) => {
@@ -79,7 +79,7 @@ impl ConnectionManager {
 
         logging::log_verbose_server("📞 クライアントが接続されました");
 
-        // レスポンス送信用のライターも取得
+        // レスポンス送信用の準備をあらかじめ行う
         let mut writer = match connection_pipe.open_write() {
             Ok(w) => w,
             Err(e) => {
@@ -91,8 +91,6 @@ impl ConnectionManager {
             }
         };
 
-        // アトミックモード: 1コマンドだけ処理
-        // Read binary command from client
         let binary_data = match reader.read_binary() {
             Ok(data) => data,
             Err(e) => {
@@ -118,11 +116,10 @@ impl ConnectionManager {
             }
         };
 
-        // Log command content
         self.log_command(&command);
 
-        // Handle shutdown specially
         let response = if matches!(command, Command::Shutdown) {
+            // シャットダウン要求の処理
             logging::log_always_server("🛑 シャットダウン要求を受信しました");
             if let Some(mut player) = audio_player.take() {
                 player.stop();
@@ -136,6 +133,7 @@ impl ConnectionManager {
             logging::log_always_server("✅ シャットダウン完了");
             return Ok(true); // ループを抜けて終了
         } else {
+            // 通常のコマンド処理
             self.command_handler.handle_command(command, audio_player)
         };
 
@@ -150,11 +148,10 @@ impl ConnectionManager {
         } else {
             logging::log_verbose_server("⚠️  警告: レスポンスのシリアライズに失敗しました");
         }
+        // 接続が自動的にクローズされる（writerがスコープ外になったので）
 
         logging::log_verbose_server(&format!("📤 レスポンスを送信しました: {:?}", response));
-
-        // 接続は自動的にクローズされる（スコープ外）
-        logging::log_verbose_server("🔄 次の接続を待機中...");
+        logging::log_verbose_server("🔄 次の接続待機に進みます...");
         Ok(false)
     }
 
