@@ -7,6 +7,7 @@ use super::config::log_verbose_client;
 use super::core::send_command_interactive;
 use crate::ipc::pipe_windows::NamedPipe;
 use crate::ipc::protocol::{Command, Response};
+use crate::server::ServerState;
 use anyhow::{Context, Result};
 
 /// Start interactive mode on the server
@@ -21,8 +22,6 @@ use anyhow::{Context, Result};
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn start_interactive() -> Result<()> {
-    use std::{thread, time::Duration};
-
     log_verbose_client("🎮 [インタラクティブモード] 開始要求を送信中...");
     log_verbose_client(&format!(
         "🔌 パイプパス: {}",
@@ -34,40 +33,23 @@ pub fn start_interactive() -> Result<()> {
         return result;
     }
 
-    // インタラクティブモードへ切り替わるまで最大1秒間待機
-    let timeout = Duration::from_secs(1);
-    let start = std::time::Instant::now();
-    loop {
-        match get_interactive_mode_state() {
-            Ok(true) => {
-                let elapsed_sec = start.elapsed().as_secs_f64();
-                log_verbose_client(&format!(
-                    "✅ [インタラクティブモード] 正常に開始しました (切替所要: {:.6}秒)",
-                    elapsed_sec
-                ));
-                return Ok(());
-            }
-            Ok(false) => {
-                if start.elapsed() >= timeout {
-                    log_verbose_client(
-                        "❌ [インタラクティブモード] サーバーがモード切替に失敗しました (timeout)",
-                    );
-                    log_always_client("[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)");
-                    std::process::exit(1);
-                }
-                thread::sleep(Duration::from_millis(1));
-            }
-            Err(e) => {
-                if start.elapsed() >= timeout {
-                    log_verbose_client(&format!(
-                        "❌ [インタラクティブモード] サーバー状態取得失敗: {} (timeout)",
-                        e
-                    ));
-                    log_always_client(&format!("[ERROR] サーバー状態取得失敗: {} (timeout)", e));
-                    std::process::exit(1);
-                }
-                thread::sleep(Duration::from_millis(1));
-            }
+    // インタラクティブモードへ切り替わるまで待機
+    // 備忘、race conditionによって「切り替わるまで接続失敗してretryし、接続成功し、true取得」はOk。
+    // ただし「retryし、接続成功し、false取得」はErr。そこでインタラクティブモードに切り替わっていないのは異常事態である。再度切り替えを送信は問題隠蔽なのでNG。
+    match get_interactive_mode_state_with_retry() {
+        Ok(true) => {
+            log_verbose_client(&format!("✅ [インタラクティブモード] 正常に開始しました",));
+            return Ok(());
+        }
+        Ok(false) => {
+            log_always_client(
+                "[ERROR] サーバーがインタラクティブモードに切り替わりませんでした (timeout)",
+            );
+            std::process::exit(1);
+        }
+        Err(e) => {
+            log_always_client(&format!("[ERROR] サーバー状態取得失敗: {} (timeout)", e));
+            std::process::exit(1);
         }
     }
 }
@@ -78,33 +60,41 @@ pub fn start_interactive() -> Result<()> {
 /// # Example
 /// ```no_run
 /// # use ym2151_log_play_server::client::interactive;
-/// let is_interactive = interactive::get_interactive_mode_state()?;
+/// let is_interactive = interactive::get_interactive_mode_state_with_retry()?;
 /// println!("Is interactive: {}", is_interactive);
 /// # Ok::<(), anyhow::Error>(())
 /// ```
-pub fn get_interactive_mode_state() -> Result<bool> {
-    let mut writer = NamedPipe::connect_default()
-        .context("Failed to connect to server. Is the server running?")?;
+pub fn get_interactive_mode_state_with_retry() -> Result<bool> {
+    Ok(get_server_state_with_retry()? == ServerState::Interactive.as_str())
+}
 
-    let command = Command::GetInteractiveModeState;
-    let binary_data = command
-        .to_binary()
-        .map_err(|e| anyhow::anyhow!("Failed to serialize command: {}", e))?;
+pub fn get_server_state_with_retry() -> Result<String> {
+    // 前提として、race conditionにより、低確率でエラーの可能性がついてまわる。今後、MAX_WAIT_MSでチューニング予定。
+    const INITIAL_WAIT_MS: u64 = 1;
+    const MAX_WAIT_MS: u64 = 50; // 指数関数的バックオフを利用し、応答速度と堅牢性のバランスを取る
 
-    log_verbose_client("🔍 インタラクティブモード状態を取得中...");
-
-    writer.write_binary(&binary_data)?;
-
-    let response_bytes = writer.read_binary_response()?;
-    let response = Response::from_binary(&response_bytes)
-        .map_err(|e| anyhow::anyhow!("Failed to parse response: {}", e))?;
-
-    log_verbose_client(&format!("response interactive mode state: {:?}", response));
-
-    match response {
-        Response::InteractiveModeState { is_interactive } => Ok(is_interactive),
-        Response::Error { message } => Err(anyhow::anyhow!("Server error: {}", message)),
-        _ => Err(anyhow::anyhow!("Unexpected response type")),
+    let mut wait_ms = INITIAL_WAIT_MS;
+    loop {
+        match get_server_state() {
+            Ok(state) => {
+                return Ok(state);
+            }
+            Err(_) => {
+                log_verbose_client(&format!("race condition. retrying...",));
+                if wait_ms >= MAX_WAIT_MS {
+                    log_verbose_client(&format!(
+                        "timeout. MAX_WAIT_MSをより大きい数字にするか検討してください: {}",
+                        MAX_WAIT_MS
+                    ));
+                    return Err(anyhow::anyhow!(
+                        "timeout reached while getting server state after retries: {}",
+                        MAX_WAIT_MS
+                    ));
+                }
+                std::thread::sleep(std::time::Duration::from_millis(wait_ms));
+                wait_ms = std::cmp::min(wait_ms * 2, MAX_WAIT_MS);
+            }
+        }
     }
 }
 
