@@ -157,12 +157,8 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
     }
 
     // All retries failed
-    Err(last_error.unwrap_or_else(|| {
-        std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Failed to connect to server after all retries",
-        )
-    }))
+    Err(last_error
+        .unwrap_or_else(|| std::io::Error::other("Failed to connect to server after all retries")))
     .context(
         r"Failed to connect to server. Is the server running? \
          サーバーが起動していることを確認してください。\

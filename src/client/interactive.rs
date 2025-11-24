@@ -41,8 +41,8 @@ pub fn start_interactive() -> Result<()> {
     // ただし「retryし、接続成功し、false取得」はErr。そこでインタラクティブモードに切り替わっていないのは異常事態である。再度切り替えを送信は問題隠蔽なのでNG。
     match get_interactive_mode_state_with_retry() {
         Ok(true) => {
-            log_verbose_client(&format!("✅ [インタラクティブモード] 正常に開始しました",));
-            return Ok(());
+            log_verbose_client("✅ [インタラクティブモード] 正常に開始しました");
+            Ok(())
         }
         Ok(false) => {
             log_always_client(
@@ -83,7 +83,7 @@ pub fn get_server_state_with_retry() -> Result<String> {
                 return Ok(state);
             }
             Err(_) => {
-                log_verbose_client(&format!("race condition. retrying...",));
+                log_verbose_client("race condition. retrying...");
                 if wait_ms >= RETRY_MAX_WAIT_MS {
                     log_verbose_client(&format!(
                         "timeout. MAX_WAIT_MSをより大きい数字にするか検討してください: {}",

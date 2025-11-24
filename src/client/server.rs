@@ -122,7 +122,6 @@ pub fn ensure_server_ready(server_app_name: &str) -> Result<()> {
         server_app_name.to_string()
     };
 
-    // Start the server in background mode
     log_verbose_client("🚀 サーバーを起動中...");
     start_server(&server_path)
         .with_context(|| format!("Failed to start server: {}", server_app_name))?;
@@ -252,8 +251,14 @@ fn install_app_via_cargo(app_name: &str) -> Result<()> {
 /// # Arguments
 /// * `server_path` - Path to the server executable (can be name in PATH or full path)
 fn start_server(server_path: &str) -> Result<()> {
+    let arg = if server_path.contains("ym2151-log-play-server") {
+        "server"
+    } else {
+        "--server"
+    };
+
     ProcessCommand::new(server_path)
-        .arg("server")
+        .arg(arg)
         .spawn()
         .context("Failed to spawn server process")?;
 
