@@ -5,7 +5,7 @@
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント（のライブラリ）
+YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント。Rustで書かれています。
 
 ## 対象プラットフォーム
 
