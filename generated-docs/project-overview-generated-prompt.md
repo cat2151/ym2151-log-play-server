@@ -1,4 +1,4 @@
-Last updated: 2025-11-23
+Last updated: 2025-11-24
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -882,6 +882,9 @@ MIT License
                                                                                   📖 113.md
                                                                                   📖 116.md
                                                                                   📖 117.md
+                                                                                  📖 118.md
+                                                                                  📖 119.md
+                                                                                  📖 120.md
                                                                                   📖 96.md
                                                                                   📖 97.md
                                                                                   📖 98.md
@@ -1005,6 +1008,9 @@ MIT License
                                                                                 📖 113.md
                                                                                 📖 116.md
                                                                                 📖 117.md
+                                                                                📖 118.md
+                                                                                📖 119.md
+                                                                                📖 120.md
                                                                                 📖 96.md
                                                                                 📖 97.md
                                                                                 📖 98.md
@@ -1128,6 +1134,9 @@ MIT License
                                                                               📖 113.md
                                                                               📖 116.md
                                                                               📖 117.md
+                                                                              📖 118.md
+                                                                              📖 119.md
+                                                                              📖 120.md
                                                                               📖 96.md
                                                                               📖 97.md
                                                                               📖 98.md
@@ -1251,6 +1260,9 @@ MIT License
                                                                             📖 113.md
                                                                             📖 116.md
                                                                             📖 117.md
+                                                                            📖 118.md
+                                                                            📖 119.md
+                                                                            📖 120.md
                                                                             📖 96.md
                                                                             📖 97.md
                                                                             📖 98.md
@@ -1374,6 +1386,9 @@ MIT License
                                                                           📖 113.md
                                                                           📖 116.md
                                                                           📖 117.md
+                                                                          📖 118.md
+                                                                          📖 119.md
+                                                                          📖 120.md
                                                                           📖 96.md
                                                                           📖 97.md
                                                                           📖 98.md
@@ -1497,6 +1512,9 @@ MIT License
                                                                         📖 113.md
                                                                         📖 116.md
                                                                         📖 117.md
+                                                                        📖 118.md
+                                                                        📖 119.md
+                                                                        📖 120.md
                                                                         📖 96.md
                                                                         📖 97.md
                                                                         📖 98.md
@@ -1620,6 +1638,9 @@ MIT License
                                                                       📖 113.md
                                                                       📖 116.md
                                                                       📖 117.md
+                                                                      📖 118.md
+                                                                      📖 119.md
+                                                                      📖 120.md
                                                                       📖 96.md
                                                                       📖 97.md
                                                                       📖 98.md
@@ -1743,6 +1764,9 @@ MIT License
                                                                     📖 113.md
                                                                     📖 116.md
                                                                     📖 117.md
+                                                                    📖 118.md
+                                                                    📖 119.md
+                                                                    📖 120.md
                                                                     📖 96.md
                                                                     📖 97.md
                                                                     📖 98.md
@@ -1866,6 +1890,9 @@ MIT License
                                                                   📖 113.md
                                                                   📖 116.md
                                                                   📖 117.md
+                                                                  📖 118.md
+                                                                  📖 119.md
+                                                                  📖 120.md
                                                                   📖 96.md
                                                                   📖 97.md
                                                                   📖 98.md
@@ -1989,6 +2016,9 @@ MIT License
                                                                 📖 113.md
                                                                 📖 116.md
                                                                 📖 117.md
+                                                                📖 118.md
+                                                                📖 119.md
+                                                                📖 120.md
                                                                 📖 96.md
                                                                 📖 97.md
                                                                 📖 98.md
@@ -2112,6 +2142,9 @@ MIT License
                                                               📖 113.md
                                                               📖 116.md
                                                               📖 117.md
+                                                              📖 118.md
+                                                              📖 119.md
+                                                              📖 120.md
                                                               📖 96.md
                                                               📖 97.md
                                                               📖 98.md
@@ -2235,6 +2268,9 @@ MIT License
                                                             📖 113.md
                                                             📖 116.md
                                                             📖 117.md
+                                                            📖 118.md
+                                                            📖 119.md
+                                                            📖 120.md
                                                             📖 96.md
                                                             📖 97.md
                                                             📖 98.md
@@ -2358,6 +2394,9 @@ MIT License
                                                           📖 113.md
                                                           📖 116.md
                                                           📖 117.md
+                                                          📖 118.md
+                                                          📖 119.md
+                                                          📖 120.md
                                                           📖 96.md
                                                           📖 97.md
                                                           📖 98.md
@@ -2470,6 +2509,7 @@ MIT License
                                                       📄 _config.yml
                                                       📄 build.rs
                                                       📁 generated-docs/
+                                                        📖 development-status-generated-prompt.md
                                                       📄 install-ym2151-tools.rs
                                                       📁 issue-notes/
                                                         📖 100.md
@@ -2481,6 +2521,9 @@ MIT License
                                                         📖 113.md
                                                         📖 116.md
                                                         📖 117.md
+                                                        📖 118.md
+                                                        📖 119.md
+                                                        📖 120.md
                                                         📖 96.md
                                                         📖 97.md
                                                         📖 98.md
@@ -2593,6 +2636,7 @@ MIT License
                                                     📄 _config.yml
                                                     📄 build.rs
                                                     📁 generated-docs/
+                                                      📖 development-status-generated-prompt.md
                                                     📄 install-ym2151-tools.rs
                                                     📁 issue-notes/
                                                       📖 100.md
@@ -2604,6 +2648,9 @@ MIT License
                                                       📖 113.md
                                                       📖 116.md
                                                       📖 117.md
+                                                      📖 118.md
+                                                      📖 119.md
+                                                      📖 120.md
                                                       📖 96.md
                                                       📖 97.md
                                                       📖 98.md
@@ -2716,6 +2763,7 @@ MIT License
                                                   📄 _config.yml
                                                   📄 build.rs
                                                   📁 generated-docs/
+                                                    📖 development-status-generated-prompt.md
                                                   📄 install-ym2151-tools.rs
                                                   📁 issue-notes/
                                                     📖 100.md
@@ -2727,6 +2775,9 @@ MIT License
                                                     📖 113.md
                                                     📖 116.md
                                                     📖 117.md
+                                                    📖 118.md
+                                                    📖 119.md
+                                                    📖 120.md
                                                     📖 96.md
                                                     📖 97.md
                                                     📖 98.md
@@ -2839,6 +2890,7 @@ MIT License
                                                 📄 _config.yml
                                                 📄 build.rs
                                                 📁 generated-docs/
+                                                  📖 development-status-generated-prompt.md
                                                 📄 install-ym2151-tools.rs
                                                 📁 issue-notes/
                                                   📖 100.md
@@ -2850,6 +2902,9 @@ MIT License
                                                   📖 113.md
                                                   📖 116.md
                                                   📖 117.md
+                                                  📖 118.md
+                                                  📖 119.md
+                                                  📖 120.md
                                                   📖 96.md
                                                   📖 97.md
                                                   📖 98.md
@@ -2962,6 +3017,7 @@ MIT License
                                               📄 _config.yml
                                               📄 build.rs
                                               📁 generated-docs/
+                                                📖 development-status-generated-prompt.md
                                               📄 install-ym2151-tools.rs
                                               📁 issue-notes/
                                                 📖 100.md
@@ -2973,6 +3029,9 @@ MIT License
                                                 📖 113.md
                                                 📖 116.md
                                                 📖 117.md
+                                                📖 118.md
+                                                📖 119.md
+                                                📖 120.md
                                                 📖 96.md
                                                 📖 97.md
                                                 📖 98.md
@@ -3085,6 +3144,7 @@ MIT License
                                             📄 _config.yml
                                             📄 build.rs
                                             📁 generated-docs/
+                                              📖 development-status-generated-prompt.md
                                             📄 install-ym2151-tools.rs
                                             📁 issue-notes/
                                               📖 100.md
@@ -3096,6 +3156,9 @@ MIT License
                                               📖 113.md
                                               📖 116.md
                                               📖 117.md
+                                              📖 118.md
+                                              📖 119.md
+                                              📖 120.md
                                               📖 96.md
                                               📖 97.md
                                               📖 98.md
@@ -3208,6 +3271,7 @@ MIT License
                                           📄 _config.yml
                                           📄 build.rs
                                           📁 generated-docs/
+                                            📖 development-status-generated-prompt.md
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
                                             📖 100.md
@@ -3219,6 +3283,9 @@ MIT License
                                             📖 113.md
                                             📖 116.md
                                             📖 117.md
+                                            📖 118.md
+                                            📖 119.md
+                                            📖 120.md
                                             📖 96.md
                                             📖 97.md
                                             📖 98.md
@@ -3331,6 +3398,7 @@ MIT License
                                         📄 _config.yml
                                         📄 build.rs
                                         📁 generated-docs/
+                                          📖 development-status-generated-prompt.md
                                         📄 install-ym2151-tools.rs
                                         📁 issue-notes/
                                           📖 100.md
@@ -3342,6 +3410,9 @@ MIT License
                                           📖 113.md
                                           📖 116.md
                                           📖 117.md
+                                          📖 118.md
+                                          📖 119.md
+                                          📖 120.md
                                           📖 96.md
                                           📖 97.md
                                           📖 98.md
@@ -3454,6 +3525,7 @@ MIT License
                                       📄 _config.yml
                                       📄 build.rs
                                       📁 generated-docs/
+                                        📖 development-status-generated-prompt.md
                                       📄 install-ym2151-tools.rs
                                       📁 issue-notes/
                                         📖 100.md
@@ -3465,6 +3537,9 @@ MIT License
                                         📖 113.md
                                         📖 116.md
                                         📖 117.md
+                                        📖 118.md
+                                        📖 119.md
+                                        📖 120.md
                                         📖 96.md
                                         📖 97.md
                                         📖 98.md
@@ -3577,6 +3652,7 @@ MIT License
                                     📄 _config.yml
                                     📄 build.rs
                                     📁 generated-docs/
+                                      📖 development-status-generated-prompt.md
                                     📄 install-ym2151-tools.rs
                                     📁 issue-notes/
                                       📖 100.md
@@ -3588,6 +3664,9 @@ MIT License
                                       📖 113.md
                                       📖 116.md
                                       📖 117.md
+                                      📖 118.md
+                                      📖 119.md
+                                      📖 120.md
                                       📖 96.md
                                       📖 97.md
                                       📖 98.md
@@ -3700,6 +3779,7 @@ MIT License
                                   📄 _config.yml
                                   📄 build.rs
                                   📁 generated-docs/
+                                    📖 development-status-generated-prompt.md
                                   📄 install-ym2151-tools.rs
                                   📁 issue-notes/
                                     📖 100.md
@@ -3711,6 +3791,9 @@ MIT License
                                     📖 113.md
                                     📖 116.md
                                     📖 117.md
+                                    📖 118.md
+                                    📖 119.md
+                                    📖 120.md
                                     📖 96.md
                                     📖 97.md
                                     📖 98.md
@@ -3823,6 +3906,7 @@ MIT License
                                 📄 _config.yml
                                 📄 build.rs
                                 📁 generated-docs/
+                                  📖 development-status-generated-prompt.md
                                 📄 install-ym2151-tools.rs
                                 📁 issue-notes/
                                   📖 100.md
@@ -3834,6 +3918,9 @@ MIT License
                                   📖 113.md
                                   📖 116.md
                                   📖 117.md
+                                  📖 118.md
+                                  📖 119.md
+                                  📖 120.md
                                   📖 96.md
                                   📖 97.md
                                   📖 98.md
@@ -3946,6 +4033,7 @@ MIT License
                               📄 _config.yml
                               📄 build.rs
                               📁 generated-docs/
+                                📖 development-status-generated-prompt.md
                               📄 install-ym2151-tools.rs
                               📁 issue-notes/
                                 📖 100.md
@@ -3957,6 +4045,9 @@ MIT License
                                 📖 113.md
                                 📖 116.md
                                 📖 117.md
+                                📖 118.md
+                                📖 119.md
+                                📖 120.md
                                 📖 96.md
                                 📖 97.md
                                 📖 98.md
@@ -4069,6 +4160,7 @@ MIT License
                             📄 _config.yml
                             📄 build.rs
                             📁 generated-docs/
+                              📖 development-status-generated-prompt.md
                             📄 install-ym2151-tools.rs
                             📁 issue-notes/
                               📖 100.md
@@ -4080,6 +4172,9 @@ MIT License
                               📖 113.md
                               📖 116.md
                               📖 117.md
+                              📖 118.md
+                              📖 119.md
+                              📖 120.md
                               📖 96.md
                               📖 97.md
                               📖 98.md
@@ -4192,6 +4287,7 @@ MIT License
                           📄 _config.yml
                           📄 build.rs
                           📁 generated-docs/
+                            📖 development-status-generated-prompt.md
                           📄 install-ym2151-tools.rs
                           📁 issue-notes/
                             📖 100.md
@@ -4203,6 +4299,9 @@ MIT License
                             📖 113.md
                             📖 116.md
                             📖 117.md
+                            📖 118.md
+                            📖 119.md
+                            📖 120.md
                             📖 96.md
                             📖 97.md
                             📖 98.md
@@ -4315,6 +4414,7 @@ MIT License
                         📄 _config.yml
                         📄 build.rs
                         📁 generated-docs/
+                          📖 development-status-generated-prompt.md
                         📄 install-ym2151-tools.rs
                         📁 issue-notes/
                           📖 100.md
@@ -4326,6 +4426,9 @@ MIT License
                           📖 113.md
                           📖 116.md
                           📖 117.md
+                          📖 118.md
+                          📖 119.md
+                          📖 120.md
                           📖 96.md
                           📖 97.md
                           📖 98.md
@@ -4438,6 +4541,7 @@ MIT License
                       📄 _config.yml
                       📄 build.rs
                       📁 generated-docs/
+                        📖 development-status-generated-prompt.md
                       📄 install-ym2151-tools.rs
                       📁 issue-notes/
                         📖 100.md
@@ -4449,6 +4553,9 @@ MIT License
                         📖 113.md
                         📖 116.md
                         📖 117.md
+                        📖 118.md
+                        📖 119.md
+                        📖 120.md
                         📖 96.md
                         📖 97.md
                         📖 98.md
@@ -4561,6 +4668,7 @@ MIT License
                     📄 _config.yml
                     📄 build.rs
                     📁 generated-docs/
+                      📖 development-status-generated-prompt.md
                     📄 install-ym2151-tools.rs
                     📁 issue-notes/
                       📖 100.md
@@ -4572,6 +4680,9 @@ MIT License
                       📖 113.md
                       📖 116.md
                       📖 117.md
+                      📖 118.md
+                      📖 119.md
+                      📖 120.md
                       📖 96.md
                       📖 97.md
                       📖 98.md
@@ -4684,6 +4795,7 @@ MIT License
                   📄 _config.yml
                   📄 build.rs
                   📁 generated-docs/
+                    📖 development-status-generated-prompt.md
                   📄 install-ym2151-tools.rs
                   📁 issue-notes/
                     📖 100.md
@@ -4695,6 +4807,9 @@ MIT License
                     📖 113.md
                     📖 116.md
                     📖 117.md
+                    📖 118.md
+                    📖 119.md
+                    📖 120.md
                     📖 96.md
                     📖 97.md
                     📖 98.md
@@ -4807,6 +4922,7 @@ MIT License
                 📄 _config.yml
                 📄 build.rs
                 📁 generated-docs/
+                  📖 development-status-generated-prompt.md
                 📄 install-ym2151-tools.rs
                 📁 issue-notes/
                   📖 100.md
@@ -4818,6 +4934,9 @@ MIT License
                   📖 113.md
                   📖 116.md
                   📖 117.md
+                  📖 118.md
+                  📖 119.md
+                  📖 120.md
                   📖 96.md
                   📖 97.md
                   📖 98.md
@@ -4930,6 +5049,7 @@ MIT License
               📄 _config.yml
               📄 build.rs
               📁 generated-docs/
+                📖 development-status-generated-prompt.md
               📄 install-ym2151-tools.rs
               📁 issue-notes/
                 📖 100.md
@@ -4941,6 +5061,9 @@ MIT License
                 📖 113.md
                 📖 116.md
                 📖 117.md
+                📖 118.md
+                📖 119.md
+                📖 120.md
                 📖 96.md
                 📖 97.md
                 📖 98.md
@@ -5053,6 +5176,7 @@ MIT License
             📄 _config.yml
             📄 build.rs
             📁 generated-docs/
+              📖 development-status-generated-prompt.md
             📄 install-ym2151-tools.rs
             📁 issue-notes/
               📖 100.md
@@ -5064,6 +5188,9 @@ MIT License
               📖 113.md
               📖 116.md
               📖 117.md
+              📖 118.md
+              📖 119.md
+              📖 120.md
               📖 96.md
               📖 97.md
               📖 98.md
@@ -5176,6 +5303,7 @@ MIT License
           📄 _config.yml
           📄 build.rs
           📁 generated-docs/
+            📖 development-status-generated-prompt.md
           📄 install-ym2151-tools.rs
           📁 issue-notes/
             📖 100.md
@@ -5187,6 +5315,9 @@ MIT License
             📖 113.md
             📖 116.md
             📖 117.md
+            📖 118.md
+            📖 119.md
+            📖 120.md
             📖 96.md
             📖 97.md
             📖 98.md
@@ -5299,6 +5430,7 @@ MIT License
         📄 _config.yml
         📄 build.rs
         📁 generated-docs/
+          📖 development-status-generated-prompt.md
         📄 install-ym2151-tools.rs
         📁 issue-notes/
           📖 100.md
@@ -5310,6 +5442,9 @@ MIT License
           📖 113.md
           📖 116.md
           📖 117.md
+          📖 118.md
+          📖 119.md
+          📖 120.md
           📖 96.md
           📖 97.md
           📖 98.md
@@ -5422,6 +5557,7 @@ MIT License
       📄 _config.yml
       📄 build.rs
       📁 generated-docs/
+        📖 development-status-generated-prompt.md
       📄 install-ym2151-tools.rs
       📁 issue-notes/
         📖 100.md
@@ -5433,6 +5569,9 @@ MIT License
         📖 113.md
         📖 116.md
         📖 117.md
+        📖 118.md
+        📖 119.md
+        📖 120.md
         📖 96.md
         📖 97.md
         📖 98.md
@@ -5545,6 +5684,7 @@ MIT License
     📄 _config.yml
     📄 build.rs
     📁 generated-docs/
+      📖 development-status-generated-prompt.md
     📄 install-ym2151-tools.rs
     📁 issue-notes/
       📖 100.md
@@ -5556,6 +5696,9 @@ MIT License
       📖 113.md
       📖 116.md
       📖 117.md
+      📖 118.md
+      📖 119.md
+      📖 120.md
       📖 96.md
       📖 97.md
       📖 98.md
@@ -5668,6 +5811,7 @@ MIT License
   📄 _config.yml
   📄 build.rs
   📁 generated-docs/
+    📖 development-status-generated-prompt.md
   📄 install-ym2151-tools.rs
   📁 issue-notes/
     📖 100.md
@@ -5679,6 +5823,9 @@ MIT License
     📖 113.md
     📖 116.md
     📖 117.md
+    📖 118.md
+    📖 119.md
+    📖 120.md
     📖 96.md
     📖 97.md
     📖 98.md
@@ -5791,6 +5938,7 @@ MIT License
 📄 _config.yml
 📄 build.rs
 📁 generated-docs/
+  📖 development-status-generated-prompt.md
 📄 install-ym2151-tools.rs
 📁 issue-notes/
   📖 100.md
@@ -5802,6 +5950,9 @@ MIT License
   📖 113.md
   📖 116.md
   📖 117.md
+  📖 118.md
+  📖 119.md
+  📖 120.md
   📖 96.md
   📖 97.md
   📖 98.md
@@ -5988,4 +6139,4 @@ output_ym2151.json
 
 
 ---
-Generated at: 2025-11-23 07:01:45 JST
+Generated at: 2025-11-24 07:01:47 JST
