@@ -1,51 +1,56 @@
-Last updated: 2025-11-24
+Last updated: 2025-11-25
 
 # Development Status
 
 ## 現在のIssues
-- サーバーコマンドの整理とインタラクティブモードの改善（[Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md)）が進められています。
-- Agentが生成するWindows用コードのTDD不足によるビルド失敗問題（[Issue #118](../issue-notes/118.md)）に対する対策案が検討されています。
-- クライアントのインタラクティブモードにおけるフレーズ開始タイミングのずれ（[Issue #117](../issue-notes/117.md)）の解消に向け、`ym2151 tone editor`での動作確認と問題点の可視化が求められています。
+- コマンドライン引数`--demo-interactive`がヘルプ表示されず、ユーザーを混乱させる問題があります ([Issue #121](../issue-notes/121.md))。
+- サーバーコマンドの`clear schedule`を廃止し、`play json interactive`に統合する ([Issue #120](../issue-notes/120.md))、および不要な`get interactive mode`コマンドを削除する ([Issue #119](../issue-notes/119.md)) ことで、サーバーコマンドのシンプル化が提案されています。
+- Agentが提案したWindows向けコードがTDDされておらず、ビルドが通らない問題が発生しており、開発体験の悪化につながっています ([Issue #118](../issue-notes/118.md))。
 
 ## 次の一手候補
-1.  [Issue #118](../issue-notes/118.md) AgentによるWindowsコードTDD不足対策の検討と実装
-    -   最初の小さな一歩: `issue-notes/118.md` に記載されている「対策案」と「方法の案」に基づき、GitHub ActionsでWindows版Rustコードのコンパイルチェックを行うためのワークフローのステップ（`cargo check --target=x86_64-pc-windows-gnu`）を`build_windows.yml`に追加する変更案を作成する。
+1.  コマンドライン引数ヘルプの修正により`--demo-interactive`オプションを表示 [Issue #121](../issue-notes/121.md)
+    -   最初の小さな一歩: `src/main.rs`または`src/client/mod.rs`内で、`--demo-interactive`オプションの`clap`クレート設定を確認し、ヘルプメッセージに表示されるように修正します。
     -   Agent実行プロンプ:
         ```
-        対象ファイル: .github/workflows/build_windows.yml
+        対象ファイル: `src/main.rs`, `src/client/mod.rs`
 
-        実行内容: `issue-notes/118.md` を参照し、Linux Runner上でWindowsターゲットのRustコードのコンパイルチェック (`cargo check --target=x86_64-pc-windows-gnu`) を行うためのGitHub Actionsワークフローのステップを検討し、`build_windows.yml` に追加する変更案をmarkdown形式で出力してください。具体的には、必要なRust toolchainのインストールやtargetの追加を含めてください。このステップは、ビルドエラーを検出し、そのログを出力することを目指します。
+        実行内容: `src/main.rs`および`src/client/mod.rs`において、`--demo-interactive`オプションがコマンドラインヘルプメッセージ（`--help`）に適切に表示されるように修正してください。clapクレートの`long_help`や`about`属性、または`arg`定義を確認し、このオプションが適切にドキュメント化されているか検証してください。
 
-        確認事項: 既存の`.github/workflows/build_windows.yml`の内容を確認し、重複する設定がないか、または既存のビルドプロセスに影響を与えないことを確認してください。Linux RunnerでWindowsターゲットのコンパイルチェックが可能なRust toolchainおよびtargetのインストール方法を調査してください。
+        確認事項: 修正前に、他のコマンドラインオプションの表示との整合性、および`--demo-interactive`オプションの実際の動作への影響がないことを確認してください。
 
-        期待する出力: `build_windows.yml` に追加する具体的なYAML形式のステップの提案と、そのステップが想定通りに動作することを確認するための手順をmarkdown形式で記述してください。
+        期待する出力: 修正後の`src/main.rs`と`src/client/mod.rs`の変更内容（差分形式）と、修正後の`--help`コマンドの出力例（markdown形式）を期待します。
         ```
 
-2.  [Issue #119](../issue-notes/119.md) サーバーコマンドの`get interactive mode`削除によるシンプル化
-    -   最初の小さな一歩: `get interactive mode`コマンドの削除から着手する。`src/ipc/protocol.rs`、`src/server/command_handler.rs`、`src/client/core.rs`、`src/client/interactive.rs`、`src/client/mod.rs`の中から、関連する定義、処理ロジック、呼び出し箇所を特定し、削除の影響範囲を調査する。
-    -   Agent実行プロンプト:
+2.  サーバーコマンドの整理：`clear schedule`統合と`get interactive mode`削除 [Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md)
+    -   最初の小さな一歩: まず`get interactive mode`コマンドがコードベースのどこで使用されており、削除しても影響がないかコードを分析し、その結果を報告します。
+    -   Agent実行プロンプ:
         ```
-        対象ファイル: src/ipc/protocol.rs, src/server/command_handler.rs, src/client/core.rs, src/client/interactive.rs, src/client/mod.rs
+        対象ファイル: `src/server/command_handler.rs`, `src/ipc/protocol.rs`, `src/client/mod.rs`, および関連するテストファイル
 
-        実行内容: [Issue #119](../issue-notes/119.md) に基づき、サーバーコマンド `get interactive mode` を削除するための変更を上記ファイルに対して提案してください。具体的には、`get interactive mode` に関連する定義、処理ロジック、呼び出し箇所を特定し、それらを削除または修正するコード変更案を記述してください。この削除が他の機能に予期せぬ影響を与えないか、簡単な分析結果も合わせて報告してください。
+        実行内容: サーバーコマンド`get interactive mode`の定義と、それに関連するすべての参照を特定し、削除するための影響範囲を分析してください。このコマンドの削除によって既存のクライアントやテストが影響を受けないかを確認してください。また、`clear schedule`コマンドを`play json interactive`コマンドに統合する設計案（具体的には、`play json interactive`実行時に、指定されたJSONデータの先頭サンプル時刻より未来のスケジュールのみを削除するロジックをどこに追加するか）をmarkdown形式で提案してください。
 
-        確認事項: `get interactive mode` が他のどの機能で利用されているかを正確に特定し、その機能が今後も正しく動作するか、あるいは同様に削除されるべきかを検討してください。コマンド削除に伴うプロトコルバージョンの変更や互換性の問題がないことを確認してください。
+        確認事項: `get interactive mode`の削除が互換性を損なわないか、`play json interactive`への`clear schedule`統合が既存の動作に予期せぬ影響を与えないかを確認してください。特に、キーリピート問題への対策として、スケジュールクリアの範囲が適切であるか検討してください。
 
-        期待する出力: `get interactive mode` コマンドの削除に伴う各ファイルの具体的なコード変更案（差分形式または修正後のコードスニペット）と、その変更がもたらす影響（他の機能への影響、テストの必要性など）に関する簡潔なレポートをmarkdown形式で記述してください。
+        期待する出力: 削除対象ファイルと修正が必要なファイルのリスト、および`play json interactive`コマンドへの`clear schedule`機能統合に関する設計案（実装箇所、変更ロジックの詳細など）をmarkdown形式で出力してください。
         ```
 
-3.  [Issue #117](../issue-notes/117.md) クライアントのインタラクティブモードのタイミングのブレ解消と `ym2151 tone editor` での動作確認
-    -   最初の小さな一歩: `issue-notes/117.md` に記載されている通り、`ym2151 tone editor` において通常モードとインタラクティブモードで音が鳴ることを確認し、もし問題があれば具体的な事象を可視化する。そのため、まず既存の関連コードとテストを分析し、現状の挙動を理解する。
-    -   Agent実行プロンプト:
+3.  WindowsビルドのTDD導入のための調査と計画 [Issue #118](../issue-notes/118.md)
+    -   最初の小さな一歩: GitHub ActionsのLinux Runner上でWindowsターゲットのRustコードをコンパイルチェックするための最適な方法（`cargo check --target`、`cross`、`cargo-xwin`など）をweb調査し、それぞれのメリット・デメリットをまとめます。
+    -   Agent実行プロンプ:
         ```
-        対象ファイル: src/client/interactive.rs, src/demo_client_interactive.rs, tests/interactive/play_json_test.rs, tests/interactive/mode_test.rs, issue-notes/117.md
+        対象ファイル: なし（調査）
 
-        実行内容: [Issue #117](../issue-notes/117.md) の現状分析に基づき、`ym2151 tone editor` をシミュレートするような環境で、クライアントのインタラクティブモードが想定通りに動作し、音が鳴ることを確認するためのテストシナリオを考案してください。既存のテストコード (`tests/interactive/play_json_test.rs`, `tests/interactive/mode_test.rs`) を分析し、もしテストが不足している場合は、`ym2151 tone editor` での基本的な動作確認（通常モードとインタラクティブモードでの音出し）をカバーするような新しいテストケースの追加を検討してください。また、現在の`client demo interactive`の動作がなぜブレるのか、`src/client/interactive.rs`と`src/demo_client_interactive.rs`のコードを詳細に分析し、原因の仮説を立ててください。
+        実行内容: Web上の情報源（Rust公式ドキュメント、GitHub Actionsのドキュメント、関連ブログ記事など）を参考に、GitHub ActionsのLinux Runner環境でWindowsターゲット（`x86_64-pc-windows-gnu`または`x86_64-pc-windows-msvc`）向けのRustプロジェクトをコンパイルチェック（`cargo check`）する実践的な方法を調査してください。具体的には、`cargo check --target`、`cross`クレート、`cargo-xwin`の3つのアプローチについて、以下の観点で比較分析し、markdown形式でレポートしてください：
+        1. セットアップの複雑さ
+        2. 必要な依存関係（ツールチェイン、リンカーなど）
+        3. GitHub Actionsでの実装例（もしあれば）
+        4. AgentがTDDで修正を行う際の自動化の可能性
+        5. このプロジェクトに最適なアプローチの推奨
 
-        確認事項: `ym2151 tone editor` の具体的な機能要件（特に音出しに関するもの）を明確に定義し、テストシナリオがそれをカバーしているか確認してください。既存のテストスイートとの整合性を保ち、新しいテストが既存の機能を壊さないことを確認してください。
+        確認事項: 既存の`.github/workflows`ディレクトリ内のファイルや`Cargo.toml`の設定との整合性を考慮し、実行環境としてLinux Runnerを前提としてください。また、Agentが自律的にTDDで修正を行える可能性についても具体的に言及してください。
 
-        期待する出力: `ym2151 tone editor` での動作確認のためのテストシナリオ（手順と期待結果）をmarkdown形式で記述してください。必要であれば、既存のテストファイルに追加するテストコードの提案（Rustコードスニペット）を含めてください。クライアントのインタラクティブモードでのタイミングのブレに関する原因の分析結果と、その仮説をmarkdown形式で記述してください。
+        期待する出力: 上記の観点での比較分析と推奨アプローチをまとめたmarkdown形式のレポートを期待します。
         ```
 
 ---
-Generated at: 2025-11-24 07:02:09 JST
+Generated at: 2025-11-25 07:01:58 JST

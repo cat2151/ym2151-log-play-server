@@ -1,4 +1,4 @@
-Last updated: 2025-11-24
+Last updated: 2025-11-25
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -199,6 +199,8 @@ Last updated: 2025-11-24
 - .github/workflows/call-issue-note.yml
 - .github/workflows/call-translate-readme.yml
 - .gitignore
+- .vscode/extensions.json
+- .vscode/settings.json
 - Cargo.lock
 - Cargo.toml
 - LICENSE
@@ -220,6 +222,8 @@ Last updated: 2025-11-24
 - issue-notes/118.md
 - issue-notes/119.md
 - issue-notes/120.md
+- issue-notes/121.md
+- issue-notes/122.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -320,6 +324,21 @@ Last updated: 2025-11-24
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
+## [Issue #121](../issue-notes/121.md): コマンドライン引数の表示パターンが2パターンあり（help時、不明なオプション時）、どちらも--demo-interactiveが表示されず、userが混乱する
+[issue-notes/121.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/121.md)
+
+...
+ラベル: 
+--- issue-notes/121.md の内容 ---
+
+```markdown
+# issue コマンドライン引数の表示パターンが2パターンあり（help時、不明なオプション時）、どちらも--demo-interactiveが表示されず、userが混乱する #121
+[issues #121](https://github.com/cat2151/ym2151-log-play-server/issues/121)
+
+
+
+```
+
 ## [Issue #120](../issue-notes/120.md): server commandのうち、clear scheduleを廃止し、play json interactiveはデフォルトでwith clear scheduleにする（そのjsonの先頭sample時刻より未来のscheduleだけ削除する。キーリピート問題対策用）
 [issue-notes/120.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/120.md)
 
@@ -636,6 +655,65 @@ Last updated: 2025-11-24
 
 ```
 
+### .github/actions-tmp/issue-notes/21.md
+```md
+# issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
+[issues #21](https://github.com/cat2151/github-actions/issues/21)
+
+# 何が困るの？
+- project-overview.mdがpromptに添付されていたほうが、Geminiの生成品質が改善できる可能性がある。
+    - メリットは、ファイル一覧、関数一覧、をGeminiにわたせること
+
+# 検討事項
+- 課題、その一覧に付記されている「ファイルや関数の要約」は、Geminiが「ファイル名や関数名を元に生成しただけ」で、「ファイル内容や関数内容を参照せずに生成した」可能性が高い
+    - 対策、project-overview.mdに依存しない。
+        - 方法、新規関数をagentに実装させる
+            - 新規関数で、ファイル一覧と関数一覧を生成する
+        - 根拠、そのほうが、シンプルに目的を達成できる可能性が高そう。
+        - 根拠、project-overview.mdだと、不具合として.github 配下のymlがlistに含まれておらず、ymlに関するissue、に関する生成、をするとき不具合の可能性がありそう。そういった、別機能の不具合に影響されがち。
+- 課題、早期に実施したほうが毎日好影響が出る可能性がある
+    - 対策、上記検討事項の対処は後回しにして、先に実装してみる
+    - agentに投げる
+- 課題、ProjectSummaryCoordinator をみたところ、並列処理されている
+    - なので、project-overview.mdを参照したいときに、まだ生成されていない、という可能性が高い
+    - 対策、前述の、新規関数で、ファイル一覧と関数一覧を生成させる
+
+# agentに投げるための整理
+- 編集対象ファイル
+    - prompt
+        - .github_automation/project_summary/prompts/development-status-prompt.md
+        - 編集内容
+            - projectのファイル一覧を埋め込む用の、プレースホルダーを追加する
+    - source
+        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+        - 編集内容
+            - projectのファイル一覧を生成する関数、を実装し、
+            - それを前述のプレースホルダーに埋め込む
+
+# agentに投げて実装させた
+
+# test結果
+- 以下が不要
+    - .git/
+    - node_modules/
+
+# どうする？
+- agentに上記を変更させた
+- testする
+
+# 結果
+- test greenとなった
+
+# まとめ
+- issueのtitleからは仕様変更した。
+    - projectのfile一覧をpromptに含める、とした。
+    - そのほうがpromptとして、よい生成結果が期待できる、と判断した。
+- test greenとなった
+
+# closeとする
+
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 # issue issue note生成できるかのtest用 #7
@@ -852,28 +930,43 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ```
 
+### issue-notes/121.md
+```md
+# issue コマンドライン引数の表示パターンが2パターンあり（help時、不明なオプション時）、どちらも--demo-interactiveが表示されず、userが混乱する #121
+[issues #121](https://github.com/cat2151/ym2151-log-play-server/issues/121)
+
+
+
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+481da70 Update issue notes for clarity on server subcommand
+15ad475 Add issue note for #122 [auto]
+2f82c7e Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
+3eca69c ensure_server_ready時に、ym2151-log-play-server以外のserver機能を持つアプリ、例えばcat-play-mmlを引数に与えたときは、server起動時の引数をサブコマンドでなくoptionとするよう修正
+08e76d1 Add issue note for #121 [auto]
+2235bfc Update project summaries (overview & development status) [auto]
 7d8591f shutdownできるよう修正
 75ec2a7 指数バックオフの計算ミス修正
 920a648 Outline goals for GitHub Copilot TDD on Linux Runner
 44635ab Add issue note for #120 [auto]
-3669b13 Add issue note for #119 [auto]
-8695dee Document issues with Windows code quality and TDD
-651c4a6 Update issue notes with TDD strategies and methods
-8ddb41e Add issue note for #118 [auto]
-b44b081 fix #96 Enable sound in interactive mode for ym2151 tone editor
-896600d server verbose log文言修正
 
 ### 変更されたファイル:
+.vscode/extensions.json
+.vscode/settings.json
 Cargo.lock
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 issue-notes/118.md
-issue-notes/119.md
-issue-notes/120.md
+issue-notes/121.md
+issue-notes/122.md
 src/client/core.rs
 src/client/interactive.rs
 src/client/server.rs
 
 
 ---
-Generated at: 2025-11-24 07:01:47 JST
+Generated at: 2025-11-25 07:01:42 JST

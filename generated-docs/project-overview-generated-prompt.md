@@ -1,4 +1,4 @@
-Last updated: 2025-11-24
+Last updated: 2025-11-25
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -463,6 +463,9 @@ MIT License
   📄 config.toml
 📄 .editorconfig
 📄 .gitignore
+📁 .vscode/
+  📊 extensions.json
+  📊 settings.json
 📄 Cargo.lock
 📄 Cargo.toml
 📄 LICENSE
@@ -473,6 +476,9 @@ MIT License
     📄 config.toml
   📄 .editorconfig
   📄 .gitignore
+  📁 .vscode/
+    📊 extensions.json
+    📊 settings.json
   📄 Cargo.lock
   📄 Cargo.toml
   📄 LICENSE
@@ -483,6 +489,9 @@ MIT License
       📄 config.toml
     📄 .editorconfig
     📄 .gitignore
+    📁 .vscode/
+      📊 extensions.json
+      📊 settings.json
     📄 Cargo.lock
     📄 Cargo.toml
     📄 LICENSE
@@ -493,6 +502,9 @@ MIT License
         📄 config.toml
       📄 .editorconfig
       📄 .gitignore
+      📁 .vscode/
+        📊 extensions.json
+        📊 settings.json
       📄 Cargo.lock
       📄 Cargo.toml
       📄 LICENSE
@@ -503,6 +515,9 @@ MIT License
           📄 config.toml
         📄 .editorconfig
         📄 .gitignore
+        📁 .vscode/
+          📊 extensions.json
+          📊 settings.json
         📄 Cargo.lock
         📄 Cargo.toml
         📄 LICENSE
@@ -513,6 +528,9 @@ MIT License
             📄 config.toml
           📄 .editorconfig
           📄 .gitignore
+          📁 .vscode/
+            📊 extensions.json
+            📊 settings.json
           📄 Cargo.lock
           📄 Cargo.toml
           📄 LICENSE
@@ -523,6 +541,9 @@ MIT License
               📄 config.toml
             📄 .editorconfig
             📄 .gitignore
+            📁 .vscode/
+              📊 extensions.json
+              📊 settings.json
             📄 Cargo.lock
             📄 Cargo.toml
             📄 LICENSE
@@ -533,6 +554,9 @@ MIT License
                 📄 config.toml
               📄 .editorconfig
               📄 .gitignore
+              📁 .vscode/
+                📊 extensions.json
+                📊 settings.json
               📄 Cargo.lock
               📄 Cargo.toml
               📄 LICENSE
@@ -543,6 +567,9 @@ MIT License
                   📄 config.toml
                 📄 .editorconfig
                 📄 .gitignore
+                📁 .vscode/
+                  📊 extensions.json
+                  📊 settings.json
                 📄 Cargo.lock
                 📄 Cargo.toml
                 📄 LICENSE
@@ -553,6 +580,9 @@ MIT License
                     📄 config.toml
                   📄 .editorconfig
                   📄 .gitignore
+                  📁 .vscode/
+                    📊 extensions.json
+                    📊 settings.json
                   📄 Cargo.lock
                   📄 Cargo.toml
                   📄 LICENSE
@@ -563,6 +593,9 @@ MIT License
                       📄 config.toml
                     📄 .editorconfig
                     📄 .gitignore
+                    📁 .vscode/
+                      📊 extensions.json
+                      📊 settings.json
                     📄 Cargo.lock
                     📄 Cargo.toml
                     📄 LICENSE
@@ -573,6 +606,9 @@ MIT License
                         📄 config.toml
                       📄 .editorconfig
                       📄 .gitignore
+                      📁 .vscode/
+                        📊 extensions.json
+                        📊 settings.json
                       📄 Cargo.lock
                       📄 Cargo.toml
                       📄 LICENSE
@@ -583,6 +619,9 @@ MIT License
                           📄 config.toml
                         📄 .editorconfig
                         📄 .gitignore
+                        📁 .vscode/
+                          📊 extensions.json
+                          📊 settings.json
                         📄 Cargo.lock
                         📄 Cargo.toml
                         📄 LICENSE
@@ -593,6 +632,9 @@ MIT License
                             📄 config.toml
                           📄 .editorconfig
                           📄 .gitignore
+                          📁 .vscode/
+                            📊 extensions.json
+                            📊 settings.json
                           📄 Cargo.lock
                           📄 Cargo.toml
                           📄 LICENSE
@@ -603,6 +645,9 @@ MIT License
                               📄 config.toml
                             📄 .editorconfig
                             📄 .gitignore
+                            📁 .vscode/
+                              📊 extensions.json
+                              📊 settings.json
                             📄 Cargo.lock
                             📄 Cargo.toml
                             📄 LICENSE
@@ -613,6 +658,9 @@ MIT License
                                 📄 config.toml
                               📄 .editorconfig
                               📄 .gitignore
+                              📁 .vscode/
+                                📊 extensions.json
+                                📊 settings.json
                               📄 Cargo.lock
                               📄 Cargo.toml
                               📄 LICENSE
@@ -623,6 +671,9 @@ MIT License
                                   📄 config.toml
                                 📄 .editorconfig
                                 📄 .gitignore
+                                📁 .vscode/
+                                  📊 extensions.json
+                                  📊 settings.json
                                 📄 Cargo.lock
                                 📄 Cargo.toml
                                 📄 LICENSE
@@ -633,6 +684,9 @@ MIT License
                                     📄 config.toml
                                   📄 .editorconfig
                                   📄 .gitignore
+                                  📁 .vscode/
+                                    📊 extensions.json
+                                    📊 settings.json
                                   📄 Cargo.lock
                                   📄 Cargo.toml
                                   📄 LICENSE
@@ -643,6 +697,9 @@ MIT License
                                       📄 config.toml
                                     📄 .editorconfig
                                     📄 .gitignore
+                                    📁 .vscode/
+                                      📊 extensions.json
+                                      📊 settings.json
                                     📄 Cargo.lock
                                     📄 Cargo.toml
                                     📄 LICENSE
@@ -653,6 +710,9 @@ MIT License
                                         📄 config.toml
                                       📄 .editorconfig
                                       📄 .gitignore
+                                      📁 .vscode/
+                                        📊 extensions.json
+                                        📊 settings.json
                                       📄 Cargo.lock
                                       📄 Cargo.toml
                                       📄 LICENSE
@@ -663,6 +723,9 @@ MIT License
                                           📄 config.toml
                                         📄 .editorconfig
                                         📄 .gitignore
+                                        📁 .vscode/
+                                          📊 extensions.json
+                                          📊 settings.json
                                         📄 Cargo.lock
                                         📄 Cargo.toml
                                         📄 LICENSE
@@ -673,6 +736,9 @@ MIT License
                                             📄 config.toml
                                           📄 .editorconfig
                                           📄 .gitignore
+                                          📁 .vscode/
+                                            📊 extensions.json
+                                            📊 settings.json
                                           📄 Cargo.lock
                                           📄 Cargo.toml
                                           📄 LICENSE
@@ -683,6 +749,9 @@ MIT License
                                               📄 config.toml
                                             📄 .editorconfig
                                             📄 .gitignore
+                                            📁 .vscode/
+                                              📊 extensions.json
+                                              📊 settings.json
                                             📄 Cargo.lock
                                             📄 Cargo.toml
                                             📄 LICENSE
@@ -693,6 +762,9 @@ MIT License
                                                 📄 config.toml
                                               📄 .editorconfig
                                               📄 .gitignore
+                                              📁 .vscode/
+                                                📊 extensions.json
+                                                📊 settings.json
                                               📄 Cargo.lock
                                               📄 Cargo.toml
                                               📄 LICENSE
@@ -703,6 +775,9 @@ MIT License
                                                   📄 config.toml
                                                 📄 .editorconfig
                                                 📄 .gitignore
+                                                📁 .vscode/
+                                                  📊 extensions.json
+                                                  📊 settings.json
                                                 📄 Cargo.lock
                                                 📄 Cargo.toml
                                                 📄 LICENSE
@@ -713,6 +788,9 @@ MIT License
                                                     📄 config.toml
                                                   📄 .editorconfig
                                                   📄 .gitignore
+                                                  📁 .vscode/
+                                                    📊 extensions.json
+                                                    📊 settings.json
                                                   📄 Cargo.lock
                                                   📄 Cargo.toml
                                                   📄 LICENSE
@@ -723,6 +801,9 @@ MIT License
                                                       📄 config.toml
                                                     📄 .editorconfig
                                                     📄 .gitignore
+                                                    📁 .vscode/
+                                                      📊 extensions.json
+                                                      📊 settings.json
                                                     📄 Cargo.lock
                                                     📄 Cargo.toml
                                                     📄 LICENSE
@@ -733,6 +814,9 @@ MIT License
                                                         📄 config.toml
                                                       📄 .editorconfig
                                                       📄 .gitignore
+                                                      📁 .vscode/
+                                                        📊 extensions.json
+                                                        📊 settings.json
                                                       📄 Cargo.lock
                                                       📄 Cargo.toml
                                                       📄 LICENSE
@@ -743,6 +827,9 @@ MIT License
                                                           📄 config.toml
                                                         📄 .editorconfig
                                                         📄 .gitignore
+                                                        📁 .vscode/
+                                                          📊 extensions.json
+                                                          📊 settings.json
                                                         📄 Cargo.lock
                                                         📄 Cargo.toml
                                                         📄 LICENSE
@@ -753,6 +840,9 @@ MIT License
                                                             📄 config.toml
                                                           📄 .editorconfig
                                                           📄 .gitignore
+                                                          📁 .vscode/
+                                                            📊 extensions.json
+                                                            📊 settings.json
                                                           📄 Cargo.lock
                                                           📄 Cargo.toml
                                                           📄 LICENSE
@@ -763,6 +853,9 @@ MIT License
                                                               📄 config.toml
                                                             📄 .editorconfig
                                                             📄 .gitignore
+                                                            📁 .vscode/
+                                                              📊 extensions.json
+                                                              📊 settings.json
                                                             📄 Cargo.lock
                                                             📄 Cargo.toml
                                                             📄 LICENSE
@@ -773,6 +866,9 @@ MIT License
                                                                 📄 config.toml
                                                               📄 .editorconfig
                                                               📄 .gitignore
+                                                              📁 .vscode/
+                                                                📊 extensions.json
+                                                                📊 settings.json
                                                               📄 Cargo.lock
                                                               📄 Cargo.toml
                                                               📄 LICENSE
@@ -783,6 +879,9 @@ MIT License
                                                                   📄 config.toml
                                                                 📄 .editorconfig
                                                                 📄 .gitignore
+                                                                📁 .vscode/
+                                                                  📊 extensions.json
+                                                                  📊 settings.json
                                                                 📄 Cargo.lock
                                                                 📄 Cargo.toml
                                                                 📄 LICENSE
@@ -793,6 +892,9 @@ MIT License
                                                                     📄 config.toml
                                                                   📄 .editorconfig
                                                                   📄 .gitignore
+                                                                  📁 .vscode/
+                                                                    📊 extensions.json
+                                                                    📊 settings.json
                                                                   📄 Cargo.lock
                                                                   📄 Cargo.toml
                                                                   📄 LICENSE
@@ -803,6 +905,9 @@ MIT License
                                                                       📄 config.toml
                                                                     📄 .editorconfig
                                                                     📄 .gitignore
+                                                                    📁 .vscode/
+                                                                      📊 extensions.json
+                                                                      📊 settings.json
                                                                     📄 Cargo.lock
                                                                     📄 Cargo.toml
                                                                     📄 LICENSE
@@ -813,6 +918,9 @@ MIT License
                                                                         📄 config.toml
                                                                       📄 .editorconfig
                                                                       📄 .gitignore
+                                                                      📁 .vscode/
+                                                                        📊 extensions.json
+                                                                        📊 settings.json
                                                                       📄 Cargo.lock
                                                                       📄 Cargo.toml
                                                                       📄 LICENSE
@@ -823,6 +931,9 @@ MIT License
                                                                           📄 config.toml
                                                                         📄 .editorconfig
                                                                         📄 .gitignore
+                                                                        📁 .vscode/
+                                                                          📊 extensions.json
+                                                                          📊 settings.json
                                                                         📄 Cargo.lock
                                                                         📄 Cargo.toml
                                                                         📄 LICENSE
@@ -833,6 +944,9 @@ MIT License
                                                                             📄 config.toml
                                                                           📄 .editorconfig
                                                                           📄 .gitignore
+                                                                          📁 .vscode/
+                                                                            📊 extensions.json
+                                                                            📊 settings.json
                                                                           📄 Cargo.lock
                                                                           📄 Cargo.toml
                                                                           📄 LICENSE
@@ -843,6 +957,9 @@ MIT License
                                                                               📄 config.toml
                                                                             📄 .editorconfig
                                                                             📄 .gitignore
+                                                                            📁 .vscode/
+                                                                              📊 extensions.json
+                                                                              📊 settings.json
                                                                             📄 Cargo.lock
                                                                             📄 Cargo.toml
                                                                             📄 LICENSE
@@ -853,6 +970,9 @@ MIT License
                                                                                 📄 config.toml
                                                                               📄 .editorconfig
                                                                               📄 .gitignore
+                                                                              📁 .vscode/
+                                                                                📊 extensions.json
+                                                                                📊 settings.json
                                                                               📄 Cargo.lock
                                                                               📄 Cargo.toml
                                                                               📄 LICENSE
@@ -863,6 +983,9 @@ MIT License
                                                                                   📄 config.toml
                                                                                 📄 .editorconfig
                                                                                 📄 .gitignore
+                                                                                📁 .vscode/
+                                                                                  📊 extensions.json
+                                                                                  📊 settings.json
                                                                                 📄 Cargo.lock
                                                                                 📄 Cargo.toml
                                                                                 📄 LICENSE
@@ -885,6 +1008,8 @@ MIT License
                                                                                   📖 118.md
                                                                                   📖 119.md
                                                                                   📖 120.md
+                                                                                  📖 121.md
+                                                                                  📖 122.md
                                                                                   📖 96.md
                                                                                   📖 97.md
                                                                                   📖 98.md
@@ -1011,6 +1136,8 @@ MIT License
                                                                                 📖 118.md
                                                                                 📖 119.md
                                                                                 📖 120.md
+                                                                                📖 121.md
+                                                                                📖 122.md
                                                                                 📖 96.md
                                                                                 📖 97.md
                                                                                 📖 98.md
@@ -1137,6 +1264,8 @@ MIT License
                                                                               📖 118.md
                                                                               📖 119.md
                                                                               📖 120.md
+                                                                              📖 121.md
+                                                                              📖 122.md
                                                                               📖 96.md
                                                                               📖 97.md
                                                                               📖 98.md
@@ -1263,6 +1392,8 @@ MIT License
                                                                             📖 118.md
                                                                             📖 119.md
                                                                             📖 120.md
+                                                                            📖 121.md
+                                                                            📖 122.md
                                                                             📖 96.md
                                                                             📖 97.md
                                                                             📖 98.md
@@ -1389,6 +1520,8 @@ MIT License
                                                                           📖 118.md
                                                                           📖 119.md
                                                                           📖 120.md
+                                                                          📖 121.md
+                                                                          📖 122.md
                                                                           📖 96.md
                                                                           📖 97.md
                                                                           📖 98.md
@@ -1515,6 +1648,8 @@ MIT License
                                                                         📖 118.md
                                                                         📖 119.md
                                                                         📖 120.md
+                                                                        📖 121.md
+                                                                        📖 122.md
                                                                         📖 96.md
                                                                         📖 97.md
                                                                         📖 98.md
@@ -1641,6 +1776,8 @@ MIT License
                                                                       📖 118.md
                                                                       📖 119.md
                                                                       📖 120.md
+                                                                      📖 121.md
+                                                                      📖 122.md
                                                                       📖 96.md
                                                                       📖 97.md
                                                                       📖 98.md
@@ -1767,6 +1904,8 @@ MIT License
                                                                     📖 118.md
                                                                     📖 119.md
                                                                     📖 120.md
+                                                                    📖 121.md
+                                                                    📖 122.md
                                                                     📖 96.md
                                                                     📖 97.md
                                                                     📖 98.md
@@ -1879,6 +2018,7 @@ MIT License
                                                                 📄 _config.yml
                                                                 📄 build.rs
                                                                 📁 generated-docs/
+                                                                  📖 development-status-generated-prompt.md
                                                                 📄 install-ym2151-tools.rs
                                                                 📁 issue-notes/
                                                                   📖 100.md
@@ -1893,6 +2033,8 @@ MIT License
                                                                   📖 118.md
                                                                   📖 119.md
                                                                   📖 120.md
+                                                                  📖 121.md
+                                                                  📖 122.md
                                                                   📖 96.md
                                                                   📖 97.md
                                                                   📖 98.md
@@ -2005,6 +2147,7 @@ MIT License
                                                               📄 _config.yml
                                                               📄 build.rs
                                                               📁 generated-docs/
+                                                                📖 development-status-generated-prompt.md
                                                               📄 install-ym2151-tools.rs
                                                               📁 issue-notes/
                                                                 📖 100.md
@@ -2019,6 +2162,8 @@ MIT License
                                                                 📖 118.md
                                                                 📖 119.md
                                                                 📖 120.md
+                                                                📖 121.md
+                                                                📖 122.md
                                                                 📖 96.md
                                                                 📖 97.md
                                                                 📖 98.md
@@ -2131,6 +2276,7 @@ MIT License
                                                             📄 _config.yml
                                                             📄 build.rs
                                                             📁 generated-docs/
+                                                              📖 development-status-generated-prompt.md
                                                             📄 install-ym2151-tools.rs
                                                             📁 issue-notes/
                                                               📖 100.md
@@ -2145,6 +2291,8 @@ MIT License
                                                               📖 118.md
                                                               📖 119.md
                                                               📖 120.md
+                                                              📖 121.md
+                                                              📖 122.md
                                                               📖 96.md
                                                               📖 97.md
                                                               📖 98.md
@@ -2257,6 +2405,7 @@ MIT License
                                                           📄 _config.yml
                                                           📄 build.rs
                                                           📁 generated-docs/
+                                                            📖 development-status-generated-prompt.md
                                                           📄 install-ym2151-tools.rs
                                                           📁 issue-notes/
                                                             📖 100.md
@@ -2271,6 +2420,8 @@ MIT License
                                                             📖 118.md
                                                             📖 119.md
                                                             📖 120.md
+                                                            📖 121.md
+                                                            📖 122.md
                                                             📖 96.md
                                                             📖 97.md
                                                             📖 98.md
@@ -2383,6 +2534,7 @@ MIT License
                                                         📄 _config.yml
                                                         📄 build.rs
                                                         📁 generated-docs/
+                                                          📖 development-status-generated-prompt.md
                                                         📄 install-ym2151-tools.rs
                                                         📁 issue-notes/
                                                           📖 100.md
@@ -2397,6 +2549,8 @@ MIT License
                                                           📖 118.md
                                                           📖 119.md
                                                           📖 120.md
+                                                          📖 121.md
+                                                          📖 122.md
                                                           📖 96.md
                                                           📖 97.md
                                                           📖 98.md
@@ -2524,6 +2678,8 @@ MIT License
                                                         📖 118.md
                                                         📖 119.md
                                                         📖 120.md
+                                                        📖 121.md
+                                                        📖 122.md
                                                         📖 96.md
                                                         📖 97.md
                                                         📖 98.md
@@ -2651,6 +2807,8 @@ MIT License
                                                       📖 118.md
                                                       📖 119.md
                                                       📖 120.md
+                                                      📖 121.md
+                                                      📖 122.md
                                                       📖 96.md
                                                       📖 97.md
                                                       📖 98.md
@@ -2778,6 +2936,8 @@ MIT License
                                                     📖 118.md
                                                     📖 119.md
                                                     📖 120.md
+                                                    📖 121.md
+                                                    📖 122.md
                                                     📖 96.md
                                                     📖 97.md
                                                     📖 98.md
@@ -2905,6 +3065,8 @@ MIT License
                                                   📖 118.md
                                                   📖 119.md
                                                   📖 120.md
+                                                  📖 121.md
+                                                  📖 122.md
                                                   📖 96.md
                                                   📖 97.md
                                                   📖 98.md
@@ -3032,6 +3194,8 @@ MIT License
                                                 📖 118.md
                                                 📖 119.md
                                                 📖 120.md
+                                                📖 121.md
+                                                📖 122.md
                                                 📖 96.md
                                                 📖 97.md
                                                 📖 98.md
@@ -3159,6 +3323,8 @@ MIT License
                                               📖 118.md
                                               📖 119.md
                                               📖 120.md
+                                              📖 121.md
+                                              📖 122.md
                                               📖 96.md
                                               📖 97.md
                                               📖 98.md
@@ -3286,6 +3452,8 @@ MIT License
                                             📖 118.md
                                             📖 119.md
                                             📖 120.md
+                                            📖 121.md
+                                            📖 122.md
                                             📖 96.md
                                             📖 97.md
                                             📖 98.md
@@ -3413,6 +3581,8 @@ MIT License
                                           📖 118.md
                                           📖 119.md
                                           📖 120.md
+                                          📖 121.md
+                                          📖 122.md
                                           📖 96.md
                                           📖 97.md
                                           📖 98.md
@@ -3540,6 +3710,8 @@ MIT License
                                         📖 118.md
                                         📖 119.md
                                         📖 120.md
+                                        📖 121.md
+                                        📖 122.md
                                         📖 96.md
                                         📖 97.md
                                         📖 98.md
@@ -3667,6 +3839,8 @@ MIT License
                                       📖 118.md
                                       📖 119.md
                                       📖 120.md
+                                      📖 121.md
+                                      📖 122.md
                                       📖 96.md
                                       📖 97.md
                                       📖 98.md
@@ -3794,6 +3968,8 @@ MIT License
                                     📖 118.md
                                     📖 119.md
                                     📖 120.md
+                                    📖 121.md
+                                    📖 122.md
                                     📖 96.md
                                     📖 97.md
                                     📖 98.md
@@ -3921,6 +4097,8 @@ MIT License
                                   📖 118.md
                                   📖 119.md
                                   📖 120.md
+                                  📖 121.md
+                                  📖 122.md
                                   📖 96.md
                                   📖 97.md
                                   📖 98.md
@@ -4048,6 +4226,8 @@ MIT License
                                 📖 118.md
                                 📖 119.md
                                 📖 120.md
+                                📖 121.md
+                                📖 122.md
                                 📖 96.md
                                 📖 97.md
                                 📖 98.md
@@ -4175,6 +4355,8 @@ MIT License
                               📖 118.md
                               📖 119.md
                               📖 120.md
+                              📖 121.md
+                              📖 122.md
                               📖 96.md
                               📖 97.md
                               📖 98.md
@@ -4302,6 +4484,8 @@ MIT License
                             📖 118.md
                             📖 119.md
                             📖 120.md
+                            📖 121.md
+                            📖 122.md
                             📖 96.md
                             📖 97.md
                             📖 98.md
@@ -4429,6 +4613,8 @@ MIT License
                           📖 118.md
                           📖 119.md
                           📖 120.md
+                          📖 121.md
+                          📖 122.md
                           📖 96.md
                           📖 97.md
                           📖 98.md
@@ -4556,6 +4742,8 @@ MIT License
                         📖 118.md
                         📖 119.md
                         📖 120.md
+                        📖 121.md
+                        📖 122.md
                         📖 96.md
                         📖 97.md
                         📖 98.md
@@ -4683,6 +4871,8 @@ MIT License
                       📖 118.md
                       📖 119.md
                       📖 120.md
+                      📖 121.md
+                      📖 122.md
                       📖 96.md
                       📖 97.md
                       📖 98.md
@@ -4810,6 +5000,8 @@ MIT License
                     📖 118.md
                     📖 119.md
                     📖 120.md
+                    📖 121.md
+                    📖 122.md
                     📖 96.md
                     📖 97.md
                     📖 98.md
@@ -4937,6 +5129,8 @@ MIT License
                   📖 118.md
                   📖 119.md
                   📖 120.md
+                  📖 121.md
+                  📖 122.md
                   📖 96.md
                   📖 97.md
                   📖 98.md
@@ -5064,6 +5258,8 @@ MIT License
                 📖 118.md
                 📖 119.md
                 📖 120.md
+                📖 121.md
+                📖 122.md
                 📖 96.md
                 📖 97.md
                 📖 98.md
@@ -5191,6 +5387,8 @@ MIT License
               📖 118.md
               📖 119.md
               📖 120.md
+              📖 121.md
+              📖 122.md
               📖 96.md
               📖 97.md
               📖 98.md
@@ -5318,6 +5516,8 @@ MIT License
             📖 118.md
             📖 119.md
             📖 120.md
+            📖 121.md
+            📖 122.md
             📖 96.md
             📖 97.md
             📖 98.md
@@ -5445,6 +5645,8 @@ MIT License
           📖 118.md
           📖 119.md
           📖 120.md
+          📖 121.md
+          📖 122.md
           📖 96.md
           📖 97.md
           📖 98.md
@@ -5572,6 +5774,8 @@ MIT License
         📖 118.md
         📖 119.md
         📖 120.md
+        📖 121.md
+        📖 122.md
         📖 96.md
         📖 97.md
         📖 98.md
@@ -5699,6 +5903,8 @@ MIT License
       📖 118.md
       📖 119.md
       📖 120.md
+      📖 121.md
+      📖 122.md
       📖 96.md
       📖 97.md
       📖 98.md
@@ -5826,6 +6032,8 @@ MIT License
     📖 118.md
     📖 119.md
     📖 120.md
+    📖 121.md
+    📖 122.md
     📖 96.md
     📖 97.md
     📖 98.md
@@ -5953,6 +6161,8 @@ MIT License
   📖 118.md
   📖 119.md
   📖 120.md
+  📖 121.md
+  📖 122.md
   📖 96.md
   📖 97.md
   📖 98.md
@@ -6070,50 +6280,37 @@ MIT License
 関数呼び出し階層を分析できませんでした
 
 ## プロジェクト構造（ファイル一覧）
+.vscode/extensions.json
+.vscode/settings.json
 README.ja.md
 README.md
+_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/extensions.json
+_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/.vscode/settings.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.ja.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/README.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
-_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/output_ym2151.json
 _codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/_codeql_detected_source_root/issue-notes/100.md
@@ -6139,4 +6336,4 @@ output_ym2151.json
 
 
 ---
-Generated at: 2025-11-24 07:01:47 JST
+Generated at: 2025-11-25 07:01:42 JST
