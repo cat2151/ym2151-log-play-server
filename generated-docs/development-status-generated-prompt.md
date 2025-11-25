@@ -1,4 +1,4 @@
-Last updated: 2025-11-25
+Last updated: 2025-11-26
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -103,7 +103,6 @@ Last updated: 2025-11-25
 - Issue番号を記載する際は、必ず [Issue #番号](../issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
 
 ## プロジェクトのファイル一覧
-- .cargo/config.toml
 - .editorconfig
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
@@ -941,32 +940,27 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+1471c66 Auto-translate README.ja.md to README.md [auto]
+8319d4b zig ccへの言及を削除（別件と勘違いしていた）
+bdb2ec9 Auto-translate README.ja.md to README.md [auto]
+854da1a Revise development status in README.ja.md
+04bdf81 Auto-translate README.ja.md to README.md [auto]
+b0598bb Clarify server-client description in README.ja.md
+7f5fd40 Update project summaries (overview & development status) [auto]
 481da70 Update issue notes for clarity on server subcommand
 15ad475 Add issue note for #122 [auto]
 2f82c7e Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
-3eca69c ensure_server_ready時に、ym2151-log-play-server以外のserver機能を持つアプリ、例えばcat-play-mmlを引数に与えたときは、server起動時の引数をサブコマンドでなくoptionとするよう修正
-08e76d1 Add issue note for #121 [auto]
-2235bfc Update project summaries (overview & development status) [auto]
-7d8591f shutdownできるよう修正
-75ec2a7 指数バックオフの計算ミス修正
-920a648 Outline goals for GitHub Copilot TDD on Linux Runner
-44635ab Add issue note for #120 [auto]
 
 ### 変更されたファイル:
-.vscode/extensions.json
-.vscode/settings.json
-Cargo.lock
+.cargo/config.toml
+.github/copilot-instructions.md
+README.ja.md
+README.md
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/118.md
-issue-notes/121.md
-issue-notes/122.md
-src/client/core.rs
-src/client/interactive.rs
-src/client/server.rs
 
 
 ---
-Generated at: 2025-11-25 07:01:42 JST
+Generated at: 2025-11-26 07:01:48 JST

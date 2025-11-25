@@ -1,246 +1,236 @@
-Last updated: 2025-11-25
+Last updated: 2025-11-26
 
 # Project Overview
 
 ## プロジェクト概要
-- YM2151（OPM）音源チップのレジスタイベントログをリアルタイムで再生するサーバー・クライアントシステムです。
-- JSON形式の音楽データを扱い、Windowsプラットフォーム上で高精度なオーディオ再生とWAVファイル出力に対応します。
-- 名前付きパイプによるサーバー・クライアント通信で、外部アプリケーションからの動的な演奏制御や切り替えが可能です。
+- YM2151（OPM）音源チップのレジスタイベントログをリアルタイムで再生するシステムです。
+- Windows専用のサーバー・クライアントアーキテクチャを採用し、柔軟な音楽制御とWAVファイル出力機能を提供します。
+- リアルタイムでのインタラクティブな演奏切り替えや音源エディタとの連携を目指しています。
 
 ## 技術スタック
-- フロントエンド: このプロジェクト自体は直接的なGUIを持たず、クライアントライブラリやCLIとして機能します。UIは外部の利用プロジェクトによって提供されます。
-- 音楽・オーディオ: Nuked-OPM (YM2151エミュレーション用Cライブラリ。高精度なFM音源チップYM2151のレジスタ操作をシミュレートし、オーディオデータを生成します。)
-- 開発ツール: zig cc (Cコードコンパイル用。Nuked-OPMライブラリのビルドに使用されます。)
-- テスト: Rustの標準テストフレームワーク (cargo testコマンドで実行されるユニットテストおよび統合テスト)。
-- ビルドツール: Cargo (Rustのパッケージマネージャー兼ビルドシステム。プロジェクトの依存関係管理、ビルド、テスト、実行を担います。)
-- 言語機能: Rust 1.70以降 (メモリ安全性、並行性、パフォーマンスに優れたシステムプログラミング言語。)
-- 自動化・CI/CD: setup_ci_environment.sh (CI環境設定スクリプト。特定のCI/CDサービスに依存せず、環境構築の自動化に使用されます。)
-- 開発標準: EditorConfig (.editorconfigファイルにより、異なるエディタやIDE間でコードのスタイルとフォーマットの一貫性を保ちます。)
+- フロントエンド: このプロジェクトはGUIフロントエンドを持たず、コマンドラインインターフェース（CLI）またはRustライブラリとしてプログラムから利用されることを想定しています。
+- 音楽・オーディオ: YM2151 (OPM) ハードウェアエミュレーション（Nuked-OPM C言語ライブラリを使用）、リアルタイムオーディオ再生、WAVファイル出力、高精度なオーディオリサンプリング。
+- 開発ツール: Rust言語（バージョン1.70以降）、Cargo（Rustのビルドシステムとパッケージマネージャー）、rust-script（開発支援スクリプトの実行）。
+- テスト: `cargo test`コマンドで実行されるユニットテストおよび統合テスト。
+- ビルドツール: Cargo (Rustプロジェクトのビルド、依存関係管理、テスト実行)。
+- 言語機能: Rust (高い安全性とパフォーマンス)、FFI (C言語ライブラリであるNuked-OPMとの連携)。
+- 自動化・CI/CD: `setup_ci_environment.sh`スクリプト（CI環境構築用）。
+- 開発標準: `.editorconfig`（エディタ設定によるコードスタイル統一）。
 
 ## ファイル階層ツリー
 ```
-📁 ym2151-log-play-server/
-  📁 .cargo/
-    📄 config.toml
-  📄 .editorconfig
-  📄 .gitignore
-  📁 .vscode/
-    📊 extensions.json
-    📊 settings.json
-  📄 Cargo.lock
-  📄 Cargo.toml
-  📄 LICENSE
-  📖 README.ja.md
-  📖 README.md
-  📄 _config.yml
-  📄 build.rs
-  📁 generated-docs/
-    📖 development-status-generated-prompt.md
-  📄 install-ym2151-tools.rs
-  📁 issue-notes/
-    📖 100.md
-    📖 101.md
-    📖 102.md
-    📖 110.md
-    📖 111.md
-    📖 112.md
-    📖 113.md
-    📖 116.md
-    📖 117.md
-    📖 118.md
-    📖 119.md
-    📖 120.md
-    📖 121.md
-    📖 122.md
-    📖 96.md
-    📖 97.md
-    📖 98.md
-    📖 99.md
-  📄 opm.c
-  📄 opm.h
-  📊 output_ym2151.json
-  📄 setup_ci_environment.sh
-  📁 src/
-    📁 audio/
-      📄 buffers.rs
-      📄 commands.rs
-      📄 generator.rs
-      📄 mod.rs
-      📄 player.rs
-      📄 scheduler.rs
-      📄 stream.rs
-    📄 audio_config.rs
-    📁 client/
-      📄 config.rs
-      📄 core.rs
-      📄 interactive.rs
-      📄 json.rs
-      📄 mod.rs
-      📄 server.rs
-    📄 debug_wav.rs
-    📄 demo_client_interactive.rs
-    📄 demo_server_interactive.rs
-    📄 demo_server_non_interactive.rs
-    📄 events.rs
-    📁 ipc/
-      📄 mod.rs
-      📄 pipe_windows.rs
-      📄 protocol.rs
-      📁 windows/
-        📄 mod.rs
-        📄 pipe_factory.rs
-        📄 pipe_handle.rs
-        📄 pipe_reader.rs
-        📄 pipe_writer.rs
-        📄 test_logging.rs
-    📄 lib.rs
-    📄 logging.rs
-    📄 main.rs
-    📄 mmcss.rs
-    📄 opm.rs
-    📄 opm_ffi.rs
-    📄 player.rs
-    📄 resampler.rs
-    📄 scheduler.rs
-    📁 server/
-      📄 command_handler.rs
-      📄 connection.rs
-      📄 mod.rs
-      📄 playback.rs
-      📄 state.rs
-    📄 wav_writer.rs
-  📁 tests/
-    📁 audio/
-      📄 audio_playback_test.rs
-      📄 audio_sound_test.rs
-      📄 mod.rs
-    📄 clear_schedule_test.rs
-    📄 cli_integration_test.rs
-    📄 client_json_test.rs
-    📄 client_test.rs
-    📄 client_verbose_test.rs
-    📄 debug_wav_test.rs
-    📄 duration_test.rs
-    📄 ensure_server_ready_test.rs
-    📄 events_processing_test.rs
-    📄 feature_demonstration_test.rs
-    📁 fixtures/
-      📊 complex.json
-      📊 simple.json
-    📄 integration_test.rs
-    📁 interactive/
-      📄 mod.rs
-      📄 mode_test.rs
-      📄 play_json_test.rs
-      📄 shared_mutex.rs
-      📄 step_by_step_test.rs
-    📄 interactive_tests.rs
-    📄 ipc_pipe_test.rs
-    📄 logging_test.rs
-    📄 server_basic_test.rs
-    📄 server_integration_test.rs
-    📄 tail_generation_test.rs
-    📄 test_util_server_mutex.rs
+.
+├── .editorconfig
+├── .gitignore
+├── .vscode/
+│   ├── extensions.json
+│   └── settings.json
+├── Cargo.lock
+├── Cargo.toml
+├── LICENSE
+├── README.ja.md
+├── README.md
+├── _config.yml
+├── build.rs
+├── generated-docs/
+│   └── development-status-generated-prompt.md
+├── install-ym2151-tools.rs
+├── issue-notes/
+│   ├── 100.md
+│   ├── 101.md
+│   ├── ... (他のIssueノートファイル)
+│   └── 99.md
+├── opm.c
+├── opm.h
+├── output_ym2151.json
+├── setup_ci_environment.sh
+├── src/
+│   ├── audio/
+│   │   ├── buffers.rs
+│   │   ├── commands.rs
+│   │   ├── generator.rs
+│   │   ├── mod.rs
+│   │   ├── player.rs
+│   │   ├── scheduler.rs
+│   │   └── stream.rs
+│   ├── audio_config.rs
+│   ├── client/
+│   │   ├── config.rs
+│   │   ├── core.rs
+│   │   ├── interactive.rs
+│   │   ├── json.rs
+│   │   ├── mod.rs
+│   │   └── server.rs
+│   ├── debug_wav.rs
+│   ├── demo_client_interactive.rs
+│   ├── demo_server_interactive.rs
+│   ├── demo_server_non_interactive.rs
+│   ├── events.rs
+│   ├── ipc/
+│   │   ├── mod.rs
+│   │   ├── pipe_windows.rs
+│   │   ├── protocol.rs
+│   │   └── windows/
+│   │       ├── mod.rs
+│   │       ├── pipe_factory.rs
+│   │       ├── pipe_handle.rs
+│   │       ├── pipe_reader.rs
+│   │       ├── pipe_writer.rs
+│   │       └── test_logging.rs
+│   ├── lib.rs
+│   ├── logging.rs
+│   ├── main.rs
+│   ├── mmcss.rs
+│   ├── opm.rs
+│   ├── opm_ffi.rs
+│   ├── player.rs
+│   ├── resampler.rs
+│   ├── scheduler.rs
+│   ├── server/
+│   │   ├── command_handler.rs
+│   │   ├── connection.rs
+│   │   ├── mod.rs
+│   │   ├── playback.rs
+│   │   └── state.rs
+│   ├── tests/
+│   │   ├── audio_tests.rs
+│   │   ├── client_tests.rs
+│   │   ├── debug_wav_tests.rs
+│   │   ├── ... (他のsrc内テストファイル)
+│   │   └── wav_writer_tests.rs
+│   └── wav_writer.rs
+└── tests/
+    ├── audio/
+    │   ├── audio_playback_test.rs
+    │   ├── audio_sound_test.rs
+    │   └── mod.rs
+    ├── clear_schedule_test.rs
+    ├── cli_integration_test.rs
+    ├── ... (他のルートテストファイル)
+    ├── fixtures/
+    │   ├── complex.json
+    │   └── simple.json
+    └── test_util_server_mutex.rs
 ```
 
 ## ファイル詳細説明
-- **`.cargo/config.toml`**: Cargoのカスタム設定ファイル。ビルド時の挙動やリンカ設定などを指定することがあります。
-- **`.editorconfig`**: コードエディタ間でインデントスタイル、文字コードなどのコーディング規約を統一するための設定ファイルです。
-- **`.gitignore`**: Gitがバージョン管理の対象から除外するファイルやディレクトリを指定するファイルです。
-- **`.vscode/extensions.json`**: Visual Studio Codeのワークスペース推奨拡張機能のリスト。チーム開発で開発環境の統一に役立ちます。
-- **`.vscode/settings.json`**: Visual Studio Codeのワークスペース固有の設定ファイル。特定のプロジェクトでのエディタの挙動やLintルールなどを定義します。
-- **`Cargo.lock`**: `Cargo.toml`で指定された依存関係の正確なバージョンとその依存ツリーを記録し、プロジェクトの再現可能なビルドを保証します。
-- **`Cargo.toml`**: Rustプロジェクトのマニフェストファイル。プロジェクト名、バージョン、著者、ライブラリの依存関係、ビルド設定などが記述されます。
-- **`LICENSE`**: プロジェクトの利用条件を規定するライセンス情報ファイル（このプロジェクトではMIT Licenseが指定されています）。
-- **`README.ja.md`**: プロジェクトの日本語での概要、機能、使い方、ビルド方法などを説明する主要なドキュメントファイルです。
-- **`README.md`**: プロジェクトの英語での概要、機能、使い方、ビルド方法などを説明する主要なドキュメントファイルです。
-- **`_config.yml`**: 通常、静的サイトジェネレーター（例: Jekyll）の設定ファイルとして使用されます。ドキュメントサイト生成などの用途かもしれません。
-- **`build.rs`**: Rustプロジェクトのカスタムビルドスクリプト。主にC言語ライブラリ（Nuked-OPM）のコンパイルやリンクなどのビルド時処理を自動化するために使用されます。
-- **`generated-docs/development-status-generated-prompt.md`**: 自動生成されたドキュメントや開発状況に関する情報が格納されるディレクトリ。
-- **`install-ym2151-tools.rs`**: YM2151関連のツール群を一括でインストールするためのRustスクリプトファイル。
-- **`issue-notes/`**: 開発中に発生した課題や検討事項を記録するためのノートを格納するディレクトリです。
-- **`opm.c`**: YM2151（OPM）音源チップのエミュレーションを行うNuked-OPMライブラリのC言語ソースコードファイルです。
-- **`opm.h`**: `opm.c`に対応するC言語ヘッダーファイル。Nuked-OPMライブラリの公開関数とデータ構造を定義します。
-- **`output_ym2151.json`**: YM2151レジスタイベントログのサンプルデータが格納されたJSONファイル。テストやデモで使用されます。
-- **`setup_ci_environment.sh`**: 継続的インテグレーション（CI）環境をセットアップするために使用されるシェルスクリプトです。
-- **`src/audio/buffers.rs`**: オーディオデータのバッファリングと管理に関連するロジックを定義します。
-- **`src/audio/commands.rs`**: オーディオ再生システム内で使用されるコマンド（例: 再生開始、停止）の定義を含みます。
-- **`src/audio/generator.rs`**: YM2151エミュレータからの出力に基づいて、実際のオーディオサンプルを生成する機能を提供します。
-- **`src/audio/mod.rs`**: `src/audio`モジュールのルートファイル。オーディオ関連のサブモジュールを公開します。
-- **`src/audio/player.rs`**: オーディオ再生のコアロジックを実装し、オーディオストリームの開始・停止・データ供給を制御します。
-- **`src/audio/scheduler.rs`**: YM2151レジスタイベントを正確なタイミングでエミュレータに供給するためのスケジューリング機構を実装します。
-- **`src/audio/stream.rs`**: オーディオデバイスとのインターフェースを提供し、オーディオデータのリアルタイム出力ストリームを管理します。
-- **`src/audio_config.rs`**: オーディオのサンプリングレート、チャンネル数、バッファサイズなど、オーディオ再生に関する設定を定義します。
-- **`src/client/config.rs`**: クライアントアプリケーションの動作に必要な設定値（例: 名前付きパイプ名）を定義します。
-- **`src/client/core.rs`**: クライアント機能の基盤となるロジック。サーバーとの通信やコマンド送信の抽象化を提供します。
-- **`src/client/interactive.rs`**: 連続したオーディオストリームを維持しつつ、リアルタイムに演奏を制御する「インタラクティブモード」のクライアントサイド機能です。
-- **`src/client/json.rs`**: JSON形式で記述されたYM2151レジスタイベントデータを解析し、プロジェクト内部のデータ構造に変換する機能を提供します。
-- **`src/client/mod.rs`**: `src/client`モジュールのルートファイル。クライアント関連のサブモジュールを公開します。
-- **`src/client/server.rs`**: クライアントからサーバーの起動、停止、状態確認といったライフサイクル管理を行うロジックを実装します。
-- **`src/debug_wav.rs`**: デバッグ目的で、生成されたオーディオデータをWAVファイルとして出力する機能を提供します。
-- **`src/demo_client_interactive.rs`**: インタラクティブモードクライアントの使用例を示すデモンストレーションコードです。
-- **`src/demo_server_interactive.rs`**: インタラクティブモードサーバーの使用例を示すデモンストレーションコードです。
-- **`src/demo_server_non_interactive.rs`**: 非インタラクティブモードサーバーの使用例を示すデモンストレーションコードです。
-- **`src/events.rs`**: YM2151レジスタへの書き込みイベントのデータ構造（時間、アドレス、データなど）と、それらを処理するロジックを定義します。
-- **`src/ipc/mod.rs`**: `src/ipc`モジュールのルートファイル。プロセス間通信（IPC）に関連するサブモジュールを公開します。
-- **`src/ipc/pipe_windows.rs`**: Windowsの名前付きパイプを使用したプロセス間通信の実装を提供します。
-- **`src/ipc/protocol.rs`**: クライアントとサーバー間でやり取りされるコマンドやメッセージのプロトコル（形式）を定義します。
-- **`src/ipc/windows/mod.rs`**: Windows固有のIPC実装に関連するサブモジュールのルートファイルです。
-- **`src/ipc/windows/pipe_factory.rs`**: Windowsの名前付きパイプを作成・初期化するためのファクトリパターンを実装します。
-- **`src/ipc/windows/pipe_handle.rs`**: Windowsの名前付きパイプのハンドルを安全に管理するためのラッパー構造体です。
-- **`src/ipc/windows/pipe_reader.rs`**: Windowsの名前付きパイプからデータを非同期的に読み取る機能を提供します。
-- **`src/ipc/windows/pipe_writer.rs`**: Windowsの名前付きパイプにデータを非同期的に書き込む機能を提供します。
-- **`src/ipc/windows/test_logging.rs`**: Windows IPCテスト中に発生するイベントやデータを記録するためのロギングユーティリティです。
-- **`src/lib.rs`**: このプロジェクトが提供するライブラリクレートのメインエントリーポイント。公開APIやモジュールの宣言を行います。
-- **`src/logging.rs`**: アプリケーション全体のログ出力設定（ロガーの初期化、出力レベルなど）を定義します。
-- **`src/main.rs`**: 実行可能バイナリのメインエントリーポイント。コマンドライン引数に応じてサーバーまたはクライアントとして動作を開始します。
-- **`src/mmcss.rs`**: WindowsのMultimedia Class Scheduler Service (MMCSS) を利用するための機能を提供し、オーディオ処理の優先度を向上させます。
-- **`src/opm.rs`**: Nuked-OPM（C言語ライブラリ）をRustから利用するためのForeign Function Interface (FFI) ラッパーと、YM2151エミュレータのRust向けインターフェースを提供します。
-- **`src/opm_ffi.rs`**: C言語で書かれたNuked-OPMライブラリの関数やデータ型をRustから安全に呼び出すためのFFIバインディングを定義します。
-- **`src/player.rs`**: オーディオ再生の全体的なフローを管理する上位モジュール。YM2151エミュレータ、スケジューラ、オーディオストリームを連携させます。
-- **`src/resampler.rs`**: オーディオデータのサンプリングレートを変換する機能（例: 高品質補間、低品質線形補間）を提供します。
-- **`src/scheduler.rs`**: YM2151レジスタイベントをタイムスタンプに基づいて順序付けし、正確なタイミングで実行するためのスケジューリングロジックです。
-- **`src/server/command_handler.rs`**: クライアントから受信したコマンドを解釈し、サーバーの内部状態や再生処理に反映させるロジックを実装します。
-- **`src/server/connection.rs`**: クライアントとのプロセス間通信（IPC）接続の確立、維持、切断を管理します。
-- **`src/server/mod.rs`**: `src/server`モジュールのルートファイル。サーバー関連のサブモジュールを公開します。
-- **`src/server/playback.rs`**: サーバーサイドでのYM2151音楽データ再生処理の中核を担い、オーディオ生成と出力ストリームを管理します。
-- **`src/server/state.rs`**: サーバーの現在の動作状態（再生モード、スケジューラの状態など）を保持し、管理する構造体です。
-- **`src/wav_writer.rs`**: 生成されたオーディオデータを標準的なWAVファイル形式でディスクに書き込む機能を提供します。
-- **`tests/audio/audio_playback_test.rs`**: オーディオ再生機能の動作を確認するテストスイート。
-- **`tests/audio/audio_sound_test.rs`**: 生成される音響の品質や特性を検証するテストスイート。
-- **`tests/audio/mod.rs`**: `tests/audio`モジュールのルートファイル。オーディオ関連のテストをまとめる。
-- **`tests/clear_schedule_test.rs`**: インタラクティブモードにおけるスケジュールクリア機能の正確性を検証するテスト。
-- **`tests/cli_integration_test.rs`**: コマンドラインインターフェース（CLI）の統合的な動作を検証するテスト。
-- **`tests/client_json_test.rs`**: クライアントがJSON形式の音楽データをサーバーに送信し、正しく処理されるかを検証するテスト。
-- **`tests/client_test.rs`**: クライアントの基本的な機能が正しく動作するかを検証するテストスイート。
-- **`tests/client_verbose_test.rs`**: クライアントがverboseモードで詳細なログを出力するかどうかを検証するテスト。
-- **`tests/debug_wav_test.rs`**: デバッグ目的でのWAVファイル出力機能が正しく動作するかを検証するテスト。
-- **`tests/duration_test.rs`**: 音楽イベントの持続時間計算や時間管理が正確であるかを検証するテスト。
-- **`tests/ensure_server_ready_test.rs`**: クライアントライブラリの`ensure_server_ready`関数がサーバーの準備と起動を正しく行うかを検証するテスト。
-- **`tests/events_processing_test.rs`**: YM2151レジスタイベントの解析と処理ロジックの正確性を検証するテスト。
-- **`tests/feature_demonstration_test.rs`**: 特定のプロジェクト機能が期待通りに動作することをデモンストレーション形式で示すテスト。
-- **`tests/fixtures/complex.json`**: 複雑なYM2151レジスタイベントシーケンスを含むテスト用JSONフィクスチャ。
-- **`tests/fixtures/simple.json`**: 単純なYM2151レジスタイベントシーケンスを含むテスト用JSONフィクスチャ。
-- **`tests/integration_test.rs`**: プロジェクト全体としての各コンポーネントが連携して正しく動作するかを検証する統合テスト。
-- **`tests/interactive/mod.rs`**: `tests/interactive`モジュールのルートファイル。インタラクティブモード関連のテストをまとめる。
-- **`tests/interactive/mode_test.rs`**: インタラクティブモードの開始・終了やモード間の切り替えが正しく行われるかを検証するテスト。
-- **`tests/interactive/play_json_test.rs`**: インタラクティブモードでJSONデータがスムーズに再生されるかを検証するテスト。
-- **`tests/interactive/shared_mutex.rs`**: テスト内で共有されるミューテックスの正しい使用法と安全性に関するテストユーティリティ。
-- **`tests/interactive/step_by_step_test.rs`**: インタラクティブモードの段階的な動作やイベント処理を詳細に検証するテスト。
-- **`tests/interactive_tests.rs`**: インタラクティブモード全般の機能と挙動を検証するテストスイート。
-- **`tests/ipc_pipe_test.rs`**: プロセス間通信（名前付きパイプ）の信頼性とパフォーマンスを検証するテスト。
-- **`tests/logging_test.rs`**: プロジェクトのロギング機能が正しく設定され、期待通りのログを出力するかを検証するテスト。
-- **`tests/server_basic_test.rs`**: サーバーの基本的な起動、待機、シャットダウンといった動作を検証するテスト。
-- **`tests/server_integration_test.rs`**: サーバーとクライアントが連携した状態での、より複雑なシナリオを検証する統合テスト。
-- **`tests/tail_generation_test.rs`**: 音源のリリースや減衰（テール）が正しく生成・処理されるかを検証するテスト。
-- **`tests/test_util_server_mutex.rs`**: サーバーテストで使用される、特定の共有状態を保護するためのユーティリティミューテックス。
+-   **`.editorconfig`**: コードエディタの設定ファイルで、インデントスタイルや文字コードなど、プロジェクト全体のコーディング規約を定義します。
+-   **`.gitignore`**: Gitによるバージョン管理から除外するファイルやディレクトリを指定します。
+-   **`.vscode/`**: Visual Studio Code用の開発設定を格納するディレクトリです。
+    -   **`extensions.json`**: プロジェクト推奨のVS Code拡張機能を定義します。
+    -   **`settings.json`**: VS Codeのワークスペース固有の設定を定義します。
+-   **`Cargo.lock`**: Cargoがビルド時に使用する正確な依存関係のバージョンを記録します。
+-   **`Cargo.toml`**: Rustプロジェクトのマニフェストファイルで、プロジェクト名、バージョン、依存クレート、ビルド設定などを定義します。
+-   **`LICENSE`**: プロジェクトのライセンス情報（MIT License）を記載しています。
+-   **`README.ja.md` / `README.md`**: プロジェクトの概要、機能、使用方法、開発状況などを説明するドキュメントです（日本語版と英語版）。
+-   **`_config.yml`**: GitHub Pagesなどの設定ファイル（プロジェクト情報には直接記載なし）。
+-   **`build.rs`**: Rustプロジェクトのビルドスクリプトで、主にC言語の`opm.c`をコンパイルするために使用されます。
+-   **`generated-docs/`**: 生成されたドキュメントを格納するディレクトリです。
+-   **`install-ym2151-tools.rs`**: 関連ツールを一括インストールするためのRustスクリプトです。
+-   **`issue-notes/`**: 開発中の課題やメモを記録したMarkdownファイル群です。
+-   **`opm.c` / `opm.h`**: YM2151 (OPM) 音源チップのエミュレーションを行うC言語のソースファイルとヘッダファイルです（Nuked-OPMライブラリ）。
+-   **`output_ym2151.json`**: YM2151のレジスタイベントログを含むJSONファイルのサンプルです。
+-   **`setup_ci_environment.sh`**: CI (継続的インテグレーション) 環境をセットアップするためのシェルスクリプトです。
+-   **`src/main.rs`**: アプリケーションのエントリポイントで、コマンドライン引数を解析し、サーバーまたはクライアントモードの実行を制御します。
+-   **`src/lib.rs`**: クレートのメインライブラリファイルで、外部から利用されるAPI（特にクライアント機能）を定義します。
+-   **`src/audio/`**: オーディオ再生関連のモジュール群です。
+    -   **`buffers.rs`**: オーディオデータのバッファリングに関する処理を定義します。
+    -   **`commands.rs`**: オーディオエンジンに送信されるコマンド（再生開始、停止など）を定義します。
+    -   **`generator.rs`**: YM2151レジスタの状態からオーディオ波形を生成するロジックを扱います。
+    -   **`mod.rs`**: `audio`モジュールのルートファイルです。
+    -   **`player.rs`**: オーディオ再生全体の制御を担うプレーヤーロジックを実装します。
+    -   **`scheduler.rs`**: YM2151イベントを時間に基づいてスケジューリングする機能を提供します。
+    -   **`stream.rs`**: オーディオストリームの管理と出力を担当します。
+-   **`src/audio_config.rs`**: オーディオ設定（サンプリングレートなど）を定義します。
+-   **`src/client/`**: クライアント側の機能を提供するモジュール群です。
+    -   **`config.rs`**: クライアントの設定を管理します。
+    -   **`core.rs`**: クライアントの基本的な制御コマンド（停止、シャットダウンなど）を実装します。
+    -   **`interactive.rs`**: インタラクティブモードでのリアルタイム再生制御ロジックを実装します。
+    -   **`json.rs`**: JSON形式の音楽データのパースと送信を扱います。
+    -   **`mod.rs`**: `client`モジュールのルートファイルです。
+    -   **`server.rs`**: クライアントからサーバーとの通信を確立・管理するロジックを定義します。
+-   **`src/debug_wav.rs`**: デバッグ目的でWAVファイルを生成する機能を提供します。
+-   **`src/demo_client_interactive.rs`**: インタラクティブクライアントモードのデモコードです。
+-   **`src/demo_server_interactive.rs`**: インタラクティブサーバーモードのデモコードです。
+-   **`src/demo_server_non_interactive.rs`**: 非インタラクティブサーバーモードのデモコードです。
+-   **`src/events.rs`**: YM2151レジスタイベントの構造と処理を定義します。
+-   **`src/ipc/`**: プロセス間通信（IPC）に関するモジュール群です。
+    -   **`mod.rs`**: `ipc`モジュールのルートファイルです。
+    -   **`pipe_windows.rs`**: Windowsの名前付きパイプを使用したIPCの実装です。
+    -   **`protocol.rs`**: クライアントとサーバー間の通信プロトコル（コマンド、データ形式）を定義します。
+    -   **`windows/`**: Windows固有のパイプ関連モジュール群です。
+        -   **`pipe_factory.rs`**: 名前付きパイプの生成を担当します。
+        -   **`pipe_handle.rs`**: パイプハンドルのラッパーを提供します。
+        -   **`pipe_reader.rs`**: パイプからのデータ読み込みを扱います。
+        -   **`pipe_writer.rs`**: パイプへのデータ書き込みを扱います。
+        -   **`test_logging.rs`**: パイプテスト用のロギング機能です。
+-   **`src/logging.rs`**: アプリケーション全体のロギング設定と機能を提供します。
+-   **`src/mmcss.rs`**: WindowsのMultimedia Class Scheduler Service (MMCSS) を利用して、オーディオ再生の優先度を上げるための機能を提供します。
+-   **`src/opm.rs`**: YM2151エミュレータ（Nuked-OPM）のRustラッパーです。
+-   **`src/opm_ffi.rs`**: C言語のNuked-OPMライブラリとのFFI（Foreign Function Interface）バインディングを定義します。
+-   **`src/player.rs`**: (おそらく`src/audio/player.rs`と統合されるか、高レベルのプレーヤーロジックを扱う) オーディオ再生の主要ロジックを扱います。
+-   **`src/resampler.rs`**: オーディオサンプリングレート変換（リサンプリング）のロジックを実装します。
+-   **`src/scheduler.rs`**: (おそらく`src/audio/scheduler.rs`と統合されるか、高レベルのイベントスケジューラ) 音楽イベントのスケジュール管理を行います。
+-   **`src/server/`**: サーバー側の機能を提供するモジュール群です。
+    -   **`command_handler.rs`**: クライアントからのコマンドを処理するロジックを実装します。
+    -   **`connection.rs`**: クライアントとの接続管理を扱います。
+    -   **`mod.rs`**: `server`モジュールのルートファイルです。
+    -   **`playback.rs`**: サーバーでの実際の音楽再生フローを管理します。
+    -   **`state.rs`**: サーバーの現在の状態（再生中、停止中など）を管理します。
+-   **`src/tests/`**: 開発中のユニットテストやモジュールごとのテストコードを格納します。
+-   **`src/wav_writer.rs`**: オーディオデータをWAVファイルとして出力する機能を提供します。
+-   **`tests/`**: 統合テストやアプリケーション全体のエンドツーエンドテストを格納するディレクトリです。
 
 ## 関数詳細説明
-プロジェクト情報からは関数の具体的な役割、引数、戻り値、機能に関する詳細な情報は提供されていません。そのため、個々の関数の詳細な説明は生成できません。
+-   **`client::ensure_server_ready(app_name: &str) -> anyhow::Result<()>`**:
+    -   **役割**: YM2151再生サーバーが起動しているか確認し、必要に応じて自動的にインストールおよびバックグラウンドで起動します。
+    -   **引数**: `app_name` - サーバーがインストールされているアプリケーションの名前。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: サーバーの存在確認、`cargo`経由でのインストール、バックグラウンド起動、コマンド受付待機を自動化し、シームレスな開発体験を提供します。
+-   **`client::send_json(json_data: &str) -> anyhow::Result<()>`**:
+    -   **役割**: 指定されたJSON形式のYM2151レジスタイベントデータをサーバーに送信し、再生を開始します（非インタラクティブモード）。
+    -   **引数**: `json_data` - YM2151レジスタイベントを含むJSON文字列。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: JSONデータをサーバーに渡し、新しい演奏を開始します。前の演奏は自動的に停止します。
+-   **`client::stop_playback() -> anyhow::Result<()>`**:
+    -   **役割**: サーバーに対して現在再生中の音楽を停止するよう指示します。
+    -   **引数**: なし。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: サーバーのオーディオ出力を無音化します。
+-   **`client::shutdown_server() -> anyhow::Result<()>`**:
+    -   **役割**: サーバープロセスを安全にシャットダウンするよう指示します。
+    -   **引数**: なし。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: サーバーアプリケーションを終了させます。
+-   **`client::start_interactive() -> anyhow::Result<()>`**:
+    -   **役割**: サーバーをインタラクティブモードに切り替え、連続した音声ストリームを開始します。
+    -   **引数**: なし。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: リアルタイムな音響制御を可能にするためのサーバー状態に移行します。
+-   **`client::play_json_interactive(json_data: &str) -> anyhow::Result<()>`**:
+    -   **役割**: インタラクティブモードで、JSON形式のYM2151レジスタイベントデータをサーバーのスケジュールに追加します。音声ギャップなしでの連続再生が可能です。
+    -   **引数**: `json_data` - YM2151レジスタイベントを含むJSON文字列（サンプル単位の時間が自動で秒単位に変換されます）。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: サーバーの再生キューにイベントを動的に追加し、滑らかな音楽の切り替えや複雑なシーケンスを可能にします。
+-   **`client::clear_schedule() -> anyhow::Result<()>`**:
+    -   **役割**: インタラクティブモードにおいて、サーバーにスケジュールされている未処理のイベントをすべてクリアします。
+    -   **引数**: なし。
+    -   **戻り値**: 成功した場合は`Ok(())`、エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: 進行中の演奏を中断し、新しいイベントシーケンスに素早く移行する際に使用されます。
+-   **`client::get_server_time() -> anyhow::Result<f64>`**:
+    -   **役割**: サーバーの現在の再生時刻を秒単位で取得します。
+    -   **引数**: なし。
+    -   **戻り値**: 現在のサーバー時刻（秒）を`f64`で返します。エラーが発生した場合は`anyhow::Error`を返します。
+    -   **機能**: クライアントとサーバー間で正確なタイミング同期を行うために使用されます（Web Audioの`currentTime`に相当）。
+-   **`main()`**:
+    -   **役割**: プログラムのメインエントリポイント。コマンドライン引数を解析し、サーバーまたはクライアントのどちらかのモードでプログラムを起動します。
+    -   **引数**: コマンドライン引数。
+    -   **戻り値**: 実行結果を示す`anyhow::Result<()>`。
+    -   **機能**: CLIアプリケーションとして、ユーザーの指示に応じたモード（サーバー/クライアント、verbose/non-verbose、インタラクティブ/非インタラクティブ）でプログラムを初期化し、実行します。
 
 ## 関数呼び出し階層ツリー
 ```
 関数呼び出し階層を分析できませんでした。
 
 ---
-Generated at: 2025-11-25 07:02:37 JST
+Generated at: 2025-11-26 07:02:38 JST

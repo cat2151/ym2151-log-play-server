@@ -1,4 +1,4 @@
-Last updated: 2025-11-25
+Last updated: 2025-11-26
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -68,7 +68,7 @@ Last updated: 2025-11-25
   <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
 </p>
 
-YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント（のライブラリ）
+YM2151（OPM）レジスタイベントログを受け取り、リアルタイム再生を行うサーバー・クライアント。Rustで書かれています。
 
 ## 対象プラットフォーム
 
@@ -77,9 +77,11 @@ YM2151（OPM）レジスタイベントログを受け取り、リアルタイ�
     - 当projectにおいてはハルシネーションの増大が認められたため、
         - Linux専用codeを禁止します
 
-## 状況
+## 開発状況
 
 ライブラリとして、`cat-play-mml`や`ym2151-tone-editor`に組み込んで使っています。
+
+頻繁に破壊的変更があります。特にclient-serverプロトコルとserver動作モードについて。
 
 ## 概要
 
@@ -390,7 +392,6 @@ cargo test
 ## ビルド要件
 
 - Rust 1.70以降
-- zig cc（Cコンパイラとして使用）
 
 ## 今後の展望
 - 破壊的変更中
@@ -459,8 +460,6 @@ MIT License
 {}
 
 ## ファイル階層ツリー
-📁 .cargo/
-  📄 config.toml
 📄 .editorconfig
 📄 .gitignore
 📁 .vscode/
@@ -472,8 +471,6 @@ MIT License
 📖 README.ja.md
 📖 README.md
 📁 _codeql_detected_source_root/
-  📁 .cargo/
-    📄 config.toml
   📄 .editorconfig
   📄 .gitignore
   📁 .vscode/
@@ -485,8 +482,6 @@ MIT License
   📖 README.ja.md
   📖 README.md
   📁 _codeql_detected_source_root/
-    📁 .cargo/
-      📄 config.toml
     📄 .editorconfig
     📄 .gitignore
     📁 .vscode/
@@ -498,8 +493,6 @@ MIT License
     📖 README.ja.md
     📖 README.md
     📁 _codeql_detected_source_root/
-      📁 .cargo/
-        📄 config.toml
       📄 .editorconfig
       📄 .gitignore
       📁 .vscode/
@@ -511,8 +504,6 @@ MIT License
       📖 README.ja.md
       📖 README.md
       📁 _codeql_detected_source_root/
-        📁 .cargo/
-          📄 config.toml
         📄 .editorconfig
         📄 .gitignore
         📁 .vscode/
@@ -524,8 +515,6 @@ MIT License
         📖 README.ja.md
         📖 README.md
         📁 _codeql_detected_source_root/
-          📁 .cargo/
-            📄 config.toml
           📄 .editorconfig
           📄 .gitignore
           📁 .vscode/
@@ -537,8 +526,6 @@ MIT License
           📖 README.ja.md
           📖 README.md
           📁 _codeql_detected_source_root/
-            📁 .cargo/
-              📄 config.toml
             📄 .editorconfig
             📄 .gitignore
             📁 .vscode/
@@ -550,8 +537,6 @@ MIT License
             📖 README.ja.md
             📖 README.md
             📁 _codeql_detected_source_root/
-              📁 .cargo/
-                📄 config.toml
               📄 .editorconfig
               📄 .gitignore
               📁 .vscode/
@@ -563,8 +548,6 @@ MIT License
               📖 README.ja.md
               📖 README.md
               📁 _codeql_detected_source_root/
-                📁 .cargo/
-                  📄 config.toml
                 📄 .editorconfig
                 📄 .gitignore
                 📁 .vscode/
@@ -576,8 +559,6 @@ MIT License
                 📖 README.ja.md
                 📖 README.md
                 📁 _codeql_detected_source_root/
-                  📁 .cargo/
-                    📄 config.toml
                   📄 .editorconfig
                   📄 .gitignore
                   📁 .vscode/
@@ -589,8 +570,6 @@ MIT License
                   📖 README.ja.md
                   📖 README.md
                   📁 _codeql_detected_source_root/
-                    📁 .cargo/
-                      📄 config.toml
                     📄 .editorconfig
                     📄 .gitignore
                     📁 .vscode/
@@ -602,8 +581,6 @@ MIT License
                     📖 README.ja.md
                     📖 README.md
                     📁 _codeql_detected_source_root/
-                      📁 .cargo/
-                        📄 config.toml
                       📄 .editorconfig
                       📄 .gitignore
                       📁 .vscode/
@@ -615,8 +592,6 @@ MIT License
                       📖 README.ja.md
                       📖 README.md
                       📁 _codeql_detected_source_root/
-                        📁 .cargo/
-                          📄 config.toml
                         📄 .editorconfig
                         📄 .gitignore
                         📁 .vscode/
@@ -628,8 +603,6 @@ MIT License
                         📖 README.ja.md
                         📖 README.md
                         📁 _codeql_detected_source_root/
-                          📁 .cargo/
-                            📄 config.toml
                           📄 .editorconfig
                           📄 .gitignore
                           📁 .vscode/
@@ -641,8 +614,6 @@ MIT License
                           📖 README.ja.md
                           📖 README.md
                           📁 _codeql_detected_source_root/
-                            📁 .cargo/
-                              📄 config.toml
                             📄 .editorconfig
                             📄 .gitignore
                             📁 .vscode/
@@ -654,8 +625,6 @@ MIT License
                             📖 README.ja.md
                             📖 README.md
                             📁 _codeql_detected_source_root/
-                              📁 .cargo/
-                                📄 config.toml
                               📄 .editorconfig
                               📄 .gitignore
                               📁 .vscode/
@@ -667,8 +636,6 @@ MIT License
                               📖 README.ja.md
                               📖 README.md
                               📁 _codeql_detected_source_root/
-                                📁 .cargo/
-                                  📄 config.toml
                                 📄 .editorconfig
                                 📄 .gitignore
                                 📁 .vscode/
@@ -680,8 +647,6 @@ MIT License
                                 📖 README.ja.md
                                 📖 README.md
                                 📁 _codeql_detected_source_root/
-                                  📁 .cargo/
-                                    📄 config.toml
                                   📄 .editorconfig
                                   📄 .gitignore
                                   📁 .vscode/
@@ -693,8 +658,6 @@ MIT License
                                   📖 README.ja.md
                                   📖 README.md
                                   📁 _codeql_detected_source_root/
-                                    📁 .cargo/
-                                      📄 config.toml
                                     📄 .editorconfig
                                     📄 .gitignore
                                     📁 .vscode/
@@ -706,8 +669,6 @@ MIT License
                                     📖 README.ja.md
                                     📖 README.md
                                     📁 _codeql_detected_source_root/
-                                      📁 .cargo/
-                                        📄 config.toml
                                       📄 .editorconfig
                                       📄 .gitignore
                                       📁 .vscode/
@@ -719,8 +680,6 @@ MIT License
                                       📖 README.ja.md
                                       📖 README.md
                                       📁 _codeql_detected_source_root/
-                                        📁 .cargo/
-                                          📄 config.toml
                                         📄 .editorconfig
                                         📄 .gitignore
                                         📁 .vscode/
@@ -732,8 +691,6 @@ MIT License
                                         📖 README.ja.md
                                         📖 README.md
                                         📁 _codeql_detected_source_root/
-                                          📁 .cargo/
-                                            📄 config.toml
                                           📄 .editorconfig
                                           📄 .gitignore
                                           📁 .vscode/
@@ -745,8 +702,6 @@ MIT License
                                           📖 README.ja.md
                                           📖 README.md
                                           📁 _codeql_detected_source_root/
-                                            📁 .cargo/
-                                              📄 config.toml
                                             📄 .editorconfig
                                             📄 .gitignore
                                             📁 .vscode/
@@ -758,8 +713,6 @@ MIT License
                                             📖 README.ja.md
                                             📖 README.md
                                             📁 _codeql_detected_source_root/
-                                              📁 .cargo/
-                                                📄 config.toml
                                               📄 .editorconfig
                                               📄 .gitignore
                                               📁 .vscode/
@@ -771,8 +724,6 @@ MIT License
                                               📖 README.ja.md
                                               📖 README.md
                                               📁 _codeql_detected_source_root/
-                                                📁 .cargo/
-                                                  📄 config.toml
                                                 📄 .editorconfig
                                                 📄 .gitignore
                                                 📁 .vscode/
@@ -784,8 +735,6 @@ MIT License
                                                 📖 README.ja.md
                                                 📖 README.md
                                                 📁 _codeql_detected_source_root/
-                                                  📁 .cargo/
-                                                    📄 config.toml
                                                   📄 .editorconfig
                                                   📄 .gitignore
                                                   📁 .vscode/
@@ -797,8 +746,6 @@ MIT License
                                                   📖 README.ja.md
                                                   📖 README.md
                                                   📁 _codeql_detected_source_root/
-                                                    📁 .cargo/
-                                                      📄 config.toml
                                                     📄 .editorconfig
                                                     📄 .gitignore
                                                     📁 .vscode/
@@ -810,8 +757,6 @@ MIT License
                                                     📖 README.ja.md
                                                     📖 README.md
                                                     📁 _codeql_detected_source_root/
-                                                      📁 .cargo/
-                                                        📄 config.toml
                                                       📄 .editorconfig
                                                       📄 .gitignore
                                                       📁 .vscode/
@@ -823,8 +768,6 @@ MIT License
                                                       📖 README.ja.md
                                                       📖 README.md
                                                       📁 _codeql_detected_source_root/
-                                                        📁 .cargo/
-                                                          📄 config.toml
                                                         📄 .editorconfig
                                                         📄 .gitignore
                                                         📁 .vscode/
@@ -836,8 +779,6 @@ MIT License
                                                         📖 README.ja.md
                                                         📖 README.md
                                                         📁 _codeql_detected_source_root/
-                                                          📁 .cargo/
-                                                            📄 config.toml
                                                           📄 .editorconfig
                                                           📄 .gitignore
                                                           📁 .vscode/
@@ -849,8 +790,6 @@ MIT License
                                                           📖 README.ja.md
                                                           📖 README.md
                                                           📁 _codeql_detected_source_root/
-                                                            📁 .cargo/
-                                                              📄 config.toml
                                                             📄 .editorconfig
                                                             📄 .gitignore
                                                             📁 .vscode/
@@ -862,8 +801,6 @@ MIT License
                                                             📖 README.ja.md
                                                             📖 README.md
                                                             📁 _codeql_detected_source_root/
-                                                              📁 .cargo/
-                                                                📄 config.toml
                                                               📄 .editorconfig
                                                               📄 .gitignore
                                                               📁 .vscode/
@@ -875,8 +812,6 @@ MIT License
                                                               📖 README.ja.md
                                                               📖 README.md
                                                               📁 _codeql_detected_source_root/
-                                                                📁 .cargo/
-                                                                  📄 config.toml
                                                                 📄 .editorconfig
                                                                 📄 .gitignore
                                                                 📁 .vscode/
@@ -888,8 +823,6 @@ MIT License
                                                                 📖 README.ja.md
                                                                 📖 README.md
                                                                 📁 _codeql_detected_source_root/
-                                                                  📁 .cargo/
-                                                                    📄 config.toml
                                                                   📄 .editorconfig
                                                                   📄 .gitignore
                                                                   📁 .vscode/
@@ -901,8 +834,6 @@ MIT License
                                                                   📖 README.ja.md
                                                                   📖 README.md
                                                                   📁 _codeql_detected_source_root/
-                                                                    📁 .cargo/
-                                                                      📄 config.toml
                                                                     📄 .editorconfig
                                                                     📄 .gitignore
                                                                     📁 .vscode/
@@ -914,8 +845,6 @@ MIT License
                                                                     📖 README.ja.md
                                                                     📖 README.md
                                                                     📁 _codeql_detected_source_root/
-                                                                      📁 .cargo/
-                                                                        📄 config.toml
                                                                       📄 .editorconfig
                                                                       📄 .gitignore
                                                                       📁 .vscode/
@@ -927,8 +856,6 @@ MIT License
                                                                       📖 README.ja.md
                                                                       📖 README.md
                                                                       📁 _codeql_detected_source_root/
-                                                                        📁 .cargo/
-                                                                          📄 config.toml
                                                                         📄 .editorconfig
                                                                         📄 .gitignore
                                                                         📁 .vscode/
@@ -940,8 +867,6 @@ MIT License
                                                                         📖 README.ja.md
                                                                         📖 README.md
                                                                         📁 _codeql_detected_source_root/
-                                                                          📁 .cargo/
-                                                                            📄 config.toml
                                                                           📄 .editorconfig
                                                                           📄 .gitignore
                                                                           📁 .vscode/
@@ -953,8 +878,6 @@ MIT License
                                                                           📖 README.ja.md
                                                                           📖 README.md
                                                                           📁 _codeql_detected_source_root/
-                                                                            📁 .cargo/
-                                                                              📄 config.toml
                                                                             📄 .editorconfig
                                                                             📄 .gitignore
                                                                             📁 .vscode/
@@ -966,8 +889,6 @@ MIT License
                                                                             📖 README.ja.md
                                                                             📖 README.md
                                                                             📁 _codeql_detected_source_root/
-                                                                              📁 .cargo/
-                                                                                📄 config.toml
                                                                               📄 .editorconfig
                                                                               📄 .gitignore
                                                                               📁 .vscode/
@@ -979,8 +900,6 @@ MIT License
                                                                               📖 README.ja.md
                                                                               📖 README.md
                                                                               📁 _codeql_detected_source_root/
-                                                                                📁 .cargo/
-                                                                                  📄 config.toml
                                                                                 📄 .editorconfig
                                                                                 📄 .gitignore
                                                                                 📁 .vscode/
@@ -2018,7 +1937,6 @@ MIT License
                                                                 📄 _config.yml
                                                                 📄 build.rs
                                                                 📁 generated-docs/
-                                                                  📖 development-status-generated-prompt.md
                                                                 📄 install-ym2151-tools.rs
                                                                 📁 issue-notes/
                                                                   📖 100.md
@@ -2147,7 +2065,6 @@ MIT License
                                                               📄 _config.yml
                                                               📄 build.rs
                                                               📁 generated-docs/
-                                                                📖 development-status-generated-prompt.md
                                                               📄 install-ym2151-tools.rs
                                                               📁 issue-notes/
                                                                 📖 100.md
@@ -2276,7 +2193,6 @@ MIT License
                                                             📄 _config.yml
                                                             📄 build.rs
                                                             📁 generated-docs/
-                                                              📖 development-status-generated-prompt.md
                                                             📄 install-ym2151-tools.rs
                                                             📁 issue-notes/
                                                               📖 100.md
@@ -2405,7 +2321,6 @@ MIT License
                                                           📄 _config.yml
                                                           📄 build.rs
                                                           📁 generated-docs/
-                                                            📖 development-status-generated-prompt.md
                                                           📄 install-ym2151-tools.rs
                                                           📁 issue-notes/
                                                             📖 100.md
@@ -6336,4 +6251,4 @@ output_ym2151.json
 
 
 ---
-Generated at: 2025-11-25 07:01:42 JST
+Generated at: 2025-11-26 07:01:49 JST
