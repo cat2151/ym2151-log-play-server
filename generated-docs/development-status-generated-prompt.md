@@ -1,4 +1,4 @@
-Last updated: 2025-11-26
+Last updated: 2025-12-02
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -162,6 +162,7 @@ Last updated: 2025-11-26
 - .github/actions-tmp/generated-docs/project-overview-generated-prompt.md
 - .github/actions-tmp/generated-docs/project-overview.md
 - .github/actions-tmp/generated-docs/style.css
+- .github/actions-tmp/googled947dc864c270e07.html
 - .github/actions-tmp/issue-notes/10.md
 - .github/actions-tmp/issue-notes/11.md
 - .github/actions-tmp/issue-notes/12.md
@@ -208,6 +209,7 @@ Last updated: 2025-11-26
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- googled947dc864c270e07.html
 - install-ym2151-tools.rs
 - issue-notes/100.md
 - issue-notes/101.md
@@ -940,6 +942,9 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+7401c65 Google検索にindexさせる用
+28d1db3 Google検索にindexさせる用
+64f6177 Update project summaries (overview & development status) [auto]
 1471c66 Auto-translate README.ja.md to README.md [auto]
 8319d4b zig ccへの言及を削除（別件と勘違いしていた）
 bdb2ec9 Auto-translate README.ja.md to README.md [auto]
@@ -947,20 +952,19 @@ bdb2ec9 Auto-translate README.ja.md to README.md [auto]
 04bdf81 Auto-translate README.ja.md to README.md [auto]
 b0598bb Clarify server-client description in README.ja.md
 7f5fd40 Update project summaries (overview & development status) [auto]
-481da70 Update issue notes for clarity on server subcommand
-15ad475 Add issue note for #122 [auto]
-2f82c7e Merge branch 'main' of github.com:cat2151/ym2151-log-play-server into main
 
 ### 変更されたファイル:
 .cargo/config.toml
 .github/copilot-instructions.md
 README.ja.md
 README.md
+_config.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
+googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-11-26 07:01:48 JST
+Generated at: 2025-12-02 07:01:43 JST

@@ -1,55 +1,63 @@
-Last updated: 2025-11-26
+Last updated: 2025-12-02
 
 # Development Status
 
 ## 現在のIssues
-- コマンドライン引数のヘルプ表示において、`--demo-interactive` オプションが不足しており、ユーザーが混乱する可能性があります ([Issue #121](../issue-notes/121.md))。
-- サーバーコマンドの「clear schedule」は廃止し、`play json interactive` 実行時にJSONの先頭sample時刻より未来のスケジュールを自動的にクリアするよう統合が必要です ([Issue #120](../issue-notes/120.md))。
-- Agentが生成したWindows用コードはTDDが不足しており、ビルドエラーやハルシネーションが多発し、開発体験を損ねています ([Issue #118](../issue-notes/118.md))。
+- [Issue #118](../issue-notes/118.md) では、Agentが生成するWindows用コードのTDD不足によるビルド失敗問題の解決策が検討されています。
+- [Issue #121](../issue-notes/121.md), [Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md) は、コマンドラインヘルプの改善、サーバーコマンドのシンプル化、およびスケジュールクリア機能の統合による操作性の向上を目指しています。
+- [Issue #117](../issue-notes/117.md) では、クライアント側のデモインタラクティブモードにおけるフレーズ開始タイミングのブレの原因分析と、YM2151トーンエディタでの動作確認が求められています。
 
 ## 次の一手候補
-1. コマンドライン引数ヘルプ表示の `--demo-interactive` オプション追加と表示修正 [Issue #121](../issue-notes/121.md)
-   - 最初の小さな一歩: `src/main.rs` 内のコマンドライン引数定義箇所を特定し、`--demo-interactive` オプションの定義とヘルプメッセージへの表示ロジックを確認する。
+1. [Issue #118](../issue-notes/118.md): AgentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない
+   - 最初の小さな一歩: GitHub ActionsのLinux Runner上でRustのWindowsターゲット向けコンパイルチェック（`cargo check --target x86_64-pc-windows-gnu`など）が実行可能か、その具体的な方法とagentでのTDD適用可能性について調査する。
    - Agent実行プロンプ:
      ```
-     対象ファイル: `src/main.rs`
+     対象ファイル: _research/windows_build_check_on_linux_ci.md (新規作成)
 
-     実行内容: `src/main.rs` 内のコマンドライン引数解析部分を調査し、`--demo-interactive` オプションがヘルプメッセージ（`--help` 実行時）および不明なオプション時のエラーメッセージに表示されるように修正してください。具体的には、引数解析ライブラリのドキュメントを参照し、オプションの可視性を設定する方法を適用してください。
+     実行内容: GitHub ActionsのLinux Runner環境でRustプロジェクトのWindowsターゲット向け（例: `x86_64-pc-windows-gnu`）のコンパイルチェックを実行するための実現可能性を調査し、以下の観点でmarkdown形式でまとめてください。
+     1. 利用可能なツール（`cargo check --target`, `cross`, `cargo-xwin`など）とその簡単な説明。
+     2. 各ツールのGitHub Actions Linux Runnerでの設定方法と制約。
+     3. GitHub Copilot Coding AgentがTDDを通じてWindowsビルドエラーを自律的に修正できる可能性と、そのためのプロンプト指示方法の検討。
+     4. 最終的な推奨されるアプローチと、そのための初期ワークフローの草案（もし実現可能であれば）。
 
-     確認事項: 既存のコマンドライン引数解析ロジック、特に `clap` クレート（または使用されているライブラリ）の使い方を確認し、ヘルプ表示のカスタマイズに関する既存のパターンを理解してください。修正が `--demo-interactive` の実際の機能に影響を与えないことを確認してください。
+     確認事項: 調査にあたり、Rustのクロスコンパイルに関する公式ドキュメントや関連コミュニティの議論を参照し、最新かつ信頼性の高い情報を収集してください。また、既存の`.github/workflows/`内のファイルが参考になる可能性があります。
 
-     期待する出力: 修正された `src/main.rs` のコード差分。また、修正前後の `--help` 出力の例（Markdown形式）と、変更が意図通りに機能することを検証するための簡単なテスト計画を提案してください。
+     期待する出力: 上記実行内容で指定された観点を含む、詳細な調査結果をmarkdown形式で出力してください。
      ```
 
-2. `clear schedule` コマンドの廃止と `play json interactive` への機能統合 [Issue #120](../issue-notes/120.md)
-   - 最初の小さな一歩: `src/server/command_handler.rs` および `src/server/state.rs` を参照し、`clear schedule` コマンドの現在の実装と、`play json interactive` コマンドがどのようにスケジュールを操作しているかを分析する。
+2. [Issue #119](../issue-notes/119.md): server commandのうち、get interactive modeは不要になったので削除し、シンプル化する
+   - 最初の小さな一歩: サーバーコマンド定義である`src/ipc/protocol.rs`から`GetInteractiveMode`エントリを削除し、コンパイルエラーが発生する箇所を特定する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `src/server/command_handler.rs`, `src/server/state.rs`, `src/client/mod.rs` (必要に応じて)
+     対象ファイル: src/ipc/protocol.rs, src/server/command_handler.rs, src/client/core.rs, src/client/mod.rs, src/tests/**/*.rs, tests/**/*.rs
 
-     実行内容: `clear schedule` コマンドを完全に削除し、その機能を `play json interactive` コマンドの実行フローに統合してください。`play json interactive` が実行される際、渡されたJSONデータ内の最初のサンプル時刻より未来のスケジュールのみを自動的にクリアするロジックを実装してください。この変更により、クライアント側からの `clear schedule` コマンド送信ロジックも不要になる可能性がありますので、関連ファイルを調整してください。
+     実行内容: `GetInteractiveMode`コマンドをシステム全体から完全に削除するための変更を適用してください。具体的には、
+     1. `src/ipc/protocol.rs`から`GetInteractiveMode`コマンド定義を削除します。
+     2. `src/server/command_handler.rs`で`GetInteractiveMode`を処理するロジックを削除します。
+     3. `src/client/core.rs`や`src/client/mod.rs`など、クライアント側で`GetInteractiveMode`を使用している箇所があれば、その呼び出しと関連ロジックを削除または修正します。
+     4. `src/tests/`および`tests/`配下の関連する単体テストや統合テストを削除または適切に修正し、機能削除を反映させます。
 
-     確認事項: `clear schedule` コマンドが完全に削除され、他のコード箇所からの参照がないことを確認してください。`play json interactive` のスケジュールクリアロジックが、「そのJSONの先頭sample時刻より未来」という要件を正確に満たしていることを確認してください。既存のテストケースに影響がないか、または変更を検証する新しいユニットテストが必要か検討し、提案してください。
+     確認事項: この変更が、他のサーバーコマンドやクライアント機能の動作に影響を与えないことを確認してください。また、削除される機能の痕跡がコードベースに残らないように徹底してください。
 
-     期待する出力: 変更された各ファイルのコード差分。`clear schedule` コマンドの削除と `play json interactive` の動作変更を検証するための新しいテストケースまたは既存テストの修正提案。
+     期待する出力: `GetInteractiveMode`の削除によって変更された全ファイルの差分と、削除されたテストファイルの一覧、および主要な変更箇所の説明をmarkdown形式で出力してください。
      ```
 
-3. WindowsビルドのTDD不足対策のためのCI/CDワークフロー調査と提案 [Issue #118](../issue-notes/118.md)
-   - 最初の小さな一歩: プロジェクトルートの `Cargo.toml` と `.github/workflows/` ディレクトリ内の既存のCI/CDワークフローファイルを確認し、Windowsターゲット向けのビルドやテストに関する既存の設定（もしあれば）を把握する。
+3. [Issue #117](../issue-notes/117.md): client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる
+   - 最初の小さな一歩: `ym2151 tone editor` (またはそれに相当するデモクライアント) の通常モードとインタラクティブモードで音が正しく鳴るかを確認し、もしタイミングのブレが発生する場合、その具体的な状況（再現手順、ブレの度合いなど）を詳細に記録する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `Cargo.toml`, `.github/workflows/` ディレクトリ内の既存ワークフローファイル（例: `build_windows.yml` など）。
+     対象ファイル: src/client/interactive.rs, src/demo_client_interactive.rs, src/audio/scheduler.rs
 
-     実行内容: GitHub ActionsのLinux Runner上で、RustプロジェクトのWindowsターゲット向けコンパイルチェック（例: `cargo check --target x86_64-pc-windows-gnu`）を実現するための方法を調査し、最適なアプローチを提案してください。具体的には、`cross` クレート、`cargo-xwin`、またはその他のネイティブなクロスコンパイル設定の可能性について比較検討し、それぞれの利点・欠点を分析してください。この調査結果に基づき、Linux Runner上でWindowsターゲットのコンパイルチェックを導入するためのGitHub Actionsワークフローの草案を作成してください。
+     実行内容: クライアント側のデモインタラクティブモード（`src/demo_client_interactive.rs`）において、JSONデータの送信タイミングとサーバー側でのスケジューリングの関係性を分析し、以下の観点から報告してください。
+     1. JSONがクライアントから送信される際のタイムスタンプ処理（またはその欠如）。
+     2. サーバーがJSONを受信し、未来オフセットを加算してスケジューリングするロジック（`src/audio/scheduler.rs`に関連）。
+     3. このプロセスにおける名前付きパイプのI/O遅延が、フレーズ開始タイミングのブレに与える影響の可能性。
+     4. ブレを可視化するための簡単なデバッグログの挿入案（例: クライアント送信直前とサーバー受信直後のタイムスタンプ記録）。
 
-     確認事項: 提案するソリューションがAgentのTDDフローに組み込み可能であるか、また既存のCI/CDパイプラインとの整合性を確保できるかを確認してください。導入コストと、ハルシネーション検知能力向上への期待効果を評価してください。
+     確認事項: 既存の`play json`コマンドや他のモードとのスケジューリングロジックの比較を行い、`demo interactive mode`特有の問題点がないか確認してください。名前付きパイプの動作原理についても考慮に入れてください。
 
-     期待する出力: 以下の内容をまとめたMarkdown形式のレポート：
-       1. Linux RunnerでのWindowsターゲットコンパイルチェックの実現方法に関する調査結果と各候補の比較。
-       2. 推奨されるアプローチとその選定理由。
-       3. 推奨アプローチを導入するためのGitHub Actionsワークフロー (`.github/workflows/check-windows-build.yml` のような新規ファイル) の草案コード。
-       4. Agentへの具体的な指示プロンプトの例（TDDフローにこのチェックを組み込む場合を想定）。
+     期待する出力: 分析結果とデバッグログ挿入案をmarkdown形式で出力してください。特に、タイムスタンプがどのように扱われているか、どの部分で遅延が発生しうるかについて焦点を当ててください。
      ```
 
 ---
-Generated at: 2025-11-26 07:02:08 JST
+Generated at: 2025-12-02 07:02:08 JST
