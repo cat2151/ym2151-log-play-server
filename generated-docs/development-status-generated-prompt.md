@@ -1,4 +1,4 @@
-Last updated: 2025-12-02
+Last updated: 2025-12-07
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -107,11 +107,13 @@ Last updated: 2025-12-02
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/call-issue-note.yml
+- .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
+- .github/actions-tmp/.github/workflows/rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/translate-readme.yml
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/callgraph.ql
 - .github/actions-tmp/.github_automation/callgraph/codeql-queries/codeql-pack.lock.yml
@@ -197,6 +199,7 @@ Last updated: 2025-12-02
 - .github/workflows/build_windows.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
+- .github/workflows/call-rust-windows-check.yml
 - .github/workflows/call-translate-readme.yml
 - .gitignore
 - .vscode/extensions.json
@@ -209,6 +212,7 @@ Last updated: 2025-12-02
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- generated-docs/project-overview-generated-prompt.md
 - googled947dc864c270e07.html
 - install-ym2151-tools.rs
 - issue-notes/100.md
@@ -480,6 +484,7 @@ Last updated: 2025-12-02
 ## ドキュメントで言及されているファイルの内容
 ### .github/actions-tmp/issue-notes/17.md
 ```md
+{% raw %}
 # issue development-status が生成したmdに誤りがある。issue-note へのlinkがURL誤りで、404となってしまう #17
 [issues #17](https://github.com/cat2151/github-actions/issues/17)
 
@@ -516,10 +521,12 @@ Last updated: 2025-12-02
 - test green
 - closeする
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/18.md
 ```md
+{% raw %}
 # issue DevelopmentStatusGenerator.cjs 内に、Geminiに与えるpromptがハードコーディングされてしまっている #18
 [issues #18](https://github.com/cat2151/github-actions/issues/18)
 
@@ -544,10 +551,12 @@ Last updated: 2025-12-02
 # closeとする
 
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/19.md
 ```md
+{% raw %}
 # issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
 [issues #19](https://github.com/cat2151/github-actions/issues/19)
 
@@ -581,10 +590,12 @@ Last updated: 2025-12-02
 
 # closeする
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/20.md
 ```md
+{% raw %}
 # issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
 [issues #20](https://github.com/cat2151/github-actions/issues/20)
 
@@ -654,10 +665,12 @@ Last updated: 2025-12-02
 
 # closeとする
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/21.md
 ```md
+{% raw %}
 # issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
 [issues #21](https://github.com/cat2151/github-actions/issues/21)
 
@@ -713,20 +726,24 @@ Last updated: 2025-12-02
 
 # closeとする
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/7.md
 ```md
+{% raw %}
 # issue issue note生成できるかのtest用 #7
 [issues #7](https://github.com/cat2151/github-actions/issues/7)
 
 - 生成できた
 - closeとする
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/8.md
 ```md
+{% raw %}
 # issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
 [issues #8](https://github.com/cat2151/github-actions/issues/8)
 
@@ -800,10 +817,12 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 # closeとする
 - もし生成されたhtmlがNGの場合は、別issueとするつもり
 
+{% endraw %}
 ```
 
 ### .github/actions-tmp/issue-notes/9.md
 ```md
+{% raw %}
 # issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
 [issues #9](https://github.com/cat2151/github-actions/issues/9)
 
@@ -816,10 +835,12 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 # closeとする
 
+{% endraw %}
 ```
 
 ### issue-notes/117.md
 ```md
+{% raw %}
 # issue client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる #117
 [issues #117](https://github.com/cat2151/ym2151-log-play-server/issues/117)
 
@@ -844,10 +865,12 @@ planにおいては、修正対象のソースファイル名と関数名を、�
         - 問題あれば、どのような問題があるか？をissueに可視化すること
 
 
+{% endraw %}
 ```
 
 ### issue-notes/118.md
 ```md
+{% raw %}
 # issue agentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない #118
 [issues #118](https://github.com/cat2151/ym2151-log-play-server/issues/118)
 
@@ -911,51 +934,53 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 # 状況
 - 検討中
 
+{% endraw %}
 ```
 
 ### issue-notes/119.md
 ```md
+{% raw %}
 # issue server commandのうち、get interactive modeは不要になったので削除し、シンプル化する #119
 [issues #119](https://github.com/cat2151/ym2151-log-play-server/issues/119)
 
 
 
+{% endraw %}
 ```
 
 ### issue-notes/120.md
 ```md
+{% raw %}
 # issue server commandのうち、clear scheduleを廃止し、play json with clear scheduleにする（そのjsonのsample時刻より過去のscheduleだけ削除する） #120
 [issues #120](https://github.com/cat2151/ym2151-log-play-server/issues/120)
 
 
 
+{% endraw %}
 ```
 
 ### issue-notes/121.md
 ```md
+{% raw %}
 # issue コマンドライン引数の表示パターンが2パターンあり（help時、不明なオプション時）、どちらも--demo-interactiveが表示されず、userが混乱する #121
 [issues #121](https://github.com/cat2151/ym2151-log-play-server/issues/121)
 
 
 
+{% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+04e35d0 Rust Windows check
+25ba3b3 Update project summaries (overview & development status) [auto]
 7401c65 Google検索にindexさせる用
 28d1db3 Google検索にindexさせる用
-64f6177 Update project summaries (overview & development status) [auto]
-1471c66 Auto-translate README.ja.md to README.md [auto]
-8319d4b zig ccへの言及を削除（別件と勘違いしていた）
-bdb2ec9 Auto-translate README.ja.md to README.md [auto]
-854da1a Revise development status in README.ja.md
-04bdf81 Auto-translate README.ja.md to README.md [auto]
-b0598bb Clarify server-client description in README.ja.md
-7f5fd40 Update project summaries (overview & development status) [auto]
 
 ### 変更されたファイル:
 .cargo/config.toml
 .github/copilot-instructions.md
+.github/workflows/call-rust-windows-check.yml
 README.ja.md
 README.md
 _config.yml
@@ -967,4 +992,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-12-02 07:01:43 JST
+Generated at: 2025-12-07 07:01:40 JST

@@ -1,63 +1,50 @@
-Last updated: 2025-12-02
+Last updated: 2025-12-07
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #118](../issue-notes/118.md) では、Agentが生成するWindows用コードのTDD不足によるビルド失敗問題の解決策が検討されています。
-- [Issue #121](../issue-notes/121.md), [Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md) は、コマンドラインヘルプの改善、サーバーコマンドのシンプル化、およびスケジュールクリア機能の統合による操作性の向上を目指しています。
-- [Issue #117](../issue-notes/117.md) では、クライアント側のデモインタラクティブモードにおけるフレーズ開始タイミングのブレの原因分析と、YM2151トーンエディタでの動作確認が求められています。
+- コマンドライン引数のヘルプ表示 [Issue #121](../issue-notes/121.md) やserverコマンドのシンプル化 [Issue #119](../issue-notes/119.md), [Issue #120](../issue-notes/120.md) に関する改善がオープンです。
+- Agentが生成したWindows用コードのTDD不足 [Issue #118](../issue-notes/118.md) により、ビルドが通らない問題が発生しており、開発体験に影響を与えています。
+- Clientのdemo interactive modeでのフレーズ開始タイミングのずれ [Issue #117](../issue-notes/117.md) の原因究明と、演奏品質を安定させるための対策が必要です。
 
 ## 次の一手候補
-1. [Issue #118](../issue-notes/118.md): AgentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない
-   - 最初の小さな一歩: GitHub ActionsのLinux Runner上でRustのWindowsターゲット向けコンパイルチェック（`cargo check --target x86_64-pc-windows-gnu`など）が実行可能か、その具体的な方法とagentでのTDD適用可能性について調査する。
+1. [Issue #118](../issue-notes/118.md): WindowsターゲットのRustコードに対するCIビルドチェックの強化
+   - 最初の小さな一歩: Linux Runner上でWindowsターゲットの `cargo check` を実行するGitHub Actionsワークフローを既存の `call-rust-windows-check.yml` に追加し、現在のコンパイルエラーを可視化する。
    - Agent実行プロンプ:
      ```
-     対象ファイル: _research/windows_build_check_on_linux_ci.md (新規作成)
+     対象ファイル: .github/workflows/call-rust-windows-check.yml
 
-     実行内容: GitHub ActionsのLinux Runner環境でRustプロジェクトのWindowsターゲット向け（例: `x86_64-pc-windows-gnu`）のコンパイルチェックを実行するための実現可能性を調査し、以下の観点でmarkdown形式でまとめてください。
-     1. 利用可能なツール（`cargo check --target`, `cross`, `cargo-xwin`など）とその簡単な説明。
-     2. 各ツールのGitHub Actions Linux Runnerでの設定方法と制約。
-     3. GitHub Copilot Coding AgentがTDDを通じてWindowsビルドエラーを自律的に修正できる可能性と、そのためのプロンプト指示方法の検討。
-     4. 最終的な推奨されるアプローチと、そのための初期ワークフローの草案（もし実現可能であれば）。
+     実行内容: .github/workflows/call-rust-windows-check.yml に、Linux Runner上で `cargo check --target x86_64-pc-windows-gnu` を実行するステップを追加してください。このステップは、AgentによってTDDされていないWindowsコードがビルドエラーにならないかを確認するためのものです。
 
-     確認事項: 調査にあたり、Rustのクロスコンパイルに関する公式ドキュメントや関連コミュニティの議論を参照し、最新かつ信頼性の高い情報を収集してください。また、既存の`.github/workflows/`内のファイルが参考になる可能性があります。
+     確認事項: 既存のRustビルド関連ワークフロー（例: `build_windows.yml`）との競合がないか、またWindowsターゲット向けのクロスコンパイル環境（`rustup target add x86_64-pc-windows-gnu` など）がGitHub Actions Linux Runnerで適切に設定されているかを確認してください。
 
-     期待する出力: 上記実行内容で指定された観点を含む、詳細な調査結果をmarkdown形式で出力してください。
+     期待する出力: `call-rust-windows-check.yml` の変更により、Windowsターゲットのコンパイルチェックが実行され、その結果がGitHub Actionsのログに表示されること。
      ```
 
-2. [Issue #119](../issue-notes/119.md): server commandのうち、get interactive modeは不要になったので削除し、シンプル化する
-   - 最初の小さな一歩: サーバーコマンド定義である`src/ipc/protocol.rs`から`GetInteractiveMode`エントリを削除し、コンパイルエラーが発生する箇所を特定する。
-   - Agent実行プロンプト:
+2. [Issue #121](../issue-notes/121.md): コマンドライン引数ヘルプ表示で `--demo-interactive` オプションが表示されない原因の特定
+   - 最初の小さな一歩: `src/main.rs` を中心に、コマンドライン引数を定義している箇所（`clap` クレートを使用している可能性が高い）を特定し、`--demo-interactive` オプションの定義方法とヘルプ表示への影響を調査する。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: src/ipc/protocol.rs, src/server/command_handler.rs, src/client/core.rs, src/client/mod.rs, src/tests/**/*.rs, tests/**/*.rs
+     対象ファイル: src/main.rs, src/client/core.rs, src/server/mod.rs (関連するオプション定義がある場合)
 
-     実行内容: `GetInteractiveMode`コマンドをシステム全体から完全に削除するための変更を適用してください。具体的には、
-     1. `src/ipc/protocol.rs`から`GetInteractiveMode`コマンド定義を削除します。
-     2. `src/server/command_handler.rs`で`GetInteractiveMode`を処理するロジックを削除します。
-     3. `src/client/core.rs`や`src/client/mod.rs`など、クライアント側で`GetInteractiveMode`を使用している箇所があれば、その呼び出しと関連ロジックを削除または修正します。
-     4. `src/tests/`および`tests/`配下の関連する単体テストや統合テストを削除または適切に修正し、機能削除を反映させます。
+     実行内容: `src/main.rs` におけるコマンドライン引数（`clap` クレートを使用していると仮定）の定義を分析し、特に `--demo-interactive` オプションがヘルプメッセージ (`--help`) や不明なオプションエラー時に表示されない原因を特定してください。
 
-     確認事項: この変更が、他のサーバーコマンドやクライアント機能の動作に影響を与えないことを確認してください。また、削除される機能の痕跡がコードベースに残らないように徹底してください。
+     確認事項: `clap` クレートのバージョンや設定、`flatten` や `subcommand` などの特殊な属性が `--demo-interactive` オプションまたはその関連構造体でどのように使用されているかを確認してください。
 
-     期待する出力: `GetInteractiveMode`の削除によって変更された全ファイルの差分と、削除されたテストファイルの一覧、および主要な変更箇所の説明をmarkdown形式で出力してください。
+     期待する出力: `src/main.rs` および関連ファイルの分析結果をMarkdownで出力し、`--demo-interactive` オプションがヘルプに表示されない具体的な原因と、その修正方針案を提示してください。
      ```
 
-3. [Issue #117](../issue-notes/117.md): client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる
-   - 最初の小さな一歩: `ym2151 tone editor` (またはそれに相当するデモクライアント) の通常モードとインタラクティブモードで音が正しく鳴るかを確認し、もしタイミングのブレが発生する場合、その具体的な状況（再現手順、ブレの度合いなど）を詳細に記録する。
-   - Agent実行プロンプト:
+3. [Issue #119](../issue-notes/119.md): `get interactive mode` serverコマンドの削除と影響分析
+   - 最初の小さな一歩: `src/ipc/protocol.rs` で `GetInteractiveMode` コマンドが定義されている箇所を特定し、そのコマンドの呼び出し元と利用箇所をコードベース全体で検索する。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: src/client/interactive.rs, src/demo_client_interactive.rs, src/audio/scheduler.rs
+     対象ファイル: src/ipc/protocol.rs, src/server/command_handler.rs, src/client/mod.rs (またはクライアント側でこのコマンドを呼び出している可能性のあるファイル), src/tests/**/*.rs (関連テストファイル)
 
-     実行内容: クライアント側のデモインタラクティブモード（`src/demo_client_interactive.rs`）において、JSONデータの送信タイミングとサーバー側でのスケジューリングの関係性を分析し、以下の観点から報告してください。
-     1. JSONがクライアントから送信される際のタイムスタンプ処理（またはその欠如）。
-     2. サーバーがJSONを受信し、未来オフセットを加算してスケジューリングするロジック（`src/audio/scheduler.rs`に関連）。
-     3. このプロセスにおける名前付きパイプのI/O遅延が、フレーズ開始タイミングのブレに与える影響の可能性。
-     4. ブレを可視化するための簡単なデバッグログの挿入案（例: クライアント送信直前とサーバー受信直後のタイムスタンプ記録）。
+     実行内容: `GetInteractiveMode` コマンドをシステムから完全に削除するための影響分析を行ってください。具体的には、`src/ipc/protocol.rs` での定義、`src/server/command_handler.rs` での処理ロジック、およびクライアント側でこのコマンドを呼び出している可能性のあるファイルを特定し、削除した場合の影響と必要な修正箇所をリストアップしてください。
 
-     確認事項: 既存の`play json`コマンドや他のモードとのスケジューリングロジックの比較を行い、`demo interactive mode`特有の問題点がないか確認してください。名前付きパイプの動作原理についても考慮に入れてください。
+     確認事項: `GetInteractiveMode` コマンドが他のコマンドやインタラクティブモードの振る舞いに依存していないか、また削除によってシステムの既存機能に予期せぬ副作用がないかを確認してください。関連するテストファイルも調査対象に含めてください。
 
-     期待する出力: 分析結果とデバッグログ挿入案をmarkdown形式で出力してください。特に、タイムスタンプがどのように扱われているか、どの部分で遅延が発生しうるかについて焦点を当ててください。
-     ```
+     期待する出力: `GetInteractiveMode` コマンド削除による影響範囲と、必要なコード変更（ファイルパスと関数名）のリストをMarkdown形式で出力してください。
 
 ---
-Generated at: 2025-12-02 07:02:08 JST
+Generated at: 2025-12-07 07:01:58 JST
