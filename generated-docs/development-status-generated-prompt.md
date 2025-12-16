@@ -1,4 +1,4 @@
-Last updated: 2025-12-07
+Last updated: 2025-12-17
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -212,7 +212,6 @@ Last updated: 2025-12-07
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
-- generated-docs/project-overview-generated-prompt.md
 - googled947dc864c270e07.html
 - install-ym2151-tools.rs
 - issue-notes/100.md
@@ -972,24 +971,20 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-04e35d0 Rust Windows check
-25ba3b3 Update project summaries (overview & development status) [auto]
-7401c65 Google検索にindexさせる用
-28d1db3 Google検索にindexさせる用
+b762a1b Auto-translate README.ja.md to README.md [auto]
+2a0828f Update README.ja.md for terminology consistency
+c66ec40 Auto-translate README.ja.md to README.md [auto]
+dc90c9e Add project scope exclusions to README.ja.md
 
 ### 変更されたファイル:
-.cargo/config.toml
-.github/copilot-instructions.md
 .github/workflows/call-rust-windows-check.yml
 README.ja.md
 README.md
-_config.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-12-07 07:01:40 JST
+Generated at: 2025-12-17 07:01:41 JST
