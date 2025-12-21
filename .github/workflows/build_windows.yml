@@ -9,35 +9,49 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
-      
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry/index
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache cargo dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry/cache
           key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Cache target directory
         uses: actions/cache@v4
         with:
           path: target
           key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Check code compilation
         run: cargo check --locked --verbose
-      
+
       - name: Check test compilation
         run: cargo check --tests --locked --verbose
 
       - name: run test
         run: cargo test --verbose
+
+      - name: Create issue on failure
+        if: failure()
+        uses: dacbd/create-issue-action@v1
+        with:
+          title: "[CI] Windows build or test failed"
+          body: |
+            Windows CI でビルドまたはテストに失敗しました。
+            - Workflow: ${{ github.workflow }}
+            - Job: ${{ github.job }}
+            - Commit: ${{ github.sha }}
+            - Ref: ${{ github.ref }}
+            - 詳細はActionsログを参照してください。
+          labels: "ci,windows,auto-generated"
