@@ -46,6 +46,7 @@ jobs:
         if: failure()
         uses: dacbd/create-issue-action@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           title: "[CI] Windows build or test failed"
           body: |
             Windows CI でビルドまたはテストに失敗しました。
