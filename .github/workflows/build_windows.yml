@@ -6,6 +6,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,7 +48,7 @@ jobs:
           exit $LASTEXITCODE
 
       - name: Capture test failure summary
-        if: failure() && steps.test.outcome == 'failure'
+        if: (failure() || cancelled()) && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         id: test_output
         shell: pwsh
         run: |
@@ -65,7 +66,7 @@ jobs:
           }
 
       - name: Upload test log artifacts
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
@@ -73,13 +74,15 @@ jobs:
           retention-days: 30
 
       - name: Create issue on failure
-        if: failure()
+        if: failure() || cancelled()
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "[CI] Windows build or test failed"
+          title: "[CI] Windows build or test ${{ cancelled() && 'timed out' || 'failed' }}"
           body: |
             Windows CI でビルドまたはテストに失敗しました。
+
+            **ステータス**: ${{ cancelled() && 'タイムアウトによりキャンセル' || '失敗' }}
 
             ## ログへのリンク
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
