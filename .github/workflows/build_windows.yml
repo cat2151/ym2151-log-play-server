@@ -33,75 +33,46 @@ jobs:
           path: target
           key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Check code compilation
-        run: cargo check --locked --verbose
-
-      - name: Check test compilation
-        run: cargo check --tests --locked --verbose
+      - name: Build code
+        run: cargo build --locked --verbose
 
       - name: Install cargo-nextest
         uses: taiki-e/install-action@nextest
 
-      - name: Run tests
+      - name: Run tests with nextest
         id: test
         run: |
-          # nextest: 失敗テストを最後にまとめて表示、全テスト実行
+          # nextest: 設定ファイル(.config/nextest.toml)で60秒タイムアウトを設定済み
+          # --no-fail-fast: 全テストを実行（失敗したテストがあっても継続）
+          # --failure-output=final: 失敗したテストの出力を最後にまとめて表示
           cargo nextest run --no-fail-fast --failure-output=final 2>&1 | Tee-Object -FilePath test_output.log
-          $testResult = $LASTEXITCODE
-
-          # 失敗時は失敗サマリーを抽出（FAILからSummaryまで、またはファイル末尾）
-          if ($testResult -ne 0) {
-            $content = Get-Content -Path test_output.log -Raw
-            # 失敗テストの出力部分を抽出（--- FAIL から始まる部分）
-            $failurePattern = '(?s)(---\s*FAIL.*?)(?=---\s*(?:PASS|FAIL)|Summary|\z)'
-            $failures = [regex]::Matches($content, $failurePattern)
-            $failureSummary = ($failures | ForEach-Object { $_.Value }) -join "`n"
-
-            # Summaryセクションも抽出
-            $summaryPattern = '(?s)(Summary.*?\z)'
-            $summaryMatch = [regex]::Match($content, $summaryPattern)
-            if ($summaryMatch.Success) {
-              $failureSummary += "`n`n" + $summaryMatch.Value
-            }
-
-            # 失敗サマリーを別ファイルに保存
-            $failureSummary | Out-File -FilePath test_failures.log -Encoding utf8
-          }
-
-          exit $testResult
-
-      - name: Capture test failure summary
-        if: failure() && steps.test.outcome == 'failure'
-        id: test_output
-        shell: pwsh
-        run: |
-          # 失敗サマリーファイルがあればそれを使用、なければ全ログの末尾
-          if (Test-Path test_failures.log) {
-            $content = Get-Content -Path test_failures.log -Raw -ErrorAction SilentlyContinue
-          } else {
-            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
-          }
-
-          if ($content) {
-            # 最大65000文字に制限（GitHub issue本文の制限対策）
-            if ($content.Length -gt 65000) {
-              $content = $content.Substring($content.Length - 65000)
-            }
-            # GitHub Actions output用に heredoc 形式で出力
-            "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
+          exit $LASTEXITCODE
 
       - name: Upload test log artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
-          path: |
-            test_output.log
-            test_failures.log
+          path: test_output.log
           retention-days: 30
+
+      - name: Capture test failure summary
+        if: failure() && steps.test.outcome == 'failure'
+        id: test_output
+        shell: pwsh
+        run: |
+          # GitHub issue用にログを取得（最大65000文字）
+          if (Test-Path test_output.log) {
+            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
+            if ($content -and $content.Length -gt 65000) {
+              $content = $content.Substring($content.Length - 65000)
+            }
+            if ($content) {
+              "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            }
+          }
 
       - name: Create issue on failure
         if: failure()
