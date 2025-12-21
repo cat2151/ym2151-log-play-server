@@ -1,6 +1,7 @@
 [profile.default]
 # Set a 60-second timeout for all tests
 # Tests that take longer than 1 minute will be terminated
+# terminate-after = 3: Send SIGTERM signal up to 3 times before force-killing with SIGKILL
 slow-timeout = { period = "60s", terminate-after = 3 }
 
 # Ensure failure output is shown

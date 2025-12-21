@@ -42,19 +42,9 @@ jobs:
       - name: Run tests with nextest
         id: test
         run: |
-          # nextest: 設定ファイル(.config/nextest.toml)で60秒タイムアウトを設定済み
-          # --no-fail-fast: 全テストを実行（失敗したテストがあっても継続）
-          # --failure-output=final: 失敗したテストの出力を最後にまとめて表示
-          cargo nextest run --no-fail-fast --failure-output=final 2>&1 | Tee-Object -FilePath test_output.log
+          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
+          cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
           exit $LASTEXITCODE
-
-      - name: Upload test log artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-logs
-          path: test_output.log
-          retention-days: 30
 
       - name: Capture test failure summary
         if: failure() && steps.test.outcome == 'failure'
@@ -73,6 +63,14 @@ jobs:
               "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             }
           }
+
+      - name: Upload test log artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: test_output.log
+          retention-days: 30
 
       - name: Create issue on failure
         if: failure()
