@@ -38,3 +38,6 @@ jobs:
       
       - name: Check test compilation
         run: cargo check --tests --locked --verbose
+
+      - name: run test
+        run: cargo test --verbose
