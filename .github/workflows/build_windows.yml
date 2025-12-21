@@ -39,8 +39,69 @@ jobs:
       - name: Check test compilation
         run: cargo check --tests --locked --verbose
 
-      - name: run test
-        run: cargo test --verbose
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Run tests
+        id: test
+        run: |
+          # nextest: 失敗テストを最後にまとめて表示、全テスト実行
+          cargo nextest run --no-fail-fast --failure-output=final 2>&1 | Tee-Object -FilePath test_output.log
+          $testResult = $LASTEXITCODE
+
+          # 失敗時は失敗サマリーを抽出（FAILからSummaryまで、またはファイル末尾）
+          if ($testResult -ne 0) {
+            $content = Get-Content -Path test_output.log -Raw
+            # 失敗テストの出力部分を抽出（--- FAIL から始まる部分）
+            $failurePattern = '(?s)(---\s*FAIL.*?)(?=---\s*(?:PASS|FAIL)|Summary|\z)'
+            $failures = [regex]::Matches($content, $failurePattern)
+            $failureSummary = ($failures | ForEach-Object { $_.Value }) -join "`n"
+
+            # Summaryセクションも抽出
+            $summaryPattern = '(?s)(Summary.*?\z)'
+            $summaryMatch = [regex]::Match($content, $summaryPattern)
+            if ($summaryMatch.Success) {
+              $failureSummary += "`n`n" + $summaryMatch.Value
+            }
+
+            # 失敗サマリーを別ファイルに保存
+            $failureSummary | Out-File -FilePath test_failures.log -Encoding utf8
+          }
+
+          exit $testResult
+
+      - name: Capture test failure summary
+        if: failure() && steps.test.outcome == 'failure'
+        id: test_output
+        shell: pwsh
+        run: |
+          # 失敗サマリーファイルがあればそれを使用、なければ全ログの末尾
+          if (Test-Path test_failures.log) {
+            $content = Get-Content -Path test_failures.log -Raw -ErrorAction SilentlyContinue
+          } else {
+            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
+          }
+
+          if ($content) {
+            # 最大65000文字に制限（GitHub issue本文の制限対策）
+            if ($content.Length -gt 65000) {
+              $content = $content.Substring($content.Length - 65000)
+            }
+            # GitHub Actions output用に heredoc 形式で出力
+            "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Upload test log artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: |
+            test_output.log
+            test_failures.log
+          retention-days: 30
 
       - name: Create issue on failure
         if: failure()
@@ -50,9 +111,28 @@ jobs:
           title: "[CI] Windows build or test failed"
           body: |
             Windows CI でビルドまたはテストに失敗しました。
+
+            ## ログへのリンク
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ## 詳細
             - Workflow: ${{ github.workflow }}
             - Job: ${{ github.job }}
-            - Commit: ${{ github.sha }}
+            - Run ID: ${{ github.run_id }}
+            - Run Attempt: ${{ github.run_attempt }}
             - Ref: ${{ github.ref }}
-            - 詳細はActionsログを参照してください。
+            - Commit: ${{ github.sha }}
+
+            ## テスト失敗サマリー
+            <details>
+            <summary>クリックして展開</summary>
+
+            ```
+            ${{ steps.test_output.outputs.log }}
+            ```
+
+            </details>
+
+            ## アーティファクト
+            完全なログは上記リンクの「Artifacts」セクションから `test-logs` をダウンロードしてください。
           labels: "ci,windows,auto-generated"
