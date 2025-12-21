@@ -1,4 +1,4 @@
-Last updated: 2025-12-17
+Last updated: 2025-12-22
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -103,6 +103,7 @@ Last updated: 2025-12-17
 - Issue番号を記載する際は、必ず [Issue #番号](../issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
 
 ## プロジェクトのファイル一覧
+- .config/nextest.toml
 - .editorconfig
 - .github/actions-tmp/.github/workflows/call-callgraph.yml
 - .github/actions-tmp/.github/workflows/call-daily-project-summary.yml
@@ -228,6 +229,9 @@ Last updated: 2025-12-17
 - issue-notes/120.md
 - issue-notes/121.md
 - issue-notes/122.md
+- issue-notes/123.md
+- issue-notes/124.md
+- issue-notes/128.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -328,6 +332,21 @@ Last updated: 2025-12-17
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
+## [Issue #123](../issue-notes/123.md): user作業 : 現在のGitHub Actions / Workflow / Windows Runnerに、cargo testを追加し、runして検証する
+[issue-notes/123.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/123.md)
+
+...
+ラベル: 
+--- issue-notes/123.md の内容 ---
+
+```markdown
+# issue user作業 : 現在のWindows Runnerに、cargo testを追加し、runして検証する #123
+[issues #123](https://github.com/cat2151/ym2151-log-play-server/issues/123)
+
+
+
+```
+
 ## [Issue #121](../issue-notes/121.md): コマンドライン引数の表示パターンが2パターンあり（help時、不明なオプション時）、どちらも--demo-interactiveが表示されず、userが混乱する
 [issue-notes/121.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/121.md)
 
@@ -728,6 +747,111 @@ Last updated: 2025-12-17
 {% endraw %}
 ```
 
+### .github/actions-tmp/issue-notes/23.md
+```md
+{% raw %}
+# issue issue 17が再発してしまっている #23
+[issues #23](https://github.com/cat2151/github-actions/issues/23)
+
+# 症状は？
+- issue 17と同じ
+
+# どうする？
+- development-status-generated-prompt.md を確認する
+- 結果
+    - >Issue番号を記載する際は、必ず [Issue #番号](issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
+    - 仮説、これが残っており、ほかの ../ 指定と競合し、どちらかがランダムで選ばれていた
+    - 対策、ここを ../ 指定にする
+
+# 結果
+- test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/3.md
+```md
+{% raw %}
+# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
+[issues #3](https://github.com/cat2151/github-actions/issues/3)
+
+- 前提
+  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
+  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+
+- prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlはまだ共通ワークフロー化されず、
+呼び出し元からコピーされたままの状態です。
+このymlファイル名のまま、
+中身を共通ワークフロー化してください。
+呼び出し元ymlは別途書きますので気にしないでください。
+まずplanしてください
+```
+
+- plan 生成結果
+```
+共通ワークフロー化のためのplanは以下の通りです。
+
+1. 目的
+現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
+2. 主な変更点
+on: トリガーを workflow_call に変更（直接イベントで起動しない）。
+必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
+github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
+既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
+3. 具体的な修正内容
+on: issues: → on: workflow_call: に変更。
+inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
+スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
+github-script ステップも同様にinputsを参照。
+必要に応じて secrets も workflow_call で受け取れるようにする。
+4. ファイル名・配置
+ファイル名はそのまま issue-note.yml。
+配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
+5. 呼び出し元への影響
+呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
+このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+```
+
+- userがplanレビューし、OKを出した
+- agentに生成結果ymlをレビューさせた、OKとなった
+  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
+-  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
+```
+原因の分析：
+
+呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
+共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
+しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
+エラーの本質的な原因：
+
+actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
+script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
+そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
+正しい書き方：
+
+actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
+例（修正版）：
+
+このように、inputs の値を env で渡し、script 内では process.env で参照してください。
+
+まとめ：
+
+actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
+env: で値を渡し、process.env で参照するのが正しい
+修正が必要です。修正版のワークフローが必要な場合はお知らせください。
+```
+
+- test green
+- closeとする
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -969,22 +1093,38 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
+### issue-notes/123.md
+```md
+{% raw %}
+# issue user作業 : 現在のWindows Runnerに、cargo testを追加し、runして検証する #123
+[issues #123](https://github.com/cat2151/ym2151-log-play-server/issues/123)
+
+
+
+{% endraw %}
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-b762a1b Auto-translate README.ja.md to README.md [auto]
-2a0828f Update README.ja.md for terminology consistency
-c66ec40 Auto-translate README.ja.md to README.md [auto]
-dc90c9e Add project scope exclusions to README.ja.md
+ba6a722 Merge pull request #129 from cat2151/copilot/improve-build-windows-yml
+4b61ed0 Address code review feedback: improve comments and reorder workflow steps
+818e05b Add nextest configuration with 60s timeout and simplify build_windows.yml
+4cac6b4 Initial plan
+baf0d49 Add issue note for #128 [auto]
+eb61a35 テスト実行の改善と失敗サマリーのキャプチャを追加
+36ef6f4 Add missing token parameter to issue creation step in Windows CI workflow
+ea749f1 Add failure issue creation step to Windows CI workflow
+987a729 Merge pull request #125 from cat2151/copilot/fix-windows-test-failures
+4ce1d5d Fix test mutex lock ordering in server_basic_test
 
 ### 変更されたファイル:
-.github/workflows/call-rust-windows-check.yml
-README.ja.md
-README.md
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
+.config/nextest.toml
+.github/workflows/build_windows.yml
+issue-notes/124.md
+issue-notes/128.md
+tests/server_basic_test.rs
+tests/server_integration_test.rs
 
 
 ---
-Generated at: 2025-12-17 07:01:41 JST
+Generated at: 2025-12-22 07:01:31 JST
