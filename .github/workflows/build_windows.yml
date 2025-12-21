@@ -73,16 +73,29 @@ jobs:
           path: test_output.log
           retention-days: 30
 
+      - name: Determine failure status
+        if: failure() || cancelled()
+        id: failure_status
+        shell: pwsh
+        run: |
+          if ("${{ job.status }}" -eq "cancelled") {
+            "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "status_en=failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
       - name: Create issue on failure
         if: failure() || cancelled()
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "[CI] Windows build or test ${{ cancelled() && 'timed out' || 'failed' }}"
+          title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
           body: |
             Windows CI でビルドまたはテストに失敗しました。
 
-            **ステータス**: ${{ cancelled() && 'タイムアウトによりキャンセル' || '失敗' }}
+            **ステータス**: ${{ steps.failure_status.outputs.status_ja }}
 
             ## ログへのリンク
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
