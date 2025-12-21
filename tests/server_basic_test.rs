@@ -73,6 +73,10 @@ fn test_multiple_server_instances() {
 fn test_server_startup_automated() {
     eprintln!("🔍 test_server_startup_automated: テスト開始");
 
+    // Acquire lock to prevent parallel execution of server tests
+    let _lock = test_util_server_mutex::server_test_lock();
+    eprintln!("✅ mutexロック取得完了");
+
     // Check if there are any existing servers or processes
     match NamedPipe::connect_default() {
         Ok(_) => {
@@ -81,10 +85,6 @@ fn test_server_startup_automated() {
         }
         Err(_) => eprintln!("✅ 既存サーバーなし - テスト続行"),
     }
-
-    // Acquire lock to prevent parallel execution of server tests
-    let _lock = test_util_server_mutex::server_test_lock();
-    eprintln!("✅ mutexロック取得完了");
 
     // This test verifies basic server startup and shutdown functionality
     // automatically without requiring manual verification
