@@ -42,6 +42,8 @@ jobs:
 
       - name: Run tests with nextest
         id: test
+        # 15分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
+        # テストがハングした場合でも、issue作成などの後処理を確実に実行するため
         timeout-minutes: 15
         continue-on-error: true
         run: |
@@ -80,6 +82,9 @@ jobs:
         id: failure_status
         shell: pwsh
         run: |
+          # cancelled: ユーザーによる手動キャンセル
+          # timed_out: timeout-minutesによる自動タイムアウト
+          # どちらも「タイムアウト」としてユーザーに報告
           if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
             "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
