@@ -42,13 +42,15 @@ jobs:
 
       - name: Run tests with nextest
         id: test
+        timeout-minutes: 15
+        continue-on-error: true
         run: |
           # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
           cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
           exit $LASTEXITCODE
 
       - name: Capture test failure summary
-        if: (failure() || cancelled()) && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         id: test_output
         shell: pwsh
         run: |
@@ -66,7 +68,7 @@ jobs:
           }
 
       - name: Upload test log artifacts
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
@@ -74,11 +76,11 @@ jobs:
           retention-days: 30
 
       - name: Determine failure status
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         id: failure_status
         shell: pwsh
         run: |
-          if ("${{ job.status }}" -eq "cancelled") {
+          if ("${{ steps.test.outcome }}" -eq "cancelled") {
             "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
@@ -87,7 +89,7 @@ jobs:
           }
 
       - name: Create issue on failure
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
