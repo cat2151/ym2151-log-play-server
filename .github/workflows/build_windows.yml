@@ -42,13 +42,17 @@ jobs:
 
       - name: Run tests with nextest
         id: test
+        # 15分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
+        # テストがハングした場合でも、issue作成などの後処理を確実に実行するため
+        timeout-minutes: 15
+        continue-on-error: true
         run: |
           # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
           cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
           exit $LASTEXITCODE
 
       - name: Capture test failure summary
-        if: (failure() || cancelled()) && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: test_output
         shell: pwsh
         run: |
@@ -66,7 +70,7 @@ jobs:
           }
 
       - name: Upload test log artifacts
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
@@ -74,11 +78,14 @@ jobs:
           retention-days: 30
 
       - name: Determine failure status
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: failure_status
         shell: pwsh
         run: |
-          if ("${{ job.status }}" -eq "cancelled") {
+          # cancelled: ユーザーによる手動キャンセル
+          # timed_out: timeout-minutesによる自動タイムアウト
+          # どちらも「タイムアウト」としてユーザーに報告
+          if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
             "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
@@ -87,7 +94,7 @@ jobs:
           }
 
       - name: Create issue on failure
-        if: failure() || cancelled()
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
