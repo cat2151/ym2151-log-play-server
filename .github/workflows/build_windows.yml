@@ -50,7 +50,7 @@ jobs:
           exit $LASTEXITCODE
 
       - name: Capture test failure summary
-        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: test_output
         shell: pwsh
         run: |
@@ -68,7 +68,7 @@ jobs:
           }
 
       - name: Upload test log artifacts
-        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
@@ -76,11 +76,11 @@ jobs:
           retention-days: 30
 
       - name: Determine failure status
-        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: failure_status
         shell: pwsh
         run: |
-          if ("${{ steps.test.outcome }}" -eq "cancelled") {
+          if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
             "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
@@ -89,7 +89,7 @@ jobs:
           }
 
       - name: Create issue on failure
-        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
