@@ -31,6 +31,10 @@ fn test_write_read_pipe() {
         writer.write_str("Hello, Windows Pipe!\n").unwrap();
     });
 
+    // Give the client thread time to start and attempt connection
+    // This prevents race condition where open_read() is called before client thread starts
+    thread::sleep(Duration::from_millis(200));
+
     // Read from the pipe (this will block until writer connects)
     let mut reader = pipe.open_read().unwrap();
     let line = reader.read_line().unwrap();
@@ -55,6 +59,9 @@ fn test_multiple_messages() {
         writer.write_str("Message 2\n").unwrap();
         writer.write_str("Message 3\n").unwrap();
     });
+
+    // Give the client thread time to start and attempt connection
+    thread::sleep(Duration::from_millis(200));
 
     let mut reader = pipe.open_read().unwrap();
     let line1 = reader.read_line().unwrap();
@@ -101,6 +108,9 @@ fn test_binary_protocol_with_logging() {
 
     // Set server context for logging
     test_set_server_context();
+
+    // Give the client thread time to start and attempt connection
+    thread::sleep(Duration::from_millis(200));
 
     // Read command from client
     let mut reader = pipe.open_read().unwrap();
