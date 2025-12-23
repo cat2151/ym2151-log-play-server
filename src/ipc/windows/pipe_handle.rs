@@ -4,6 +4,7 @@ use std::time::Duration;
 use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0, WAIT_TIMEOUT};
 use windows::Win32::System::Pipes::ConnectNamedPipe;
 use windows::Win32::System::Threading::{CreateEventW, WaitForSingleObject};
+use windows::Win32::System::IO::GetOverlappedResult;
 
 use super::pipe_factory::{connect_to_pipe, create_named_pipe};
 use super::pipe_reader::PipeReader;
@@ -75,15 +76,29 @@ impl NamedPipe {
             }
         };
 
-        // Clean up the event handle
-        unsafe { CloseHandle(event) }.ok();
-
         match wait_result {
             WAIT_OBJECT_0 => {
-                // Connection succeeded
-                Ok(PipeReader::new(self.handle))
+                // Wait succeeded, verify the operation completed successfully
+                let mut bytes_transferred = 0u32;
+                let overlapped_result = unsafe {
+                    GetOverlappedResult(self.handle, &overlapped, &mut bytes_transferred, false)
+                };
+
+                // Clean up the event handle
+                unsafe { CloseHandle(event) }.ok();
+
+                match overlapped_result {
+                    Ok(_) => Ok(PipeReader::new(self.handle)),
+                    Err(e) => Err(io::Error::other(format!(
+                        "GetOverlappedResult failed: {}",
+                        e
+                    ))),
+                }
             }
             WAIT_TIMEOUT => {
+                // Clean up the event handle
+                unsafe { CloseHandle(event) }.ok();
+
                 // Timeout occurred
                 Err(io::Error::new(
                     io::ErrorKind::TimedOut,
@@ -91,6 +106,9 @@ impl NamedPipe {
                 ))
             }
             _ => {
+                // Clean up the event handle
+                unsafe { CloseHandle(event) }.ok();
+
                 // Other error
                 Err(io::Error::last_os_error())
             }
