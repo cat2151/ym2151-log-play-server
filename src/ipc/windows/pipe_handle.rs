@@ -1,7 +1,9 @@
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0, WAIT_TIMEOUT};
+use windows::Win32::Foundation::{
+    CloseHandle, ERROR_IO_PENDING, HANDLE, WAIT_OBJECT_0, WAIT_TIMEOUT,
+};
 use windows::Win32::System::Pipes::ConnectNamedPipe;
 use windows::Win32::System::Threading::{CreateEventW, WaitForSingleObject};
 use windows::Win32::System::IO::GetOverlappedResult;
@@ -42,6 +44,9 @@ impl NamedPipe {
 
     pub fn open_read_with_timeout(&self, timeout: Duration) -> io::Result<PipeReader> {
         // Create an event for overlapped I/O
+        // Parameters: security_attributes=None, manual_reset=true, initial_state=false, name=None
+        // manual_reset=true: Event must be manually reset (stays signaled until ResetEvent)
+        // initial_state=false: Event starts in non-signaled state
         let event = unsafe {
             CreateEventW(None, true, false, None)
                 .map_err(|e| io::Error::other(format!("Failed to create event: {}", e)))?
@@ -63,10 +68,9 @@ impl NamedPipe {
                 return Ok(PipeReader::new(self.handle));
             }
             Err(e) => {
-                // Check if operation is pending (ERROR_IO_PENDING = 997)
+                // Check if operation is pending (ERROR_IO_PENDING)
                 let error_code = e.code().0 as u32;
-                if error_code != 997 {
-                    // ERROR_IO_PENDING
+                if error_code != ERROR_IO_PENDING.0 {
                     unsafe { CloseHandle(event) }.ok();
                     return Err(io::Error::other(format!("ConnectNamedPipe failed: {}", e)));
                 }
