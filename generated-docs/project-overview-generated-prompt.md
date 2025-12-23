@@ -1,4 +1,4 @@
-Last updated: 2025-12-23
+Last updated: 2025-12-24
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -3696,6 +3696,7 @@ MIT License
                                         📄 _config.yml
                                         📄 build.rs
                                         📁 generated-docs/
+                                          📖 development-status-generated-prompt.md
                                         🌐 googled947dc864c270e07.html
                                         📄 install-ym2151-tools.rs
                                         📁 issue-notes/
@@ -3831,6 +3832,7 @@ MIT License
                                       📄 _config.yml
                                       📄 build.rs
                                       📁 generated-docs/
+                                        📖 development-status-generated-prompt.md
                                       🌐 googled947dc864c270e07.html
                                       📄 install-ym2151-tools.rs
                                       📁 issue-notes/
@@ -3966,6 +3968,7 @@ MIT License
                                     📄 _config.yml
                                     📄 build.rs
                                     📁 generated-docs/
+                                      📖 development-status-generated-prompt.md
                                     🌐 googled947dc864c270e07.html
                                     📄 install-ym2151-tools.rs
                                     📁 issue-notes/
@@ -4101,6 +4104,7 @@ MIT License
                                   📄 _config.yml
                                   📄 build.rs
                                   📁 generated-docs/
+                                    📖 development-status-generated-prompt.md
                                   🌐 googled947dc864c270e07.html
                                   📄 install-ym2151-tools.rs
                                   📁 issue-notes/
@@ -4236,6 +4240,7 @@ MIT License
                                 📄 _config.yml
                                 📄 build.rs
                                 📁 generated-docs/
+                                  📖 development-status-generated-prompt.md
                                 🌐 googled947dc864c270e07.html
                                 📄 install-ym2151-tools.rs
                                 📁 issue-notes/
@@ -4371,6 +4376,7 @@ MIT License
                               📄 _config.yml
                               📄 build.rs
                               📁 generated-docs/
+                                📖 development-status-generated-prompt.md
                               🌐 googled947dc864c270e07.html
                               📄 install-ym2151-tools.rs
                               📁 issue-notes/
@@ -4506,6 +4512,7 @@ MIT License
                             📄 _config.yml
                             📄 build.rs
                             📁 generated-docs/
+                              📖 development-status-generated-prompt.md
                             🌐 googled947dc864c270e07.html
                             📄 install-ym2151-tools.rs
                             📁 issue-notes/
@@ -4641,6 +4648,7 @@ MIT License
                           📄 _config.yml
                           📄 build.rs
                           📁 generated-docs/
+                            📖 development-status-generated-prompt.md
                           🌐 googled947dc864c270e07.html
                           📄 install-ym2151-tools.rs
                           📁 issue-notes/
@@ -4776,6 +4784,7 @@ MIT License
                         📄 _config.yml
                         📄 build.rs
                         📁 generated-docs/
+                          📖 development-status-generated-prompt.md
                         🌐 googled947dc864c270e07.html
                         📄 install-ym2151-tools.rs
                         📁 issue-notes/
@@ -4911,6 +4920,7 @@ MIT License
                       📄 _config.yml
                       📄 build.rs
                       📁 generated-docs/
+                        📖 development-status-generated-prompt.md
                       🌐 googled947dc864c270e07.html
                       📄 install-ym2151-tools.rs
                       📁 issue-notes/
@@ -6758,4 +6768,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-12-23 07:01:41 JST
+Generated at: 2025-12-24 07:01:41 JST

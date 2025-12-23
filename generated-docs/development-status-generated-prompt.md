@@ -1,4 +1,4 @@
-Last updated: 2025-12-23
+Last updated: 2025-12-24
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -335,6 +335,20 @@ Last updated: 2025-12-23
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
+## [Issue #137](../issue-notes/137.md): Fix Windows CI timeout by adding timeout to ConnectNamedPipe
+Windows CI timed out after 15 minutes because `ConnectNamedPipe` blocks indefinitely when waiting for client connections. If client threads fail to connect due to race conditions, tests hang forever.
+
+## Changes
+
+- **Added overlapped I/O timeout to `ConnectNamedPipe`**
+  - Created `open_read_with_ti...
+ラベル: 
+--- issue-notes/137.md の内容 ---
+
+```markdown
+
+```
+
 ## [Issue #136](../issue-notes/136.md): [CI] Windows build or test timed out
 Windows CI でビルドまたはテストに失敗しました。
 
@@ -354,38 +368,6 @@ https://github.com/cat2151/ym2151-log-play-server/actions/runs/20432715103
 --- issue-notes/136.md の内容 ---
 
 ```markdown
-
-```
-
-## [Issue #135](../issue-notes/135.md): Fix test hang in build_windows.yml by adding step timeout and proper outcome handling
-The Windows CI workflow would hang for 10+ minutes at the test step without creating failure issues, blocking feedback on test failures.
-
-## Changes
-
-**Added step-level timeout and error continuation**
-```yaml
-- name: Run tests with nextest
-  id: test
-  timeout-minutes: 15        # Shorter than 30mi...
-ラベル: 
---- issue-notes/135.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #134](../issue-notes/134.md): build_windows.yml が test run failedとなっているのに10分以上もその状態のままでjobがtestから先に進まない
-[issue-notes/134.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/134.md)
-
-...
-ラベル: 
---- issue-notes/134.md の内容 ---
-
-```markdown
-# issue build_windows.yml が test run failedとなっているのに10分以上もその状態のままでjobがtestから先に進まない #134
-[issues #134](https://github.com/cat2151/ym2151-log-play-server/issues/134)
-
-
 
 ```
 
@@ -909,152 +891,6 @@ env: で値を渡し、process.env で参照するのが正しい
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/4.md
-```md
-{% raw %}
-# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
-[issues #4](https://github.com/cat2151/github-actions/issues/4)
-
-# prompt
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlファイルを、以下の2つのファイルに分割してください。
-1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
-2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
-まずplanしてください
-```
-
-# 結果、あちこちハルシネーションのあるymlが生成された
-- agentの挙動があからさまにハルシネーション
-    - インデントが修正できない、「失敗した」という
-    - 構文誤りを認識できない
-- 人力で修正した
-
-# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
-```
-あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
-
---- 呼び出し元
-
-name: Call Daily Project Summary
-
-on:
-  schedule:
-    # 日本時間 07:00 (UTC 22:00 前日)
-    - cron: '0 22 * * *'
-  workflow_dispatch:
-
-jobs:
-  call-daily-project-summary:
-    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
-    secrets:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
---- 共通ワークフロー
-name: Daily Project Summary
-on:
-  workflow_call:
-
-jobs:
-  generate-summary:
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-      issues: read
-      pull-requests: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 履歴を取得するため
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: |
-          # 一時的なディレクトリで依存関係をインストール
-          mkdir -p /tmp/summary-deps
-          cd /tmp/summary-deps
-          npm init -y
-          npm install @google/generative-ai @octokit/rest
-          # generated-docsディレクトリを作成
-          mkdir -p $GITHUB_WORKSPACE/generated-docs
-
-      - name: Generate project summary
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          NODE_PATH: /tmp/summary-deps/node_modules
-        run: |
-          node .github/scripts/generate-project-summary.cjs
-
-      - name: Check for generated summaries
-        id: check_summaries
-        run: |
-          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
-            echo "summaries_generated=true" >> $GITHUB_OUTPUT
-          else
-            echo "summaries_generated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push summaries
-        if: steps.check_summaries.outputs.summaries_generated == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          # package.jsonの変更のみリセット（generated-docsは保持）
-          git restore package.json 2>/dev/null || true
-          # サマリーファイルのみを追加
-          git add generated-docs/project-overview.md
-          git add generated-docs/development-status.md
-          git commit -m "Update project summaries (overview & development status)"
-          git push
-
-      - name: Summary generation result
-        run: |
-          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
-            echo "✅ Project summaries updated successfully"
-            echo "📊 Generated: project-overview.md & development-status.md"
-          else
-            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
-          fi
-```
-
-# 上記promptで、2つのLLMにレビューさせ、合格した
-
-# 細部を、先行する2つのymlを参照に手直しした
-
-# ローカルtestをしてからcommitできるとよい。方法を検討する
-- ローカルtestのメリット
-    - 素早く修正のサイクルをまわせる
-    - ムダにgit historyを汚さない
-        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
-- 方法
-    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
-    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
-    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
-- 結果
-    - OK
-    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
-    - OK
-
-# test green
-
-# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
-
-# closeとする
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/7.md
 ```md
 {% raw %}
@@ -1160,136 +996,6 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 # test green
 
 # closeとする
-
-{% endraw %}
-```
-
-### .github/workflows/build_windows.yml
-```yml
-{% raw %}
-name: Windows CI
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry/index
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache cargo dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry/cache
-          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Cache target directory
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build code
-        run: cargo build --locked --verbose
-
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@nextest
-
-      - name: Run tests with nextest
-        id: test
-        run: |
-          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
-          cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
-          exit $LASTEXITCODE
-
-      - name: Capture test failure summary
-        if: (failure() || cancelled()) && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled')
-        id: test_output
-        shell: pwsh
-        run: |
-          # GitHub issue用にログを取得（最大65000文字）
-          if (Test-Path test_output.log) {
-            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
-            if ($content -and $content.Length -gt 65000) {
-              $content = $content.Substring($content.Length - 65000)
-            }
-            if ($content) {
-              "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            }
-          }
-
-      - name: Upload test log artifacts
-        if: failure() || cancelled()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-logs
-          path: test_output.log
-          retention-days: 30
-
-      - name: Determine failure status
-        if: failure() || cancelled()
-        id: failure_status
-        shell: pwsh
-        run: |
-          if ("${{ job.status }}" -eq "cancelled") {
-            "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          } else {
-            "status_en=failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-
-      - name: Create issue on failure
-        if: failure() || cancelled()
-        uses: dacbd/create-issue-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
-          body: |
-            Windows CI でビルドまたはテストに失敗しました。
-
-            **ステータス**: ${{ steps.failure_status.outputs.status_ja }}
-
-            ## ログへのリンク
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            ## 詳細
-            - Workflow: ${{ github.workflow }}
-            - Job: ${{ github.job }}
-            - Run ID: ${{ github.run_id }}
-            - Run Attempt: ${{ github.run_attempt }}
-            - Ref: ${{ github.ref }}
-            - Commit: ${{ github.sha }}
-
-            ## テスト失敗サマリー
-            <details>
-            <summary>クリックして展開</summary>
-
-            ```
-            ${{ steps.test_output.outputs.log }}
-            ```
-
-            </details>
-
-            ## アーティファクト
-            完全なログは上記リンクの「Artifacts」セクションから `test-logs` をダウンロードしてください。
-          labels: "ci,windows,auto-generated"
 
 {% endraw %}
 ```
@@ -1437,32 +1143,20 @@ jobs:
 {% endraw %}
 ```
 
-### issue-notes/134.md
-```md
-{% raw %}
-# issue build_windows.yml が test run failedとなっているのに10分以上もその状態のままでjobがtestから先に進まない #134
-[issues #134](https://github.com/cat2151/ym2151-log-play-server/issues/134)
-
-
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+f66cf88 Merge pull request #135 from cat2151/copilot/fix-test-run-failed-handling
+64453a5 Update project summaries (overview & development status) [auto]
+2d2059c Add clarifying comments for timeout strategy and outcome handling
+faaaf60 Fix timeout detection: add 'timed_out' outcome handling
+96cc11b Add step-level timeout and improve failure handling in build_windows.yml
+0a4d13a Initial plan
 66668a2 Add issue note for #134 [auto]
 b7899c1 Merge pull request #133 from cat2151/copilot/fix-build-windows-yml-error
 85d51c9 Fix GitHub Actions workflow syntax error in build_windows.yml
 e25dbd8 Initial plan
-cce93fe Add issue note for #132 [auto]
-7743750 Merge pull request #131 from cat2151/copilot/fix-cargo-test-timeout-issue
-6250269 Fix issue creation when cargo test times out
-eb4e4b5 Initial plan
-2945bf0 Add issue note for #130 [auto]
-93d22aa Update project summaries (overview & development status) [auto]
 
 ### 変更されたファイル:
-.config/nextest.toml
 .github/workflows/build_windows.yml
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
@@ -1474,4 +1168,4 @@ issue-notes/134.md
 
 
 ---
-Generated at: 2025-12-23 07:01:41 JST
+Generated at: 2025-12-24 07:01:40 JST
