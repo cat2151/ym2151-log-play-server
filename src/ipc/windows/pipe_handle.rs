@@ -1,13 +1,18 @@
 use std::io;
 use std::path::{Path, PathBuf};
-use windows::Win32::Foundation::{CloseHandle, HANDLE};
+use std::time::Duration;
+use windows::Win32::Foundation::{CloseHandle, HANDLE, WAIT_OBJECT_0, WAIT_TIMEOUT};
 use windows::Win32::System::Pipes::ConnectNamedPipe;
+use windows::Win32::System::Threading::{CreateEventW, WaitForSingleObject};
 
 use super::pipe_factory::{connect_to_pipe, create_named_pipe};
 use super::pipe_reader::PipeReader;
 use super::pipe_writer::PipeWriter;
 
 pub const DEFAULT_PIPE_PATH: &str = r"\\.\pipe\ym2151-log-play-server";
+
+// Default timeout for pipe connections (5 seconds for tests)
+const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Debug)]
 pub struct NamedPipe {
@@ -31,11 +36,65 @@ impl NamedPipe {
     }
 
     pub fn open_read(&self) -> io::Result<PipeReader> {
-        unsafe {
-            ConnectNamedPipe(self.handle, None).map_err(io::Error::other)?;
-        }
+        self.open_read_with_timeout(DEFAULT_CONNECT_TIMEOUT)
+    }
 
-        Ok(PipeReader::new(self.handle))
+    pub fn open_read_with_timeout(&self, timeout: Duration) -> io::Result<PipeReader> {
+        // Create an event for overlapped I/O
+        let event = unsafe {
+            CreateEventW(None, true, false, None)
+                .map_err(|e| io::Error::other(format!("Failed to create event: {}", e)))?
+        };
+
+        // Prepare overlapped structure
+        let mut overlapped = windows::Win32::System::IO::OVERLAPPED {
+            hEvent: event,
+            ..Default::default()
+        };
+
+        // Try to connect with overlapped I/O
+        let connect_result = unsafe { ConnectNamedPipe(self.handle, Some(&mut overlapped)) };
+
+        let wait_result = match connect_result {
+            Ok(_) => {
+                // Connection succeeded immediately
+                unsafe { CloseHandle(event) }.ok();
+                return Ok(PipeReader::new(self.handle));
+            }
+            Err(e) => {
+                // Check if operation is pending (ERROR_IO_PENDING = 997)
+                let error_code = e.code().0 as u32;
+                if error_code != 997 {
+                    // ERROR_IO_PENDING
+                    unsafe { CloseHandle(event) }.ok();
+                    return Err(io::Error::other(format!("ConnectNamedPipe failed: {}", e)));
+                }
+
+                // Wait for the connection with timeout
+                unsafe { WaitForSingleObject(event, timeout.as_millis() as u32) }
+            }
+        };
+
+        // Clean up the event handle
+        unsafe { CloseHandle(event) }.ok();
+
+        match wait_result {
+            WAIT_OBJECT_0 => {
+                // Connection succeeded
+                Ok(PipeReader::new(self.handle))
+            }
+            WAIT_TIMEOUT => {
+                // Timeout occurred
+                Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    format!("Timeout waiting for pipe connection after {:?}", timeout),
+                ))
+            }
+            _ => {
+                // Other error
+                Err(io::Error::last_os_error())
+            }
+        }
     }
 
     pub fn open_write(&self) -> io::Result<PipeWriter> {
