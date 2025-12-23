@@ -52,11 +52,10 @@ impl NamedPipe {
                 .map_err(|e| io::Error::other(format!("Failed to create event: {}", e)))?
         };
 
-        // Prepare overlapped structure
-        let mut overlapped = windows::Win32::System::IO::OVERLAPPED {
-            hEvent: event,
-            ..Default::default()
-        };
+        // Prepare overlapped structure (must be zero-initialized per Windows API requirements)
+        let mut overlapped =
+            unsafe { std::mem::zeroed::<windows::Win32::System::IO::OVERLAPPED>() };
+        overlapped.hEvent = event;
 
         // Try to connect with overlapped I/O
         let connect_result = unsafe { ConnectNamedPipe(self.handle, Some(&mut overlapped)) };
