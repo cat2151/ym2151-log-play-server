@@ -1,4 +1,4 @@
-Last updated: 2025-12-24
+Last updated: 2025-12-25
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -197,6 +197,9 @@ Last updated: 2025-12-24
 - .github/actions-tmp/package.json
 - .github/actions-tmp/src/main.js
 - .github/copilot-instructions.md
+- .github/scripts/README.md
+- .github/scripts/generate_test_failure_issue.py
+- .github/scripts/test_generate_test_failure_issue.py
 - .github/workflows/build_windows.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
@@ -235,6 +238,9 @@ Last updated: 2025-12-24
 - issue-notes/130.md
 - issue-notes/132.md
 - issue-notes/134.md
+- issue-notes/138.md
+- issue-notes/141.md
+- issue-notes/143.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -335,54 +341,56 @@ Last updated: 2025-12-24
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-## [Issue #137](../issue-notes/137.md): Fix Windows CI timeout by adding timeout to ConnectNamedPipe
-Windows CI timed out after 15 minutes because `ConnectNamedPipe` blocks indefinitely when waiting for client connections. If client threads fail to connect due to race conditions, tests hang forever.
+## [Issue #144](../issue-notes/144.md): Add Gemini AI translation of test errors to Windows CI failure issues
+When Windows CI tests fail, auto-generated GitHub issues now include AI-translated Japanese summaries at the top to reduce cognitive load for Japanese developers.
 
 ## Changes
 
-- **Added overlapped I/O timeout to `ConnectNamedPipe`**
-  - Created `open_read_with_ti...
+### Python Script (`generate_test_failure_issue.py`)
+- Added `translate_error_messages_with_gemini()` using Gemini 1.5 Flash...
 ラベル: 
---- issue-notes/137.md の内容 ---
+--- issue-notes/144.md の内容 ---
 
 ```markdown
 
 ```
 
-## [Issue #136](../issue-notes/136.md): [CI] Windows build or test timed out
-Windows CI でビルドまたはテストに失敗しました。
-
-**ステータス**: タイムアウトによりキャンセル
-
-## ログへのリンク
-https://github.com/cat2151/ym2151-log-play-server/actions/runs/20432715103
-
-## 詳細
-- Workflow: Windows CI
-- Job: build-windows
-- Run ID: 20432715103
-- Run Attempt: 1
-- Ref: refs/heads/main
-- Commit: b7899c159d5fdb9318f2bd9ad71d33e85...
-ラベル: ci, windows, auto-generated
---- issue-notes/136.md の内容 ---
-
-```markdown
-
-```
-
-## [Issue #123](../issue-notes/123.md): user作業 : 現在のGitHub Actions / Workflow / Windows Runnerに、cargo testを追加し、runして検証する
-[issue-notes/123.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/123.md)
+## [Issue #143](../issue-notes/143.md): build_windows.ymlでtest failed時のissue生成機能について、issue先頭に、geminiを利用してtestエラーメッセージ群を日本語訳したものを追加し、userの認知負荷を下げる
+[issue-notes/143.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/143.md)
 
 ...
 ラベル: 
---- issue-notes/123.md の内容 ---
+--- issue-notes/143.md の内容 ---
 
 ```markdown
-# issue user作業 : 現在のWindows Runnerに、cargo testを追加し、runして検証する #123
-[issues #123](https://github.com/cat2151/ym2151-log-play-server/issues/123)
+# issue build_windows.ymlでtest failed時のissue生成機能について、issue先頭に、geminiを利用してtestエラーメッセージ群を日本語訳したものを追加し、userの認知負荷を下げる #143
+[issues #143](https://github.com/cat2151/ym2151-log-play-server/issues/143)
 
 
+
+```
+
+## [Issue #138](../issue-notes/138.md): PR 137 のagentの挙動（初手の対策案が誤っており、userがより深く分析させたら正しい対策案に到達した）はハルシネーションの可能性がある。対策案を洗い出して整理する
+[issue-notes/138.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/138.md)
+
+...
+ラベル: 
+--- issue-notes/138.md の内容 ---
+
+```markdown
+# issue PR 137 のagentの挙動（初手の対策案が誤っており、userがより深く分析させたら正しい対策案に到達した）はハルシネーションの可能性がある。対策案を洗い出して整理する #138
+[issues #138](https://github.com/cat2151/ym2151-log-play-server/issues/138)
+
+# 何が困るの？
+- PR 137はラッキーだっただけ
+- もっと深刻な潜在的な「アーキテクチャ誤り、仕様誤り、バグ」をagentが生成してしまうリスクがある
+- つまり大きな開発コスト増大リスクがある
+
+# 対策案は？
+- 様子見。例えば、あと2回同様の「agentがハルシネーション的誤り。しかもuserもうっかり素通りさせるところだった」が発生したら、さらに検討する
+- CIエラーログの縮小。今回50KB超のサイズである。エラー部分だけにして縮小できるか検討する。
+  - 課題、見込みが低そう。agentは結局CIログを全量readしにいきそう。
+- ひとまず様子見とする
 
 ```
 
@@ -786,30 +794,6 @@ https://github.com/cat2151/ym2151-log-play-server/actions/runs/20432715103
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/23.md
-```md
-{% raw %}
-# issue issue 17が再発してしまっている #23
-[issues #23](https://github.com/cat2151/github-actions/issues/23)
-
-# 症状は？
-- issue 17と同じ
-
-# どうする？
-- development-status-generated-prompt.md を確認する
-- 結果
-    - >Issue番号を記載する際は、必ず [Issue #番号](issue-notes/番号.md) の形式でMarkdownリンクとして記載してください。
-    - 仮説、これが残っており、ほかの ../ 指定と競合し、どちらかがランダムで選ばれていた
-    - 対策、ここを ../ 指定にする
-
-# 結果
-- test green
-
-# closeとする
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/3.md
 ```md
 {% raw %}
@@ -887,6 +871,152 @@ env: で値を渡し、process.env で参照するのが正しい
 
 - test green
 - closeとする
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/4.md
+```md
+{% raw %}
+# issue GitHub Actions「project概要生成」を共通ワークフロー化する #4
+[issues #4](https://github.com/cat2151/github-actions/issues/4)
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/daily-project-summary.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-daily-project-summary.yml
+まずplanしてください
+```
+
+# 結果、あちこちハルシネーションのあるymlが生成された
+- agentの挙動があからさまにハルシネーション
+    - インデントが修正できない、「失敗した」という
+    - 構文誤りを認識できない
+- 人力で修正した
+
+# このagentによるセルフレビューが信頼できないため、別のLLMによるセカンドオピニオンを試す
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 呼び出し元
+
+name: Call Daily Project Summary
+
+on:
+  schedule:
+    # 日本時間 07:00 (UTC 22:00 前日)
+    - cron: '0 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-daily-project-summary:
+    uses: cat2151/github-actions/.github/workflows/daily-project-summary.yml
+    secrets:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+--- 共通ワークフロー
+name: Daily Project Summary
+on:
+  workflow_call:
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # 履歴を取得するため
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          # 一時的なディレクトリで依存関係をインストール
+          mkdir -p /tmp/summary-deps
+          cd /tmp/summary-deps
+          npm init -y
+          npm install @google/generative-ai @octokit/rest
+          # generated-docsディレクトリを作成
+          mkdir -p $GITHUB_WORKSPACE/generated-docs
+
+      - name: Generate project summary
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          NODE_PATH: /tmp/summary-deps/node_modules
+        run: |
+          node .github/scripts/generate-project-summary.cjs
+
+      - name: Check for generated summaries
+        id: check_summaries
+        run: |
+          if [ -f "generated-docs/project-overview.md" ] && [ -f "generated-docs/development-status.md" ]; then
+            echo "summaries_generated=true" >> $GITHUB_OUTPUT
+          else
+            echo "summaries_generated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push summaries
+        if: steps.check_summaries.outputs.summaries_generated == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # package.jsonの変更のみリセット（generated-docsは保持）
+          git restore package.json 2>/dev/null || true
+          # サマリーファイルのみを追加
+          git add generated-docs/project-overview.md
+          git add generated-docs/development-status.md
+          git commit -m "Update project summaries (overview & development status)"
+          git push
+
+      - name: Summary generation result
+        run: |
+          if [ "${{ steps.check_summaries.outputs.summaries_generated }}" == "true" ]; then
+            echo "✅ Project summaries updated successfully"
+            echo "📊 Generated: project-overview.md & development-status.md"
+          else
+            echo "ℹ️ No summaries generated (likely no user commits in the last 24 hours)"
+          fi
+```
+
+# 上記promptで、2つのLLMにレビューさせ、合格した
+
+# 細部を、先行する2つのymlを参照に手直しした
+
+# ローカルtestをしてからcommitできるとよい。方法を検討する
+- ローカルtestのメリット
+    - 素早く修正のサイクルをまわせる
+    - ムダにgit historyを汚さない
+        - これまでの事例：「実装したつもり」「エラー。修正したつもり」「エラー。修正したつもり」...（以降エラー多数）
+- 方法
+    - ※検討、WSL + act を環境構築済みである。test可能であると判断する
+    - 呼び出し元のURLをコメントアウトし、相対パス記述にする
+    - ※備考、テスト成功すると結果がcommit pushされる。それでよしとする
+- 結果
+    - OK
+    - secretsを簡略化できるか試した、できなかった、現状のsecrets記述が今わかっている範囲でベストと判断する
+    - OK
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
 
 {% endraw %}
 ```
@@ -996,6 +1126,461 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 # test green
 
 # closeとする
+
+{% endraw %}
+```
+
+### .github/scripts/generate_test_failure_issue.py
+```py
+{% raw %}
+#!/usr/bin/env python3
+"""
+Generate issue body text for CI test failures.
+
+This script generates the issue body for GitHub issues created when
+Windows CI tests fail or time out.
+"""
+
+import argparse
+import sys
+from typing import Optional
+
+
+def generate_issue_body(
+    status_ja: str,
+    total_tests: str,
+    passed: str,
+    failed: str,
+    timed_out: str,
+    failed_tests_categorized: str,
+    workflow: str,
+    job: str,
+    run_id: str,
+    run_attempt: str,
+    ref: str,
+    commit: str,
+    server_url: str,
+    repository: str,
+    error_log: Optional[str] = None,
+) -> str:
+    """
+    Generate the issue body text for a test failure.
+    
+    Args:
+        status_ja: Status in Japanese (e.g., "失敗" or "タイムアウトによりキャンセル")
+        total_tests: Total number of tests run
+        passed: Number of passed tests
+        failed: Number of failed tests
+        timed_out: Number of timed out tests
+        failed_tests_categorized: Categorized list of failed tests (markdown formatted)
+        workflow: GitHub workflow name
+        job: GitHub job name
+        run_id: GitHub run ID
+        run_attempt: GitHub run attempt number
+        ref: GitHub ref (branch/tag)
+        commit: GitHub commit SHA
+        server_url: GitHub server URL
+        repository: GitHub repository (owner/repo)
+        error_log: Optional detailed error log
+    
+    Returns:
+        The formatted issue body text
+    """
+    
+    # Build the main sections
+    sections = []
+    
+    # Header
+    sections.append("Windows CI でビルドまたはテストに失敗しました。")
+    sections.append("")
+    sections.append(f"**ステータス**: {status_ja}")
+    sections.append("")
+    
+    # Test Summary
+    sections.append("## 失敗テストサマリー")
+    sections.append("")
+    sections.append(f"**総テスト数**: {total_tests}")
+    sections.append(f"**成功**: {passed}")
+    sections.append(f"**失敗**: {failed}")
+    sections.append(f"**タイムアウト**: {timed_out}")
+    sections.append("")
+    
+    # Failed Tests List
+    sections.append("### 失敗したテスト一覧")
+    sections.append(failed_tests_categorized)
+    sections.append("")
+    
+    # Log Link
+    sections.append("## ログへのリンク")
+    sections.append(f"{server_url}/{repository}/actions/runs/{run_id}")
+    sections.append("")
+    
+    # Details
+    sections.append("## 詳細")
+    sections.append(f"- Workflow: {workflow}")
+    sections.append(f"- Job: {job}")
+    sections.append(f"- Run ID: {run_id}")
+    sections.append(f"- Run Attempt: {run_attempt}")
+    sections.append(f"- Ref: {ref}")
+    sections.append(f"- Commit: {commit}")
+    sections.append("")
+    
+    # Detailed Error Log (if provided)
+    if error_log and error_log.strip():
+        sections.append("## 詳細なエラーログ")
+        sections.append("<details>")
+        sections.append("<summary>クリックして展開</summary>")
+        sections.append("")
+        sections.append("```")
+        sections.append(error_log)
+        sections.append("```")
+        sections.append("")
+        sections.append("</details>")
+        sections.append("")
+    
+    # Artifacts
+    sections.append("## アーティファクト")
+    sections.append("完全なログは上記リンクの「Artifacts」セクションから `test-logs` をダウンロードしてください。")
+    
+    return "\n".join(sections)
+
+
+def main():
+    """Main entry point for the script."""
+    parser = argparse.ArgumentParser(
+        description="Generate issue body text for CI test failures"
+    )
+    
+    parser.add_argument(
+        "--status-ja",
+        required=True,
+        help="Status in Japanese (e.g., '失敗' or 'タイムアウトによりキャンセル')"
+    )
+    parser.add_argument(
+        "--total-tests",
+        required=True,
+        help="Total number of tests run"
+    )
+    parser.add_argument(
+        "--passed",
+        required=True,
+        help="Number of passed tests"
+    )
+    parser.add_argument(
+        "--failed",
+        required=True,
+        help="Number of failed tests"
+    )
+    parser.add_argument(
+        "--timed-out",
+        required=True,
+        help="Number of timed out tests"
+    )
+    parser.add_argument(
+        "--failed-tests-categorized",
+        required=True,
+        help="Categorized list of failed tests (markdown formatted)"
+    )
+    parser.add_argument(
+        "--workflow",
+        required=True,
+        help="GitHub workflow name"
+    )
+    parser.add_argument(
+        "--job",
+        required=True,
+        help="GitHub job name"
+    )
+    parser.add_argument(
+        "--run-id",
+        required=True,
+        help="GitHub run ID"
+    )
+    parser.add_argument(
+        "--run-attempt",
+        required=True,
+        help="GitHub run attempt number"
+    )
+    parser.add_argument(
+        "--ref",
+        required=True,
+        help="GitHub ref (branch/tag)"
+    )
+    parser.add_argument(
+        "--commit",
+        required=True,
+        help="GitHub commit SHA"
+    )
+    parser.add_argument(
+        "--server-url",
+        required=True,
+        help="GitHub server URL"
+    )
+    parser.add_argument(
+        "--repository",
+        required=True,
+        help="GitHub repository (owner/repo)"
+    )
+    parser.add_argument(
+        "--error-log",
+        default="",
+        help="Optional detailed error log"
+    )
+    
+    args = parser.parse_args()
+    
+    issue_body = generate_issue_body(
+        status_ja=args.status_ja,
+        total_tests=args.total_tests,
+        passed=args.passed,
+        failed=args.failed,
+        timed_out=args.timed_out,
+        failed_tests_categorized=args.failed_tests_categorized,
+        workflow=args.workflow,
+        job=args.job,
+        run_id=args.run_id,
+        run_attempt=args.run_attempt,
+        ref=args.ref,
+        commit=args.commit,
+        server_url=args.server_url,
+        repository=args.repository,
+        error_log=args.error_log,
+    )
+    
+    print(issue_body)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+{% endraw %}
+```
+
+### .github/workflows/build_windows.yml
+```yml
+{% raw %}
+name: Windows CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build code
+        run: cargo build --locked --verbose
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Run tests with nextest
+        id: test
+        # 15分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
+        # テストがハングした場合でも、issue作成などの後処理を確実に実行するため
+        timeout-minutes: 15
+        continue-on-error: true
+        run: |
+          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
+          cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
+          exit $LASTEXITCODE
+
+      - name: Parse test results
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: test_summary
+        shell: pwsh
+        run: |
+          # テスト結果を解析して構造化データを抽出
+          if (Test-Path test_output.log) {
+            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
+            
+            # 統計情報を抽出（nextest summary行から）
+            $total = "不明"
+            $passed = "不明"
+            $failed = "不明"
+            $timedOut = "不明"
+            
+            if ($content -match 'Summary.*?(\d+) tests run: (\d+) passed, (\d+) failed(?:, (\d+) timed out)?') {
+              $total = $matches[1]
+              $passed = $matches[2]
+              $failed = $matches[3]
+              $timedOut = if ($matches[4]) { $matches[4] } else { "0" }
+            }
+            
+            # 失敗したテスト名を抽出
+            $failedTestsList = @()
+            $failMatches = [regex]::Matches($content, 'FAIL\s+(?:\[[\d.]+s\])?\s+\([\d/]+\)\s+([\w:]+(?:::[\w:]+)*)')
+            foreach ($match in $failMatches) {
+              $testName = $match.Groups[1].Value
+              if ($testName -and $failedTestsList -notcontains $testName) {
+                $failedTestsList += $testName
+              }
+            }
+            
+            # タイムアウトしたテストを抽出
+            $timeoutMatches = [regex]::Matches($content, 'TIMEOUT\s+\[[\d.]+s\]\s+\([\d/]+\)\s+([\w:]+(?:::[\w:]+)*)')
+            foreach ($match in $timeoutMatches) {
+              $testName = $match.Groups[1].Value
+              if ($testName -and $failedTestsList -notcontains $testName) {
+                $failedTestsList += "$testName (タイムアウト)"
+              }
+            }
+            
+            # テストをカテゴリ別に分類
+            $categorized = @{
+              "Pipe Tests" = @()
+              "CLI Integration Tests" = @()
+              "Client Integration Tests" = @()
+              "Interactive Mode Tests" = @()
+              "Server Integration Tests" = @()
+              "その他" = @()
+            }
+            
+            foreach ($test in $failedTestsList) {
+              if ($test -match 'pipe.*test|test.*pipe') {
+                $categorized["Pipe Tests"] += $test
+              } elseif ($test -match 'cli_integration') {
+                $categorized["CLI Integration Tests"] += $test
+              } elseif ($test -match 'client.*test|test.*client') {
+                $categorized["Client Integration Tests"] += $test
+              } elseif ($test -match 'interactive') {
+                $categorized["Interactive Mode Tests"] += $test
+              } elseif ($test -match 'server.*test|test.*server') {
+                $categorized["Server Integration Tests"] += $test
+              } else {
+                $categorized["その他"] += $test
+              }
+            }
+            
+            # カテゴリ別リストを作成
+            $categorizedList = ""
+            foreach ($category in $categorized.Keys | Sort-Object) {
+              $tests = $categorized[$category]
+              if ($tests.Count -gt 0) {
+                $categorizedList += "`n#### $category ($($tests.Count)件)`n"
+                foreach ($test in $tests) {
+                  $categorizedList += "- $test`n"
+                }
+              }
+            }
+            
+            # GITHUB_OUTPUTに出力
+            "total_tests=$total" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "passed=$passed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed=$failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "timed_out=$timedOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            
+            "failed_tests_categorized<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            $categorizedList | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Capture test failure summary
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: test_output
+        shell: pwsh
+        run: |
+          # GitHub issue用にログを取得（最大65000文字）
+          if (Test-Path test_output.log) {
+            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
+            if ($content -and $content.Length -gt 65000) {
+              $content = $content.Substring($content.Length - 65000)
+            }
+            if ($content) {
+              "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            }
+          }
+
+      - name: Upload test log artifacts
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: test_output.log
+          retention-days: 30
+
+      - name: Determine failure status
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: failure_status
+        shell: pwsh
+        run: |
+          # cancelled: ユーザーによる手動キャンセル
+          # timed_out: timeout-minutesによる自動タイムアウト
+          # どちらも「タイムアウト」としてユーザーに報告
+          if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
+            "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "status_en=failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Generate issue body
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: issue_body
+        shell: pwsh
+        run: |
+          # Python scriptを使用してissue本文を生成
+          $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
+            --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
+            --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
+            --passed "${{ steps.test_summary.outputs.passed }}" `
+            --failed "${{ steps.test_summary.outputs.failed }}" `
+            --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
+            --failed-tests-categorized "${{ steps.test_summary.outputs.failed_tests_categorized }}" `
+            --workflow "${{ github.workflow }}" `
+            --job "${{ github.job }}" `
+            --run-id "${{ github.run_id }}" `
+            --run-attempt "${{ github.run_attempt }}" `
+            --ref "${{ github.ref }}" `
+            --commit "${{ github.sha }}" `
+            --server-url "${{ github.server_url }}" `
+            --repository "${{ github.repository }}" `
+            --error-log "${{ steps.test_output.outputs.log }}"
+          
+          # GITHUB_OUTPUTに出力
+          "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $issueBody | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create issue on failure
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        uses: dacbd/create-issue-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
+          body: ${{ steps.issue_body.outputs.body }}
+          labels: "ci,windows,auto-generated"
 
 {% endraw %}
 ```
@@ -1132,11 +1717,31 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### issue-notes/123.md
+### issue-notes/138.md
 ```md
 {% raw %}
-# issue user作業 : 現在のWindows Runnerに、cargo testを追加し、runして検証する #123
-[issues #123](https://github.com/cat2151/ym2151-log-play-server/issues/123)
+# issue PR 137 のagentの挙動（初手の対策案が誤っており、userがより深く分析させたら正しい対策案に到達した）はハルシネーションの可能性がある。対策案を洗い出して整理する #138
+[issues #138](https://github.com/cat2151/ym2151-log-play-server/issues/138)
+
+# 何が困るの？
+- PR 137はラッキーだっただけ
+- もっと深刻な潜在的な「アーキテクチャ誤り、仕様誤り、バグ」をagentが生成してしまうリスクがある
+- つまり大きな開発コスト増大リスクがある
+
+# 対策案は？
+- 様子見。例えば、あと2回同様の「agentがハルシネーション的誤り。しかもuserもうっかり素通りさせるところだった」が発生したら、さらに検討する
+- CIエラーログの縮小。今回50KB超のサイズである。エラー部分だけにして縮小できるか検討する。
+  - 課題、見込みが低そう。agentは結局CIログを全量readしにいきそう。
+- ひとまず様子見とする
+
+{% endraw %}
+```
+
+### issue-notes/143.md
+```md
+{% raw %}
+# issue build_windows.ymlでtest failed時のissue生成機能について、issue先頭に、geminiを利用してtestエラーメッセージ群を日本語訳したものを追加し、userの認知負荷を下げる #143
+[issues #143](https://github.com/cat2151/ym2151-log-play-server/issues/143)
 
 
 
@@ -1145,27 +1750,28 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-f66cf88 Merge pull request #135 from cat2151/copilot/fix-test-run-failed-handling
-64453a5 Update project summaries (overview & development status) [auto]
-2d2059c Add clarifying comments for timeout strategy and outcome handling
-faaaf60 Fix timeout detection: add 'timed_out' outcome handling
-96cc11b Add step-level timeout and improve failure handling in build_windows.yml
-0a4d13a Initial plan
-66668a2 Add issue note for #134 [auto]
-b7899c1 Merge pull request #133 from cat2151/copilot/fix-build-windows-yml-error
-85d51c9 Fix GitHub Actions workflow syntax error in build_windows.yml
-e25dbd8 Initial plan
+952e137 Merge pull request #142 from cat2151/copilot/extract-issue-text-generation
+c078a87 Add issue note for #143 [auto]
+6964680 Add unit tests and documentation for issue generation script
+8089618 Extract issue text generation to Python script
+b3005fc Initial plan
+ffb7dad Add issue note for #141 [auto]
+4ed9b1d fix: testでフリーズしていたのを修正。名前付きパイプへの接続を使用後に閉じてから次のtestをするよう修正した
+df7815f fix: test_client_option_without_argument_fails - remove stderr message assertion
+695b13d fix: test_server_shutdown_without_server_fails - remove stderr message assertion
+614447e fix: test_client_without_server_fails - remove stderr message assertion
 
 ### 変更されたファイル:
+.github/scripts/README.md
+.github/scripts/generate_test_failure_issue.py
+.github/scripts/test_generate_test_failure_issue.py
 .github/workflows/build_windows.yml
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/130.md
-issue-notes/132.md
-issue-notes/134.md
+.gitignore
+issue-notes/141.md
+issue-notes/143.md
+tests/cli_integration_test.rs
+tests/server_integration_test.rs
 
 
 ---
-Generated at: 2025-12-24 07:01:40 JST
+Generated at: 2025-12-25 07:01:34 JST
