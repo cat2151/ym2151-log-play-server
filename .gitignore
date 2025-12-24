@@ -35,3 +35,10 @@ ym2151-client.log
 # Test log files (cfg(test) only)
 test_server.log
 test_client.log
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
