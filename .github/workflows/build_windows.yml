@@ -183,48 +183,39 @@ jobs:
             "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
+      - name: Generate issue body
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: issue_body
+        shell: pwsh
+        run: |
+          # Python scriptを使用してissue本文を生成
+          $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
+            --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
+            --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
+            --passed "${{ steps.test_summary.outputs.passed }}" `
+            --failed "${{ steps.test_summary.outputs.failed }}" `
+            --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
+            --failed-tests-categorized "${{ steps.test_summary.outputs.failed_tests_categorized }}" `
+            --workflow "${{ github.workflow }}" `
+            --job "${{ github.job }}" `
+            --run-id "${{ github.run_id }}" `
+            --run-attempt "${{ github.run_attempt }}" `
+            --ref "${{ github.ref }}" `
+            --commit "${{ github.sha }}" `
+            --server-url "${{ github.server_url }}" `
+            --repository "${{ github.repository }}" `
+            --error-log "${{ steps.test_output.outputs.log }}"
+          
+          # GITHUB_OUTPUTに出力
+          "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $issueBody | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Create issue on failure
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
-          body: |
-            Windows CI でビルドまたはテストに失敗しました。
-
-            **ステータス**: ${{ steps.failure_status.outputs.status_ja }}
-
-            ## 失敗テストサマリー
-
-            **総テスト数**: ${{ steps.test_summary.outputs.total_tests }}
-            **成功**: ${{ steps.test_summary.outputs.passed }}
-            **失敗**: ${{ steps.test_summary.outputs.failed }}
-            **タイムアウト**: ${{ steps.test_summary.outputs.timed_out }}
-
-            ### 失敗したテスト一覧
-            ${{ steps.test_summary.outputs.failed_tests_categorized }}
-
-            ## ログへのリンク
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            ## 詳細
-            - Workflow: ${{ github.workflow }}
-            - Job: ${{ github.job }}
-            - Run ID: ${{ github.run_id }}
-            - Run Attempt: ${{ github.run_attempt }}
-            - Ref: ${{ github.ref }}
-            - Commit: ${{ github.sha }}
-
-            ## 詳細なエラーログ
-            <details>
-            <summary>クリックして展開</summary>
-
-            ```
-            ${{ steps.test_output.outputs.log }}
-            ```
-
-            </details>
-
-            ## アーティファクト
-            完全なログは上記リンクの「Artifacts」セクションから `test-logs` をダウンロードしてください。
+          body: ${{ steps.issue_body.outputs.body }}
           labels: "ci,windows,auto-generated"
