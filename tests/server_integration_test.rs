@@ -40,25 +40,28 @@ mod server_playback_tests {
         eprintln!("Attempting to send PLAY command...");
 
         // Send PLAY command to play JSON data using binary protocol
-        let mut writer =
-            NamedPipe::connect_default().expect("Failed to connect to server for PLAY command");
-        eprintln!("Connected to server, sending PlayJson command...");
+        // Use a scope to ensure the pipe connection is closed before opening a new one
+        {
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for PLAY command");
+            eprintln!("Connected to server, sending PlayJson command...");
 
-        // Read and send JSON data
-        let json_content = std::fs::read_to_string("output_ym2151.json")
-            .expect("Failed to read output_ym2151.json");
+            // Read and send JSON data
+            let json_content = std::fs::read_to_string("output_ym2151.json")
+                .expect("Failed to read output_ym2151.json");
 
-        let json_data: serde_json::Value = serde_json::from_str(&json_content)
-            .expect("Failed to parse JSON from output_ym2151.json");
+            let json_data: serde_json::Value = serde_json::from_str(&json_content)
+                .expect("Failed to parse JSON from output_ym2151.json");
 
-        let cmd = Command::PlayJson { data: json_data };
-        let binary_data = cmd
-            .to_binary()
-            .expect("Failed to serialize PlayJson command");
-        writer
-            .write_binary(&binary_data)
-            .expect("Failed to send PlayJson command to server");
-        eprintln!("PlayJson command sent successfully");
+            let cmd = Command::PlayJson { data: json_data };
+            let binary_data = cmd
+                .to_binary()
+                .expect("Failed to serialize PlayJson command");
+            writer
+                .write_binary(&binary_data)
+                .expect("Failed to send PlayJson command to server");
+            eprintln!("PlayJson command sent successfully");
+        } // writer is dropped here, releasing the pipe connection
 
         // Wait a bit for the new file to start playing
         thread::sleep(Duration::from_millis(500));
@@ -66,16 +69,18 @@ mod server_playback_tests {
         eprintln!("Sending shutdown command...");
 
         // Send shutdown using binary protocol
-        let mut writer =
-            NamedPipe::connect_default().expect("Failed to connect to server for shutdown");
-        let cmd = Command::Shutdown;
-        let binary_data = cmd
-            .to_binary()
-            .expect("Failed to serialize Shutdown command");
-        writer
-            .write_binary(&binary_data)
-            .expect("Failed to send Shutdown command to server");
-        eprintln!("Shutdown command sent successfully");
+        {
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for shutdown");
+            let cmd = Command::Shutdown;
+            let binary_data = cmd
+                .to_binary()
+                .expect("Failed to serialize Shutdown command");
+            writer
+                .write_binary(&binary_data)
+                .expect("Failed to send Shutdown command to server");
+            eprintln!("Shutdown command sent successfully");
+        } // writer is dropped here
 
         // Wait for server to finish
         thread::sleep(Duration::from_millis(500));
@@ -113,15 +118,18 @@ mod server_playback_tests {
         eprintln!("Attempting to send STOP command...");
 
         // Send STOP command using binary protocol
-        let mut writer =
-            NamedPipe::connect_default().expect("Failed to connect to server for STOP command");
-        eprintln!("Connected to server, sending STOP command...");
-        let cmd = Command::Stop;
-        let binary_data = cmd.to_binary().expect("Failed to serialize STOP command");
-        writer
-            .write_binary(&binary_data)
-            .expect("Failed to send STOP command to server");
-        eprintln!("STOP command sent successfully");
+        // Use a scope to ensure the pipe connection is closed before opening a new one
+        {
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for STOP command");
+            eprintln!("Connected to server, sending STOP command...");
+            let cmd = Command::Stop;
+            let binary_data = cmd.to_binary().expect("Failed to serialize STOP command");
+            writer
+                .write_binary(&binary_data)
+                .expect("Failed to send STOP command to server");
+            eprintln!("STOP command sent successfully");
+        } // writer is dropped here, releasing the pipe connection
 
         // Wait a bit
         thread::sleep(Duration::from_millis(300));
@@ -129,15 +137,17 @@ mod server_playback_tests {
         eprintln!("Sending shutdown command...");
 
         // Send shutdown using binary protocol
-        let mut writer =
-            NamedPipe::connect_default().expect("Failed to connect to server for shutdown");
-        let cmd = Command::Shutdown;
-        let binary_data = cmd
-            .to_binary()
-            .expect("Failed to serialize Shutdown command");
-        writer
-            .write_binary(&binary_data)
-            .expect("Failed to send Shutdown command to server");
+        {
+            let mut writer =
+                NamedPipe::connect_default().expect("Failed to connect to server for shutdown");
+            let cmd = Command::Shutdown;
+            let binary_data = cmd
+                .to_binary()
+                .expect("Failed to serialize Shutdown command");
+            writer
+                .write_binary(&binary_data)
+                .expect("Failed to send Shutdown command to server");
+        } // writer is dropped here
 
         // Wait for server to finish
         thread::sleep(Duration::from_millis(500));
