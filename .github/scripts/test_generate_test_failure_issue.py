@@ -4,7 +4,8 @@ Unit tests for generate_test_failure_issue.py
 """
 
 import unittest
-from generate_test_failure_issue import generate_issue_body
+from unittest.mock import patch, MagicMock
+from generate_test_failure_issue import generate_issue_body, translate_error_messages_with_gemini
 
 
 class TestGenerateIssueBody(unittest.TestCase):
@@ -222,6 +223,177 @@ class TestGenerateIssueBody(unittest.TestCase):
         # Check that test names with special characters are preserved
         self.assertIn("test::with::colons", result)
         self.assertIn("test_with_underscores", result)
+
+
+class TestTranslateErrorMessages(unittest.TestCase):
+    """Test cases for the translate_error_messages_with_gemini function."""
+    
+    def test_translate_with_no_api_key(self):
+        """Test that translation returns None when API key is not provided."""
+        error_log = "Error: test failed"
+        result = translate_error_messages_with_gemini(error_log, "")
+        self.assertIsNone(result)
+    
+    def test_translate_with_no_error_log(self):
+        """Test that translation returns None when error log is empty."""
+        result = translate_error_messages_with_gemini("", "fake-api-key")
+        self.assertIsNone(result)
+    
+    def test_translate_with_whitespace_error_log(self):
+        """Test that translation returns None when error log is whitespace only."""
+        result = translate_error_messages_with_gemini("   \n  ", "fake-api-key")
+        self.assertIsNone(result)
+    
+    @patch('urllib.request.urlopen')
+    def test_translate_success(self, mock_urlopen):
+        """Test successful translation with Gemini API."""
+        # Mock API response
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'''
+        {
+            "candidates": [{
+                "content": {
+                    "parts": [{
+                        "text": "\\u30c6\\u30b9\\u30c8\\u304c\\u5931\\u6557\\u3057\\u307e\\u3057\\u305f"
+                    }]
+                }
+            }]
+        }
+        '''
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_response
+        
+        error_log = "Error: test failed"
+        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        
+        self.assertIsNotNone(result)
+        self.assertEqual(result, "テストが失敗しました")
+    
+    @patch('urllib.request.urlopen')
+    def test_translate_api_error(self, mock_urlopen):
+        """Test that translation handles API errors gracefully."""
+        mock_urlopen.side_effect = Exception("API Error")
+        
+        error_log = "Error: test failed"
+        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        
+        # Should return None on error
+        self.assertIsNone(result)
+    
+    @patch('urllib.request.urlopen')
+    def test_translate_malformed_response(self, mock_urlopen):
+        """Test that translation handles malformed API responses."""
+        mock_response = MagicMock()
+        mock_response.read.return_value = b'{"invalid": "response"}'
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_response
+        
+        error_log = "Error: test failed"
+        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        
+        # Should return None when response doesn't have expected structure
+        self.assertIsNone(result)
+
+
+class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
+    """Test cases for generate_issue_body with Gemini translation."""
+    
+    @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
+    def test_with_gemini_translation_success(self, mock_translate):
+        """Test issue body generation with successful Gemini translation."""
+        mock_translate.return_value = "テストが失敗しました。詳細なエラー情報が含まれます。"
+        
+        error_log = "Error: test failed\nStack trace: at function()"
+        
+        result = generate_issue_body(
+            status_ja="失敗",
+            total_tests="10",
+            passed="9",
+            failed="1",
+            timed_out="0",
+            failed_tests_categorized="#### Tests (1件)\n- test_fail",
+            workflow="Windows CI",
+            job="build-windows",
+            run_id="123456",
+            run_attempt="1",
+            ref="refs/heads/main",
+            commit="abc123",
+            server_url="https://github.com",
+            repository="cat2151/ym2151-log-play-server",
+            error_log=error_log,
+            gemini_api_key="fake-api-key",
+        )
+        
+        # Check that translation section is present
+        self.assertIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
+        self.assertIn("テストが失敗しました。詳細なエラー情報が含まれます。", result)
+        self.assertIn("---", result)
+        
+        # Check that translation was called with correct parameters
+        mock_translate.assert_called_once_with(error_log, "fake-api-key")
+    
+    @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
+    def test_with_gemini_translation_failure(self, mock_translate):
+        """Test issue body generation when Gemini translation fails."""
+        mock_translate.return_value = None
+        
+        error_log = "Error: test failed"
+        
+        result = generate_issue_body(
+            status_ja="失敗",
+            total_tests="10",
+            passed="9",
+            failed="1",
+            timed_out="0",
+            failed_tests_categorized="#### Tests (1件)\n- test_fail",
+            workflow="Windows CI",
+            job="build-windows",
+            run_id="123456",
+            run_attempt="1",
+            ref="refs/heads/main",
+            commit="abc123",
+            server_url="https://github.com",
+            repository="cat2151/ym2151-log-play-server",
+            error_log=error_log,
+            gemini_api_key="fake-api-key",
+        )
+        
+        # Check that translation section is NOT present when translation fails
+        self.assertNotIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
+        
+        # But the rest of the issue should still be generated
+        self.assertIn("Windows CI でビルドまたはテストに失敗しました", result)
+    
+    def test_without_gemini_api_key(self):
+        """Test issue body generation without Gemini API key."""
+        error_log = "Error: test failed"
+        
+        result = generate_issue_body(
+            status_ja="失敗",
+            total_tests="10",
+            passed="9",
+            failed="1",
+            timed_out="0",
+            failed_tests_categorized="#### Tests (1件)\n- test_fail",
+            workflow="Windows CI",
+            job="build-windows",
+            run_id="123456",
+            run_attempt="1",
+            ref="refs/heads/main",
+            commit="abc123",
+            server_url="https://github.com",
+            repository="cat2151/ym2151-log-play-server",
+            error_log=error_log,
+            gemini_api_key=None,
+        )
+        
+        # Check that translation section is NOT present without API key
+        self.assertNotIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
+        
+        # But the rest of the issue should still be generated
+        self.assertIn("Windows CI でビルドまたはテストに失敗しました", result)
 
 
 if __name__ == "__main__":

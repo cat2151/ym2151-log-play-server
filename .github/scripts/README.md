@@ -10,6 +10,11 @@
 
 **用途**: `build_windows.yml` ワークフローでテストが失敗またはタイムアウトした時に、詳細な情報を含む Issue を自動生成します。
 
+**機能**:
+- テスト失敗の詳細情報を構造化して表示
+- Gemini API を使用してエラーメッセージを日本語に翻訳（オプション）
+- AIによる日本語訳をissue先頭に配置し、ユーザーの認知負荷を低減
+
 **使い方**:
 ```bash
 python3 generate_test_failure_issue.py \
@@ -27,7 +32,8 @@ python3 generate_test_failure_issue.py \
   --commit "abc123" \
   --server-url "https://github.com" \
   --repository "owner/repo" \
-  --error-log "Optional error log text"
+  --error-log "Optional error log text" \
+  --gemini-api-key "Optional Gemini API key for translation"
 ```
 
 **テスト**:

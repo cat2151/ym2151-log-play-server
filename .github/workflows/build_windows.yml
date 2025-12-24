@@ -187,6 +187,8 @@ jobs:
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: issue_body
         shell: pwsh
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Python scriptを使用してissue本文を生成
           $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
@@ -204,7 +206,8 @@ jobs:
             --commit "${{ github.sha }}" `
             --server-url "${{ github.server_url }}" `
             --repository "${{ github.repository }}" `
-            --error-log "${{ steps.test_output.outputs.log }}"
+            --error-log "${{ steps.test_output.outputs.log }}" `
+            --gemini-api-key "$env:GEMINI_API_KEY"
           
           # GITHUB_OUTPUTに出力
           "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
