@@ -42,10 +42,9 @@ jobs:
 
       - name: Run tests with nextest
         id: test
-        # 20分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
-        # テスト実行に15分以上かかることがあるため、余裕を持って20分に設定
+        # 15分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
         # テストがハングした場合でも、issue作成などの後処理を確実に実行するため
-        timeout-minutes: 20
+        timeout-minutes: 15
         continue-on-error: true
         run: |
           # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
