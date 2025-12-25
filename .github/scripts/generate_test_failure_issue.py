@@ -7,8 +7,109 @@ Windows CI tests fail or time out.
 """
 
 import argparse
+import json
+import os
 import sys
+import time
+import urllib.request
+import urllib.error
 from typing import Optional
+
+
+def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
+    """
+    Translate error messages to Japanese using Gemini API.
+    
+    Retrieves API key from GEMINI_API_KEY environment variable.
+    Implements exponential backoff retry for transient API errors.
+    
+    Args:
+        error_log: The error log text to translate
+    
+    Returns:
+        Translated text in Japanese, or None if API key is not available
+        
+    Raises:
+        Exception: For non-API errors that should be detected early
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or not api_key.strip():
+        return None
+    
+    if not error_log or not error_log.strip():
+        return None
+    
+    # Prepare the API request
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    # Create the prompt for translation
+    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗ログです。
+このエラーログを日本語に翻訳してください。
+技術用語は適切に翻訳し、開発者が理解しやすいように要約してください。
+エラーの主な原因と失敗したテストについて簡潔に説明してください。
+
+エラーログ:
+```
+{error_log}
+```
+
+日本語訳:"""
+    
+    # Prepare request data
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": prompt
+            }]
+        }],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 2048
+        }
+    }
+    
+    # Exponential backoff retry configuration
+    # Initial delay: 60 seconds (1 minute)
+    # Max delay: 7200 seconds (2 hours)
+    # Sequence: 60s -> 120s -> 240s -> 480s -> 960s -> 1920s -> 3840s -> 7200s (capped)
+    max_retries = 8
+    base_delay = 60.0  # seconds (1 minute)
+    max_delay = 7200.0  # seconds (2 hours)
+    
+    for attempt in range(max_retries):
+        try:
+            # Make the API request
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(data).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            with urllib.request.urlopen(req, timeout=60) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                
+                # Extract the translated text
+                if 'candidates' in result and len(result['candidates']) > 0:
+                    candidate = result['candidates'][0]
+                    if 'content' in candidate and 'parts' in candidate['content']:
+                        parts = candidate['content']['parts']
+                        if len(parts) > 0 and 'text' in parts[0]:
+                            return parts[0]['text'].strip()
+            
+            return None
+        
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+            # API-specific errors: retry with exponential backoff
+            if attempt < max_retries - 1:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+            else:
+                # Max retries reached
+                print(f"Error: Gemini API failed after {max_retries} attempts: {e}", file=sys.stderr)
+                return None
+    
+    return None
 
 
 def generate_issue_body(
@@ -54,6 +155,17 @@ def generate_issue_body(
     
     # Build the main sections
     sections = []
+    
+    # If error log is provided, try to translate error messages using Gemini API
+    if error_log:
+        japanese_translation = translate_error_messages_with_gemini(error_log)
+        if japanese_translation:
+            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+            sections.append("")
+            sections.append(japanese_translation)
+            sections.append("")
+            sections.append("---")
+            sections.append("")
     
     # Header
     sections.append("Windows CI でビルドまたはテストに失敗しました。")

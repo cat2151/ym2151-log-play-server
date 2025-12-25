@@ -10,8 +10,20 @@
 
 **用途**: `build_windows.yml` ワークフローでテストが失敗またはタイムアウトした時に、詳細な情報を含む Issue を自動生成します。
 
+**機能**:
+- テスト失敗の詳細情報を構造化して表示
+- Gemini API を使用してエラーメッセージを日本語に翻訳（環境変数 `GEMINI_API_KEY` が設定されている場合）
+- AIによる日本語訳をissue先頭に配置し、ユーザーの認知負荷を低減
+- 指数バックオフによるリトライ機能でAPI呼び出しの信頼性を向上（初回60秒、最大2時間、最大8回試行）
+
+**環境変数**:
+- `GEMINI_API_KEY`: Gemini API キー（オプション。設定されている場合、エラーメッセージの日本語翻訳が有効になります）
+
 **使い方**:
 ```bash
+# 環境変数でAPI keyを設定
+export GEMINI_API_KEY="your-api-key-here"
+
 python3 generate_test_failure_issue.py \
   --status-ja "失敗" \
   --total-tests "10" \
