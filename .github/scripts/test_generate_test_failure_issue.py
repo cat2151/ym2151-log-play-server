@@ -227,6 +227,38 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("test_with_underscores", result)
 
 
+class TestHelperFunctions(unittest.TestCase):
+    """Test cases for helper functions."""
+    
+    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
+    def test_get_value_with_env_fallback_uses_arg(self):
+        """Test that non-empty argument value is returned."""
+        from generate_test_failure_issue import _get_value_with_env_fallback
+        result = _get_value_with_env_fallback("arg_value", "TEST_VAR")
+        self.assertEqual(result, "arg_value")
+    
+    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
+    def test_get_value_with_env_fallback_uses_env(self):
+        """Test that environment variable is used when argument is empty."""
+        from generate_test_failure_issue import _get_value_with_env_fallback
+        result = _get_value_with_env_fallback("", "TEST_VAR")
+        self.assertEqual(result, "env_value")
+    
+    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
+    def test_get_value_with_env_fallback_whitespace(self):
+        """Test that environment variable is used when argument is whitespace."""
+        from generate_test_failure_issue import _get_value_with_env_fallback
+        result = _get_value_with_env_fallback("  \n  ", "TEST_VAR")
+        self.assertEqual(result, "env_value")
+    
+    @patch.dict(os.environ, {}, clear=True)
+    def test_get_value_with_env_fallback_no_env(self):
+        """Test that empty string is returned when both arg and env are empty."""
+        from generate_test_failure_issue import _get_value_with_env_fallback
+        result = _get_value_with_env_fallback("", "NONEXISTENT_VAR")
+        self.assertEqual(result, "")
+
+
 class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     

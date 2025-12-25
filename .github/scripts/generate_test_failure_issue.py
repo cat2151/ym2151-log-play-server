@@ -222,6 +222,22 @@ def generate_issue_body(
     return "\n".join(sections)
 
 
+def _get_value_with_env_fallback(arg_value: str, env_var_name: str) -> str:
+    """
+    Get value from argument or fall back to environment variable if empty.
+    
+    Args:
+        arg_value: The value from command-line argument
+        env_var_name: The name of the environment variable to use as fallback
+    
+    Returns:
+        The argument value if non-empty, otherwise the environment variable value
+    """
+    if arg_value and arg_value.strip():
+        return arg_value
+    return os.getenv(env_var_name, "")
+
+
 def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(
@@ -308,18 +324,12 @@ def main():
     
     args = parser.parse_args()
     
-    def get_value_with_env_fallback(arg_value: str, env_var_name: str) -> str:
-        """Get value from argument or fall back to environment variable if empty."""
-        if arg_value and arg_value.strip():
-            return arg_value
-        return os.getenv(env_var_name, "")
-    
     # Get values from arguments or environment variables
-    failed_tests_categorized = get_value_with_env_fallback(
+    failed_tests_categorized = _get_value_with_env_fallback(
         args.failed_tests_categorized, 
         "FAILED_TESTS_CATEGORIZED"
     )
-    error_log = get_value_with_env_fallback(
+    error_log = _get_value_with_env_fallback(
         args.error_log,
         "ERROR_LOG"
     )
