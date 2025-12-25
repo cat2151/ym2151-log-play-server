@@ -301,21 +301,28 @@ def main():
     )
     parser.add_argument(
         "--error-log",
+        required=False,
         default="",
         help="Optional detailed error log"
     )
     
     args = parser.parse_args()
     
-    # Get failed_tests_categorized from environment variable if not provided as argument
-    failed_tests_categorized = args.failed_tests_categorized
-    if not failed_tests_categorized or not failed_tests_categorized.strip():
-        failed_tests_categorized = os.getenv("FAILED_TESTS_CATEGORIZED", "")
+    def get_value_with_env_fallback(arg_value: str, env_var_name: str) -> str:
+        """Get value from argument or fall back to environment variable if empty."""
+        if arg_value and arg_value.strip():
+            return arg_value
+        return os.getenv(env_var_name, "")
     
-    # Get error_log from environment variable if not provided as argument
-    error_log = args.error_log
-    if not error_log or not error_log.strip():
-        error_log = os.getenv("ERROR_LOG", "")
+    # Get values from arguments or environment variables
+    failed_tests_categorized = get_value_with_env_fallback(
+        args.failed_tests_categorized, 
+        "FAILED_TESTS_CATEGORIZED"
+    )
+    error_log = get_value_with_env_fallback(
+        args.error_log,
+        "ERROR_LOG"
+    )
     
     issue_body = generate_issue_body(
         status_ja=args.status_ja,
