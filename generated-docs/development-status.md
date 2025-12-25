@@ -1,51 +1,51 @@
-Last updated: 2025-12-25
+Last updated: 2025-12-26
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #144](../issue-notes/144.md) と [Issue #143](../issue-notes/143.md) は、Windows CIテスト失敗時の自動生成IssueにGemini AIによるテストエラーの日本語翻訳を追加し、ユーザーの認知負荷軽減を目指しています。
-- [Issue #138](../issue-notes/138.md) では、Agentの初手対策案が誤っていた事例（PR 137）を受け、ハルシネーションの可能性とその対策（現状は様子見）について議論しています。
-- [Issue #118](../issue-notes/118.md) は、AgentがPRしたWindows用コードのTDD不足によるビルド失敗の問題を指摘し、Linux Runner上でのWindows版Rustコンパイルチェック導入を検討しています。
+- Windows CIでのビルド/テスト ([Issue #145](../issue-notes/145.md)) が失敗しており、AgentによるWindowsコードのTDD不足 ([Issue #118](../issue-notes/118.md)) やハルシネーション ([Issue #138](../issue-notes/138.md)) が根本原因として指摘されています。
+- コマンドライン引数のヘルプ表示で `--demo-interactive` が欠落しユーザーが混乱する問題 ([Issue #121](../issue-notes/121.md)) と、サーバーコマンド (`clear schedule` の廃止・統合、`get interactive mode` の削除) の改善提案 ([Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md)) があります。
+- クライアントのデモインタラクティブモードでのフレーズ開始タイミングのブレ ([Issue #117](../issue-notes/117.md)) も未解決の重要な課題です。
 
 ## 次の一手候補
-1. [Issue #138](../issue-notes/138.md): PR 137でのAgentハルシネーション問題の根本原因分析
-   - 最初の小さな一歩: `issue-notes/138.md`で言及されているPR 137のハルシネーション問題について、Agentがなぜ誤った対策案を提示したのか、その根本原因を特定するための具体的な調査計画を立てる。特に、CIログのどの部分がAgentの判断を誤らせたのか、または情報不足だったのかを深掘りする。
-   - Agent実行プロンプ:
+1. WindowsビルドのコンパイルチェックをLinux CIで実施し、Agentによる品質保証を強化する [Issue #118](../issue-notes/118.md), [Issue #145](../issue-notes/145.md)
+   - 最初の小さな一歩: Linux Runner上で `cargo check --target=x86_64-pc-windows-gnu` を実行するGitHub Actionsワークフロー `.github/workflows/check_windows_build_on_linux.yml` を新規作成し、Windows版のコンパイルチェックが可能か検証する。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: .github/workflows/build_windows.yml, .github/scripts/generate_test_failure_issue.py, issue-notes/138.md
+     対象ファイル: .github/workflows/check_windows_build_on_linux.yml (新規作成)
 
-     実行内容: issue-notes/138.mdで言及されているPR 137のハルシネーション問題について、build_windows.ymlとgenerate_test_failure_issue.pyが生成するCIログの構造と内容を分析し、Agentが誤った判断をした可能性のある情報源や、不足していた情報の種類を特定してください。特に、ログのどの部分がAgentの理解を妨げたかを推測し、改善点を検討してください。
+     実行内容: [Issue #118](../issue-notes/118.md) の対策案に基づき、Linux Runnerで `cargo check --target=x86_64-pc-windows-gnu` を実行するGitHub Actionsワークフロー `.github/workflows/check_windows_build_on_linux.yml` を新規作成してください。このワークフローは、`build_windows.yml` の関連部分を参考に、WindowsターゲットのRustコードがLinux環境でコンパイルチェック可能か検証することを目的とします。
 
-     確認事項: issue-notes/138.mdの記述内容と、build_windows.ymlにおけるテスト結果の解析およびログ出力部分の関連性を確認してください。Agentがログをどのように解釈し、それがどのように誤った対策案につながったかを考察してください。
+     確認事項: `setup_ci_environment.sh` がRustツールチェインやターゲットのインストールにどのように影響するかを確認し、`cargo check` が必要な環境を正しく設定できるかを検証してください。また、`build_windows.yml` などの既存のCIワークフローとの整合性を考慮してください。
 
-     期待する出力: markdown形式で、PR 137でのAgentのハルシネーションの原因に関する分析結果と、CIログの改善点に関する提言を記述してください。具体的には、ログのどの要素がAgentの誤解を招いた可能性が高いか、そしてログのどの情報が不足していたかを明確にしてください。
-     ```
-
-2. [Issue #118](../issue-notes/118.md): Agent生成Windowsコードの品質保証のためのLinux Runner上でのRustコンパイルチェック導入
-   - 最初の小さな一歩: Linux Runner上でWindowsターゲット向けのRustコードのコンパイルチェック（`cargo check --target x86_64-pc-windows-msvc`など）をGitHub Actionsに組み込むための実現可能性を調査し、具体的な実装案をまとめる。
-   - Agent実行プロンプ:
-     ```
-     対象ファイル: issue-notes/118.md, Cargo.toml, .github/workflows/build_windows.yml
-
-     実行内容: issue-notes/118.mdに記載されている、Linux Runner上でWindowsターゲット向けRustコードのコンパイルチェックを導入するためのWeb調査を行い、`cargo check --target x86_64-pc-windows-msvc`、`cross`、`cargo-xwin`などのツールについて、それぞれの特徴とGitHub Actionsでの実現可能性、およびAgent駆動開発におけるTDDとの連携方法を比較検討してください。
-
-     確認事項: 現在の.github/workflows/build_windows.ymlの構成と、Linux RunnerでWindowsターゲットをチェックする際の依存関係（ツールチェイン、環境設定など）を考慮し、実行コストや複雑性を評価してください。Agentが自律的に修正できる範囲で、品質保証を向上させるための最適なアプローチを検討してください。
-
-     期待する出力: markdown形式で、Linux Runner上でのWindowsターゲット向けRustコンパイルチェックの導入に関する調査結果と推奨されるアプローチを記述してください。具体的には、各ツールの比較、GitHub Actionsへの統合案、およびAgentがそのチェック結果に基づいてTDDを実践できる可能性について詳述してください。
+     期待する出力: 新規作成する `.github/workflows/check_windows_build_on_linux.yml` ファイルの内容をMarkdownコードブロックで出力し、このワークフローがWindowsビルドのコンパイルチェックをLinux CI上で行うための手順と、そのワークフローが意図通りに動作することを確認するための簡単な説明を含めてください。
      ```
 
-3. [Issue #121](../issue-notes/121.md): コマンドライン引数`--demo-interactive`のヘルプ表示改善
-   - 最初の小さな一歩: 現在のコマンドライン引数パーシングとヘルプメッセージ生成のコードを特定し、`--demo-interactive`オプションがヘルプメッセージや不明なオプションエラー時に表示されない原因を分析する。
-   - Agent実行プロンプ:
+2. コマンドライン引数のヘルプメッセージに `--demo-interactive` オプションを表示させる [Issue #121](../issue-notes/121.md)
+   - 最初の小さな一歩: `src/main.rs` および `src/client/interactive.rs` のコマンドライン引数定義を分析し、`--demo-interactive` オプションが `clap` クレートに正しく登録され、ヘルプメッセージ生成に含まれる設定になっているかを確認する。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: src/main.rs, src/client/mod.rs, src/client/interactive.rs, issue-notes/121.md
+     対象ファイル: src/main.rs, src/client/interactive.rs, src/client/mod.rs
 
-     実行内容: issue-notes/121.mdで言及されているコマンドライン引数表示の問題について、src/main.rsおよび関連するコマンドライン引数パーシングコードを分析し、`--demo-interactive`オプションがヘルプメッセージ（`--help`）や不明なオプションエラー時に表示されない具体的な原因を特定してください。特に、`clap`クレートなどの引数処理ライブラリがどのように構成されているかを確認してください。
+     実行内容: [Issue #121](../issue-notes/121.md) で報告されている `--demo-interactive` オプションがヘルプメッセージに表示されない問題について、`src/main.rs` にあるコマンドライン引数定義箇所を調査してください。特に `clap` クレートの利用状況を確認し、`--demo-interactive` オプションが正しく定義され、ヘルプ出力に含まれるように設定されているかを分析してください。
 
-     確認事項: `--demo-interactive`オプションの定義場所と、それが`clap`などのライブラリによってどのように処理されているか、また、他のオプションとの関連性や表示ロジックの制約を確認してください。
+     確認事項: 他の既存のコマンドラインオプションとの整合性、および `clap` のバージョンと利用方法に関するドキュメントを確認し、推奨される実装方法と逸脱がないかを検証してください。
 
-     期待する出力: markdown形式で、`--demo-interactive`オプションが表示されない原因に関する分析結果と、その表示を修正するための具体的なコード変更案（ファイルパスと関数名を含む）を記述してください。
+     期待する出力: `src/main.rs` 内の `clap` の定義と、`--demo-interactive` がヘルプに表示されない原因、そしてその修正案をMarkdown形式で出力してください。修正案には具体的なコード変更の例を含めてください。
+     ```
+
+3. クライアントデモインタラクティブモードでのフレーズ開始タイミングのブレの原因を特定し、可視化する [Issue #117](../issue-notes/117.md)
+   - 最初の小さな一歩: [Issue #117](../issue-notes/117.md) の結論に基づき、`src/demo_client_interactive.rs` と `src/demo_server_interactive.rs` を使用してデモ環境をセットアップし、通常モードとインタラクティブモードで音が鳴ることを確認する。その後、各モードでのフレーズ開始タイミングのブレを測定・可視化し、具体的な問題点として記録する。
+   - Agent実行プロンプト:
+     ```
+     対象ファイル: src/client/interactive.rs, src/server/command_handler.rs, src/audio/scheduler.rs, src/demo_client_interactive.rs, src/demo_server_interactive.rs
+
+     実行内容: [Issue #117](../issue-notes/117.md) に記載されている「client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる」問題について、`src/client/interactive.rs` からサーバー (`src/server/command_handler.rs`) へのJSON送信と、サーバー側のスケジューリング (`src/audio/scheduler.rs`) のロジックを分析してください。特に、`src/demo_client_interactive.rs` および `src/demo_server_interactive.rs` のデモ実装におけるタイムスタンプの扱い、IPC通信の遅延、およびスケジューリングオフセットの適用方法に注目し、ブレの原因となりうる箇所を特定してください。
+
+     確認事項: クライアントとサーバー間のIPC通信 (`src/ipc/mod.rs` など) の特性、および既存のテストコード (`tests/interactive/mod.rs` など) を確認し、ブレの再現性や測定方法について考慮してください。デモを再現するために必要な具体的なコマンドも考慮に入れてください。
+
+     期待する出力: 問題の原因となりうる箇所を特定し、その分析結果と、ブレを軽減するための具体的なコード修正の方向性をMarkdown形式で提案してください。可能であれば、修正後の期待される挙動についても言及してください。
      ```
 
 ---
-Generated at: 2025-12-25 07:01:57 JST
+Generated at: 2025-12-26 07:01:52 JST

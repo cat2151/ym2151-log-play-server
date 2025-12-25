@@ -1,4 +1,4 @@
-Last updated: 2025-12-25
+Last updated: 2025-12-26
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -4308,7 +4308,6 @@ MIT License
                                 📄 _config.yml
                                 📄 build.rs
                                 📁 generated-docs/
-                                  📖 development-status-generated-prompt.md
                                 🌐 googled947dc864c270e07.html
                                 📄 install-ym2151-tools.rs
                                 📁 issue-notes/
@@ -4447,7 +4446,6 @@ MIT License
                               📄 _config.yml
                               📄 build.rs
                               📁 generated-docs/
-                                📖 development-status-generated-prompt.md
                               🌐 googled947dc864c270e07.html
                               📄 install-ym2151-tools.rs
                               📁 issue-notes/
@@ -4586,7 +4584,6 @@ MIT License
                             📄 _config.yml
                             📄 build.rs
                             📁 generated-docs/
-                              📖 development-status-generated-prompt.md
                             🌐 googled947dc864c270e07.html
                             📄 install-ym2151-tools.rs
                             📁 issue-notes/
@@ -4725,7 +4722,6 @@ MIT License
                           📄 _config.yml
                           📄 build.rs
                           📁 generated-docs/
-                            📖 development-status-generated-prompt.md
                           🌐 googled947dc864c270e07.html
                           📄 install-ym2151-tools.rs
                           📁 issue-notes/
@@ -6887,4 +6883,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-12-25 07:01:34 JST
+Generated at: 2025-12-26 07:01:29 JST
