@@ -198,17 +198,13 @@ jobs:
             $failedTestsFile = Join-Path $tempDir "failed_tests_categorized.txt"
             $errorLogFile = Join-Path $tempDir "error_log.txt"
             
-            # failed_tests_categorizedを一時ファイルに書き込み
+            # failed_tests_categorizedを一時ファイルに書き込み（空でも作成）
             $failedTestsCategorized = "${{ steps.test_summary.outputs.failed_tests_categorized }}"
-            if ($failedTestsCategorized) {
-              $failedTestsCategorized | Out-File -FilePath $failedTestsFile -Encoding UTF8 -NoNewline
-            }
+            $failedTestsCategorized | Out-File -FilePath $failedTestsFile -Encoding UTF8 -NoNewline
             
-            # error_logを一時ファイルに書き込み
+            # error_logを一時ファイルに書き込み（空でも作成）
             $errorLog = "${{ steps.test_output.outputs.log }}"
-            if ($errorLog) {
-              $errorLog | Out-File -FilePath $errorLogFile -Encoding UTF8 -NoNewline
-            }
+            $errorLog | Out-File -FilePath $errorLogFile -Encoding UTF8 -NoNewline
             
             $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
               --status-ja "${{ steps.failure_status.outputs.status_ja }}" `

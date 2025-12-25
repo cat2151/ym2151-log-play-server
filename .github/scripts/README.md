@@ -18,12 +18,10 @@
 
 **環境変数**:
 - `GEMINI_API_KEY`: Gemini API キー（オプション。設定されている場合、エラーメッセージの日本語翻訳が有効になります）
-- `FAILED_TESTS_CATEGORIZED`: 失敗したテストのカテゴリ別リスト（マークダウン形式）。後方互換性のため残されていますが、一時ファイルの使用を推奨します
-- `ERROR_LOG`: 詳細なエラーログ。後方互換性のため残されていますが、一時ファイルの使用を推奨します
 
 **使い方**:
 
-方法1: 一時ファイルを使用（**推奨**：大きなログデータを扱う場合）
+一時ファイルを使用（必須）
 ```bash
 # 一時ファイルに複数行データを書き込む
 echo "#### Server Tests (2件)
@@ -53,41 +51,10 @@ python3 generate_test_failure_issue.py \
   --error-log-file "/tmp/error_log.txt"
 ```
 
-方法2: コマンドライン引数を使用（シンプルなケース向け）
-```bash
-python3 generate_test_failure_issue.py \
-  --status-ja "失敗" \
-  --total-tests "10" \
-  --passed "8" \
-  --failed "2" \
-  --timed-out "0" \
-  --failed-tests-categorized "#### Tests\n- test1\n- test2" \
-  --workflow "Windows CI" \
-  --job "build-windows" \
-  --run-id "123456" \
-  --run-attempt "1" \
-  --ref "refs/heads/main" \
-  --commit "abc123" \
-  --server-url "https://github.com" \
-  --repository "owner/repo" \
-  --error-log "Optional error log text"
-```
-
-方法3: 環境変数を使用（後方互換性のため残されています）
-```bash
-export GEMINI_API_KEY="your-api-key-here"
-export FAILED_TESTS_CATEGORIZED="#### Server Tests (2件)
-- test_server_1
-- test_server_2"
-export ERROR_LOG="Error: test failed
-Stack trace: at function()"
-
-python3 generate_test_failure_issue.py \
-  --status-ja "失敗" \
-  --total-tests "10" \
-  --passed "8" \
-  --failed "2" \
-  --timed-out "0" \
+**注意**: 
+- `--failed-tests-categorized-file` と `--error-log-file` は必須引数です
+- ファイルが存在しないか読み取れない場合、スクリプトはエラーで終了します（早期エラー終了により問題を迅速に検知）
+- 大きなログデータを扱う場合でも、一時ファイルにはサイズ制限がありません
   --workflow "Windows CI" \
   --job "build-windows" \
   --run-id "123456" \

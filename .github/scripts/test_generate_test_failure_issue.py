@@ -227,44 +227,12 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("test_with_underscores", result)
 
 
-class TestHelperFunctions(unittest.TestCase):
-    """Test cases for helper functions."""
-    
-    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
-    def test_get_value_with_env_fallback_uses_arg(self):
-        """Test that non-empty argument value is returned."""
-        from generate_test_failure_issue import _get_value_with_env_fallback
-        result = _get_value_with_env_fallback("arg_value", "TEST_VAR")
-        self.assertEqual(result, "arg_value")
-    
-    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
-    def test_get_value_with_env_fallback_uses_env(self):
-        """Test that environment variable is used when argument is empty."""
-        from generate_test_failure_issue import _get_value_with_env_fallback
-        result = _get_value_with_env_fallback("", "TEST_VAR")
-        self.assertEqual(result, "env_value")
-    
-    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
-    def test_get_value_with_env_fallback_whitespace(self):
-        """Test that environment variable is used when argument is whitespace."""
-        from generate_test_failure_issue import _get_value_with_env_fallback
-        result = _get_value_with_env_fallback("  \n  ", "TEST_VAR")
-        self.assertEqual(result, "env_value")
-    
-    @patch.dict(os.environ, {}, clear=True)
-    def test_get_value_with_env_fallback_no_env(self):
-        """Test that empty string is returned when both arg and env are empty."""
-        from generate_test_failure_issue import _get_value_with_env_fallback
-        result = _get_value_with_env_fallback("", "NONEXISTENT_VAR")
-        self.assertEqual(result, "")
-
-
-class TestReadFromFileOrArg(unittest.TestCase):
-    """Test cases for the _read_from_file_or_arg helper function."""
+class TestReadFromFile(unittest.TestCase):
+    """Test cases for the _read_from_file helper function."""
     
     def test_read_from_file(self):
         """Test that content is read from file when file exists."""
-        from generate_test_failure_issue import _read_from_file_or_arg
+        from generate_test_failure_issue import _read_from_file
         import tempfile
         
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
@@ -272,62 +240,28 @@ class TestReadFromFileOrArg(unittest.TestCase):
             temp_file = f.name
         
         try:
-            result = _read_from_file_or_arg(temp_file, "arg_value", "ENV_VAR")
+            result = _read_from_file(temp_file)
             self.assertEqual(result, "file_content")
         finally:
             os.unlink(temp_file)
     
-    def test_fallback_to_arg_when_file_not_found(self):
-        """Test that argument is used when file doesn't exist."""
-        from generate_test_failure_issue import _read_from_file_or_arg
-        result = _read_from_file_or_arg("/nonexistent/file.txt", "arg_value", "ENV_VAR")
-        self.assertEqual(result, "arg_value")
+    def test_file_not_found_raises_error(self):
+        """Test that FileNotFoundError is raised when file doesn't exist."""
+        from generate_test_failure_issue import _read_from_file
+        with self.assertRaises(FileNotFoundError):
+            _read_from_file("/nonexistent/file.txt")
     
-    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
-    def test_fallback_to_env_when_file_and_arg_empty(self):
-        """Test that environment variable is used when file and arg are empty."""
-        from generate_test_failure_issue import _read_from_file_or_arg
-        result = _read_from_file_or_arg("", "", "TEST_VAR")
-        self.assertEqual(result, "env_value")
+    def test_empty_path_returns_empty_string(self):
+        """Test that empty path returns empty string."""
+        from generate_test_failure_issue import _read_from_file
+        result = _read_from_file("")
+        self.assertEqual(result, "")
     
-    def test_priority_order(self):
-        """Test that file > arg > env priority is respected."""
-        from generate_test_failure_issue import _read_from_file_or_arg
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-            f.write("file_content")
-            temp_file = f.name
-        
-        try:
-            with patch.dict(os.environ, {"TEST_VAR": "env_value"}):
-                # File should win over arg and env
-                result = _read_from_file_or_arg(temp_file, "arg_value", "TEST_VAR")
-                self.assertEqual(result, "file_content")
-        finally:
-            os.unlink(temp_file)
-    
-    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
-    def test_arg_wins_over_env(self):
-        """Test that argument takes priority over environment variable."""
-        from generate_test_failure_issue import _read_from_file_or_arg
-        result = _read_from_file_or_arg("", "arg_value", "TEST_VAR")
-        self.assertEqual(result, "arg_value")
-    
-    def test_empty_file_falls_back(self):
-        """Test that empty file falls back to argument."""
-        from generate_test_failure_issue import _read_from_file_or_arg
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-            # Write nothing (empty file)
-            temp_file = f.name
-        
-        try:
-            result = _read_from_file_or_arg(temp_file, "arg_value", "")
-            self.assertEqual(result, "arg_value")
-        finally:
-            os.unlink(temp_file)
+    def test_whitespace_path_returns_empty_string(self):
+        """Test that whitespace-only path returns empty string."""
+        from generate_test_failure_issue import _read_from_file
+        result = _read_from_file("  \n  ")
+        self.assertEqual(result, "")
 
 
 class TestTranslateErrorMessages(unittest.TestCase):
