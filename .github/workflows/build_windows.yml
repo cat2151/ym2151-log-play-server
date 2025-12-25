@@ -206,8 +206,7 @@ jobs:
             --commit "${{ github.sha }}" `
             --server-url "${{ github.server_url }}" `
             --repository "${{ github.repository }}" `
-            --error-log "${{ steps.test_output.outputs.log }}" `
-            --gemini-api-key "$env:GEMINI_API_KEY"
+            --error-log "${{ steps.test_output.outputs.log }}"
           
           # GITHUB_OUTPUTに出力
           "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append

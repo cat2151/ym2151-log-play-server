@@ -10,87 +10,102 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.request
 import urllib.error
 from typing import Optional
 
 
-def translate_error_messages_with_gemini(error_log: str, api_key: str) -> Optional[str]:
+def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
     """
     Translate error messages to Japanese using Gemini API.
     
+    Retrieves API key from GEMINI_API_KEY environment variable.
+    Implements exponential backoff retry for transient API errors.
+    
     Args:
         error_log: The error log text to translate
-        api_key: Gemini API key
     
     Returns:
-        Translated text in Japanese, or None if translation fails
+        Translated text in Japanese, or None if API key is not available
+        
+    Raises:
+        Exception: For non-API errors that should be detected early
     """
-    if not error_log or not error_log.strip():
-        return None
-    
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or not api_key.strip():
         return None
     
-    try:
-        # Prepare the API request
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-        
-        # Create the prompt for translation
-        prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗ログです。
+    if not error_log or not error_log.strip():
+        return None
+    
+    # Prepare the API request
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    
+    # Create the prompt for translation
+    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗ログです。
 このエラーログを日本語に翻訳してください。
 技術用語は適切に翻訳し、開発者が理解しやすいように要約してください。
 エラーの主な原因と失敗したテストについて簡潔に説明してください。
 
 エラーログ:
 ```
-{error_log[:3000]}
+{error_log}
 ```
 
 日本語訳:"""
-        
-        # Prepare request data
-        data = {
-            "contents": [{
-                "parts": [{
-                    "text": prompt
-                }]
-            }],
-            "generationConfig": {
-                "temperature": 0.3,
-                "maxOutputTokens": 1000
-            }
-        }
-        
-        # Make the API request
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(data).encode('utf-8'),
-            headers={'Content-Type': 'application/json'}
-        )
-        
-        with urllib.request.urlopen(req, timeout=30) as response:
-            result = json.loads(response.read().decode('utf-8'))
-            
-            # Extract the translated text
-            if 'candidates' in result and len(result['candidates']) > 0:
-                candidate = result['candidates'][0]
-                if 'content' in candidate and 'parts' in candidate['content']:
-                    parts = candidate['content']['parts']
-                    if len(parts) > 0 and 'text' in parts[0]:
-                        return parts[0]['text'].strip()
-        
-        return None
     
-    except urllib.error.URLError as e:
-        print(f"Warning: Failed to translate with Gemini API: {e}", file=sys.stderr)
-        return None
-    except json.JSONDecodeError as e:
-        print(f"Warning: Failed to parse Gemini API response: {e}", file=sys.stderr)
-        return None
-    except Exception as e:
-        print(f"Warning: Unexpected error during translation: {e}", file=sys.stderr)
-        return None
+    # Prepare request data
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": prompt
+            }]
+        }],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 2048
+        }
+    }
+    
+    # Exponential backoff retry configuration
+    max_retries = 5
+    base_delay = 1.0  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            # Make the API request
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(data).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            with urllib.request.urlopen(req, timeout=60) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                
+                # Extract the translated text
+                if 'candidates' in result and len(result['candidates']) > 0:
+                    candidate = result['candidates'][0]
+                    if 'content' in candidate and 'parts' in candidate['content']:
+                        parts = candidate['content']['parts']
+                        if len(parts) > 0 and 'text' in parts[0]:
+                            return parts[0]['text'].strip()
+            
+            return None
+        
+        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+            # API-specific errors: retry with exponential backoff
+            if attempt < max_retries - 1:
+                delay = base_delay * (2 ** attempt)
+                print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+            else:
+                # Max retries reached
+                print(f"Error: Gemini API failed after {max_retries} attempts: {e}", file=sys.stderr)
+                return None
+    
+    return None
 
 
 def generate_issue_body(
@@ -109,7 +124,6 @@ def generate_issue_body(
     server_url: str,
     repository: str,
     error_log: Optional[str] = None,
-    gemini_api_key: Optional[str] = None,
 ) -> str:
     """
     Generate the issue body text for a test failure.
@@ -130,7 +144,6 @@ def generate_issue_body(
         server_url: GitHub server URL
         repository: GitHub repository (owner/repo)
         error_log: Optional detailed error log
-        gemini_api_key: Optional Gemini API key for translation
     
     Returns:
         The formatted issue body text
@@ -139,9 +152,9 @@ def generate_issue_body(
     # Build the main sections
     sections = []
     
-    # If Gemini API key is provided, try to translate error messages
-    if gemini_api_key and error_log:
-        japanese_translation = translate_error_messages_with_gemini(error_log, gemini_api_key)
+    # If error log is provided, try to translate error messages using Gemini API
+    if error_log:
+        japanese_translation = translate_error_messages_with_gemini(error_log)
         if japanese_translation:
             sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
             sections.append("")
@@ -286,11 +299,6 @@ def main():
         default="",
         help="Optional detailed error log"
     )
-    parser.add_argument(
-        "--gemini-api-key",
-        default="",
-        help="Optional Gemini API key for translating error messages"
-    )
     
     args = parser.parse_args()
     
@@ -310,7 +318,6 @@ def main():
         server_url=args.server_url,
         repository=args.repository,
         error_log=args.error_log,
-        gemini_api_key=args.gemini_api_key,
     )
     
     print(issue_body)

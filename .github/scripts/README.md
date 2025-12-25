@@ -12,11 +12,18 @@
 
 **機能**:
 - テスト失敗の詳細情報を構造化して表示
-- Gemini API を使用してエラーメッセージを日本語に翻訳（オプション）
+- Gemini API を使用してエラーメッセージを日本語に翻訳（環境変数 `GEMINI_API_KEY` が設定されている場合）
 - AIによる日本語訳をissue先頭に配置し、ユーザーの認知負荷を低減
+- 指数バックオフによるリトライ機能でAPI呼び出しの信頼性を向上
+
+**環境変数**:
+- `GEMINI_API_KEY`: Gemini API キー（オプション。設定されている場合、エラーメッセージの日本語翻訳が有効になります）
 
 **使い方**:
 ```bash
+# 環境変数でAPI keyを設定
+export GEMINI_API_KEY="your-api-key-here"
+
 python3 generate_test_failure_issue.py \
   --status-ja "失敗" \
   --total-tests "10" \
@@ -32,8 +39,7 @@ python3 generate_test_failure_issue.py \
   --commit "abc123" \
   --server-url "https://github.com" \
   --repository "owner/repo" \
-  --error-log "Optional error log text" \
-  --gemini-api-key "Optional Gemini API key for translation"
+  --error-log "Optional error log text"
 ```
 
 **テスト**:

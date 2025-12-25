@@ -3,7 +3,9 @@
 Unit tests for generate_test_failure_issue.py
 """
 
+import os
 import unittest
+import urllib.error
 from unittest.mock import patch, MagicMock
 from generate_test_failure_issue import generate_issue_body, translate_error_messages_with_gemini
 
@@ -228,22 +230,26 @@ class TestGenerateIssueBody(unittest.TestCase):
 class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     
+    @patch.dict(os.environ, {}, clear=True)
     def test_translate_with_no_api_key(self):
-        """Test that translation returns None when API key is not provided."""
+        """Test that translation returns None when API key is not in environment."""
         error_log = "Error: test failed"
-        result = translate_error_messages_with_gemini(error_log, "")
+        result = translate_error_messages_with_gemini(error_log)
         self.assertIsNone(result)
     
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     def test_translate_with_no_error_log(self):
         """Test that translation returns None when error log is empty."""
-        result = translate_error_messages_with_gemini("", "fake-api-key")
+        result = translate_error_messages_with_gemini("")
         self.assertIsNone(result)
     
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     def test_translate_with_whitespace_error_log(self):
         """Test that translation returns None when error log is whitespace only."""
-        result = translate_error_messages_with_gemini("   \n  ", "fake-api-key")
+        result = translate_error_messages_with_gemini("   \n  ")
         self.assertIsNone(result)
     
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     @patch('urllib.request.urlopen')
     def test_translate_success(self, mock_urlopen):
         """Test successful translation with Gemini API."""
@@ -265,22 +271,29 @@ class TestTranslateErrorMessages(unittest.TestCase):
         mock_urlopen.return_value = mock_response
         
         error_log = "Error: test failed"
-        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        result = translate_error_messages_with_gemini(error_log)
         
         self.assertIsNotNone(result)
         self.assertEqual(result, "テストが失敗しました")
     
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     @patch('urllib.request.urlopen')
-    def test_translate_api_error(self, mock_urlopen):
-        """Test that translation handles API errors gracefully."""
-        mock_urlopen.side_effect = Exception("API Error")
+    @patch('time.sleep')  # Mock sleep to speed up test
+    def test_translate_api_error_with_retry(self, mock_sleep, mock_urlopen):
+        """Test that translation retries with exponential backoff on API errors."""
+        mock_urlopen.side_effect = urllib.error.URLError("Connection failed")
         
         error_log = "Error: test failed"
-        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        result = translate_error_messages_with_gemini(error_log)
         
-        # Should return None on error
+        # Should return None after max retries
         self.assertIsNone(result)
+        # Should have attempted 5 times
+        self.assertEqual(mock_urlopen.call_count, 5)
+        # Should have called sleep 4 times (between retries)
+        self.assertEqual(mock_sleep.call_count, 4)
     
+    @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     @patch('urllib.request.urlopen')
     def test_translate_malformed_response(self, mock_urlopen):
         """Test that translation handles malformed API responses."""
@@ -291,7 +304,7 @@ class TestTranslateErrorMessages(unittest.TestCase):
         mock_urlopen.return_value = mock_response
         
         error_log = "Error: test failed"
-        result = translate_error_messages_with_gemini(error_log, "fake-api-key")
+        result = translate_error_messages_with_gemini(error_log)
         
         # Should return None when response doesn't have expected structure
         self.assertIsNone(result)
@@ -323,7 +336,6 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             server_url="https://github.com",
             repository="cat2151/ym2151-log-play-server",
             error_log=error_log,
-            gemini_api_key="fake-api-key",
         )
         
         # Check that translation section is present
@@ -332,7 +344,7 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
         self.assertIn("---", result)
         
         # Check that translation was called with correct parameters
-        mock_translate.assert_called_once_with(error_log, "fake-api-key")
+        mock_translate.assert_called_once_with(error_log)
     
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_with_gemini_translation_failure(self, mock_translate):
@@ -357,7 +369,6 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             server_url="https://github.com",
             repository="cat2151/ym2151-log-play-server",
             error_log=error_log,
-            gemini_api_key="fake-api-key",
         )
         
         # Check that translation section is NOT present when translation fails
@@ -366,10 +377,8 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
         # But the rest of the issue should still be generated
         self.assertIn("Windows CI でビルドまたはテストに失敗しました", result)
     
-    def test_without_gemini_api_key(self):
-        """Test issue body generation without Gemini API key."""
-        error_log = "Error: test failed"
-        
+    def test_without_error_log(self):
+        """Test issue body generation without error log."""
         result = generate_issue_body(
             status_ja="失敗",
             total_tests="10",
@@ -385,11 +394,10 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             commit="abc123",
             server_url="https://github.com",
             repository="cat2151/ym2151-log-play-server",
-            error_log=error_log,
-            gemini_api_key=None,
+            error_log=None,
         )
         
-        # Check that translation section is NOT present without API key
+        # Check that translation section is NOT present without error log
         self.assertNotIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
         
         # But the rest of the issue should still be generated
