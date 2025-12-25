@@ -255,8 +255,9 @@ def main():
     )
     parser.add_argument(
         "--failed-tests-categorized",
-        required=True,
-        help="Categorized list of failed tests (markdown formatted)"
+        required=False,
+        default="",
+        help="Categorized list of failed tests (markdown formatted). If not provided, reads from FAILED_TESTS_CATEGORIZED environment variable."
     )
     parser.add_argument(
         "--workflow",
@@ -306,13 +307,23 @@ def main():
     
     args = parser.parse_args()
     
+    # Get failed_tests_categorized from environment variable if not provided as argument
+    failed_tests_categorized = args.failed_tests_categorized
+    if not failed_tests_categorized or not failed_tests_categorized.strip():
+        failed_tests_categorized = os.getenv("FAILED_TESTS_CATEGORIZED", "")
+    
+    # Get error_log from environment variable if not provided as argument
+    error_log = args.error_log
+    if not error_log or not error_log.strip():
+        error_log = os.getenv("ERROR_LOG", "")
+    
     issue_body = generate_issue_body(
         status_ja=args.status_ja,
         total_tests=args.total_tests,
         passed=args.passed,
         failed=args.failed,
         timed_out=args.timed_out,
-        failed_tests_categorized=args.failed_tests_categorized,
+        failed_tests_categorized=failed_tests_categorized,
         workflow=args.workflow,
         job=args.job,
         run_id=args.run_id,
@@ -321,7 +332,7 @@ def main():
         commit=args.commit,
         server_url=args.server_url,
         repository=args.repository,
-        error_log=args.error_log,
+        error_log=error_log,
     )
     
     print(issue_body)
