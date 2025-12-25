@@ -69,8 +69,12 @@ def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
     }
     
     # Exponential backoff retry configuration
-    max_retries = 5
-    base_delay = 1.0  # seconds
+    # Initial delay: 60 seconds (1 minute)
+    # Max delay: 7200 seconds (2 hours)
+    # Sequence: 60s -> 120s -> 240s -> 480s -> 960s -> 1920s -> 3840s -> 7200s (capped)
+    max_retries = 8
+    base_delay = 60.0  # seconds (1 minute)
+    max_delay = 7200.0  # seconds (2 hours)
     
     for attempt in range(max_retries):
         try:
@@ -97,7 +101,7 @@ def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
         except (urllib.error.HTTPError, urllib.error.URLError) as e:
             # API-specific errors: retry with exponential backoff
             if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
+                delay = min(base_delay * (2 ** attempt), max_delay)
                 print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...", file=sys.stderr)
                 time.sleep(delay)
             else:

@@ -288,10 +288,14 @@ class TestTranslateErrorMessages(unittest.TestCase):
         
         # Should return None after max retries
         self.assertIsNone(result)
-        # Should have attempted 5 times
-        self.assertEqual(mock_urlopen.call_count, 5)
-        # Should have called sleep 4 times (between retries)
-        self.assertEqual(mock_sleep.call_count, 4)
+        # Should have attempted 8 times (updated from 5)
+        self.assertEqual(mock_urlopen.call_count, 8)
+        # Should have called sleep 7 times (between retries)
+        self.assertEqual(mock_sleep.call_count, 7)
+        # Verify exponential backoff with 60s base and 7200s max
+        expected_delays = [60.0, 120.0, 240.0, 480.0, 960.0, 1920.0, 3840.0]
+        actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
+        self.assertEqual(actual_delays, expected_delays)
     
     @patch.dict(os.environ, {"GEMINI_API_KEY": "fake-api-key"})
     @patch('urllib.request.urlopen')
