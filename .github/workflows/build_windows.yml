@@ -191,13 +191,27 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Python scriptを使用してissue本文を生成
+          # エラー情報（failed_tests_categorized, error_log）は先行jobで生成されたデータを一時ファイル経由で渡す
+          
+          # 一時ファイルを作成してエラー情報を書き込む
+          $tempDir = [System.IO.Path]::GetTempPath()
+          $failedTestsFile = Join-Path $tempDir "failed_tests_categorized.txt"
+          $errorLogFile = Join-Path $tempDir "error_log.txt"
+          
+          # 先行jobで生成されたfailed_tests_categorizedを一時ファイルに書き込み
+          $failedTestsCategorized = "${{ steps.test_summary.outputs.failed_tests_categorized }}"
+          $failedTestsCategorized | Out-File -FilePath $failedTestsFile -Encoding UTF8 -NoNewline
+          
+          # 先行jobで生成されたerror_logを一時ファイルに書き込み
+          $errorLog = "${{ steps.test_output.outputs.log }}"
+          $errorLog | Out-File -FilePath $errorLogFile -Encoding UTF8 -NoNewline
+          
           $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
             --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
             --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
             --passed "${{ steps.test_summary.outputs.passed }}" `
             --failed "${{ steps.test_summary.outputs.failed }}" `
             --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
-            --failed-tests-categorized "${{ steps.test_summary.outputs.failed_tests_categorized }}" `
             --workflow "${{ github.workflow }}" `
             --job "${{ github.job }}" `
             --run-id "${{ github.run_id }}" `
@@ -206,7 +220,12 @@ jobs:
             --commit "${{ github.sha }}" `
             --server-url "${{ github.server_url }}" `
             --repository "${{ github.repository }}" `
-            --error-log "${{ steps.test_output.outputs.log }}"
+            --failed-tests-categorized-file "$failedTestsFile" `
+            --error-log-file "$errorLogFile"
+          
+          # 一時ファイルをクリーンアップ
+          if (Test-Path $failedTestsFile) { Remove-Item $failedTestsFile -ErrorAction SilentlyContinue }
+          if (Test-Path $errorLogFile) { Remove-Item $errorLogFile -ErrorAction SilentlyContinue }
           
           # GITHUB_OUTPUTに出力
           "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append

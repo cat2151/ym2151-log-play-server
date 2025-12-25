@@ -21,7 +21,17 @@
 
 **使い方**:
 
+エラー情報は先行jobで生成されたデータを一時ファイル経由で渡します。
+
 ```bash
+# 先行jobで生成されたエラー情報を一時ファイルに書き込む
+echo "#### Server Tests (2件)
+- test_server_1
+- test_server_2" > /tmp/failed_tests.txt
+
+echo "Error: test failed
+Stack trace: at function()" > /tmp/error_log.txt
+
 export GEMINI_API_KEY="your-api-key-here"
 
 python3 generate_test_failure_issue.py \
@@ -30,9 +40,6 @@ python3 generate_test_failure_issue.py \
   --passed "8" \
   --failed "2" \
   --timed-out "0" \
-  --failed-tests-categorized "#### Server Tests (2件)
-- test_server_1
-- test_server_2" \
   --workflow "Windows CI" \
   --job "build-windows" \
   --run-id "123456" \
@@ -41,14 +48,14 @@ python3 generate_test_failure_issue.py \
   --commit "abc123" \
   --server-url "https://github.com" \
   --repository "owner/repo" \
-  --error-log "Error: test failed
-Stack trace: at function()"
+  --failed-tests-categorized-file "/tmp/failed_tests.txt" \
+  --error-log-file "/tmp/error_log.txt"
 ```
 
 **注意**: 
-- `--failed-tests-categorized` は必須引数です
-- `--error-log` はオプション引数です
-- 引数として直接文字列を渡すため、シンプルで理解しやすい実装です
+- `--failed-tests-categorized-file` と `--error-log-file` は必須引数です
+- これらのファイルには先行jobで生成されたエラー情報が含まれます
+- ファイルが存在しないか読み取れない場合、スクリプトはエラーで終了します
   --workflow "Windows CI" \
   --job "build-windows" \
   --run-id "123456" \

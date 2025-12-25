@@ -227,6 +227,31 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("test_with_underscores", result)
 
 
+class TestReadFromFile(unittest.TestCase):
+    """Test cases for the _read_from_file helper function."""
+    
+    def test_read_from_file(self):
+        """Test that content is read from file."""
+        from generate_test_failure_issue import _read_from_file
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("file_content from prior job")
+            temp_file = f.name
+        
+        try:
+            result = _read_from_file(temp_file)
+            self.assertEqual(result, "file_content from prior job")
+        finally:
+            os.unlink(temp_file)
+    
+    def test_file_not_found_raises_error(self):
+        """Test that FileNotFoundError is raised when file doesn't exist."""
+        from generate_test_failure_issue import _read_from_file
+        with self.assertRaises(FileNotFoundError):
+            _read_from_file("/nonexistent/file.txt")
+
+
 class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     
