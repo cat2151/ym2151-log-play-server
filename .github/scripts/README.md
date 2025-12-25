@@ -18,12 +18,42 @@
 
 **環境変数**:
 - `GEMINI_API_KEY`: Gemini API キー（オプション。設定されている場合、エラーメッセージの日本語翻訳が有効になります）
-- `FAILED_TESTS_CATEGORIZED`: 失敗したテストのカテゴリ別リスト（マークダウン形式）。コマンドライン引数が空の場合に使用されます
-- `ERROR_LOG`: 詳細なエラーログ。コマンドライン引数が空の場合に使用されます
+- `FAILED_TESTS_CATEGORIZED`: 失敗したテストのカテゴリ別リスト（マークダウン形式）。後方互換性のため残されていますが、一時ファイルの使用を推奨します
+- `ERROR_LOG`: 詳細なエラーログ。後方互換性のため残されていますが、一時ファイルの使用を推奨します
 
 **使い方**:
 
-方法1: コマンドライン引数を使用（推奨：シンプルなケース）
+方法1: 一時ファイルを使用（**推奨**：大きなログデータを扱う場合）
+```bash
+# 一時ファイルに複数行データを書き込む
+echo "#### Server Tests (2件)
+- test_server_1
+- test_server_2" > /tmp/failed_tests.txt
+
+echo "Error: test failed
+Stack trace: at function()" > /tmp/error_log.txt
+
+export GEMINI_API_KEY="your-api-key-here"
+
+python3 generate_test_failure_issue.py \
+  --status-ja "失敗" \
+  --total-tests "10" \
+  --passed "8" \
+  --failed "2" \
+  --timed-out "0" \
+  --workflow "Windows CI" \
+  --job "build-windows" \
+  --run-id "123456" \
+  --run-attempt "1" \
+  --ref "refs/heads/main" \
+  --commit "abc123" \
+  --server-url "https://github.com" \
+  --repository "owner/repo" \
+  --failed-tests-categorized-file "/tmp/failed_tests.txt" \
+  --error-log-file "/tmp/error_log.txt"
+```
+
+方法2: コマンドライン引数を使用（シンプルなケース向け）
 ```bash
 python3 generate_test_failure_issue.py \
   --status-ja "失敗" \
@@ -43,7 +73,7 @@ python3 generate_test_failure_issue.py \
   --error-log "Optional error log text"
 ```
 
-方法2: 環境変数を使用（推奨：複数行データを扱う場合）
+方法3: 環境変数を使用（後方互換性のため残されています）
 ```bash
 export GEMINI_API_KEY="your-api-key-here"
 export FAILED_TESTS_CATEGORIZED="#### Server Tests (2件)
@@ -68,10 +98,14 @@ python3 generate_test_failure_issue.py \
   --repository "owner/repo"
 ```
 
+**優先順位**:
+1. 一時ファイル（`--failed-tests-categorized-file`, `--error-log-file`）
+2. コマンドライン引数（`--failed-tests-categorized`, `--error-log`）
+3. 環境変数（`FAILED_TESTS_CATEGORIZED`, `ERROR_LOG`）
+
 **注意**: 
-- コマンドライン引数が指定されている場合、環境変数よりも優先されます
-- `--failed-tests-categorized` と `--error-log` は省略可能です（環境変数から読み取られます）
-- PowerShellでは複数行文字列のコマンドライン引数渡しで問題が発生する可能性があるため、環境変数の使用を推奨します
+- 大きなログデータを扱う場合は、一時ファイルの使用を推奨します（環境変数にはサイズ制限があります）
+- PowerShellでは複数行文字列のコマンドライン引数渡しで問題が発生する可能性があるため、一時ファイルの使用を推奨します
 
 **テスト**:
 ```bash

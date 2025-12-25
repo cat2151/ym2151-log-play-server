@@ -259,6 +259,77 @@ class TestHelperFunctions(unittest.TestCase):
         self.assertEqual(result, "")
 
 
+class TestReadFromFileOrArg(unittest.TestCase):
+    """Test cases for the _read_from_file_or_arg helper function."""
+    
+    def test_read_from_file(self):
+        """Test that content is read from file when file exists."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("file_content")
+            temp_file = f.name
+        
+        try:
+            result = _read_from_file_or_arg(temp_file, "arg_value", "ENV_VAR")
+            self.assertEqual(result, "file_content")
+        finally:
+            os.unlink(temp_file)
+    
+    def test_fallback_to_arg_when_file_not_found(self):
+        """Test that argument is used when file doesn't exist."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        result = _read_from_file_or_arg("/nonexistent/file.txt", "arg_value", "ENV_VAR")
+        self.assertEqual(result, "arg_value")
+    
+    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
+    def test_fallback_to_env_when_file_and_arg_empty(self):
+        """Test that environment variable is used when file and arg are empty."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        result = _read_from_file_or_arg("", "", "TEST_VAR")
+        self.assertEqual(result, "env_value")
+    
+    def test_priority_order(self):
+        """Test that file > arg > env priority is respected."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write("file_content")
+            temp_file = f.name
+        
+        try:
+            with patch.dict(os.environ, {"TEST_VAR": "env_value"}):
+                # File should win over arg and env
+                result = _read_from_file_or_arg(temp_file, "arg_value", "TEST_VAR")
+                self.assertEqual(result, "file_content")
+        finally:
+            os.unlink(temp_file)
+    
+    @patch.dict(os.environ, {"TEST_VAR": "env_value"})
+    def test_arg_wins_over_env(self):
+        """Test that argument takes priority over environment variable."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        result = _read_from_file_or_arg("", "arg_value", "TEST_VAR")
+        self.assertEqual(result, "arg_value")
+    
+    def test_empty_file_falls_back(self):
+        """Test that empty file falls back to argument."""
+        from generate_test_failure_issue import _read_from_file_or_arg
+        import tempfile
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            # Write nothing (empty file)
+            temp_file = f.name
+        
+        try:
+            result = _read_from_file_or_arg(temp_file, "arg_value", "")
+            self.assertEqual(result, "arg_value")
+        finally:
+            os.unlink(temp_file)
+
+
 class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     

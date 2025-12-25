@@ -226,6 +226,9 @@ def _get_value_with_env_fallback(arg_value: str, env_var_name: str) -> str:
     """
     Get value from argument or fall back to environment variable if empty.
     
+    Deprecated: This function is kept for backward compatibility.
+    New code should use _read_from_file_or_arg() instead.
+    
     Args:
         arg_value: The value from command-line argument
         env_var_name: The name of the environment variable to use as fallback
@@ -236,6 +239,46 @@ def _get_value_with_env_fallback(arg_value: str, env_var_name: str) -> str:
     if arg_value and arg_value.strip():
         return arg_value
     return os.getenv(env_var_name, "")
+
+
+def _read_from_file_or_arg(file_path: str, arg_value: str, env_var_name: str = "") -> str:
+    """
+    Read value from file, command-line argument, or environment variable.
+    
+    Priority order:
+    1. If file_path is provided and file exists, read from file
+    2. If arg_value is non-empty, use it
+    3. If env_var_name is provided, read from environment variable
+    4. Return empty string
+    
+    Args:
+        file_path: Path to file containing the value
+        arg_value: The value from command-line argument
+        env_var_name: The name of the environment variable to use as fallback
+    
+    Returns:
+        The value from file, argument, or environment variable
+    """
+    # Try to read from file first
+    if file_path and file_path.strip():
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                if content:
+                    return content
+        except (FileNotFoundError, IOError) as e:
+            # File doesn't exist or can't be read, continue to fallbacks
+            print(f"Warning: Could not read file {file_path}: {e}", file=sys.stderr)
+    
+    # Fall back to argument value
+    if arg_value and arg_value.strip():
+        return arg_value
+    
+    # Fall back to environment variable
+    if env_var_name:
+        return os.getenv(env_var_name, "")
+    
+    return ""
 
 
 def main():
@@ -273,7 +316,13 @@ def main():
         "--failed-tests-categorized",
         required=False,
         default="",
-        help="Categorized list of failed tests (markdown formatted). If not provided, reads from FAILED_TESTS_CATEGORIZED environment variable."
+        help="Categorized list of failed tests (markdown formatted). Deprecated: use --failed-tests-categorized-file instead."
+    )
+    parser.add_argument(
+        "--failed-tests-categorized-file",
+        required=False,
+        default="",
+        help="Path to file containing categorized list of failed tests (markdown formatted)"
     )
     parser.add_argument(
         "--workflow",
@@ -319,17 +368,26 @@ def main():
         "--error-log",
         required=False,
         default="",
-        help="Optional detailed error log"
+        help="Optional detailed error log. Deprecated: use --error-log-file instead."
+    )
+    parser.add_argument(
+        "--error-log-file",
+        required=False,
+        default="",
+        help="Path to file containing detailed error log"
     )
     
     args = parser.parse_args()
     
-    # Get values from arguments or environment variables
-    failed_tests_categorized = _get_value_with_env_fallback(
+    # Get values from files, arguments, or environment variables
+    # Priority: file > argument > environment variable
+    failed_tests_categorized = _read_from_file_or_arg(
+        args.failed_tests_categorized_file,
         args.failed_tests_categorized, 
         "FAILED_TESTS_CATEGORIZED"
     )
-    error_log = _get_value_with_env_fallback(
+    error_log = _read_from_file_or_arg(
+        args.error_log_file,
         args.error_log,
         "ERROR_LOG"
     )

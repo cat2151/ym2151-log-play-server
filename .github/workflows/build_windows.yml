@@ -189,12 +189,27 @@ jobs:
         shell: pwsh
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          FAILED_TESTS_CATEGORIZED: ${{ steps.test_summary.outputs.failed_tests_categorized }}
-          ERROR_LOG: ${{ steps.test_output.outputs.log }}
         run: |
           # Python scriptを使用してissue本文を生成
-          # 複数行データは環境変数経由で渡す（コマンドライン引数では問題が発生するため）
+          # 複数行データは一時ファイル経由で渡す（PowerShellのコマンドライン引数では問題が発生するため）
           try {
+            # 一時ファイルを作成して複数行データを書き込む
+            $tempDir = [System.IO.Path]::GetTempPath()
+            $failedTestsFile = Join-Path $tempDir "failed_tests_categorized.txt"
+            $errorLogFile = Join-Path $tempDir "error_log.txt"
+            
+            # failed_tests_categorizedを一時ファイルに書き込み
+            $failedTestsCategorized = "${{ steps.test_summary.outputs.failed_tests_categorized }}"
+            if ($failedTestsCategorized) {
+              $failedTestsCategorized | Out-File -FilePath $failedTestsFile -Encoding UTF8 -NoNewline
+            }
+            
+            # error_logを一時ファイルに書き込み
+            $errorLog = "${{ steps.test_output.outputs.log }}"
+            if ($errorLog) {
+              $errorLog | Out-File -FilePath $errorLogFile -Encoding UTF8 -NoNewline
+            }
+            
             $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
               --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
               --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
@@ -208,7 +223,13 @@ jobs:
               --ref "${{ github.ref }}" `
               --commit "${{ github.sha }}" `
               --server-url "${{ github.server_url }}" `
-              --repository "${{ github.repository }}"
+              --repository "${{ github.repository }}" `
+              --failed-tests-categorized-file "$failedTestsFile" `
+              --error-log-file "$errorLogFile"
+            
+            # 一時ファイルをクリーンアップ
+            if (Test-Path $failedTestsFile) { Remove-Item $failedTestsFile -ErrorAction SilentlyContinue }
+            if (Test-Path $errorLogFile) { Remove-Item $errorLogFile -ErrorAction SilentlyContinue }
             
             if ($LASTEXITCODE -ne 0) {
               throw "Python script failed with exit code $LASTEXITCODE"
