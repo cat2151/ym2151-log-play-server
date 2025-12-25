@@ -21,16 +21,7 @@
 
 **使い方**:
 
-一時ファイルを使用（必須）
 ```bash
-# 一時ファイルに複数行データを書き込む
-echo "#### Server Tests (2件)
-- test_server_1
-- test_server_2" > /tmp/failed_tests.txt
-
-echo "Error: test failed
-Stack trace: at function()" > /tmp/error_log.txt
-
 export GEMINI_API_KEY="your-api-key-here"
 
 python3 generate_test_failure_issue.py \
@@ -39,6 +30,9 @@ python3 generate_test_failure_issue.py \
   --passed "8" \
   --failed "2" \
   --timed-out "0" \
+  --failed-tests-categorized "#### Server Tests (2件)
+- test_server_1
+- test_server_2" \
   --workflow "Windows CI" \
   --job "build-windows" \
   --run-id "123456" \
@@ -47,14 +41,14 @@ python3 generate_test_failure_issue.py \
   --commit "abc123" \
   --server-url "https://github.com" \
   --repository "owner/repo" \
-  --failed-tests-categorized-file "/tmp/failed_tests.txt" \
-  --error-log-file "/tmp/error_log.txt"
+  --error-log "Error: test failed
+Stack trace: at function()"
 ```
 
 **注意**: 
-- `--failed-tests-categorized-file` と `--error-log-file` は必須引数です
-- ファイルが存在しないか読み取れない場合、スクリプトはエラーで終了します（早期エラー終了により問題を迅速に検知）
-- 大きなログデータを扱う場合でも、一時ファイルにはサイズ制限がありません
+- `--failed-tests-categorized` は必須引数です
+- `--error-log` はオプション引数です
+- 引数として直接文字列を渡すため、シンプルで理解しやすい実装です
   --workflow "Windows CI" \
   --job "build-windows" \
   --run-id "123456" \

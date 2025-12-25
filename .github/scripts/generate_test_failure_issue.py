@@ -222,27 +222,6 @@ def generate_issue_body(
     return "\n".join(sections)
 
 
-def _read_from_file(file_path: str) -> str:
-    """
-    Read value from file.
-    
-    Args:
-        file_path: Path to file containing the value
-    
-    Returns:
-        The value from file
-        
-    Raises:
-        FileNotFoundError: If file doesn't exist
-        IOError: If file cannot be read
-    """
-    if not file_path or not file_path.strip():
-        return ""
-    
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return f.read()
-
-
 def main():
     """Main entry point for the script."""
     parser = argparse.ArgumentParser(
@@ -275,9 +254,9 @@ def main():
         help="Number of timed out tests"
     )
     parser.add_argument(
-        "--failed-tests-categorized-file",
+        "--failed-tests-categorized",
         required=True,
-        help="Path to file containing categorized list of failed tests (markdown formatted)"
+        help="Categorized list of failed tests (markdown formatted)"
     )
     parser.add_argument(
         "--workflow",
@@ -320,16 +299,17 @@ def main():
         help="GitHub repository (owner/repo)"
     )
     parser.add_argument(
-        "--error-log-file",
-        required=True,
-        help="Path to file containing detailed error log"
+        "--error-log",
+        required=False,
+        default="",
+        help="Optional detailed error log"
     )
     
     args = parser.parse_args()
     
-    # Read values from files (fail fast if files cannot be read)
-    failed_tests_categorized = _read_from_file(args.failed_tests_categorized_file)
-    error_log = _read_from_file(args.error_log_file)
+    # Get values directly from arguments
+    failed_tests_categorized = args.failed_tests_categorized
+    error_log = args.error_log
     
     issue_body = generate_issue_body(
         status_ja=args.status_ja,

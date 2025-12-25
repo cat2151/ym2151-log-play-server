@@ -227,43 +227,6 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("test_with_underscores", result)
 
 
-class TestReadFromFile(unittest.TestCase):
-    """Test cases for the _read_from_file helper function."""
-    
-    def test_read_from_file(self):
-        """Test that content is read from file when file exists."""
-        from generate_test_failure_issue import _read_from_file
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-            f.write("file_content")
-            temp_file = f.name
-        
-        try:
-            result = _read_from_file(temp_file)
-            self.assertEqual(result, "file_content")
-        finally:
-            os.unlink(temp_file)
-    
-    def test_file_not_found_raises_error(self):
-        """Test that FileNotFoundError is raised when file doesn't exist."""
-        from generate_test_failure_issue import _read_from_file
-        with self.assertRaises(FileNotFoundError):
-            _read_from_file("/nonexistent/file.txt")
-    
-    def test_empty_path_returns_empty_string(self):
-        """Test that empty path returns empty string."""
-        from generate_test_failure_issue import _read_from_file
-        result = _read_from_file("")
-        self.assertEqual(result, "")
-    
-    def test_whitespace_path_returns_empty_string(self):
-        """Test that whitespace-only path returns empty string."""
-        from generate_test_failure_issue import _read_from_file
-        result = _read_from_file("  \n  ")
-        self.assertEqual(result, "")
-
-
 class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     
