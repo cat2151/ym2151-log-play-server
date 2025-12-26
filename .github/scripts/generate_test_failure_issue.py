@@ -149,8 +149,8 @@ def main():
     parser.add_argument("--passed", required=True)
     parser.add_argument("--failed", required=True)
     parser.add_argument("--timed-out", required=True)
-    parser.add_argument("--failed-tests-list", required=True)
-    parser.add_argument("--error-details", required=True)
+    parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
+    parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
     parser.add_argument("--workflow", required=True)
     parser.add_argument("--job", required=True)
     parser.add_argument("--run-id", required=True)
@@ -162,14 +162,35 @@ def main():
     
     args = parser.parse_args()
     
+    # Read large data from files to avoid command-line size limitations
+    try:
+        with open(args.failed_tests_list_file, 'r', encoding='utf-8') as f:
+            failed_tests_list = f.read()
+    except FileNotFoundError:
+        print(f"Error: Failed tests list file not found: {args.failed_tests_list_file}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read failed tests list file: {e}", file=sys.stderr)
+        sys.exit(1)
+    
+    try:
+        with open(args.error_details_file, 'r', encoding='utf-8') as f:
+            error_details = f.read()
+    except FileNotFoundError:
+        print(f"Error: Error details file not found: {args.error_details_file}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read error details file: {e}", file=sys.stderr)
+        sys.exit(1)
+    
     issue_body = generate_issue_body(
         status_ja=args.status_ja,
         total_tests=args.total_tests,
         passed=args.passed,
         failed=args.failed,
         timed_out=args.timed_out,
-        failed_tests_list=args.failed_tests_list,
-        error_details=args.error_details,
+        failed_tests_list=failed_tests_list,
+        error_details=error_details,
         workflow=args.workflow,
         job=args.job,
         run_id=args.run_id,

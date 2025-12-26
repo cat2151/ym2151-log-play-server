@@ -109,19 +109,45 @@ def format_failed_tests_with_errors(failed_tests: List[Dict[str, str]]) -> str:
 
 
 def write_github_output(output_file: str, statistics: Dict[str, str], failed_tests: List[Dict[str, str]]) -> None:
-    with open(output_file, 'a', encoding='utf-8') as f:
-        f.write(f"total_tests={statistics['total_tests']}\n")
-        f.write(f"passed={statistics['passed']}\n")
-        f.write(f"failed={statistics['failed']}\n")
-        f.write(f"timed_out={statistics['timed_out']}\n")
+    import tempfile
+    import os
+    
+    # Write large data to temporary files to avoid command-line size limitations
+    failed_tests_list_content = format_failed_tests_list(failed_tests)
+    error_details_content = format_failed_tests_with_errors(failed_tests)
+    
+    # Create temporary files for large data
+    failed_tests_list_fd, failed_tests_list_path = tempfile.mkstemp(suffix='.txt', prefix='failed_tests_list_', text=True)
+    error_details_fd, error_details_path = tempfile.mkstemp(suffix='.txt', prefix='error_details_', text=True)
+    
+    try:
+        # Write failed tests list to file
+        with os.fdopen(failed_tests_list_fd, 'w', encoding='utf-8') as f:
+            f.write(failed_tests_list_content)
         
-        f.write("failed_tests_list<<EOF\n")
-        f.write(format_failed_tests_list(failed_tests))
-        f.write("\nEOF\n")
+        # Write error details to file
+        with os.fdopen(error_details_fd, 'w', encoding='utf-8') as f:
+            f.write(error_details_content)
         
-        f.write("error_details<<EOF\n")
-        f.write(format_failed_tests_with_errors(failed_tests))
-        f.write("\nEOF\n")
+        # Write paths to GITHUB_OUTPUT
+        with open(output_file, 'a', encoding='utf-8') as f:
+            f.write(f"total_tests={statistics['total_tests']}\n")
+            f.write(f"passed={statistics['passed']}\n")
+            f.write(f"failed={statistics['failed']}\n")
+            f.write(f"timed_out={statistics['timed_out']}\n")
+            f.write(f"failed_tests_list_file={failed_tests_list_path}\n")
+            f.write(f"error_details_file={error_details_path}\n")
+    except Exception:
+        # Clean up temp files on error
+        try:
+            os.unlink(failed_tests_list_path)
+        except:
+            pass
+        try:
+            os.unlink(error_details_path)
+        except:
+            pass
+        raise
 
 
 def main():

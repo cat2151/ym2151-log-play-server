@@ -201,11 +201,36 @@ class TestWriteGithubOutput(unittest.TestCase):
             self.assertIn("passed=8", content)
             self.assertIn("failed=2", content)
             self.assertIn("timed_out=1", content)
-            self.assertIn("failed_tests_list<<EOF", content)
-            self.assertIn("- test1", content)
-            self.assertIn("- test2 (タイムアウト)", content)
-            self.assertIn("error_details<<EOF", content)
-            self.assertIn("### test1", content)
+            self.assertIn("failed_tests_list_file=", content)
+            self.assertIn("error_details_file=", content)
+            
+            # Extract file paths from output
+            lines = content.split('\n')
+            failed_tests_list_file = None
+            error_details_file = None
+            for line in lines:
+                if line.startswith("failed_tests_list_file="):
+                    failed_tests_list_file = line.split('=', 1)[1]
+                elif line.startswith("error_details_file="):
+                    error_details_file = line.split('=', 1)[1]
+            
+            self.assertIsNotNone(failed_tests_list_file)
+            self.assertIsNotNone(error_details_file)
+            
+            # Verify temporary files exist and contain correct data
+            with open(failed_tests_list_file, 'r', encoding='utf-8') as f:
+                failed_tests_list_content = f.read()
+            self.assertIn("- test1", failed_tests_list_content)
+            self.assertIn("- test2 (タイムアウト)", failed_tests_list_content)
+            
+            with open(error_details_file, 'r', encoding='utf-8') as f:
+                error_details_content = f.read()
+            self.assertIn("### test1", error_details_content)
+            self.assertIn("### test2 (タイムアウト)", error_details_content)
+            
+            # Clean up temp files
+            Path(failed_tests_list_file).unlink()
+            Path(error_details_file).unlink()
         finally:
             Path(temp_file.name).unlink()
 
