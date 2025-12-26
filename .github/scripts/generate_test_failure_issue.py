@@ -162,19 +162,16 @@ def generate_issue_body(
     sections = []
     
     # Try to translate error details using Gemini API for user cognitive load reduction
+    # If API key is missing, ValueError will be raised and workflow will fail early
     if error_details:
-        try:
-            japanese_translation = translate_error_messages_with_gemini(error_details)
-            if japanese_translation:
-                sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
-                sections.append("")
-                sections.append(japanese_translation)
-                sections.append("")
-                sections.append("---")
-                sections.append("")
-        except ValueError as e:
-            # API key is not available - log error and continue without translation
-            print(f"Warning: Translation skipped - {e}", file=sys.stderr)
+        japanese_translation = translate_error_messages_with_gemini(error_details)
+        if japanese_translation:
+            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+            sections.append("")
+            sections.append(japanese_translation)
+            sections.append("")
+            sections.append("---")
+            sections.append("")
     
     # Header with simple failed tests list (for agent to easily work with)
     sections.append("## 失敗したテスト")
