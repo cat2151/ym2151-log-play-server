@@ -138,7 +138,7 @@ def write_github_output(output_file: str, statistics: Dict[str, str], failed_tes
             f.write(f"failed_tests_list_file={failed_tests_list_path}\n")
             f.write(f"error_details_file={error_details_path}\n")
     except Exception:
-        # Clean up temp files on error
+        # Attempt to clean up temp files before re-raising exception
         try:
             os.unlink(failed_tests_list_path)
         except OSError as e:
