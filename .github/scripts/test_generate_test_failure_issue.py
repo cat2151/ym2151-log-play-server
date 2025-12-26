@@ -13,8 +13,12 @@ from generate_test_failure_issue import generate_issue_body, translate_error_mes
 class TestGenerateIssueBody(unittest.TestCase):
     """Test cases for the generate_issue_body function."""
     
-    def test_basic_failure(self):
+    @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
+    def test_basic_failure(self, mock_translate):
         """Test basic failure case with minimal data."""
+        # Mock translation to avoid needing real API key
+        mock_translate.return_value = None
+        
         result = generate_issue_body(
             status_ja="失敗",
             total_tests="10",
@@ -53,8 +57,12 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("詳細なエラーメッセージ", result)
         self.assertIn("**アーティファクト**", result)
     
-    def test_timeout_status(self):
+    @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
+    def test_timeout_status(self, mock_translate):
         """Test timeout status."""
+        # Mock translation to avoid needing real API key
+        mock_translate.return_value = None
+        
         result = generate_issue_body(
             status_ja="タイムアウトによりキャンセル",
             total_tests="5",
@@ -102,8 +110,12 @@ class TestGenerateIssueBody(unittest.TestCase):
         # Should not have details section when error_details is empty
         self.assertNotIn("<details>", result)
     
-    def test_with_whitespace_error_details(self):
+    @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
+    def test_with_whitespace_error_details(self, mock_translate):
         """Test with whitespace-only error details."""
+        # Mock translation to avoid needing real API key
+        mock_translate.return_value = None
+        
         result = generate_issue_body(
             status_ja="失敗",
             total_tests="10",
@@ -211,21 +223,54 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
         
         # Translation should not be attempted when there's no error details
         mock_translate.assert_not_called()
-
-
-class TestTranslateErrorMessages(unittest.TestCase):
-    """Test cases for the translate_error_messages_with_gemini function."""
     
-    def test_translate_with_no_api_key(self):
-        """Test that translation returns None when API key is not in environment."""
+    def test_with_missing_api_key_raises_error(self):
+        """Test that generate_issue_body raises ValueError when API key is missing and error_details is present."""
         # Ensure GEMINI_API_KEY is not set
         original_key = os.environ.get('GEMINI_API_KEY')
         if 'GEMINI_API_KEY' in os.environ:
             del os.environ['GEMINI_API_KEY']
         
         try:
-            result = translate_error_messages_with_gemini("Some error log")
-            self.assertIsNone(result)
+            with self.assertRaises(ValueError) as context:
+                generate_issue_body(
+                    status_ja="失敗",
+                    total_tests="10",
+                    passed="9",
+                    failed="1",
+                    timed_out="0",
+                    failed_tests_list="- test_fail",
+                    error_details="### test_fail\n**Error**: Test failed",
+                    workflow="Windows CI",
+                    job="build-windows",
+                    run_id="123456",
+                    run_attempt="1",
+                    ref="refs/heads/main",
+                    commit="abc123",
+                    server_url="https://github.com",
+                    repository="cat2151/ym2151-log-play-server",
+                )
+            self.assertIn("GEMINI_API_KEY", str(context.exception))
+        finally:
+            # Restore original key if it existed
+            if original_key is not None:
+                os.environ['GEMINI_API_KEY'] = original_key
+
+
+class TestTranslateErrorMessages(unittest.TestCase):
+    """Test cases for the translate_error_messages_with_gemini function."""
+    
+    def test_translate_with_no_api_key(self):
+        """Test that translation raises ValueError when API key is not in environment."""
+        # Ensure GEMINI_API_KEY is not set
+        original_key = os.environ.get('GEMINI_API_KEY')
+        if 'GEMINI_API_KEY' in os.environ:
+            del os.environ['GEMINI_API_KEY']
+        
+        try:
+            with self.assertRaises(ValueError) as context:
+                translate_error_messages_with_gemini("Some error log")
+            self.assertIn("GEMINI_API_KEY", str(context.exception))
         finally:
             # Restore original key if it existed
             if original_key is not None:
