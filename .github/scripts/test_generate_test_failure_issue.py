@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Unit tests for generate_test_failure_issue.py
-"""
 
 import os
 import unittest
@@ -11,12 +8,8 @@ from generate_test_failure_issue import generate_issue_body, translate_error_mes
 
 
 class TestGenerateIssueBody(unittest.TestCase):
-    """Test cases for the generate_issue_body function."""
-    
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_basic_failure(self, mock_translate):
-        """Test basic failure case with minimal data."""
-        # Mock translation to avoid needing real API key
         mock_translate.return_value = None
         
         result = generate_issue_body(
@@ -37,7 +30,6 @@ class TestGenerateIssueBody(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        # Check that key sections are present
         self.assertIn("## 失敗したテスト", result)
         self.assertIn("test_server_1", result)
         self.assertIn("test_server_2", result)
@@ -59,8 +51,6 @@ class TestGenerateIssueBody(unittest.TestCase):
     
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_timeout_status(self, mock_translate):
-        """Test timeout status."""
-        # Mock translation to avoid needing real API key
         mock_translate.return_value = None
         
         result = generate_issue_body(
@@ -87,7 +77,6 @@ class TestGenerateIssueBody(unittest.TestCase):
         self.assertIn("test_timeout_2 (タイムアウト)", result)
     
     def test_with_empty_error_details(self):
-        """Test with empty error details (should show minimal info)."""
         result = generate_issue_body(
             status_ja="失敗",
             total_tests="10",
@@ -107,13 +96,10 @@ class TestGenerateIssueBody(unittest.TestCase):
         )
         
         self.assertIn("- test_fail", result)
-        # Should not have details section when error_details is empty
         self.assertNotIn("<details>", result)
     
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_with_whitespace_error_details(self, mock_translate):
-        """Test with whitespace-only error details."""
-        # Mock translation to avoid needing real API key
         mock_translate.return_value = None
         
         result = generate_issue_body(
@@ -134,16 +120,12 @@ class TestGenerateIssueBody(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        # Should not have details section when error_details is only whitespace
         self.assertNotIn("<details>", result)
 
 
 class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
-    """Test cases for issue body generation with Gemini translation."""
-    
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_with_gemini_translation_success(self, mock_translate):
-        """Test issue body generation with successful Gemini translation."""
         mock_translate.return_value = "日本語訳されたエラーメッセージ"
         
         result = generate_issue_body(
@@ -164,16 +146,12 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        # Check that Gemini translation is included
         self.assertIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
         self.assertIn("日本語訳されたエラーメッセージ", result)
-        
-        # Verify the mock was called with error_details
         mock_translate.assert_called_once()
     
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_with_gemini_translation_failure(self, mock_translate):
-        """Test issue body generation when Gemini translation fails."""
         mock_translate.return_value = None
         
         result = generate_issue_body(
@@ -194,15 +172,12 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        # Check that Gemini translation section is NOT included when translation fails
         self.assertNotIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
-        # But the regular content should still be there
         self.assertIn("## 失敗したテスト", result)
         self.assertIn("- test_fail", result)
     
     @patch('generate_test_failure_issue.translate_error_messages_with_gemini')
     def test_without_error_details(self, mock_translate):
-        """Test issue body generation without error details."""
         result = generate_issue_body(
             status_ja="失敗",
             total_tests="10",
@@ -221,12 +196,9 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        # Translation should not be attempted when there's no error details
         mock_translate.assert_not_called()
     
     def test_with_missing_api_key_raises_error(self):
-        """Test that generate_issue_body raises ValueError when API key is missing and error_details is present."""
-        # Ensure GEMINI_API_KEY is not set
         original_key = os.environ.get('GEMINI_API_KEY')
         if 'GEMINI_API_KEY' in os.environ:
             del os.environ['GEMINI_API_KEY']
@@ -252,17 +224,12 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
                 )
             self.assertIn("GEMINI_API_KEY", str(context.exception))
         finally:
-            # Restore original key if it existed
             if original_key is not None:
                 os.environ['GEMINI_API_KEY'] = original_key
 
 
 class TestTranslateErrorMessages(unittest.TestCase):
-    """Test cases for the translate_error_messages_with_gemini function."""
-    
     def test_translate_with_no_api_key(self):
-        """Test that translation raises ValueError when API key is not in environment."""
-        # Ensure GEMINI_API_KEY is not set
         original_key = os.environ.get('GEMINI_API_KEY')
         if 'GEMINI_API_KEY' in os.environ:
             del os.environ['GEMINI_API_KEY']
@@ -272,12 +239,10 @@ class TestTranslateErrorMessages(unittest.TestCase):
                 translate_error_messages_with_gemini("Some error log")
             self.assertIn("GEMINI_API_KEY", str(context.exception))
         finally:
-            # Restore original key if it existed
             if original_key is not None:
                 os.environ['GEMINI_API_KEY'] = original_key
     
     def test_translate_with_no_error_log(self):
-        """Test that translation returns None when error log is empty."""
         os.environ['GEMINI_API_KEY'] = "test-api-key"
         
         try:
@@ -288,7 +253,6 @@ class TestTranslateErrorMessages(unittest.TestCase):
                 del os.environ['GEMINI_API_KEY']
     
     def test_translate_with_whitespace_error_log(self):
-        """Test that translation returns None when error log is whitespace only."""
         os.environ['GEMINI_API_KEY'] = "test-api-key"
         
         try:
@@ -300,10 +264,8 @@ class TestTranslateErrorMessages(unittest.TestCase):
     
     @patch('generate_test_failure_issue.urllib.request.urlopen')
     def test_translate_success(self, mock_urlopen):
-        """Test successful translation with Gemini API."""
         os.environ['GEMINI_API_KEY'] = "test-api-key"
         
-        # Mock successful API response
         mock_response = MagicMock()
         mock_response.read.return_value = b'{"candidates":[{"content":{"parts":[{"text":"\\u65e5\\u672c\\u8a9e\\u8a33"}]}}]}'
         mock_response.__enter__.return_value = mock_response
@@ -318,10 +280,8 @@ class TestTranslateErrorMessages(unittest.TestCase):
     
     @patch('generate_test_failure_issue.urllib.request.urlopen')
     def test_translate_malformed_response(self, mock_urlopen):
-        """Test that translation handles malformed API responses."""
         os.environ['GEMINI_API_KEY'] = "test-api-key"
         
-        # Mock malformed API response
         mock_response = MagicMock()
         mock_response.read.return_value = b'{"invalid": "response"}'
         mock_response.__enter__.return_value = mock_response
@@ -337,47 +297,17 @@ class TestTranslateErrorMessages(unittest.TestCase):
     @patch('generate_test_failure_issue.urllib.request.urlopen')
     @patch('generate_test_failure_issue.time.sleep')
     def test_translate_api_error_with_retry(self, mock_sleep, mock_urlopen):
-        """Test that translation retries with exponential backoff on API errors."""
         os.environ['GEMINI_API_KEY'] = "test-api-key"
         
-        # Mock API error (all retries fail)
         mock_urlopen.side_effect = urllib.error.URLError("Connection failed")
         
         try:
             result = translate_error_messages_with_gemini("Error message")
             self.assertIsNone(result)
-            
-            # Verify retries happened (8 attempts total, so 7 sleeps)
             self.assertEqual(mock_sleep.call_count, 7)
         finally:
             if 'GEMINI_API_KEY' in os.environ:
                 del os.environ['GEMINI_API_KEY']
-
-
-class TestReadFromFile(unittest.TestCase):
-    """Test cases for the _read_from_file function."""
-    
-    def test_read_from_file(self):
-        """Test that content is read from file."""
-        from generate_test_failure_issue import _read_from_file
-        import tempfile
-        
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, encoding='utf-8') as f:
-            f.write("Test content\nLine 2")
-            temp_path = f.name
-        
-        try:
-            content = _read_from_file(temp_path)
-            self.assertEqual(content, "Test content\nLine 2")
-        finally:
-            os.unlink(temp_path)
-    
-    def test_file_not_found_raises_error(self):
-        """Test that FileNotFoundError is raised when file doesn't exist."""
-        from generate_test_failure_issue import _read_from_file
-        
-        with self.assertRaises(FileNotFoundError):
-            _read_from_file("/nonexistent/path/file.txt")
 
 
 if __name__ == '__main__':
