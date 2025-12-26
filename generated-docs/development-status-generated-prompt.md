@@ -1,4 +1,4 @@
-Last updated: 2025-12-26
+Last updated: 2025-12-27
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -199,7 +199,9 @@ Last updated: 2025-12-26
 - .github/copilot-instructions.md
 - .github/scripts/README.md
 - .github/scripts/generate_test_failure_issue.py
+- .github/scripts/parse_nextest_junit.py
 - .github/scripts/test_generate_test_failure_issue.py
+- .github/scripts/test_parse_nextest_junit.py
 - .github/workflows/build_windows.yml
 - .github/workflows/call-daily-project-summary.yml
 - .github/workflows/call-issue-note.yml
@@ -241,6 +243,12 @@ Last updated: 2025-12-26
 - issue-notes/138.md
 - issue-notes/141.md
 - issue-notes/143.md
+- issue-notes/146.md
+- issue-notes/148.md
+- issue-notes/150.md
+- issue-notes/152.md
+- issue-notes/154.md
+- issue-notes/156.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -341,12 +349,33 @@ Last updated: 2025-12-26
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-## [Issue #145](../issue-notes/145.md): [CI] Windows build or test failed
+## [Issue #157](../issue-notes/157.md): Address PR 155 code review comments: improve error handling and cleanup
+Addresses code review feedback from PR #155 regarding exception handling, resource cleanup, and unused imports in Python CI scripts.
 
-ラベル: ci, windows, auto-generated
---- issue-notes/145.md の内容 ---
+## Changes
+
+**parse_nextest_junit.py**
+- Replace bare `except Exception:` with specific `except OSError:` when cleaning up temp files
+- Log cleanup failures to stderr...
+ラベル: 
+--- issue-notes/157.md の内容 ---
 
 ```markdown
+
+```
+
+## [Issue #156](../issue-notes/156.md): PR 155 のソースコードレビュー指摘に対応する
+[issue-notes/156.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/156.md)
+
+...
+ラベル: 
+--- issue-notes/156.md の内容 ---
+
+```markdown
+# issue PR 155 のソースコードレビュー指摘に対応する #156
+[issues #156](https://github.com/cat2151/ym2151-log-play-server/issues/156)
+
+
 
 ```
 
@@ -883,6 +912,190 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
+### .github/scripts/parse_nextest_junit.py
+```py
+{% raw %}
+#!/usr/bin/env python3
+
+import argparse
+import sys
+import xml.etree.ElementTree as ET
+from typing import Dict, List, Tuple
+
+
+def parse_junit_xml(junit_file_path: str) -> Tuple[Dict[str, str], List[Dict[str, str]]]:
+    try:
+        tree = ET.parse(junit_file_path)
+        root = tree.getroot()
+    except FileNotFoundError:
+        print(f"Error: JUnit XML file not found: {junit_file_path}", file=sys.stderr)
+        sys.exit(1)
+    except ET.ParseError as e:
+        print(f"Error: Invalid XML format in {junit_file_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError:
+        print(f"Error: Permission denied reading {junit_file_path}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to parse JUnit XML file {junit_file_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+    testsuite = root.find('.//testsuite')
+    if testsuite is None:
+        testsuite = root
+    
+    total_tests = testsuite.get('tests', '0')
+    failures = int(testsuite.get('failures', '0'))
+    errors = int(testsuite.get('errors', '0'))
+    skipped = int(testsuite.get('skipped', '0'))
+    
+    total = int(total_tests)
+    failed = failures + errors
+    passed = total - failed - skipped
+    
+    statistics = {
+        'total_tests': str(total),
+        'passed': str(passed),
+        'failed': str(failed),
+        'timed_out': '0'
+    }
+    
+    failed_tests = []
+    
+    for testcase in root.findall('.//testcase'):
+        failure = testcase.find('failure')
+        error = testcase.find('error')
+        
+        if failure is not None or error is not None:
+            test_name = testcase.get('name', 'unknown')
+            classname = testcase.get('classname', '')
+            
+            if classname:
+                full_name = f"{classname}::{test_name}"
+            else:
+                full_name = test_name
+            
+            failure_elem = failure if failure is not None else error
+            failure_message = failure_elem.get('message', '')
+            failure_details = failure_elem.text or ''
+            
+            is_timeout = 'timeout' in failure_message.lower() or 'timed out' in failure_message.lower()
+            if is_timeout:
+                statistics['timed_out'] = str(int(statistics['timed_out']) + 1)
+            
+            failed_tests.append({
+                'name': full_name,
+                'message': failure_message,
+                'details': failure_details.strip(),
+                'is_timeout': is_timeout
+            })
+    
+    return statistics, failed_tests
+
+
+def format_failed_tests_list(failed_tests: List[Dict[str, str]]) -> str:
+    if not failed_tests:
+        return ""
+    
+    lines = []
+    for test in failed_tests:
+        suffix = " (タイムアウト)" if test['is_timeout'] else ""
+        lines.append(f"- {test['name']}{suffix}")
+    
+    return "\n".join(lines)
+
+
+def format_failed_tests_with_errors(failed_tests: List[Dict[str, str]]) -> str:
+    if not failed_tests:
+        return ""
+    
+    lines = []
+    for test in failed_tests:
+        suffix = " (タイムアウト)" if test['is_timeout'] else ""
+        lines.append(f"### {test['name']}{suffix}")
+        lines.append("")
+        if test['message']:
+            lines.append(f"**Error**: {test['message']}")
+            lines.append("")
+        if test['details']:
+            lines.append("```")
+            lines.append(test['details'])
+            lines.append("```")
+            lines.append("")
+    
+    return "\n".join(lines)
+
+
+def write_github_output(output_file: str, statistics: Dict[str, str], failed_tests: List[Dict[str, str]]) -> None:
+    import tempfile
+    import os
+    
+    # Write large data to temporary files to avoid command-line size limitations
+    failed_tests_list_content = format_failed_tests_list(failed_tests)
+    error_details_content = format_failed_tests_with_errors(failed_tests)
+    
+    # Create temporary files for large data with secure permissions
+    failed_tests_list_fd, failed_tests_list_path = tempfile.mkstemp(suffix='.txt', prefix='failed_tests_list_', text=True)
+    error_details_fd, error_details_path = tempfile.mkstemp(suffix='.txt', prefix='error_details_', text=True)
+    
+    try:
+        # Write failed tests list to file
+        with os.fdopen(failed_tests_list_fd, 'w', encoding='utf-8') as f:
+            f.write(failed_tests_list_content)
+        
+        # Write error details to file
+        with os.fdopen(error_details_fd, 'w', encoding='utf-8') as f:
+            f.write(error_details_content)
+        
+        # Write paths to GITHUB_OUTPUT
+        with open(output_file, 'a', encoding='utf-8') as f:
+            f.write(f"total_tests={statistics['total_tests']}\n")
+            f.write(f"passed={statistics['passed']}\n")
+            f.write(f"failed={statistics['failed']}\n")
+            f.write(f"timed_out={statistics['timed_out']}\n")
+            f.write(f"failed_tests_list_file={failed_tests_list_path}\n")
+            f.write(f"error_details_file={error_details_path}\n")
+    except Exception:
+        # Clean up temp files on error
+        try:
+            os.unlink(failed_tests_list_path)
+        except Exception:
+            pass
+        try:
+            os.unlink(error_details_path)
+        except Exception:
+            pass
+        raise
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--junit-file", required=True)
+    parser.add_argument("--github-output", help="Path to GITHUB_OUTPUT file for direct writing")
+    args = parser.parse_args()
+    
+    statistics, failed_tests = parse_junit_xml(args.junit_file)
+    
+    if args.github_output:
+        write_github_output(args.github_output, statistics, failed_tests)
+    else:
+        print(f"total_tests={statistics['total_tests']}")
+        print(f"passed={statistics['passed']}")
+        print(f"failed={statistics['failed']}")
+        print(f"timed_out={statistics['timed_out']}")
+        print("---FAILED_TESTS---")
+        print(format_failed_tests_list(failed_tests))
+        print("---ERROR_DETAILS---")
+        print(format_failed_tests_with_errors(failed_tests))
+    
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+{% endraw %}
+```
+
 ### issue-notes/117.md
 ```md
 {% raw %}
@@ -1035,34 +1248,41 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
+### issue-notes/156.md
+```md
+{% raw %}
+# issue PR 155 のソースコードレビュー指摘に対応する #156
+[issues #156](https://github.com/cat2151/ym2151-log-play-server/issues/156)
+
+
+
+{% endraw %}
+```
+
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-d207ae1 Merge pull request #144 from cat2151/copilot/add-gemini-error-translation
-1b74d67 Update exponential backoff: initial delay 60s, max delay 2 hours
-b64c228 Refactor Gemini API integration to follow best practices
-056abb5 Update project summaries (overview & development status) [auto]
-e28d5f7 Add Gemini API translation for test error messages in issue generation
-05d2b38 Initial plan
-952e137 Merge pull request #142 from cat2151/copilot/extract-issue-text-generation
-c078a87 Add issue note for #143 [auto]
-6964680 Add unit tests and documentation for issue generation script
-8089618 Extract issue text generation to Python script
+e80f89a Add issue note for #156 [auto]
+ca89b29 Merge pull request #155 from cat2151/copilot/improve-build-windows-yml
+3ea9d4b Address code review feedback
+5606bbc Improve build_windows.yml to pass large data via files instead of command-line arguments
+bbe3a58 Initial plan
+3eef7a0 Add issue note for #154 [auto]
+0b4f89f Merge pull request #153 from cat2151/copilot/review-improve-build-windows
+68f58f3 Simplify build_windows.yml and Python scripts - remove redundant processing
+5a6d24d Initial plan
+155acf8 Add issue note for #152 [auto]
 
 ### 変更されたファイル:
-.github/scripts/README.md
 .github/scripts/generate_test_failure_issue.py
+.github/scripts/parse_nextest_junit.py
 .github/scripts/test_generate_test_failure_issue.py
+.github/scripts/test_parse_nextest_junit.py
 .github/workflows/build_windows.yml
-.gitignore
-generated-docs/development-status-generated-prompt.md
-generated-docs/development-status.md
-generated-docs/project-overview-generated-prompt.md
-generated-docs/project-overview.md
-issue-notes/141.md
-issue-notes/143.md
-tests/cli_integration_test.rs
-tests/server_integration_test.rs
+issue-notes/150.md
+issue-notes/152.md
+issue-notes/154.md
+issue-notes/156.md
 
 
 ---
-Generated at: 2025-12-26 07:01:29 JST
+Generated at: 2025-12-27 07:01:36 JST

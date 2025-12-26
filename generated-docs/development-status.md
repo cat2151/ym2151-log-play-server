@@ -1,51 +1,54 @@
-Last updated: 2025-12-26
+Last updated: 2025-12-27
 
 # Development Status
 
 ## 現在のIssues
-- Windows CIでのビルド/テスト ([Issue #145](../issue-notes/145.md)) が失敗しており、AgentによるWindowsコードのTDD不足 ([Issue #118](../issue-notes/118.md)) やハルシネーション ([Issue #138](../issue-notes/138.md)) が根本原因として指摘されています。
-- コマンドライン引数のヘルプ表示で `--demo-interactive` が欠落しユーザーが混乱する問題 ([Issue #121](../issue-notes/121.md)) と、サーバーコマンド (`clear schedule` の廃止・統合、`get interactive mode` の削除) の改善提案 ([Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md)) があります。
-- クライアントのデモインタラクティブモードでのフレーズ開始タイミングのブレ ([Issue #117](../issue-notes/117.md)) も未解決の重要な課題です。
+- PR 155のコードレビュー指摘([Issue #157](../issue-notes/157.md), [Issue #156](../issue-notes/156.md))に対応し、CIスクリプトのエラー処理と一時ファイルのクリーンアップを改善中です。
+- AgentがWindowsビルドコードでハルシネーションを起こす問題([Issue #118](../issue-notes/118.md))に対し、TDD強化やCIでのWindowsコンパイルチェックの導入が検討されています。
+- その他の課題として、Agentのハルシネーションリスクの評価([Issue #138](../issue-notes/138.md))や、CLI引数の表示、Serverコマンドの整理([Issue #121](../issue-notes/121.md), [Issue #120](../issue-notes/120.md), [Issue #119](../issue-notes/119.md))などが残っています。
 
 ## 次の一手候補
-1. WindowsビルドのコンパイルチェックをLinux CIで実施し、Agentによる品質保証を強化する [Issue #118](../issue-notes/118.md), [Issue #145](../issue-notes/145.md)
-   - 最初の小さな一歩: Linux Runner上で `cargo check --target=x86_64-pc-windows-gnu` を実行するGitHub Actionsワークフロー `.github/workflows/check_windows_build_on_linux.yml` を新規作成し、Windows版のコンパイルチェックが可能か検証する。
-   - Agent実行プロンプト:
+1. PR 155 コードレビュー指摘対応: `parse_nextest_junit.py` のエラーハンドリング強化 [Issue #157](../issue-notes/157.md)
+   - 最初の小さな一歩: `parse_nextest_junit.py` 内で一時ファイルのクリーンアップ時に発生しうるエラーを、より具体的な `OSError` で捕捉するように修正する。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: .github/workflows/check_windows_build_on_linux.yml (新規作成)
+     対象ファイル: .github/scripts/parse_nextest_junit.py
 
-     実行内容: [Issue #118](../issue-notes/118.md) の対策案に基づき、Linux Runnerで `cargo check --target=x86_64-pc-windows-gnu` を実行するGitHub Actionsワークフロー `.github/workflows/check_windows_build_on_linux.yml` を新規作成してください。このワークフローは、`build_windows.yml` の関連部分を参考に、WindowsターゲットのRustコードがLinux環境でコンパイルチェック可能か検証することを目的とします。
+     実行内容: `parse_nextest_junit.py` ファイル内の `write_github_output` 関数において、一時ファイルをクリーンアップする `os.unlink` 呼び出しに対するエラーハンドリングを改善してください。現在の広範な `except Exception:` を、より具体的な `except OSError:` に変更し、クリーンアップ失敗時にエラーメッセージを標準エラー出力にログするようにしてください。
 
-     確認事項: `setup_ci_environment.sh` がRustツールチェインやターゲットのインストールにどのように影響するかを確認し、`cargo check` が必要な環境を正しく設定できるかを検証してください。また、`build_windows.yml` などの既存のCIワークフローとの整合性を考慮してください。
+     確認事項: 既存のファイルI/Oエラー処理との整合性を保ち、Pythonの標準ライブラリの正しい例外タイプを使用していることを確認してください。変更がGitHub Actionsの出力プロセスに影響を与えないことを検証してください。
 
-     期待する出力: 新規作成する `.github/workflows/check_windows_build_on_linux.yml` ファイルの内容をMarkdownコードブロックで出力し、このワークフローがWindowsビルドのコンパイルチェックをLinux CI上で行うための手順と、そのワークフローが意図通りに動作することを確認するための簡単な説明を含めてください。
-     ```
-
-2. コマンドライン引数のヘルプメッセージに `--demo-interactive` オプションを表示させる [Issue #121](../issue-notes/121.md)
-   - 最初の小さな一歩: `src/main.rs` および `src/client/interactive.rs` のコマンドライン引数定義を分析し、`--demo-interactive` オプションが `clap` クレートに正しく登録され、ヘルプメッセージ生成に含まれる設定になっているかを確認する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: src/main.rs, src/client/interactive.rs, src/client/mod.rs
-
-     実行内容: [Issue #121](../issue-notes/121.md) で報告されている `--demo-interactive` オプションがヘルプメッセージに表示されない問題について、`src/main.rs` にあるコマンドライン引数定義箇所を調査してください。特に `clap` クレートの利用状況を確認し、`--demo-interactive` オプションが正しく定義され、ヘルプ出力に含まれるように設定されているかを分析してください。
-
-     確認事項: 他の既存のコマンドラインオプションとの整合性、および `clap` のバージョンと利用方法に関するドキュメントを確認し、推奨される実装方法と逸脱がないかを検証してください。
-
-     期待する出力: `src/main.rs` 内の `clap` の定義と、`--demo-interactive` がヘルプに表示されない原因、そしてその修正案をMarkdown形式で出力してください。修正案には具体的なコード変更の例を含めてください。
+     期待する出力: `parse_nextest_junit.py` の更新されたコード（特に `write_github_output` 関数内のエラーハンドリング部分）と、変更点の詳細な説明をMarkdown形式で出力してください。
      ```
 
-3. クライアントデモインタラクティブモードでのフレーズ開始タイミングのブレの原因を特定し、可視化する [Issue #117](../issue-notes/117.md)
-   - 最初の小さな一歩: [Issue #117](../issue-notes/117.md) の結論に基づき、`src/demo_client_interactive.rs` と `src/demo_server_interactive.rs` を使用してデモ環境をセットアップし、通常モードとインタラクティブモードで音が鳴ることを確認する。その後、各モードでのフレーズ開始タイミングのブレを測定・可視化し、具体的な問題点として記録する。
-   - Agent実行プロンプト:
+2. WindowsビルドにおけるAgentのハルシネーション対策の初期検討 [Issue #118](../issue-notes/118.md)
+   - 最初の小さな一歩: GitHub Actions Linux Runner上でWindowsターゲットのRustコンパイルチェック（`cargo check --target=x86_64-pc-windows-gnu` または `cargo check --target=x86_64-pc-windows-msvc`）が可能か、その方法とAgentへの指示方法についてWeb調査を行う。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: src/client/interactive.rs, src/server/command_handler.rs, src/audio/scheduler.rs, src/demo_client_interactive.rs, src/demo_server_interactive.rs
+     対象ファイル: なし（Web調査のため）
 
-     実行内容: [Issue #117](../issue-notes/117.md) に記載されている「client側のdemo interactive modeで、clientからserverへの送信ごとにフレーズ開始タイミングがブレる」問題について、`src/client/interactive.rs` からサーバー (`src/server/command_handler.rs`) へのJSON送信と、サーバー側のスケジューリング (`src/audio/scheduler.rs`) のロジックを分析してください。特に、`src/demo_client_interactive.rs` および `src/demo_server_interactive.rs` のデモ実装におけるタイムスタンプの扱い、IPC通信の遅延、およびスケジューリングオフセットの適用方法に注目し、ブレの原因となりうる箇所を特定してください。
+     実行内容: GitHub ActionsのLinux Runner上でRustプロジェクトのWindowsターゲット（`x86_64-pc-windows-gnu` または `x86_64-pc-windows-msvc`）のコンパイルチェックを行う方法についてWeb調査を行い、以下の観点から分析してください：
+     1) `cargo check --target` コマンドの使用可能性とその具体的な構文。
+     2) `cross` や `cargo-xwin` といったツール利用の有無。
+     3) Agentがこのコンパイルチェックを自律的に実行し、TDDサイクルに組み込むための具体的な指示（プロンプト）の作成方法。
+     4) 実現が困難な場合の代替案（手動ビルドの必要性など）。
 
-     確認事項: クライアントとサーバー間のIPC通信 (`src/ipc/mod.rs` など) の特性、および既存のテストコード (`tests/interactive/mod.rs` など) を確認し、ブレの再現性や測定方法について考慮してください。デモを再現するために必要な具体的なコマンドも考慮に入れてください。
+     確認事項: 調査結果は、GitHub ActionsのLinux環境での実行可能性、およびAgentが理解し実行できるレベルの指示への変換可能性に焦点を当ててください。
 
-     期待する出力: 問題の原因となりうる箇所を特定し、その分析結果と、ブレを軽減するための具体的なコード修正の方向性をMarkdown形式で提案してください。可能であれば、修正後の期待される挙動についても言及してください。
+     期待する出力: 調査結果をまとめたMarkdown形式のレポート。上記1〜4の観点について詳細を記述し、可能であれば具体的な `Agent実行プロンプト` の草案も含むこと。
      ```
+
+3. Agentのハルシネーションリスク対策としてのCIエラーログ縮小検討 [Issue #138](../issue-notes/138.md)
+   - 最初の小さな一歩: 現在のCIエラーログが50KB超であることについて、エラー部分のみに縮小できるか、技術的な実現可能性とAgentへの影響を分析する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: .github/scripts/parse_nextest_junit.py および関連するワークフローファイル（例: .github/workflows/build_windows.yml）
+
+     実行内容: 現在のCIエラーログ（特に`parse_nextest_junit.py`が出力するエラー詳細）が50KBを超えうるという課題に対し、エラーログのサイズをエラー部分のみに縮小する技術的な実現可能性を分析してください。具体的には、`parse_nextest_junit.py` が生成する `error_details_file` の内容を、関連するエラーメッセージやスタックトレースのみに絞り込む方法、およびその変更がAgentの分析能力に与える影響を検討してください。
+
+     確認事項: ログ縮小がAgentのデバッグ能力を損なわないか、また、縮小されたログが問題解決に十分な情報を提供できるかを確認してください。既存のGitHub Actionsのワークフローとスクリプトの変更箇所を特定してください。
+
+     期待する出力: ログ縮小の実現可能性、具体的な実装案、Agentへの影響評価、および関連するファイル変更の提案（もしあれば）をMarkdown形式で出力してください。
 
 ---
-Generated at: 2025-12-26 07:01:52 JST
+Generated at: 2025-12-27 07:01:55 JST
