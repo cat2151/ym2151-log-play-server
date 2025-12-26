@@ -142,6 +142,30 @@ def generate_issue_body(
     return "\n".join(sections)
 
 
+def read_file_content(file_path: str, file_description: str) -> str:
+    """Read content from a file with proper error handling.
+    
+    Args:
+        file_path: Path to the file to read
+        file_description: Description of the file for error messages
+    
+    Returns:
+        Content of the file as string
+    
+    Raises:
+        SystemExit: If file cannot be read
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"Error: {file_description} file not found: {file_path}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read {file_description} file: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--status-ja", required=True)
@@ -163,25 +187,8 @@ def main():
     args = parser.parse_args()
     
     # Read large data from files to avoid command-line size limitations
-    try:
-        with open(args.failed_tests_list_file, 'r', encoding='utf-8') as f:
-            failed_tests_list = f.read()
-    except FileNotFoundError:
-        print(f"Error: Failed tests list file not found: {args.failed_tests_list_file}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: Failed to read failed tests list file: {e}", file=sys.stderr)
-        sys.exit(1)
-    
-    try:
-        with open(args.error_details_file, 'r', encoding='utf-8') as f:
-            error_details = f.read()
-    except FileNotFoundError:
-        print(f"Error: Error details file not found: {args.error_details_file}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: Failed to read error details file: {e}", file=sys.stderr)
-        sys.exit(1)
+    failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
+    error_details = read_file_content(args.error_details_file, "error details")
     
     issue_body = generate_issue_body(
         status_ja=args.status_ja,

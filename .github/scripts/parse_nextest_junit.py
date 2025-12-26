@@ -116,7 +116,7 @@ def write_github_output(output_file: str, statistics: Dict[str, str], failed_tes
     failed_tests_list_content = format_failed_tests_list(failed_tests)
     error_details_content = format_failed_tests_with_errors(failed_tests)
     
-    # Create temporary files for large data
+    # Create temporary files for large data with secure permissions
     failed_tests_list_fd, failed_tests_list_path = tempfile.mkstemp(suffix='.txt', prefix='failed_tests_list_', text=True)
     error_details_fd, error_details_path = tempfile.mkstemp(suffix='.txt', prefix='error_details_', text=True)
     
@@ -141,11 +141,11 @@ def write_github_output(output_file: str, statistics: Dict[str, str], failed_tes
         # Clean up temp files on error
         try:
             os.unlink(failed_tests_list_path)
-        except:
+        except Exception:
             pass
         try:
             os.unlink(error_details_path)
-        except:
+        except Exception:
             pass
         raise
 
