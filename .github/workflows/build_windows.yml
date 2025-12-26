@@ -62,16 +62,19 @@ jobs:
               exit 1
             }
           } else {
+            # Create temporary files for fallback case
+            $failedTestsListFile = [System.IO.Path]::GetTempFileName()
+            $errorDetailsFile = [System.IO.Path]::GetTempFileName()
+            
+            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $failedTestsListFile -Encoding utf8
+            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $errorDetailsFile -Encoding utf8
+            
             "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "failed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "timed_out=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "failed_tests_list<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "error_details<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed_tests_list_file=$failedTestsListFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "error_details_file=$errorDetailsFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
 
@@ -112,8 +115,8 @@ jobs:
             --passed "${{ steps.test_summary.outputs.passed }}" `
             --failed "${{ steps.test_summary.outputs.failed }}" `
             --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
-            --failed-tests-list "${{ steps.test_summary.outputs.failed_tests_list }}" `
-            --error-details "${{ steps.test_summary.outputs.error_details }}" `
+            --failed-tests-list-file "${{ steps.test_summary.outputs.failed_tests_list_file }}" `
+            --error-details-file "${{ steps.test_summary.outputs.error_details_file }}" `
             --workflow "${{ github.workflow }}" `
             --job "${{ github.job }}" `
             --run-id "${{ github.run_id }}" `

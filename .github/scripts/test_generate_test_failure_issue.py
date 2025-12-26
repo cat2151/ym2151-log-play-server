@@ -3,6 +3,8 @@
 import os
 import unittest
 import urllib.error
+import tempfile
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 from generate_test_failure_issue import generate_issue_body, translate_error_messages_with_gemini
 
