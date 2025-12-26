@@ -47,97 +47,58 @@ jobs:
         timeout-minutes: 15
         continue-on-error: true
         run: |
-          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-outputを設定済み
+          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-output、JUnit XML出力を設定済み
+          # JUnit XMLは target/nextest/default/junit.xml に出力される
           cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
           exit $LASTEXITCODE
 
-      - name: Parse test results
+      - name: Parse test results from JUnit XML
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: test_summary
         shell: pwsh
         run: |
-          # テスト結果を解析して構造化データを抽出
-          if (Test-Path test_output.log) {
-            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
+          # nextest JUnit XML出力を解析して構造化データを抽出
+          # Python scriptを使用してJUnit XMLを解析
+          $junitFile = "target/nextest/default/junit.xml"
+          
+          if (Test-Path $junitFile) {
+            # Python scriptでJUnit XMLを解析
+            $parseOutput = python3 .github/scripts/parse_nextest_junit.py --junit-file "$junitFile" --output-format both
             
-            # 統計情報を抽出（nextest summary行から）
-            $total = "不明"
-            $passed = "不明"
-            $failed = "不明"
-            $timedOut = "不明"
+            # 出力を解析（stats行とcategorized行に分ける）
+            $lines = $parseOutput -split "`n"
+            $statsSection = $true
+            $categorizedLines = @()
             
-            if ($content -match 'Summary.*?(\d+) tests run: (\d+) passed, (\d+) failed(?:, (\d+) timed out)?') {
-              $total = $matches[1]
-              $passed = $matches[2]
-              $failed = $matches[3]
-              $timedOut = if ($matches[4]) { $matches[4] } else { "0" }
-            }
-            
-            # 失敗したテスト名を抽出
-            $failedTestsList = @()
-            $failMatches = [regex]::Matches($content, 'FAIL\s+(?:\[[\d.]+s\])?\s+\([\d/]+\)\s+([\w:]+(?:::[\w:]+)*)')
-            foreach ($match in $failMatches) {
-              $testName = $match.Groups[1].Value
-              if ($testName -and $failedTestsList -notcontains $testName) {
-                $failedTestsList += $testName
+            foreach ($line in $lines) {
+              if ($line -eq "---") {
+                $statsSection = $false
+                continue
               }
-            }
-            
-            # タイムアウトしたテストを抽出
-            $timeoutMatches = [regex]::Matches($content, 'TIMEOUT\s+\[[\d.]+s\]\s+\([\d/]+\)\s+([\w:]+(?:::[\w:]+)*)')
-            foreach ($match in $timeoutMatches) {
-              $testName = $match.Groups[1].Value
-              if ($testName -and $failedTestsList -notcontains $testName) {
-                $failedTestsList += "$testName (タイムアウト)"
-              }
-            }
-            
-            # テストをカテゴリ別に分類
-            $categorized = @{
-              "Pipe Tests" = @()
-              "CLI Integration Tests" = @()
-              "Client Integration Tests" = @()
-              "Interactive Mode Tests" = @()
-              "Server Integration Tests" = @()
-              "その他" = @()
-            }
-            
-            foreach ($test in $failedTestsList) {
-              if ($test -match 'pipe.*test|test.*pipe') {
-                $categorized["Pipe Tests"] += $test
-              } elseif ($test -match 'cli_integration') {
-                $categorized["CLI Integration Tests"] += $test
-              } elseif ($test -match 'client.*test|test.*client') {
-                $categorized["Client Integration Tests"] += $test
-              } elseif ($test -match 'interactive') {
-                $categorized["Interactive Mode Tests"] += $test
-              } elseif ($test -match 'server.*test|test.*server') {
-                $categorized["Server Integration Tests"] += $test
-              } else {
-                $categorized["その他"] += $test
-              }
-            }
-            
-            # カテゴリ別リストを作成
-            $categorizedList = ""
-            foreach ($category in $categorized.Keys | Sort-Object) {
-              $tests = $categorized[$category]
-              if ($tests.Count -gt 0) {
-                $categorizedList += "`n#### $category ($($tests.Count)件)`n"
-                foreach ($test in $tests) {
-                  $categorizedList += "- $test`n"
+              
+              if ($statsSection) {
+                # stats行を解析してGITHUB_OUTPUTに出力
+                if ($line -match '^(\w+)=(.+)$') {
+                  "$line" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
                 }
+              } else {
+                # categorized行を収集
+                $categorizedLines += $line
               }
             }
             
-            # GITHUB_OUTPUTに出力
-            "total_tests=$total" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "passed=$passed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "failed=$failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "timed_out=$timedOut" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            
+            # categorizedデータをGITHUB_OUTPUTに出力
             "failed_tests_categorized<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            $categorizedList | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            $categorizedLines -join "`n" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            # JUnit XMLが見つからない場合はデフォルト値を設定
+            "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "timed_out=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed_tests_categorized<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
@@ -164,7 +125,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-logs
-          path: test_output.log
+          path: |
+            test_output.log
+            target/nextest/default/junit.xml
           retention-days: 30
 
       - name: Determine failure status
