@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Unit tests for parse_nextest_junit.py
-"""
 
 import sys
 import unittest
@@ -10,18 +7,14 @@ from pathlib import Path
 import tempfile
 import xml.etree.ElementTree as ET
 
-# Add parent directory to path to import the module
 sys.path.insert(0, str(Path(__file__).parent))
 
-from parse_nextest_junit import parse_junit_xml, format_failed_tests_list, format_failed_tests_with_errors
+from parse_nextest_junit import parse_junit_xml, format_failed_tests_list, format_failed_tests_with_errors, write_github_output
 
 
 class TestParseJunitXml(unittest.TestCase):
-    """Test the parse_junit_xml function."""
-    
     def create_junit_xml(self, tests: int, failures: int, errors: int = 0, 
                          failed_test_data: list = None) -> str:
-        """Helper to create a temporary JUnit XML file."""
         if failed_test_data is None:
             failed_test_data = [
                 {
@@ -42,7 +35,6 @@ class TestParseJunitXml(unittest.TestCase):
             "skipped": "0"
         })
         
-        # Add passed tests
         passed_count = tests - failures - errors
         for i in range(passed_count):
             ET.SubElement(testsuite, "testcase", {
@@ -50,7 +42,6 @@ class TestParseJunitXml(unittest.TestCase):
                 "classname": "test_module"
             })
         
-        # Add failed tests
         for test_data in failed_test_data:
             testcase = ET.SubElement(testsuite, "testcase", {
                 "name": test_data['name'],
@@ -61,7 +52,6 @@ class TestParseJunitXml(unittest.TestCase):
             })
             failure.text = test_data['details']
         
-        # Write to temp file with proper cleanup
         temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False)
         try:
             tree = ET.ElementTree(root)
@@ -69,14 +59,12 @@ class TestParseJunitXml(unittest.TestCase):
             temp_file.close()
             return temp_file.name
         except:
-            # Ensure file is closed and cleaned up on error
             temp_file.close()
             if Path(temp_file.name).exists():
                 Path(temp_file.name).unlink()
             raise
     
     def test_basic_parsing(self):
-        """Test basic JUnit XML parsing."""
         failed_test_data = [
             {
                 'name': 'server_basic_test',
@@ -110,7 +98,6 @@ class TestParseJunitXml(unittest.TestCase):
             Path(junit_file).unlink()
     
     def test_timeout_detection(self):
-        """Test that timeouts are detected from failure messages."""
         failed_test_data = [
             {
                 'name': 'test_timeout',
@@ -130,14 +117,11 @@ class TestParseJunitXml(unittest.TestCase):
         try:
             stats, failed_tests = parse_junit_xml(junit_file)
             
-            # Both tests are counted as failures in JUnit XML
-            # The timeout count is extracted separately from failure messages
             self.assertEqual(stats['total_tests'], '2')
             self.assertEqual(stats['passed'], '0')
             self.assertEqual(stats['failed'], '2')
             self.assertEqual(stats['timed_out'], '1')
             
-            # Check timeout flag
             self.assertTrue(failed_tests[0]['is_timeout'])
             self.assertFalse(failed_tests[1]['is_timeout'])
         finally:
@@ -145,10 +129,7 @@ class TestParseJunitXml(unittest.TestCase):
 
 
 class TestFormatFailedTestsList(unittest.TestCase):
-    """Test the format_failed_tests_list function."""
-    
     def test_formatting(self):
-        """Test that failed tests list is formatted correctly."""
         failed_tests = [
             {'name': 'test1', 'message': 'Error1', 'details': 'Details1', 'is_timeout': False},
             {'name': 'test2', 'message': 'Error2', 'details': 'Details2', 'is_timeout': True},
@@ -160,16 +141,12 @@ class TestFormatFailedTestsList(unittest.TestCase):
         self.assertIn("- test2 (タイムアウト)", output)
     
     def test_empty_list(self):
-        """Test that empty list returns empty string."""
         output = format_failed_tests_list([])
         self.assertEqual(output, "")
 
 
 class TestFormatFailedTestsWithErrors(unittest.TestCase):
-    """Test the format_failed_tests_with_errors function."""
-    
     def test_formatting(self):
-        """Test that failed tests with errors are formatted correctly."""
         failed_tests = [
             {
                 'name': 'test1',
@@ -194,9 +171,43 @@ class TestFormatFailedTestsWithErrors(unittest.TestCase):
         self.assertIn("**Error**: Timed out", output)
     
     def test_empty_list(self):
-        """Test that empty list returns empty string."""
         output = format_failed_tests_with_errors([])
         self.assertEqual(output, "")
+
+
+class TestWriteGithubOutput(unittest.TestCase):
+    def test_write_github_output(self):
+        stats = {
+            'total_tests': '10',
+            'passed': '8',
+            'failed': '2',
+            'timed_out': '1'
+        }
+        failed_tests = [
+            {'name': 'test1', 'message': 'Error1', 'details': 'Details1', 'is_timeout': False},
+            {'name': 'test2', 'message': 'Error2', 'details': 'Details2', 'is_timeout': True},
+        ]
+        
+        temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        temp_file.close()
+        
+        try:
+            write_github_output(temp_file.name, stats, failed_tests)
+            
+            with open(temp_file.name, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            self.assertIn("total_tests=10", content)
+            self.assertIn("passed=8", content)
+            self.assertIn("failed=2", content)
+            self.assertIn("timed_out=1", content)
+            self.assertIn("failed_tests_list<<EOF", content)
+            self.assertIn("- test1", content)
+            self.assertIn("- test2 (タイムアウト)", content)
+            self.assertIn("error_details<<EOF", content)
+            self.assertIn("### test1", content)
+        finally:
+            Path(temp_file.name).unlink()
 
 
 if __name__ == '__main__':

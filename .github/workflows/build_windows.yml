@@ -42,13 +42,9 @@ jobs:
 
       - name: Run tests with nextest
         id: test
-        # 15分でタイムアウト (ジョブ全体の30分タイムアウトより短く設定)
-        # テストがハングした場合でも、issue作成などの後処理を確実に実行するため
         timeout-minutes: 15
         continue-on-error: true
         run: |
-          # nextest: 設定ファイル(.config/nextest.toml)でタイムアウト、fail-fast、failure-output、JUnit XML出力を設定済み
-          # JUnit XMLは target/nextest/default/junit.xml に出力される
           cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
           exit $LASTEXITCODE
 
@@ -57,64 +53,14 @@ jobs:
         id: test_summary
         shell: pwsh
         run: |
-          # nextest JUnit XML出力を解析して構造化データを抽出
           $junitFile = "target/nextest/default/junit.xml"
           
           if (Test-Path $junitFile) {
-            # Python scriptでJUnit XMLを解析
-            $parseOutput = python3 .github/scripts/parse_nextest_junit.py --junit-file "$junitFile" --output-format all
-            
-            # Pythonスクリプトの終了コードをチェック
+            python3 .github/scripts/parse_nextest_junit.py --junit-file "$junitFile" --github-output $env:GITHUB_OUTPUT
             if ($LASTEXITCODE -ne 0) {
-              Write-Error "Failed to parse JUnit XML file (exit code: $LASTEXITCODE)"
-              "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "failed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "timed_out=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "failed_tests_list<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "パース処理に失敗しました" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "error_details<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "パース処理に失敗しました" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              exit 0
+              Write-Error "Failed to parse JUnit XML file"
+              exit 1
             }
-            
-            # 出力を解析（3セクションに分割: stats, failed_tests, error_details）
-            $lines = $parseOutput -split "`n"
-            $section = "stats"
-            $failedTestsLines = @()
-            $errorDetailsLines = @()
-            
-            foreach ($line in $lines) {
-              if ($line -eq "---FAILED_TESTS---") {
-                $section = "failed_tests"
-                continue
-              } elseif ($line -eq "---ERROR_DETAILS---") {
-                $section = "error_details"
-                continue
-              }
-              
-              if ($section -eq "stats") {
-                if ($line -match '^(\w+)=(.+)$') {
-                  "$line" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-                }
-              } elseif ($section -eq "failed_tests") {
-                $failedTestsLines += $line
-              } elseif ($section -eq "error_details") {
-                $errorDetailsLines += $line
-              }
-            }
-            
-            # failed_tests_listをGITHUB_OUTPUTに出力
-            "failed_tests_list<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            $failedTestsLines -join "`n" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            
-            # error_detailsをGITHUB_OUTPUTに出力
-            "error_details<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            $errorDetailsLines -join "`n" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           } else {
             "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
@@ -128,23 +74,7 @@ jobs:
             "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
-      - name: Capture test failure summary
-        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
-        id: test_output
-        shell: pwsh
-        run: |
-          # GitHub issue用にログを取得（最大65000文字）
-          if (Test-Path test_output.log) {
-            $content = Get-Content -Path test_output.log -Raw -ErrorAction SilentlyContinue
-            if ($content -and $content.Length -gt 65000) {
-              $content = $content.Substring($content.Length - 65000)
-            }
-            if ($content) {
-              "log<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              $content | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-            }
-          }
+
 
       - name: Upload test log artifacts
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
@@ -161,9 +91,6 @@ jobs:
         id: failure_status
         shell: pwsh
         run: |
-          # cancelled: ユーザーによる手動キャンセル
-          # timed_out: timeout-minutesによる自動タイムアウト
-          # どちらも「タイムアウト」としてユーザーに報告
           if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
             "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
@@ -179,27 +106,14 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Python scriptを使用してissue本文を生成
-          
-          # 一時ファイルを作成してエラー情報を書き込む
-          $tempDir = [System.IO.Path]::GetTempPath()
-          $failedTestsFile = Join-Path $tempDir "failed_tests_list.txt"
-          $errorDetailsFile = Join-Path $tempDir "error_details.txt"
-          
-          # failed_tests_listを一時ファイルに書き込み（issue冒頭用）
-          $failedTestsList = "${{ steps.test_summary.outputs.failed_tests_list }}"
-          $failedTestsList | Out-File -FilePath $failedTestsFile -Encoding UTF8 -NoNewline
-          
-          # error_detailsを一時ファイルに書き込み（日本語訳用）
-          $errorDetails = "${{ steps.test_summary.outputs.error_details }}"
-          $errorDetails | Out-File -FilePath $errorDetailsFile -Encoding UTF8 -NoNewline
-          
           $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
             --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
             --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
             --passed "${{ steps.test_summary.outputs.passed }}" `
             --failed "${{ steps.test_summary.outputs.failed }}" `
             --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
+            --failed-tests-list "${{ steps.test_summary.outputs.failed_tests_list }}" `
+            --error-details "${{ steps.test_summary.outputs.error_details }}" `
             --workflow "${{ github.workflow }}" `
             --job "${{ github.job }}" `
             --run-id "${{ github.run_id }}" `
@@ -207,15 +121,13 @@ jobs:
             --ref "${{ github.ref }}" `
             --commit "${{ github.sha }}" `
             --server-url "${{ github.server_url }}" `
-            --repository "${{ github.repository }}" `
-            --failed-tests-list-file "$failedTestsFile" `
-            --error-details-file "$errorDetailsFile"
+            --repository "${{ github.repository }}"
           
-          # 一時ファイルをクリーンアップ
-          if (Test-Path $failedTestsFile) { Remove-Item $failedTestsFile -ErrorAction SilentlyContinue }
-          if (Test-Path $errorDetailsFile) { Remove-Item $errorDetailsFile -ErrorAction SilentlyContinue }
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to generate issue body"
+            exit 1
+          }
           
-          # GITHUB_OUTPUTに出力
           "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           $issueBody | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
