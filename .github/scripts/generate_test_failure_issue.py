@@ -16,6 +16,11 @@ import urllib.error
 from typing import Optional
 
 
+# Gemini API configuration
+GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+GEMINI_MODEL_NAME = "gemini-3-flash"
+
+
 def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
     """
     Translate error messages to Japanese using Gemini API.
@@ -27,20 +32,21 @@ def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
         error_details: The error details text to translate (markdown formatted with test names and error messages)
     
     Returns:
-        Translated text in Japanese, or None if API key is not available
+        Translated text in Japanese, or None if error_details is empty
         
     Raises:
-        Exception: For non-API errors that should be detected early
+        ValueError: If API key is not available or empty
+        Exception: For other non-API errors that should be detected early
     """
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key or not api_key.strip():
-        return None
+        raise ValueError("GEMINI_API_KEY environment variable is not set or empty. Translation cannot proceed without API key.")
     
     if not error_details or not error_details.strip():
         return None
     
     # Prepare the API request
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key={api_key}"
     
     # Create the prompt for translation
     prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
@@ -157,14 +163,18 @@ def generate_issue_body(
     
     # Try to translate error details using Gemini API for user cognitive load reduction
     if error_details:
-        japanese_translation = translate_error_messages_with_gemini(error_details)
-        if japanese_translation:
-            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
-            sections.append("")
-            sections.append(japanese_translation)
-            sections.append("")
-            sections.append("---")
-            sections.append("")
+        try:
+            japanese_translation = translate_error_messages_with_gemini(error_details)
+            if japanese_translation:
+                sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+                sections.append("")
+                sections.append(japanese_translation)
+                sections.append("")
+                sections.append("---")
+                sections.append("")
+        except ValueError as e:
+            # API key is not available - log error and continue without translation
+            print(f"Warning: Translation skipped - {e}", file=sys.stderr)
     
     # Header with simple failed tests list (for agent to easily work with)
     sections.append("## 失敗したテスト")

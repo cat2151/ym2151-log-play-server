@@ -217,15 +217,16 @@ class TestTranslateErrorMessages(unittest.TestCase):
     """Test cases for the translate_error_messages_with_gemini function."""
     
     def test_translate_with_no_api_key(self):
-        """Test that translation returns None when API key is not in environment."""
+        """Test that translation raises ValueError when API key is not in environment."""
         # Ensure GEMINI_API_KEY is not set
         original_key = os.environ.get('GEMINI_API_KEY')
         if 'GEMINI_API_KEY' in os.environ:
             del os.environ['GEMINI_API_KEY']
         
         try:
-            result = translate_error_messages_with_gemini("Some error log")
-            self.assertIsNone(result)
+            with self.assertRaises(ValueError) as context:
+                translate_error_messages_with_gemini("Some error log")
+            self.assertIn("GEMINI_API_KEY", str(context.exception))
         finally:
             # Restore original key if it existed
             if original_key is not None:
