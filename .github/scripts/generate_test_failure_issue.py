@@ -16,7 +16,7 @@ import urllib.error
 from typing import Optional
 
 
-def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
+def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
     """
     Translate error messages to Japanese using Gemini API.
     
@@ -24,7 +24,7 @@ def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
     Implements exponential backoff retry for transient API errors.
     
     Args:
-        error_log: The error log text to translate
+        error_details: The error details text to translate (markdown formatted with test names and error messages)
     
     Returns:
         Translated text in Japanese, or None if API key is not available
@@ -36,24 +36,23 @@ def translate_error_messages_with_gemini(error_log: str) -> Optional[str]:
     if not api_key or not api_key.strip():
         return None
     
-    if not error_log or not error_log.strip():
+    if not error_details or not error_details.strip():
         return None
     
     # Prepare the API request
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
     
     # Create the prompt for translation
-    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗ログです。
-このエラーログを日本語に翻訳してください。
+    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
+各テストのエラーメッセージを日本語に翻訳してください。
 技術用語は適切に翻訳し、開発者が理解しやすいように要約してください。
-エラーの主な原因と失敗したテストについて簡潔に説明してください。
 
-エラーログ:
+失敗したテストとエラー:
 ```
-{error_log}
+{error_details}
 ```
 
-日本語訳:"""
+日本語訳（各テストごとに失敗原因を簡潔に説明）:"""
     
     # Prepare request data
     data = {
@@ -118,7 +117,8 @@ def generate_issue_body(
     passed: str,
     failed: str,
     timed_out: str,
-    failed_tests_categorized: str,
+    failed_tests_list: str,
+    error_details: str,
     workflow: str,
     job: str,
     run_id: str,
@@ -127,7 +127,6 @@ def generate_issue_body(
     commit: str,
     server_url: str,
     repository: str,
-    error_log: Optional[str] = None,
 ) -> str:
     """
     Generate the issue body text for a test failure.
@@ -138,7 +137,8 @@ def generate_issue_body(
         passed: Number of passed tests
         failed: Number of failed tests
         timed_out: Number of timed out tests
-        failed_tests_categorized: Categorized list of failed tests (markdown formatted)
+        failed_tests_list: Simple list of failed tests (markdown formatted)
+        error_details: Detailed error messages for each failed test (markdown formatted)
         workflow: GitHub workflow name
         job: GitHub job name
         run_id: GitHub run ID
@@ -147,7 +147,6 @@ def generate_issue_body(
         commit: GitHub commit SHA
         server_url: GitHub server URL
         repository: GitHub repository (owner/repo)
-        error_log: Optional detailed error log
     
     Returns:
         The formatted issue body text
@@ -156,9 +155,9 @@ def generate_issue_body(
     # Build the main sections
     sections = []
     
-    # If error log is provided, try to translate error messages using Gemini API
-    if error_log:
-        japanese_translation = translate_error_messages_with_gemini(error_log)
+    # Try to translate error details using Gemini API for user cognitive load reduction
+    if error_details:
+        japanese_translation = translate_error_messages_with_gemini(error_details)
         if japanese_translation:
             sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
             sections.append("")
@@ -167,57 +166,45 @@ def generate_issue_body(
             sections.append("---")
             sections.append("")
     
-    # Header
-    sections.append("Windows CI でビルドまたはテストに失敗しました。")
+    # Header with simple failed tests list (for agent to easily work with)
+    sections.append("## 失敗したテスト")
     sections.append("")
+    sections.append(failed_tests_list)
+    sections.append("")
+    sections.append("---")
+    sections.append("")
+    
+    # Status and statistics
     sections.append(f"**ステータス**: {status_ja}")
     sections.append("")
-    
-    # Test Summary
-    sections.append("## 失敗テストサマリー")
-    sections.append("")
-    sections.append(f"**総テスト数**: {total_tests}")
-    sections.append(f"**成功**: {passed}")
-    sections.append(f"**失敗**: {failed}")
-    sections.append(f"**タイムアウト**: {timed_out}")
-    sections.append("")
-    
-    # Failed Tests List
-    sections.append("### 失敗したテスト一覧")
-    sections.append(failed_tests_categorized)
-    sections.append("")
-    
-    # Log Link
-    sections.append("## ログへのリンク")
-    sections.append(f"{server_url}/{repository}/actions/runs/{run_id}")
+    sections.append("### テストサマリー")
+    sections.append(f"- **総テスト数**: {total_tests}")
+    sections.append(f"- **成功**: {passed}")
+    sections.append(f"- **失敗**: {failed}")
+    sections.append(f"- **タイムアウト**: {timed_out}")
     sections.append("")
     
     # Details
-    sections.append("## 詳細")
+    sections.append("### 詳細")
     sections.append(f"- Workflow: {workflow}")
     sections.append(f"- Job: {job}")
-    sections.append(f"- Run ID: {run_id}")
-    sections.append(f"- Run Attempt: {run_attempt}")
-    sections.append(f"- Ref: {ref}")
+    sections.append(f"- Run: {server_url}/{repository}/actions/runs/{run_id}")
     sections.append(f"- Commit: {commit}")
+    sections.append(f"- Ref: {ref}")
     sections.append("")
     
-    # Detailed Error Log (if provided)
-    if error_log and error_log.strip():
-        sections.append("## 詳細なエラーログ")
+    # Detailed error messages in collapsible section
+    if error_details and error_details.strip():
         sections.append("<details>")
-        sections.append("<summary>クリックして展開</summary>")
+        sections.append("<summary>詳細なエラーメッセージ（クリックして展開）</summary>")
         sections.append("")
-        sections.append("```")
-        sections.append(error_log)
-        sections.append("```")
+        sections.append(error_details)
         sections.append("")
         sections.append("</details>")
         sections.append("")
     
     # Artifacts
-    sections.append("## アーティファクト")
-    sections.append("完全なログは上記リンクの「Artifacts」セクションから `test-logs` をダウンロードしてください。")
+    sections.append("**アーティファクト**: 完全なログは上記のRunリンクから `test-logs` をダウンロード")
     
     return "\n".join(sections)
 
@@ -245,7 +232,7 @@ def main():
     Main entry point for the script.
     
     This script receives error data from prior GitHub Actions jobs via temporary files.
-    The error data (failed tests categorization and error logs) are written to temporary
+    The error data (simple failed test list and error details) are written to temporary
     files by the workflow and passed to this script as file path arguments.
     """
     parser = argparse.ArgumentParser(
@@ -279,9 +266,14 @@ def main():
         help="Number of timed out tests"
     )
     parser.add_argument(
-        "--failed-tests-categorized-file",
+        "--failed-tests-list-file",
         required=True,
-        help="Path to temporary file containing categorized list of failed tests (generated by prior job)"
+        help="Path to temporary file containing simple list of failed tests (generated by prior job)"
+    )
+    parser.add_argument(
+        "--error-details-file",
+        required=True,
+        help="Path to temporary file containing detailed error messages (generated by prior job)"
     )
     parser.add_argument(
         "--workflow",
@@ -323,17 +315,12 @@ def main():
         required=True,
         help="GitHub repository (owner/repo)"
     )
-    parser.add_argument(
-        "--error-log-file",
-        required=True,
-        help="Path to temporary file containing detailed error log (generated by prior job)"
-    )
     
     args = parser.parse_args()
     
     # Read error data from files generated by prior job
-    failed_tests_categorized = _read_from_file(args.failed_tests_categorized_file)
-    error_log = _read_from_file(args.error_log_file)
+    failed_tests_list = _read_from_file(args.failed_tests_list_file)
+    error_details = _read_from_file(args.error_details_file)
     
     issue_body = generate_issue_body(
         status_ja=args.status_ja,
@@ -341,7 +328,8 @@ def main():
         passed=args.passed,
         failed=args.failed,
         timed_out=args.timed_out,
-        failed_tests_categorized=failed_tests_categorized,
+        failed_tests_list=failed_tests_list,
+        error_details=error_details,
         workflow=args.workflow,
         job=args.job,
         run_id=args.run_id,
@@ -350,7 +338,6 @@ def main():
         commit=args.commit,
         server_url=args.server_url,
         repository=args.repository,
-        error_log=error_log,
     )
     
     print(issue_body)
