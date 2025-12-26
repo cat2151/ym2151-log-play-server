@@ -84,11 +84,19 @@ class TestParseJunitXml(unittest.TestCase):
                 "message": "Test failed"
             })
         
-        # Write to temp file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
+        # Write to temp file with proper cleanup
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False)
+        try:
             tree = ET.ElementTree(root)
-            tree.write(f, encoding='unicode', xml_declaration=True)
-            return f.name
+            tree.write(temp_file, encoding='unicode', xml_declaration=True)
+            temp_file.close()
+            return temp_file.name
+        except:
+            # Ensure file is closed and cleaned up on error
+            temp_file.close()
+            if Path(temp_file.name).exists():
+                Path(temp_file.name).unlink()
+            raise
     
     def test_basic_parsing(self):
         """Test basic JUnit XML parsing."""
@@ -136,20 +144,24 @@ class TestParseJunitXml(unittest.TestCase):
             "message": "Assertion failed"
         })
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False) as f:
-            tree = ET.ElementTree(root)
-            tree.write(f, encoding='unicode', xml_declaration=True)
-            junit_file = f.name
-        
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.xml', delete=False)
         try:
+            tree = ET.ElementTree(root)
+            tree.write(temp_file, encoding='unicode', xml_declaration=True)
+            temp_file.close()
+            junit_file = temp_file.name
+            
             stats, categorized = parse_junit_xml(junit_file)
             
+            # Note: Both tests are counted as failures in JUnit XML
+            # The timeout count is extracted separately from failure messages
             self.assertEqual(stats['total_tests'], '2')
             self.assertEqual(stats['passed'], '0')
-            self.assertEqual(stats['failed'], '1')
+            self.assertEqual(stats['failed'], '2')
             self.assertEqual(stats['timed_out'], '1')
         finally:
-            Path(junit_file).unlink()
+            if Path(temp_file.name).exists():
+                Path(temp_file.name).unlink()
 
 
 class TestFormatCategorizedOutput(unittest.TestCase):

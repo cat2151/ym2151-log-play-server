@@ -65,6 +65,20 @@ jobs:
             # Python scriptでJUnit XMLを解析
             $parseOutput = python3 .github/scripts/parse_nextest_junit.py --junit-file "$junitFile" --output-format both
             
+            # Pythonスクリプトの終了コードをチェック
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to parse JUnit XML file (exit code: $LASTEXITCODE)"
+              # デフォルト値を設定
+              "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "failed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "timed_out=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "failed_tests_categorized<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "パース処理に失敗しました" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              exit 0  # ワークフローは継続
+            }
+            
             # 出力を解析（stats行とcategorized行に分ける）
             $lines = $parseOutput -split "`n"
             $statsSection = $true

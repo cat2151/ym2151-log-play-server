@@ -53,8 +53,17 @@ def parse_junit_xml(junit_file_path: str) -> Tuple[Dict[str, str], Dict[str, Lis
     try:
         tree = ET.parse(junit_file_path)
         root = tree.getroot()
+    except FileNotFoundError:
+        print(f"Error: JUnit XML file not found: {junit_file_path}", file=sys.stderr)
+        sys.exit(1)
+    except ET.ParseError as e:
+        print(f"Error: Invalid XML format in {junit_file_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+    except PermissionError:
+        print(f"Error: Permission denied reading {junit_file_path}", file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
-        print(f"Error parsing JUnit XML file: {e}", file=sys.stderr)
+        print(f"Error: Failed to parse JUnit XML file {junit_file_path}: {e}", file=sys.stderr)
         sys.exit(1)
     
     # Extract statistics from testsuite element
@@ -106,10 +115,13 @@ def parse_junit_xml(junit_file_path: str) -> Tuple[Dict[str, str], Dict[str, Lis
             elif error is not None:
                 failure_message = error.get('message', '')
             
+            # Only mark as timeout and adjust counts if it's explicitly a timeout
+            # Note: nextest should already count timeouts separately, but we detect them
+            # from failure messages as a backup
             if 'timeout' in failure_message.lower() or 'timed out' in failure_message.lower():
                 full_name = f"{full_name} (タイムアウト)"
+                # Increment timeout count (failures already include timeouts in JUnit XML)
                 statistics['timed_out'] = str(int(statistics['timed_out']) + 1)
-                statistics['failed'] = str(int(statistics['failed']) - 1)
             
             failed_tests.append(full_name)
     
