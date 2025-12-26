@@ -138,15 +138,15 @@ def write_github_output(output_file: str, statistics: Dict[str, str], failed_tes
             f.write(f"failed_tests_list_file={failed_tests_list_path}\n")
             f.write(f"error_details_file={error_details_path}\n")
     except Exception:
-        # Clean up temp files on error
+        # Attempt to clean up temp files before re-raising exception
         try:
             os.unlink(failed_tests_list_path)
-        except Exception:
-            pass
+        except OSError as e:
+            print(f"Warning: failed to delete temp file {failed_tests_list_path}: {e}", file=sys.stderr)
         try:
             os.unlink(error_details_path)
-        except Exception:
-            pass
+        except OSError as e:
+            print(f"Warning: failed to delete temp file {error_details_path}: {e}", file=sys.stderr)
         raise
 
 
