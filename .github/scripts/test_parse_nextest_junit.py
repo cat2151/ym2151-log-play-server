@@ -191,6 +191,8 @@ class TestWriteGithubOutput(unittest.TestCase):
         temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
         temp_file.close()
         
+        failed_tests_list_file = None
+        error_details_file = None
         try:
             write_github_output(temp_file.name, stats, failed_tests)
             
@@ -206,8 +208,6 @@ class TestWriteGithubOutput(unittest.TestCase):
             
             # Extract file paths from output
             lines = content.split('\n')
-            failed_tests_list_file = None
-            error_details_file = None
             for line in lines:
                 if line.startswith("failed_tests_list_file="):
                     failed_tests_list_file = line.split('=', 1)[1]
@@ -227,12 +227,13 @@ class TestWriteGithubOutput(unittest.TestCase):
                 error_details_content = f.read()
             self.assertIn("### test1", error_details_content)
             self.assertIn("### test2 (タイムアウト)", error_details_content)
-            
-            # Clean up temp files
-            Path(failed_tests_list_file).unlink()
-            Path(error_details_file).unlink()
         finally:
+            # Clean up temp files even if assertions fail
             Path(temp_file.name).unlink()
+            if failed_tests_list_file and Path(failed_tests_list_file).exists():
+                Path(failed_tests_list_file).unlink()
+            if error_details_file and Path(error_details_file).exists():
+                Path(error_details_file).unlink()
 
 
 if __name__ == '__main__':
