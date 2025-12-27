@@ -1,4 +1,4 @@
-Last updated: 2025-12-27
+Last updated: 2025-12-28
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -249,6 +249,8 @@ Last updated: 2025-12-27
 - issue-notes/152.md
 - issue-notes/154.md
 - issue-notes/156.md
+- issue-notes/158.md
+- issue-notes/161.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -349,31 +351,25 @@ Last updated: 2025-12-27
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-## [Issue #157](../issue-notes/157.md): Address PR 155 code review comments: improve error handling and cleanup
-Addresses code review feedback from PR #155 regarding exception handling, resource cleanup, and unused imports in Python CI scripts.
-
-## Changes
-
-**parse_nextest_junit.py**
-- Replace bare `except Exception:` with specific `except OSError:` when cleaning up temp files
-- Log cleanup failures to stderr...
+## [Issue #162](../issue-notes/162.md): Fix Windows CI workflow Unicode encoding error in generate_test_failure_issue.py
+The Windows CI workflow's issue generation step was crashing at line 239 with an incomplete traceback. Investigation revealed the root cause was a **UnicodeEncodeError** when printing output containing Unicode characters (🤖 emoji, Japanese text) on Windows consoles that default to cp1252 encoding, ...
 ラベル: 
---- issue-notes/157.md の内容 ---
+--- issue-notes/162.md の内容 ---
 
 ```markdown
 
 ```
 
-## [Issue #156](../issue-notes/156.md): PR 155 のソースコードレビュー指摘に対応する
-[issue-notes/156.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/156.md)
+## [Issue #161](../issue-notes/161.md): build_windows.ymlがエラーになったのでエラーログを元に修正する
+[issue-notes/161.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/161.md)
 
 ...
 ラベル: 
---- issue-notes/156.md の内容 ---
+--- issue-notes/161.md の内容 ---
 
 ```markdown
-# issue PR 155 のソースコードレビュー指摘に対応する #156
-[issues #156](https://github.com/cat2151/ym2151-log-play-server/issues/156)
+# issue build_windows.ymlがエラーになったのでエラーログを元に修正する #161
+[issues #161](https://github.com/cat2151/ym2151-log-play-server/issues/161)
 
 
 
@@ -667,6 +663,181 @@ Addresses code review feedback from PR #155 regarding exception handling, resour
 {% endraw %}
 ```
 
+### .github/actions-tmp/issue-notes/2.md
+```md
+{% raw %}
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
+
+
+# prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
+まずplanしてください
+```
+
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
+```
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
+
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
+```
+
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
+
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
+- test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/20.md
 ```md
 {% raw %}
@@ -912,186 +1083,400 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### .github/scripts/parse_nextest_junit.py
+### .github/scripts/generate_test_failure_issue.py
 ```py
 {% raw %}
 #!/usr/bin/env python3
 
 import argparse
+import json
+import os
 import sys
-import xml.etree.ElementTree as ET
-from typing import Dict, List, Tuple
+import time
+import urllib.request
+import urllib.error
+from typing import Optional
 
+GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+# GEMINI_MODEL_NAME = "gemini-3-pro-preview"
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
-def parse_junit_xml(junit_file_path: str) -> Tuple[Dict[str, str], List[Dict[str, str]]]:
-    try:
-        tree = ET.parse(junit_file_path)
-        root = tree.getroot()
-    except FileNotFoundError:
-        print(f"Error: JUnit XML file not found: {junit_file_path}", file=sys.stderr)
-        sys.exit(1)
-    except ET.ParseError as e:
-        print(f"Error: Invalid XML format in {junit_file_path}: {e}", file=sys.stderr)
-        sys.exit(1)
-    except PermissionError:
-        print(f"Error: Permission denied reading {junit_file_path}", file=sys.stderr)
-        sys.exit(1)
-    except Exception as e:
-        print(f"Error: Failed to parse JUnit XML file {junit_file_path}: {e}", file=sys.stderr)
-        sys.exit(1)
-    testsuite = root.find('.//testsuite')
-    if testsuite is None:
-        testsuite = root
+def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or not api_key.strip():
+        raise ValueError("GEMINI_API_KEY environment variable is not set or empty")
     
-    total_tests = testsuite.get('tests', '0')
-    failures = int(testsuite.get('failures', '0'))
-    errors = int(testsuite.get('errors', '0'))
-    skipped = int(testsuite.get('skipped', '0'))
+    if not error_details or not error_details.strip():
+        return None
+    url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key={api_key}"
+    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
+各テストのエラーメッセージを日本語に翻訳してください。
+技術用語は適切に翻訳し、開発者が理解しやすいように要約してください。
+
+失敗したテストとエラー:
+```
+{error_details}
+```
+
+日本語訳（各テストごとに失敗原因を簡潔に説明）:"""
     
-    total = int(total_tests)
-    failed = failures + errors
-    passed = total - failed - skipped
-    
-    statistics = {
-        'total_tests': str(total),
-        'passed': str(passed),
-        'failed': str(failed),
-        'timed_out': '0'
+    data = {
+        "contents": [{
+            "parts": [{
+                "text": prompt
+            }]
+        }],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 2048
+        }
     }
     
-    failed_tests = []
-    
-    for testcase in root.findall('.//testcase'):
-        failure = testcase.find('failure')
-        error = testcase.find('error')
-        
-        if failure is not None or error is not None:
-            test_name = testcase.get('name', 'unknown')
-            classname = testcase.get('classname', '')
+    max_retries = 8
+    base_delay = 60.0
+    max_delay = 7200.0
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(data).encode('utf-8'),
+                headers={'Content-Type': 'application/json'}
+            )
             
-            if classname:
-                full_name = f"{classname}::{test_name}"
+            with urllib.request.urlopen(req, timeout=60) as response:
+                result = json.loads(response.read().decode('utf-8'))
+                if 'candidates' in result and len(result['candidates']) > 0:
+                    candidate = result['candidates'][0]
+                    if 'content' in candidate and 'parts' in candidate['content']:
+                        parts = candidate['content']['parts']
+                        if len(parts) > 0 and 'text' in parts[0]:
+                            return parts[0]['text'].strip()
+            return None
+        except urllib.error.HTTPError as e:
+            # For 4xx client errors, fail immediately as retrying won't help
+            # These indicate problems with the request itself (wrong URL, authentication, etc.)
+            if 400 <= e.code < 500:
+                # Create a safe URL for logging (mask the API key)
+                safe_url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key=***"
+                print(f"Error: Gemini API client error (HTTP {e.code}). Please check the configuration.", file=sys.stderr)
+                print(f"URL: {safe_url}", file=sys.stderr)
+                print(f"Model name: {GEMINI_MODEL_NAME}", file=sys.stderr)
+                if e.code == 404:
+                    print(f"Note: The model or endpoint was not found. Verify the model name is correct.", file=sys.stderr)
+                elif e.code == 401 or e.code == 403:
+                    print(f"Note: Authentication failed. Verify the GEMINI_API_KEY is correct.", file=sys.stderr)
+                return None
+            # For 5xx server errors, retry with exponential backoff
+            if attempt < max_retries - 1:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): HTTP {e.code}. Retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
             else:
-                full_name = test_name
-            
-            failure_elem = failure if failure is not None else error
-            failure_message = failure_elem.get('message', '')
-            failure_details = failure_elem.text or ''
-            
-            is_timeout = 'timeout' in failure_message.lower() or 'timed out' in failure_message.lower()
-            if is_timeout:
-                statistics['timed_out'] = str(int(statistics['timed_out']) + 1)
-            
-            failed_tests.append({
-                'name': full_name,
-                'message': failure_message,
-                'details': failure_details.strip(),
-                'is_timeout': is_timeout
-            })
-    
-    return statistics, failed_tests
+                print(f"Error: Gemini API failed after {max_retries} attempts: HTTP {e.code}", file=sys.stderr)
+                return None
+        except urllib.error.URLError as e:
+            # Network errors might be transient, so retry
+            if attempt < max_retries - 1:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+            else:
+                print(f"Error: Gemini API failed after {max_retries} attempts: {e}", file=sys.stderr)
+                return None
+    return None
 
 
-def format_failed_tests_list(failed_tests: List[Dict[str, str]]) -> str:
-    if not failed_tests:
-        return ""
+def generate_issue_body(
+    status_ja: str,
+    total_tests: str,
+    passed: str,
+    failed: str,
+    timed_out: str,
+    failed_tests_list: str,
+    error_details: str,
+    workflow: str,
+    job: str,
+    run_id: str,
+    run_attempt: str,
+    ref: str,
+    commit: str,
+    server_url: str,
+    repository: str,
+) -> str:
+    sections = []
     
-    lines = []
-    for test in failed_tests:
-        suffix = " (タイムアウト)" if test['is_timeout'] else ""
-        lines.append(f"- {test['name']}{suffix}")
+    if error_details:
+        japanese_translation = translate_error_messages_with_gemini(error_details)
+        if japanese_translation:
+            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+            sections.append("")
+            sections.append(japanese_translation)
+            sections.append("")
+            sections.append("---")
+            sections.append("")
     
-    return "\n".join(lines)
+    sections.append("## 失敗したテスト")
+    sections.append("")
+    sections.append(failed_tests_list)
+    sections.append("")
+    sections.append("---")
+    sections.append("")
+    
+    sections.append(f"**ステータス**: {status_ja}")
+    sections.append("")
+    sections.append("### テストサマリー")
+    sections.append(f"- **総テスト数**: {total_tests}")
+    sections.append(f"- **成功**: {passed}")
+    sections.append(f"- **失敗**: {failed}")
+    sections.append(f"- **タイムアウト**: {timed_out}")
+    sections.append("")
+    
+    sections.append("### 詳細")
+    sections.append(f"- Workflow: {workflow}")
+    sections.append(f"- Job: {job}")
+    sections.append(f"- Run: {server_url}/{repository}/actions/runs/{run_id}")
+    sections.append(f"- Commit: {commit}")
+    sections.append(f"- Ref: {ref}")
+    sections.append("")
+    
+    if error_details and error_details.strip():
+        sections.append("<details>")
+        sections.append("<summary>詳細なエラーメッセージ（クリックして展開）</summary>")
+        sections.append("")
+        sections.append(error_details)
+        sections.append("")
+        sections.append("</details>")
+        sections.append("")
+    
+    sections.append("**アーティファクト**: 完全なログは上記のRunリンクから `test-logs` をダウンロード")
+    
+    return "\n".join(sections)
 
 
-def format_failed_tests_with_errors(failed_tests: List[Dict[str, str]]) -> str:
-    if not failed_tests:
-        return ""
+def read_file_content(file_path: str, file_description: str) -> str:
+    """Read content from a file with proper error handling.
     
-    lines = []
-    for test in failed_tests:
-        suffix = " (タイムアウト)" if test['is_timeout'] else ""
-        lines.append(f"### {test['name']}{suffix}")
-        lines.append("")
-        if test['message']:
-            lines.append(f"**Error**: {test['message']}")
-            lines.append("")
-        if test['details']:
-            lines.append("```")
-            lines.append(test['details'])
-            lines.append("```")
-            lines.append("")
+    Args:
+        file_path: Path to the file to read
+        file_description: Description of the file for error messages
     
-    return "\n".join(lines)
-
-
-def write_github_output(output_file: str, statistics: Dict[str, str], failed_tests: List[Dict[str, str]]) -> None:
-    import tempfile
-    import os
+    Returns:
+        Content of the file as string
     
-    # Write large data to temporary files to avoid command-line size limitations
-    failed_tests_list_content = format_failed_tests_list(failed_tests)
-    error_details_content = format_failed_tests_with_errors(failed_tests)
-    
-    # Create temporary files for large data with secure permissions
-    failed_tests_list_fd, failed_tests_list_path = tempfile.mkstemp(suffix='.txt', prefix='failed_tests_list_', text=True)
-    error_details_fd, error_details_path = tempfile.mkstemp(suffix='.txt', prefix='error_details_', text=True)
-    
+    Raises:
+        SystemExit: If file cannot be read
+    """
     try:
-        # Write failed tests list to file
-        with os.fdopen(failed_tests_list_fd, 'w', encoding='utf-8') as f:
-            f.write(failed_tests_list_content)
-        
-        # Write error details to file
-        with os.fdopen(error_details_fd, 'w', encoding='utf-8') as f:
-            f.write(error_details_content)
-        
-        # Write paths to GITHUB_OUTPUT
-        with open(output_file, 'a', encoding='utf-8') as f:
-            f.write(f"total_tests={statistics['total_tests']}\n")
-            f.write(f"passed={statistics['passed']}\n")
-            f.write(f"failed={statistics['failed']}\n")
-            f.write(f"timed_out={statistics['timed_out']}\n")
-            f.write(f"failed_tests_list_file={failed_tests_list_path}\n")
-            f.write(f"error_details_file={error_details_path}\n")
-    except Exception:
-        # Clean up temp files on error
-        try:
-            os.unlink(failed_tests_list_path)
-        except Exception:
-            pass
-        try:
-            os.unlink(error_details_path)
-        except Exception:
-            pass
-        raise
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"Error: {file_description} file not found: {file_path}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read {file_description} file: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--junit-file", required=True)
-    parser.add_argument("--github-output", help="Path to GITHUB_OUTPUT file for direct writing")
+    parser.add_argument("--status-ja", required=True)
+    parser.add_argument("--total-tests", required=True)
+    parser.add_argument("--passed", required=True)
+    parser.add_argument("--failed", required=True)
+    parser.add_argument("--timed-out", required=True)
+    parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
+    parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
+    parser.add_argument("--workflow", required=True)
+    parser.add_argument("--job", required=True)
+    parser.add_argument("--run-id", required=True)
+    parser.add_argument("--run-attempt", required=True)
+    parser.add_argument("--ref", required=True)
+    parser.add_argument("--commit", required=True)
+    parser.add_argument("--server-url", required=True)
+    parser.add_argument("--repository", required=True)
+    
     args = parser.parse_args()
     
-    statistics, failed_tests = parse_junit_xml(args.junit_file)
+    # Read large data from files to avoid command-line size limitations
+    failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
+    error_details = read_file_content(args.error_details_file, "error details")
     
-    if args.github_output:
-        write_github_output(args.github_output, statistics, failed_tests)
-    else:
-        print(f"total_tests={statistics['total_tests']}")
-        print(f"passed={statistics['passed']}")
-        print(f"failed={statistics['failed']}")
-        print(f"timed_out={statistics['timed_out']}")
-        print("---FAILED_TESTS---")
-        print(format_failed_tests_list(failed_tests))
-        print("---ERROR_DETAILS---")
-        print(format_failed_tests_with_errors(failed_tests))
+    issue_body = generate_issue_body(
+        status_ja=args.status_ja,
+        total_tests=args.total_tests,
+        passed=args.passed,
+        failed=args.failed,
+        timed_out=args.timed_out,
+        failed_tests_list=failed_tests_list,
+        error_details=error_details,
+        workflow=args.workflow,
+        job=args.job,
+        run_id=args.run_id,
+        run_attempt=args.run_attempt,
+        ref=args.ref,
+        commit=args.commit,
+        server_url=args.server_url,
+        repository=args.repository,
+    )
     
+    print(issue_body)
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
+
+{% endraw %}
+```
+
+### .github/workflows/build_windows.yml
+```yml
+{% raw %}
+name: Windows CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/index
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry/cache
+          key: ${{ runner.os }}-cargo-deps-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build code
+        run: cargo build --locked --verbose
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Run tests with nextest
+        id: test
+        timeout-minutes: 15
+        continue-on-error: true
+        run: |
+          cargo nextest run 2>&1 | Tee-Object -FilePath test_output.log
+          exit $LASTEXITCODE
+
+      - name: Parse test results from JUnit XML
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: test_summary
+        shell: pwsh
+        run: |
+          $junitFile = "target/nextest/default/junit.xml"
+          
+          if (Test-Path $junitFile) {
+            python3 .github/scripts/parse_nextest_junit.py --junit-file "$junitFile" --github-output $env:GITHUB_OUTPUT
+            if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to parse JUnit XML file"
+              exit 1
+            }
+          } else {
+            # Create temporary files for fallback case
+            $failedTestsListFile = [System.IO.Path]::GetTempFileName()
+            $errorDetailsFile = [System.IO.Path]::GetTempFileName()
+            
+            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $failedTestsListFile -Encoding utf8
+            "JUnit XMLファイルが見つかりませんでした" | Out-File -FilePath $errorDetailsFile -Encoding utf8
+            
+            "total_tests=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "passed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "timed_out=不明" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "failed_tests_list_file=$failedTestsListFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "error_details_file=$errorDetailsFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+
+
+      - name: Upload test log artifacts
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: |
+            test_output.log
+            target/nextest/default/junit.xml
+          retention-days: 30
+
+      - name: Determine failure status
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: failure_status
+        shell: pwsh
+        run: |
+          if ("${{ steps.test.outcome }}" -eq "cancelled" -or "${{ steps.test.outcome }}" -eq "timed_out") {
+            "status_en=timed out" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=タイムアウトによりキャンセル" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "status_en=failed" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+            "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+
+      - name: Generate issue body
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        id: issue_body
+        shell: pwsh
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
+            --status-ja "${{ steps.failure_status.outputs.status_ja }}" `
+            --total-tests "${{ steps.test_summary.outputs.total_tests }}" `
+            --passed "${{ steps.test_summary.outputs.passed }}" `
+            --failed "${{ steps.test_summary.outputs.failed }}" `
+            --timed-out "${{ steps.test_summary.outputs.timed_out }}" `
+            --failed-tests-list-file "${{ steps.test_summary.outputs.failed_tests_list_file }}" `
+            --error-details-file "${{ steps.test_summary.outputs.error_details_file }}" `
+            --workflow "${{ github.workflow }}" `
+            --job "${{ github.job }}" `
+            --run-id "${{ github.run_id }}" `
+            --run-attempt "${{ github.run_attempt }}" `
+            --ref "${{ github.ref }}" `
+            --commit "${{ github.sha }}" `
+            --server-url "${{ github.server_url }}" `
+            --repository "${{ github.repository }}"
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to generate issue body"
+            exit 1
+          }
+          
+          "body<<EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          $issueBody | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create issue on failure
+        if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
+        uses: dacbd/create-issue-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
+          body: ${{ steps.issue_body.outputs.body }}
+          labels: "ci,windows,auto-generated"
 
 {% endraw %}
 ```
@@ -1248,11 +1633,11 @@ if __name__ == "__main__":
 {% endraw %}
 ```
 
-### issue-notes/156.md
+### issue-notes/161.md
 ```md
 {% raw %}
-# issue PR 155 のソースコードレビュー指摘に対応する #156
-[issues #156](https://github.com/cat2151/ym2151-log-play-server/issues/156)
+# issue build_windows.ymlがエラーになったのでエラーログを元に修正する #161
+[issues #161](https://github.com/cat2151/ym2151-log-play-server/issues/161)
 
 
 
@@ -1261,28 +1646,30 @@ if __name__ == "__main__":
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-e80f89a Add issue note for #156 [auto]
-ca89b29 Merge pull request #155 from cat2151/copilot/improve-build-windows-yml
-3ea9d4b Address code review feedback
-5606bbc Improve build_windows.yml to pass large data via files instead of command-line arguments
-bbe3a58 Initial plan
-3eef7a0 Add issue note for #154 [auto]
-0b4f89f Merge pull request #153 from cat2151/copilot/review-improve-build-windows
-68f58f3 Simplify build_windows.yml and Python scripts - remove redundant processing
-5a6d24d Initial plan
-155acf8 Add issue note for #152 [auto]
+b7fb5bb Add issue note for #161 [auto]
+7abfe77 Change GEMINI_MODEL_NAME to gemini-2.5-flash
+74f9edc Merge pull request #159 from cat2151/copilot/fix-gemini-url-404-error
+d80f73a Address PR feedback: mask API key, update model name, enhance tests
+22524a0 Fix Gemini API 404 error handling and correct model name
+ce07297 Initial plan
+73309c9 Add issue note for #158 [auto]
+2d153ca Merge pull request #157 from cat2151/copilot/address-pr-155-review-comments
+20eef11 Update project summaries (overview & development status) [auto]
+02c90db Update comment to clarify exception handling purpose
 
 ### 変更されたファイル:
 .github/scripts/generate_test_failure_issue.py
 .github/scripts/parse_nextest_junit.py
 .github/scripts/test_generate_test_failure_issue.py
 .github/scripts/test_parse_nextest_junit.py
-.github/workflows/build_windows.yml
-issue-notes/150.md
-issue-notes/152.md
-issue-notes/154.md
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 issue-notes/156.md
+issue-notes/158.md
+issue-notes/161.md
 
 
 ---
-Generated at: 2025-12-27 07:01:36 JST
+Generated at: 2025-12-28 07:01:33 JST
