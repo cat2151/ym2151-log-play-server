@@ -10,8 +10,8 @@ import urllib.error
 from typing import Optional
 
 GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-GEMINI_MODEL_NAME = "gemini-3-pro-preview"
-
+# GEMINI_MODEL_NAME = "gemini-3-pro-preview"
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
     api_key = os.getenv("GEMINI_API_KEY")
