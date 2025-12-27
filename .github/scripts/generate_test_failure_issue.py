@@ -118,14 +118,18 @@ def generate_issue_body(
     sections = []
     
     if error_details:
-        japanese_translation = translate_error_messages_with_gemini(error_details)
-        if japanese_translation:
-            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
-            sections.append("")
-            sections.append(japanese_translation)
-            sections.append("")
-            sections.append("---")
-            sections.append("")
+        try:
+            japanese_translation = translate_error_messages_with_gemini(error_details)
+            if japanese_translation:
+                sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+                sections.append("")
+                sections.append(japanese_translation)
+                sections.append("")
+                sections.append("---")
+                sections.append("")
+        except (ValueError, Exception) as e:
+            # Skip translation if API key is missing or API call fails
+            print(f"Warning: Skipping Gemini translation: {e}", file=sys.stderr)
     
     sections.append("## 失敗したテスト")
     sections.append("")
@@ -190,50 +194,65 @@ def read_file_content(file_path: str, file_description: str) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--status-ja", required=True)
-    parser.add_argument("--total-tests", required=True)
-    parser.add_argument("--passed", required=True)
-    parser.add_argument("--failed", required=True)
-    parser.add_argument("--timed-out", required=True)
-    parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
-    parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
-    parser.add_argument("--workflow", required=True)
-    parser.add_argument("--job", required=True)
-    parser.add_argument("--run-id", required=True)
-    parser.add_argument("--run-attempt", required=True)
-    parser.add_argument("--ref", required=True)
-    parser.add_argument("--commit", required=True)
-    parser.add_argument("--server-url", required=True)
-    parser.add_argument("--repository", required=True)
-    
-    args = parser.parse_args()
-    
-    # Read large data from files to avoid command-line size limitations
-    failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
-    error_details = read_file_content(args.error_details_file, "error details")
-    
-    issue_body = generate_issue_body(
-        status_ja=args.status_ja,
-        total_tests=args.total_tests,
-        passed=args.passed,
-        failed=args.failed,
-        timed_out=args.timed_out,
-        failed_tests_list=failed_tests_list,
-        error_details=error_details,
-        workflow=args.workflow,
-        job=args.job,
-        run_id=args.run_id,
-        run_attempt=args.run_attempt,
-        ref=args.ref,
-        commit=args.commit,
-        server_url=args.server_url,
-        repository=args.repository,
-    )
-    
-    print(issue_body)
-    return 0
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--status-ja", required=True)
+        parser.add_argument("--total-tests", required=True)
+        parser.add_argument("--passed", required=True)
+        parser.add_argument("--failed", required=True)
+        parser.add_argument("--timed-out", required=True)
+        parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
+        parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
+        parser.add_argument("--workflow", required=True)
+        parser.add_argument("--job", required=True)
+        parser.add_argument("--run-id", required=True)
+        parser.add_argument("--run-attempt", required=True)
+        parser.add_argument("--ref", required=True)
+        parser.add_argument("--commit", required=True)
+        parser.add_argument("--server-url", required=True)
+        parser.add_argument("--repository", required=True)
+        
+        args = parser.parse_args()
+        
+        # Read large data from files to avoid command-line size limitations
+        failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
+        error_details = read_file_content(args.error_details_file, "error details")
+        
+        issue_body = generate_issue_body(
+            status_ja=args.status_ja,
+            total_tests=args.total_tests,
+            passed=args.passed,
+            failed=args.failed,
+            timed_out=args.timed_out,
+            failed_tests_list=failed_tests_list,
+            error_details=error_details,
+            workflow=args.workflow,
+            job=args.job,
+            run_id=args.run_id,
+            run_attempt=args.run_attempt,
+            ref=args.ref,
+            commit=args.commit,
+            server_url=args.server_url,
+            repository=args.repository,
+        )
+        
+        print(issue_body)
+        return 0
+    except SystemExit:
+        # Re-raise SystemExit to preserve exit codes from read_file_content
+        raise
+    except Exception as e:
+        print(f"Error in main: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
