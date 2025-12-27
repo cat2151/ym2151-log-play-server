@@ -10,7 +10,7 @@ import urllib.error
 from typing import Optional
 
 GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-GEMINI_MODEL_NAME = "gemini-3-flash"
+GEMINI_MODEL_NAME = "gemini-1.5-flash"
 
 
 def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
@@ -64,7 +64,28 @@ def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
                         if len(parts) > 0 and 'text' in parts[0]:
                             return parts[0]['text'].strip()
             return None
-        except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        except urllib.error.HTTPError as e:
+            # For 4xx client errors, fail immediately as retrying won't help
+            # These indicate problems with the request itself (wrong URL, authentication, etc.)
+            if 400 <= e.code < 500:
+                print(f"Error: Gemini API client error (HTTP {e.code}). Please check the configuration.", file=sys.stderr)
+                print(f"URL: {url}", file=sys.stderr)
+                print(f"Model name: {GEMINI_MODEL_NAME}", file=sys.stderr)
+                if e.code == 404:
+                    print(f"Note: The model or endpoint was not found. Verify the model name is correct.", file=sys.stderr)
+                elif e.code == 401 or e.code == 403:
+                    print(f"Note: Authentication failed. Verify the GEMINI_API_KEY is correct.", file=sys.stderr)
+                return None
+            # For 5xx server errors, retry with exponential backoff
+            if attempt < max_retries - 1:
+                delay = min(base_delay * (2 ** attempt), max_delay)
+                print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): HTTP {e.code}. Retrying in {delay}s...", file=sys.stderr)
+                time.sleep(delay)
+            else:
+                print(f"Error: Gemini API failed after {max_retries} attempts: HTTP {e.code}", file=sys.stderr)
+                return None
+        except urllib.error.URLError as e:
+            # Network errors might be transient, so retry
             if attempt < max_retries - 1:
                 delay = min(base_delay * (2 ** attempt), max_delay)
                 print(f"Warning: Gemini API error (attempt {attempt + 1}/{max_retries}): {e}. Retrying in {delay}s...", file=sys.stderr)

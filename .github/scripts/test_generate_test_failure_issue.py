@@ -308,6 +308,78 @@ class TestTranslateErrorMessages(unittest.TestCase):
         finally:
             if 'GEMINI_API_KEY' in os.environ:
                 del os.environ['GEMINI_API_KEY']
+    
+    @patch('generate_test_failure_issue.urllib.request.urlopen')
+    @patch('generate_test_failure_issue.time.sleep')
+    def test_translate_api_404_error_no_retry(self, mock_sleep, mock_urlopen):
+        """Test that 404 errors fail immediately without retrying."""
+        os.environ['GEMINI_API_KEY'] = "test-api-key"
+        
+        # Create a mock HTTPError with 404 status
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            url="http://test.com",
+            code=404,
+            msg="Not Found",
+            hdrs={},
+            fp=None
+        )
+        
+        try:
+            result = translate_error_messages_with_gemini("Error message")
+            self.assertIsNone(result)
+            # Should not retry on 404, so sleep should not be called
+            self.assertEqual(mock_sleep.call_count, 0)
+        finally:
+            if 'GEMINI_API_KEY' in os.environ:
+                del os.environ['GEMINI_API_KEY']
+    
+    @patch('generate_test_failure_issue.urllib.request.urlopen')
+    @patch('generate_test_failure_issue.time.sleep')
+    def test_translate_api_400_error_no_retry(self, mock_sleep, mock_urlopen):
+        """Test that 400 errors (Bad Request) fail immediately without retrying."""
+        os.environ['GEMINI_API_KEY'] = "test-api-key"
+        
+        # Create a mock HTTPError with 400 status (client error)
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            url="http://test.com",
+            code=400,
+            msg="Bad Request",
+            hdrs={},
+            fp=None
+        )
+        
+        try:
+            result = translate_error_messages_with_gemini("Error message")
+            self.assertIsNone(result)
+            # Should not retry on 400, so sleep should not be called
+            self.assertEqual(mock_sleep.call_count, 0)
+        finally:
+            if 'GEMINI_API_KEY' in os.environ:
+                del os.environ['GEMINI_API_KEY']
+    
+    @patch('generate_test_failure_issue.urllib.request.urlopen')
+    @patch('generate_test_failure_issue.time.sleep')
+    def test_translate_api_500_error_with_retry(self, mock_sleep, mock_urlopen):
+        """Test that 500 errors retry with exponential backoff."""
+        os.environ['GEMINI_API_KEY'] = "test-api-key"
+        
+        # Create a mock HTTPError with 500 status (server error)
+        mock_urlopen.side_effect = urllib.error.HTTPError(
+            url="http://test.com",
+            code=500,
+            msg="Internal Server Error",
+            hdrs={},
+            fp=None
+        )
+        
+        try:
+            result = translate_error_messages_with_gemini("Error message")
+            self.assertIsNone(result)
+            # Should retry 7 times (max_retries=8, so 7 retries after first attempt)
+            self.assertEqual(mock_sleep.call_count, 7)
+        finally:
+            if 'GEMINI_API_KEY' in os.environ:
+                del os.environ['GEMINI_API_KEY']
 
 
 if __name__ == '__main__':
