@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+# IMPORTANT: Gemini API translation is REQUIRED for this script.
+# If the GEMINI_API_KEY is not set or the API call fails, the script MUST fail early.
+# Fallback behavior (skipping translation) is strictly forbidden.
+# This ensures that any configuration or API issues are immediately visible to the user.
+
 import argparse
 import json
 import os
@@ -8,6 +13,13 @@ import time
 import urllib.request
 import urllib.error
 from typing import Optional
+
+# Force UTF-8 encoding for stdout to handle Unicode characters (emoji, Japanese text)
+# on Windows consoles that default to cp1252 encoding
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 # GEMINI_MODEL_NAME = "gemini-3-pro-preview"
