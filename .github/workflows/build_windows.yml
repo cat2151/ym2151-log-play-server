@@ -102,12 +102,18 @@ jobs:
             "status_ja=失敗" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           }
 
+      # IMPORTANT: Gemini API translation is REQUIRED for generating issue bodies.
+      # If the GEMINI_API_KEY secret is not set or the API call fails, this step MUST fail.
+      # Fallback behavior (skipping translation) is strictly forbidden.
+      # This ensures configuration or API issues are immediately visible.
       - name: Generate issue body
         if: always() && (steps.test.outcome == 'failure' || steps.test.outcome == 'cancelled' || steps.test.outcome == 'timed_out')
         id: issue_body
         shell: pwsh
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Force Python to use UTF-8 encoding to handle Unicode (emoji, Japanese text) on Windows
+          PYTHONIOENCODING: utf-8
         run: |
           $issueBody = python3 .github/scripts/generate_test_failure_issue.py `
             --status-ja "${{ steps.failure_status.outputs.status_ja }}" `

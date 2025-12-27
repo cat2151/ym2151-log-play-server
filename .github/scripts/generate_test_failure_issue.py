@@ -1,14 +1,25 @@
 #!/usr/bin/env python3
 
+# IMPORTANT: Gemini API translation is REQUIRED for this script.
+# If the GEMINI_API_KEY is not set or the API call fails, the script MUST fail early.
+# Fallback behavior (skipping translation) is strictly forbidden.
+# This ensures that any configuration or API issues are immediately visible to the user.
+
 import argparse
 import json
 import os
 import sys
 import time
-import traceback
 import urllib.request
 import urllib.error
 from typing import Optional
+
+# Force UTF-8 encoding for stdout to handle Unicode characters (emoji, Japanese text)
+# on Windows consoles that default to cp1252 encoding
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 # GEMINI_MODEL_NAME = "gemini-3-pro-preview"
@@ -119,18 +130,14 @@ def generate_issue_body(
     sections = []
     
     if error_details:
-        try:
-            japanese_translation = translate_error_messages_with_gemini(error_details)
-            if japanese_translation:
-                sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
-                sections.append("")
-                sections.append(japanese_translation)
-                sections.append("")
-                sections.append("---")
-                sections.append("")
-        except Exception as e:
-            # Skip translation if API key is missing or API call fails
-            print(f"Warning: Skipping Gemini translation: {e}", file=sys.stderr)
+        japanese_translation = translate_error_messages_with_gemini(error_details)
+        if japanese_translation:
+            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
+            sections.append("")
+            sections.append(japanese_translation)
+            sections.append("")
+            sections.append("---")
+            sections.append("")
     
     sections.append("## 失敗したテスト")
     sections.append("")
@@ -195,57 +202,49 @@ def read_file_content(file_path: str, file_description: str) -> str:
 
 
 def main():
-    try:
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--status-ja", required=True)
-        parser.add_argument("--total-tests", required=True)
-        parser.add_argument("--passed", required=True)
-        parser.add_argument("--failed", required=True)
-        parser.add_argument("--timed-out", required=True)
-        parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
-        parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
-        parser.add_argument("--workflow", required=True)
-        parser.add_argument("--job", required=True)
-        parser.add_argument("--run-id", required=True)
-        parser.add_argument("--run-attempt", required=True)
-        parser.add_argument("--ref", required=True)
-        parser.add_argument("--commit", required=True)
-        parser.add_argument("--server-url", required=True)
-        parser.add_argument("--repository", required=True)
-        
-        args = parser.parse_args()
-        
-        # Read large data from files to avoid command-line size limitations
-        failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
-        error_details = read_file_content(args.error_details_file, "error details")
-        
-        issue_body = generate_issue_body(
-            status_ja=args.status_ja,
-            total_tests=args.total_tests,
-            passed=args.passed,
-            failed=args.failed,
-            timed_out=args.timed_out,
-            failed_tests_list=failed_tests_list,
-            error_details=error_details,
-            workflow=args.workflow,
-            job=args.job,
-            run_id=args.run_id,
-            run_attempt=args.run_attempt,
-            ref=args.ref,
-            commit=args.commit,
-            server_url=args.server_url,
-            repository=args.repository,
-        )
-        
-        print(issue_body)
-        return 0
-    except SystemExit:
-        # Re-raise SystemExit to preserve exit codes from read_file_content
-        raise
-    except Exception as e:
-        print(f"Error in main: {e}", file=sys.stderr)
-        traceback.print_exc()
-        return 1
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--status-ja", required=True)
+    parser.add_argument("--total-tests", required=True)
+    parser.add_argument("--passed", required=True)
+    parser.add_argument("--failed", required=True)
+    parser.add_argument("--timed-out", required=True)
+    parser.add_argument("--failed-tests-list-file", required=True, help="Path to file containing failed tests list")
+    parser.add_argument("--error-details-file", required=True, help="Path to file containing error details")
+    parser.add_argument("--workflow", required=True)
+    parser.add_argument("--job", required=True)
+    parser.add_argument("--run-id", required=True)
+    parser.add_argument("--run-attempt", required=True)
+    parser.add_argument("--ref", required=True)
+    parser.add_argument("--commit", required=True)
+    parser.add_argument("--server-url", required=True)
+    parser.add_argument("--repository", required=True)
+    
+    args = parser.parse_args()
+    
+    # Read large data from files to avoid command-line size limitations
+    failed_tests_list = read_file_content(args.failed_tests_list_file, "failed tests list")
+    error_details = read_file_content(args.error_details_file, "error details")
+    
+    issue_body = generate_issue_body(
+        status_ja=args.status_ja,
+        total_tests=args.total_tests,
+        passed=args.passed,
+        failed=args.failed,
+        timed_out=args.timed_out,
+        failed_tests_list=failed_tests_list,
+        error_details=error_details,
+        workflow=args.workflow,
+        job=args.job,
+        run_id=args.run_id,
+        run_attempt=args.run_attempt,
+        ref=args.ref,
+        commit=args.commit,
+        server_url=args.server_url,
+        repository=args.repository,
+    )
+    
+    print(issue_body)
+    return 0
 
 
 if __name__ == "__main__":
