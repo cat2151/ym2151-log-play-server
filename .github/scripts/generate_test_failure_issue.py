@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import time
+import traceback
 import urllib.request
 import urllib.error
 from typing import Optional
@@ -127,7 +128,7 @@ def generate_issue_body(
                 sections.append("")
                 sections.append("---")
                 sections.append("")
-        except (ValueError, Exception) as e:
+        except Exception as e:
             # Skip translation if API key is missing or API call fails
             print(f"Warning: Skipping Gemini translation: {e}", file=sys.stderr)
     
@@ -243,7 +244,6 @@ def main():
         raise
     except Exception as e:
         print(f"Error in main: {e}", file=sys.stderr)
-        import traceback
         traceback.print_exc()
         return 1
 
@@ -253,6 +253,5 @@ if __name__ == "__main__":
         sys.exit(main())
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
-        import traceback
         traceback.print_exc()
         sys.exit(1)
