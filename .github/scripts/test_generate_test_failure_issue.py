@@ -325,10 +325,27 @@ class TestTranslateErrorMessages(unittest.TestCase):
         )
         
         try:
-            result = translate_error_messages_with_gemini("Error message")
+            import io
+            import contextlib
+            
+            # Capture stderr output
+            stderr_capture = io.StringIO()
+            with contextlib.redirect_stderr(stderr_capture):
+                result = translate_error_messages_with_gemini("Error message")
+            
             self.assertIsNone(result)
             # Should not retry on 404, so sleep should not be called
             self.assertEqual(mock_sleep.call_count, 0)
+            
+            # Verify diagnostic messages are printed to stderr
+            stderr_output = stderr_capture.getvalue()
+            self.assertIn("Error: Gemini API client error (HTTP 404)", stderr_output)
+            self.assertIn("URL:", stderr_output)
+            self.assertIn("gemini-3-pro-preview", stderr_output)
+            self.assertIn("key=***", stderr_output)  # Verify API key is masked
+            self.assertNotIn("test-api-key", stderr_output)  # Verify actual key not printed
+            self.assertIn("Model name: gemini-3-pro-preview", stderr_output)
+            self.assertIn("Note: The model or endpoint was not found", stderr_output)
         finally:
             if 'GEMINI_API_KEY' in os.environ:
                 del os.environ['GEMINI_API_KEY']
@@ -349,10 +366,26 @@ class TestTranslateErrorMessages(unittest.TestCase):
         )
         
         try:
-            result = translate_error_messages_with_gemini("Error message")
+            import io
+            import contextlib
+            
+            # Capture stderr output
+            stderr_capture = io.StringIO()
+            with contextlib.redirect_stderr(stderr_capture):
+                result = translate_error_messages_with_gemini("Error message")
+            
             self.assertIsNone(result)
             # Should not retry on 400, so sleep should not be called
             self.assertEqual(mock_sleep.call_count, 0)
+            
+            # Verify diagnostic messages are printed to stderr
+            stderr_output = stderr_capture.getvalue()
+            self.assertIn("Error: Gemini API client error (HTTP 400)", stderr_output)
+            self.assertIn("URL:", stderr_output)
+            self.assertIn("gemini-3-pro-preview", stderr_output)
+            self.assertIn("key=***", stderr_output)  # Verify API key is masked
+            self.assertNotIn("test-api-key", stderr_output)  # Verify actual key not printed
+            self.assertIn("Model name: gemini-3-pro-preview", stderr_output)
         finally:
             if 'GEMINI_API_KEY' in os.environ:
                 del os.environ['GEMINI_API_KEY']

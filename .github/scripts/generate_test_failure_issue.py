@@ -10,7 +10,7 @@ import urllib.error
 from typing import Optional
 
 GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-GEMINI_MODEL_NAME = "gemini-1.5-flash"
+GEMINI_MODEL_NAME = "gemini-3-pro-preview"
 
 
 def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
@@ -68,8 +68,10 @@ def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
             # For 4xx client errors, fail immediately as retrying won't help
             # These indicate problems with the request itself (wrong URL, authentication, etc.)
             if 400 <= e.code < 500:
+                # Create a safe URL for logging (mask the API key)
+                safe_url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key=***"
                 print(f"Error: Gemini API client error (HTTP {e.code}). Please check the configuration.", file=sys.stderr)
-                print(f"URL: {url}", file=sys.stderr)
+                print(f"URL: {safe_url}", file=sys.stderr)
                 print(f"Model name: {GEMINI_MODEL_NAME}", file=sys.stderr)
                 if e.code == 404:
                     print(f"Note: The model or endpoint was not found. Verify the model name is correct.", file=sys.stderr)
