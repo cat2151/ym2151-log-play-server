@@ -230,109 +230,121 @@ impl CommandHandler {
         data: serde_json::Value,
         audio_player: &Option<AudioPlayer>,
     ) -> Response {
+        // Early return: Check if in interactive mode
         let state = self.state.lock().unwrap();
         if *state != ServerState::Interactive {
             logging::log_always_server(&format!(
                 "⚠️  インタラクティブモードではありません。現在の状態: {:?}",
                 *state
             ));
-            Response::Error {
+            return Response::Error {
                 message: format!("Not in interactive mode (current state: {:?})", *state),
-            }
-        } else {
-            drop(state);
-
-            // Convert JSON value to string for parsing
-            let json_result = serde_json::to_string(&data);
-
-            match json_result {
-                Ok(json_str) => {
-                    logging::log_verbose_server("🎵 インタラクティブモードでJSONを処理中...");
-
-                    // Parse the JSON event log (time in seconds)
-                    match EventLog::from_json_str(&json_str) {
-                        Ok(event_log) => {
-                            if !event_log.validate() {
-                                logging::log_always_server("❌ 無効なイベントログです");
-                                Response::Error {
-                                    message: "Invalid event log: validation failed".to_string(),
-                                }
-                            } else if let Some(ref player_ref) = audio_player {
-                                // Get current server time
-                                let current_time_sec = {
-                                    let tracker = self.time_tracker.lock().unwrap();
-                                    tracker.elapsed_sec()
-                                };
-
-                                // Find the first event time to determine clear threshold
-                                if let Some(first_event) = event_log.events.first() {
-                                    let first_scheduled_samples = crate::scheduler::sec_to_samples(
-                                        current_time_sec + first_event.time,
-                                    );
-                                    
-                                    // Clear all events from the first scheduled time onwards
-                                    player_ref.clear_schedule_from(first_scheduled_samples);
-                                    logging::log_verbose_server(&format!(
-                                        "🗑️  サンプル時刻 {} 以降のスケジュール済みイベントをクリアしました",
-                                        first_scheduled_samples
-                                    ));
-                                }
-
-                                logging::log_verbose_server(&format!(
-                                    "📝 {}個のイベントをスケジュール中...",
-                                    event_log.events.len()
-                                ));
-
-                                let mut success_count = 0;
-
-                                // Schedule all events (time is already in seconds)
-                                for event in &event_log.events {
-                                    // Time is already in seconds, just add current time offset
-                                    let scheduled_samples = crate::scheduler::sec_to_samples(
-                                        current_time_sec + event.time,
-                                    );
-
-                                    player_ref.schedule_register_write(
-                                        scheduled_samples,
-                                        event.addr,
-                                        event.data,
-                                    );
-                                    success_count += 1;
-                                }
-
-                                logging::log_verbose_server(&format!(
-                                    "✅ {}個のイベントを正常にスケジュールしました",
-                                    success_count
-                                ));
-                                Response::Ok
-                            } else {
-                                logging::log_always_server("⚠️  音声プレーヤーがありません");
-                                Response::Error {
-                                    message: "No audio player found".to_string(),
-                                }
-                            }
-                        }
-                        Err(e) => {
-                            logging::log_always_server(&format!(
-                                "❌ JSONの解析に失敗しました: {}",
-                                e
-                            ));
-                            Response::Error {
-                                message: format!("Failed to parse JSON: {}", e),
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    logging::log_always_server(&format!(
-                        "❌ JSONシリアライズに失敗しました: {}",
-                        e
-                    ));
-                    Response::Error {
-                        message: format!("Failed to serialize JSON: {}", e),
-                    }
-                }
-            }
+            };
         }
+        drop(state);
+
+        // Early return: Serialize JSON
+        let json_str = match serde_json::to_string(&data) {
+            Ok(s) => s,
+            Err(e) => {
+                logging::log_always_server(&format!("❌ JSONシリアライズに失敗しました: {}", e));
+                return Response::Error {
+                    message: format!("Failed to serialize JSON: {}", e),
+                };
+            }
+        };
+
+        logging::log_verbose_server("🎵 インタラクティブモードでJSONを処理中...");
+
+        // Early return: Parse event log
+        let event_log = match EventLog::from_json_str(&json_str) {
+            Ok(log) => log,
+            Err(e) => {
+                logging::log_always_server(&format!("❌ JSONの解析に失敗しました: {}", e));
+                return Response::Error {
+                    message: format!("Failed to parse JSON: {}", e),
+                };
+            }
+        };
+
+        // Early return: Validate event log
+        if !event_log.validate() {
+            logging::log_always_server("❌ 無効なイベントログです");
+            return Response::Error {
+                message: "Invalid event log: validation failed".to_string(),
+            };
+        }
+
+        // Early return: Check audio player exists
+        let player_ref = match audio_player {
+            Some(ref p) => p,
+            None => {
+                logging::log_always_server("⚠️  音声プレーヤーがありません");
+                return Response::Error {
+                    message: "No audio player found".to_string(),
+                };
+            }
+        };
+
+        // Process and schedule events
+        self.schedule_events_for_interactive(&event_log, player_ref)
+    }
+
+    /// Schedule events for interactive playback
+    fn schedule_events_for_interactive(
+        &self,
+        event_log: &EventLog,
+        player_ref: &AudioPlayer,
+    ) -> Response {
+        // Get current server time
+        let current_time_sec = {
+            let tracker = self.time_tracker.lock().unwrap();
+            tracker.elapsed_sec()
+        };
+
+        // Clear schedule from first event time if events exist
+        if let Some(first_event) = event_log.events.first() {
+            let first_scheduled_samples =
+                crate::scheduler::sec_to_samples(current_time_sec + first_event.time);
+
+            player_ref.clear_schedule_from(first_scheduled_samples);
+            logging::log_verbose_server(&format!(
+                "🗑️  サンプル時刻 {} 以降のスケジュール済みイベントをクリアしました",
+                first_scheduled_samples
+            ));
+        }
+
+        logging::log_verbose_server(&format!(
+            "📝 {}個のイベントをスケジュール中...",
+            event_log.events.len()
+        ));
+
+        // Schedule all events
+        let success_count = self.schedule_all_events(event_log, player_ref, current_time_sec);
+
+        logging::log_verbose_server(&format!(
+            "✅ {}個のイベントを正常にスケジュールしました",
+            success_count
+        ));
+        Response::Ok
+    }
+
+    /// Schedule all events with time offset
+    fn schedule_all_events(
+        &self,
+        event_log: &EventLog,
+        player_ref: &AudioPlayer,
+        current_time_sec: f64,
+    ) -> usize {
+        let mut success_count = 0;
+
+        for event in &event_log.events {
+            let scheduled_samples = crate::scheduler::sec_to_samples(current_time_sec + event.time);
+
+            player_ref.schedule_register_write(scheduled_samples, event.addr, event.data);
+            success_count += 1;
+        }
+
+        success_count
     }
 }
