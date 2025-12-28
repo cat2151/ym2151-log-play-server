@@ -308,8 +308,31 @@ impl CommandHandler {
             }
         };
 
-        // Use future scheduling offset for stable audio without dropouts
-        let future_offset_sec = crate::audio_config::timing::FUTURE_SCHEDULING_OFFSET_SEC;
+        // Determine scheduling mode based on first event time
+        // If first event is at time 0.0, use ASAP mode (like Web Audio API)
+        // Otherwise, use future-scheduled mode with safety buffer
+        let is_asap_mode = event_log
+            .events
+            .first()
+            .map(|e| e.time == 0.0)
+            .unwrap_or(false);
+
+        let future_offset_sec = if is_asap_mode {
+            // ASAP mode: no future offset, play as soon as possible
+            0.0
+        } else {
+            // Future-scheduled mode: use safety buffer to prevent dropouts
+            crate::audio_config::timing::FUTURE_SCHEDULING_OFFSET_SEC
+        };
+
+        if is_asap_mode {
+            logging::log_verbose_server("⚡ ASAPモード: 最速で再生開始");
+        } else {
+            logging::log_verbose_server(&format!(
+                "⏰ 未来スケジュールモード: {}秒後に再生開始",
+                future_offset_sec
+            ));
+        }
 
         // Clear schedule from first event time if events exist
         if let Some(first_event) = event_log.events.first() {
