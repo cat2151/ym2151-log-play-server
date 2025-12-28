@@ -3,6 +3,8 @@ mod connection;
 mod playback;
 mod state;
 
+pub use command_handler::CommandHandler;
+pub use playback::PlaybackManager;
 pub use state::ServerState;
 
 use crate::audio::AudioPlayer;
