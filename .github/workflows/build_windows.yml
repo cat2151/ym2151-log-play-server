@@ -146,6 +146,6 @@ jobs:
         uses: dacbd/create-issue-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "[CI] Windows build or test ${{ steps.failure_status.outputs.status_en }}"
+          title: "test ${{ steps.failure_status.outputs.status_en }}"
           body: ${{ steps.issue_body.outputs.body }}
           labels: "ci,windows,auto-generated"
