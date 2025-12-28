@@ -33,14 +33,21 @@ def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
     if not error_details or not error_details.strip():
         return None
     url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key={api_key}"
-    prompt = f"""以下のテスト失敗情報を日本語に翻訳してください。
+    prompt = f"""【前提】
+以下のエラーログは、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
 
-失敗したテストとエラー:
+【タスク】
+各テストのエラーメッセージを日本語に翻訳してください。
+
+【制約】
+- 出力は翻訳結果のみ
+- 「これは日本語訳です」といった自己言及的な前置きは禁止
+- 原文の構造（改行・箇条書き）を維持する
+
+【入力】
 ```
 {error_details}
-```
-
-日本語訳:"""
+```"""
     
     data = {
         "contents": [{
