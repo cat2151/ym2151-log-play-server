@@ -165,8 +165,11 @@ fn test_binary_server_time_response_roundtrip() {
 }
 
 #[test]
-fn test_binary_clear_schedule_roundtrip() {
-    let original = Command::ClearSchedule;
+fn test_binary_play_json_in_interactive_roundtrip() {
+    let json_data = serde_json::json!({
+        "events": [{"time": 0, "addr": "0x08", "data": "0x00"}]
+    });
+    let original = Command::PlayJsonInInteractive { data: json_data };
     let binary = original.to_binary().unwrap();
     let parsed = Command::from_binary(&binary).unwrap();
     assert_eq!(original, parsed);

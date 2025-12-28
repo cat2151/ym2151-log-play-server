@@ -312,6 +312,56 @@ fn test_clear_schedule() {
 }
 
 #[test]
+fn test_clear_schedule_from() {
+    let player = Player::new_interactive();
+
+    // Schedule some events at different times
+    player.schedule_register_write(100, 0x08, 0x78);
+    player.schedule_register_write(200, 0x20, 0xC7);
+    player.schedule_register_write(300, 0x28, 0x3E);
+    player.schedule_register_write(400, 0x30, 0x4F);
+
+    // Verify all events were added
+    {
+        let queue = player.get_event_queue();
+        let q = queue.lock().unwrap();
+        assert_eq!(q.len(), 4);
+    }
+
+    // Clear events from time 250 onwards (should keep first 2, remove last 2)
+    player.clear_schedule_from(250);
+
+    // Verify only events before time 250 remain
+    {
+        let queue = player.get_event_queue();
+        let q = queue.lock().unwrap();
+        assert_eq!(q.len(), 2);
+        assert_eq!(q[0].time, 100);
+        assert_eq!(q[1].time, 200);
+    }
+}
+
+#[test]
+fn test_clear_schedule_from_boundary() {
+    let player = Player::new_interactive();
+
+    // Schedule events
+    player.schedule_register_write(100, 0x08, 0x78);
+    player.schedule_register_write(200, 0x20, 0xC7);
+    player.schedule_register_write(300, 0x28, 0x3E);
+
+    // Clear from exactly time 200 (should keep only first event)
+    player.clear_schedule_from(200);
+
+    {
+        let queue = player.get_event_queue();
+        let q = queue.lock().unwrap();
+        assert_eq!(q.len(), 1);
+        assert_eq!(q[0].time, 100);
+    }
+}
+
+#[test]
 fn test_clear_schedule_non_interactive_mode() {
     let log = EventLog { events: vec![] };
     let player = Player::new(log);

@@ -13,11 +13,10 @@ pub enum Command {
     /// Get the current server time in the server time coordinate system (f64 seconds)
     /// This allows clients to synchronize with the server's timeline for precise scheduling
     GetServerTime,
-    /// Clear all scheduled events in interactive mode
-    /// This allows seamless phrase transitions without audio gaps
-    ClearSchedule,
     /// Play JSON data in interactive mode
-    /// The server parses the JSON and schedules register writes in interactive mode
+    /// The server parses the JSON and automatically clears future scheduled events
+    /// (events with time >= first event time in the new JSON) before scheduling new events.
+    /// This enables seamless phrase transitions without audio gaps.
     PlayJsonInInteractive {
         data: serde_json::Value,
     },
