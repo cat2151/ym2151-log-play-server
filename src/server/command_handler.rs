@@ -336,15 +336,12 @@ impl CommandHandler {
         player_ref: &AudioPlayer,
         current_time_sec: f64,
     ) -> usize {
-        let mut success_count = 0;
-
         for event in &event_log.events {
             let scheduled_samples = crate::scheduler::sec_to_samples(current_time_sec + event.time);
 
             player_ref.schedule_register_write(scheduled_samples, event.addr, event.data);
-            success_count += 1;
         }
 
-        success_count
+        event_log.events.len()
     }
 }
