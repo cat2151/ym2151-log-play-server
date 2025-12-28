@@ -21,8 +21,6 @@ pub enum Command {
     PlayJsonInInteractive {
         data: serde_json::Value,
     },
-    /// Query if the server is currently in interactive mode
-    GetInteractiveModeState,
     GetServerState,
 }
 
@@ -76,10 +74,6 @@ pub enum Response {
     /// Server time response containing current time in seconds (f64)
     ServerTime {
         time_sec: f64,
-    },
-    /// Interactive mode state response
-    InteractiveModeState {
-        is_interactive: bool,
     },
     /// Server state response
     ServerState {

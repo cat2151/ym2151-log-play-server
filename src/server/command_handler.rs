@@ -55,7 +55,6 @@ impl CommandHandler {
             Command::PlayJsonInInteractive { data } => {
                 self.handle_play_json_in_interactive(data, audio_player)
             }
-            Command::GetInteractiveModeState => self.handle_get_interactive_mode_state(),
             Command::GetServerState => self.handle_get_server_state(),
             Command::Shutdown => {
                 // Shutdown is handled specially in the connection loop
@@ -63,20 +62,6 @@ impl CommandHandler {
                 Response::Ok
             }
         }
-    }
-
-    /// Returns whether the server is currently in interactive mode
-    fn handle_get_interactive_mode_state(&self) -> Response {
-        let state = self.state.lock().unwrap();
-        let is_interactive = *state == ServerState::Interactive;
-
-        let fn_name = std::any::type_name::<Self>();
-        logging::log_verbose_server(&format!(
-            "🔍 [{}] インタラクティブモード: {}, state: {:?}",
-            fn_name, is_interactive, state
-        ));
-
-        Response::InteractiveModeState { is_interactive }
     }
 
     fn handle_get_server_state(&self) -> Response {
