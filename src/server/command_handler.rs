@@ -320,7 +320,7 @@ impl CommandHandler {
         ));
 
         // Schedule all events
-        let success_count = self.schedule_all_events(event_log, player_ref, current_time_sec);
+        let success_count = Self::schedule_all_events(event_log, player_ref, current_time_sec);
 
         logging::log_verbose_server(&format!(
             "✅ {}個のイベントを正常にスケジュールしました",
@@ -331,7 +331,6 @@ impl CommandHandler {
 
     /// Schedule all events with time offset
     fn schedule_all_events(
-        &self,
         event_log: &EventLog,
         player_ref: &AudioPlayer,
         current_time_sec: f64,

@@ -44,9 +44,9 @@ fn test_play_json_interactive_error_when_not_in_interactive_mode() {
     }
 }
 
-/// Test that PlayJsonInInteractive returns error with invalid JSON
+/// Test that PlayJsonInInteractive returns error with invalid JSON structure
 #[test]
-fn test_play_json_interactive_error_with_invalid_json() {
+fn test_play_json_interactive_error_with_invalid_json_structure() {
     let state = Arc::new(Mutex::new(ServerState::Interactive));
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
@@ -54,7 +54,7 @@ fn test_play_json_interactive_error_with_invalid_json() {
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
-    // Create invalid JSON (missing required fields)
+    // Create invalid JSON (missing required "events" field)
     let test_json = serde_json::json!({
         "invalid": "data"
     });
@@ -64,15 +64,12 @@ fn test_play_json_interactive_error_with_invalid_json() {
     let mut audio_player = None;
     let response = handler.handle_command(command, &mut audio_player);
 
-    // Should get an error for invalid JSON
+    // Should get an error for invalid JSON parsing
     match response {
         Response::Error { message } => {
-            assert!(
-                message.contains("Failed to parse JSON")
-                    || message.contains("No audio player found")
-            );
+            assert!(message.contains("Failed to parse JSON"));
         }
-        _ => panic!("Expected error response with invalid JSON"),
+        _ => panic!("Expected error response with invalid JSON structure"),
     }
 }
 
