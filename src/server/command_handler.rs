@@ -51,7 +51,6 @@ impl CommandHandler {
             Command::StartInteractive => self.handle_start_interactive(audio_player),
             Command::GetServerTime => self.handle_get_server_time(),
             Command::StopInteractive => self.handle_stop_interactive(audio_player),
-            Command::ClearSchedule => self.handle_clear_schedule(audio_player),
             Command::PlayJsonInInteractive { data } => {
                 self.handle_play_json_in_interactive(data, audio_player)
             }
@@ -226,27 +225,6 @@ impl CommandHandler {
         Response::Ok
     }
 
-    fn handle_clear_schedule(&self, audio_player: &Option<AudioPlayer>) -> Response {
-        let state = self.state.lock().unwrap();
-        if *state != ServerState::Interactive {
-            Response::Error {
-                message: format!("Not in interactive mode (current state: {:?})", *state),
-            }
-        } else {
-            drop(state); // Release lock before clearing
-
-            if let Some(ref player_ref) = audio_player {
-                player_ref.clear_schedule();
-                logging::log_verbose_server("🗑️  スケジュール済みイベントをクリアしました");
-                Response::Ok
-            } else {
-                Response::Error {
-                    message: "No active audio player".to_string(),
-                }
-            }
-        }
-    }
-
     fn handle_play_json_in_interactive(
         &self,
         data: serde_json::Value,
@@ -285,6 +263,20 @@ impl CommandHandler {
                                     let tracker = self.time_tracker.lock().unwrap();
                                     tracker.elapsed_sec()
                                 };
+
+                                // Find the first event time to determine clear threshold
+                                if let Some(first_event) = event_log.events.first() {
+                                    let first_scheduled_samples = crate::scheduler::sec_to_samples(
+                                        current_time_sec + first_event.time,
+                                    );
+                                    
+                                    // Clear all events from the first scheduled time onwards
+                                    player_ref.clear_schedule_from(first_scheduled_samples);
+                                    logging::log_verbose_server(&format!(
+                                        "🗑️  サンプル時刻 {} 以降のスケジュール済みイベントをクリアしました",
+                                        first_scheduled_samples
+                                    ));
+                                }
 
                                 logging::log_verbose_server(&format!(
                                     "📝 {}個のイベントをスケジュール中...",

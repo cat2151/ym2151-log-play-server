@@ -90,7 +90,6 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
             }
             Command::Stop => log_verbose_client("⏳ サーバーに停止要求を送信中..."),
             Command::Shutdown => log_verbose_client("⏳ サーバーにシャットダウン要求を送信中..."),
-            Command::ClearSchedule => log_verbose_client("⏳ スケジュールクリア要求を送信中..."),
             Command::StartInteractive => {
                 log_verbose_client("⏳ インタラクティブモード開始要求を送信中...")
             }
@@ -143,7 +142,6 @@ fn send_command_internal(command: Command, is_interactive: bool) -> Result<()> {
                 }
                 Command::Stop => log_verbose_client("✅ 演奏停止しました"),
                 Command::Shutdown => log_verbose_client("✅ サーバーをシャットダウンしました"),
-                Command::ClearSchedule => log_verbose_client("✅ スケジュールをクリアしました"),
                 _ => {} // Other commands don't have custom success logging
             },
             Response::Error { message } => {

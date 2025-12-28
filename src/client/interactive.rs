@@ -193,43 +193,6 @@ pub fn stop_interactive() -> Result<()> {
     result
 }
 
-/// Clear all scheduled events in interactive mode
-///
-/// Removes all pending register write events from the server's schedule queue.
-/// This allows seamless phrase transitions without audio gaps - you can cancel
-/// phrase 1's scheduled events and immediately start phrase 2.
-///
-/// Note: Events that have already been processed (played) cannot be cleared.
-/// Only future scheduled events are removed.
-///
-/// # Example
-/// ```no_run
-/// # use ym2151_log_play_server::client::interactive;
-/// // Start interactive mode
-/// interactive::start_interactive()?;
-///
-/// // Send JSON for phrase 1
-/// let phrase1_json = r#"{"events": [
-///     {"time": 2797, "addr": "0x08", "data": "0x78"},
-///     {"time": 5594, "addr": "0x20", "data": "0xC7"}
-/// ]}"#;
-/// interactive::play_json_interactive(phrase1_json)?;
-///
-/// // Cancel phrase 1 and switch to phrase 2 without audio gap
-/// interactive::clear_schedule()?;
-/// let phrase2_json = r#"{"events": [
-///     {"time": 2797, "addr": "0x28", "data": "0x3E"}
-/// ]}"#;
-/// interactive::play_json_interactive(phrase2_json)?;
-///
-/// // Stop interactive mode when done
-/// interactive::stop_interactive()?;
-/// # Ok::<(), anyhow::Error>(())
-/// ```
-pub fn clear_schedule() -> Result<()> {
-    send_command_interactive(Command::ClearSchedule)
-}
-
 /// Send ym2151log format JSON data to interactive mode
 ///
 /// This is a convenience function that accepts ym2151log format JSON data
@@ -243,6 +206,10 @@ pub fn clear_schedule() -> Result<()> {
 /// `stop_interactive()`. This allows sending multiple JSONs continuously
 /// without audio gaps.
 ///
+/// The server automatically clears future scheduled events (events with time >=
+/// first event time in the new JSON) before scheduling new events, enabling
+/// seamless phrase transitions without audio gaps.
+///
 /// # Arguments
 /// * `json_data` - JSON string in ym2151log format with time in sample units
 ///
@@ -253,6 +220,7 @@ pub fn clear_schedule() -> Result<()> {
 /// interactive::start_interactive()?;
 ///
 /// // Send multiple JSONs without stopping - no audio gaps!
+/// // Each JSON automatically clears conflicting future events
 /// let json1 = r#"{"events": [
 ///     {"time": 0, "addr": "0x08", "data": "0x00"},
 ///     {"time": 2797, "addr": "0x20", "data": "0xC7"}
@@ -276,6 +244,7 @@ pub fn clear_schedule() -> Result<()> {
 /// - Interactive mode must be stopped manually when done
 /// - JSON parsing and timing conversion are handled client-side
 /// - Register scheduling is handled server-side
+/// - Future events are automatically cleared by the server
 pub fn play_json_interactive(json_data: &str) -> Result<()> {
     log_verbose_client("🎵 JSONデータをパース中...");
 

@@ -250,6 +250,19 @@ impl AudioPlayer {
         }
     }
 
+    /// Clear scheduled events from a specific sample time onwards
+    ///
+    /// This removes all events with time >= from_sample_time while keeping
+    /// earlier events intact, enabling smooth phrase transitions without gaps.
+    ///
+    /// # Arguments
+    /// * `from_sample_time` - Sample time threshold; events at or after this time are removed
+    pub fn clear_schedule_from(&self, from_sample_time: u32) {
+        if let Some(ref sched) = self.scheduler {
+            sched.clear_schedule_from(from_sample_time);
+        }
+    }
+
     /// Get current schedule queue size (number of scheduled events)
     pub fn get_scheduled_event_count(&self) -> Option<usize> {
         self.scheduler
