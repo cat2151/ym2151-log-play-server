@@ -1,3 +1,18 @@
+//! Windows named pipe handle management
+//!
+//! This module manages Windows named pipes with careful attention to handle ownership.
+//!
+//! # Handle Ownership
+//!
+//! There are two distinct use cases:
+//!
+//! 1. **Server-side (NamedPipe)**: Creates a pipe handle that is shared between
+//!    PipeReader and PipeWriter via borrowing. Only the NamedPipe owns and closes
+//!    the handle.
+//!
+//! 2. **Client-side (connect)**: Creates a connection with its own handle that
+//!    is owned by the returned PipeWriter, which closes it on drop.
+
 use std::io;
 use std::path::{Path, PathBuf};
 use windows::Win32::Foundation::{CloseHandle, HANDLE};
@@ -30,6 +45,11 @@ impl NamedPipe {
         Ok(NamedPipe { path, handle })
     }
 
+    /// Wait for a client to connect and return a reader
+    ///
+    /// This is called on the server side. It blocks until a client connects via CreateFileW.
+    /// Returns a PipeReader that borrows the handle from this NamedPipe.
+    /// The handle will NOT be closed when the PipeReader is dropped.
     pub fn open_read(&self) -> io::Result<PipeReader> {
         unsafe {
             ConnectNamedPipe(self.handle, None).map_err(io::Error::other)?;
@@ -38,15 +58,27 @@ impl NamedPipe {
         Ok(PipeReader::new(self.handle))
     }
 
+    /// Create a PipeWriter that uses this NamedPipe's handle
+    ///
+    /// Returns a PipeWriter that borrows the handle from this NamedPipe.
+    /// The handle will NOT be closed when the PipeWriter is dropped.
     pub fn open_write(&self) -> io::Result<PipeWriter> {
         Ok(PipeWriter::new(self.handle))
     }
 
+    /// Create a client connection to the server
+    ///
+    /// This is called on the client side. It waits for the server to accept the connection.
+    /// Returns a PipeWriter that owns its handle and will close it on drop.
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let handle = connect_to_pipe(path)?;
-        Ok(PipeWriter::new(handle))
+        Ok(PipeWriter::new_owned(handle))
     }
 
+    /// Create a client connection to the default pipe path
+    ///
+    /// Convenience method that connects to the default server pipe.
+    /// Returns a PipeWriter that owns its handle and will close it on drop.
     pub fn connect_default() -> io::Result<PipeWriter> {
         Self::connect(DEFAULT_PIPE_PATH)
     }

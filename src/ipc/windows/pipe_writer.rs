@@ -8,11 +8,24 @@ use super::test_logging::{log_client, log_write};
 
 pub struct PipeWriter {
     handle: HANDLE,
+    owns_handle: bool,
 }
 
 impl PipeWriter {
+    /// Create a PipeWriter that borrows a handle (doesn't close on drop)
     pub fn new(handle: HANDLE) -> Self {
-        PipeWriter { handle }
+        PipeWriter {
+            handle,
+            owns_handle: false,
+        }
+    }
+
+    /// Create a PipeWriter that owns a handle (closes on drop)
+    pub fn new_owned(handle: HANDLE) -> Self {
+        PipeWriter {
+            handle,
+            owns_handle: true,
+        }
     }
 
     pub fn write_str(&mut self, data: &str) -> io::Result<()> {
@@ -189,8 +202,11 @@ impl PipeWriter {
 
 impl Drop for PipeWriter {
     fn drop(&mut self) {
-        unsafe {
-            let _ = CloseHandle(self.handle);
+        // Only close the handle if we own it
+        if self.owns_handle {
+            unsafe {
+                let _ = CloseHandle(self.handle);
+            }
         }
     }
 }
