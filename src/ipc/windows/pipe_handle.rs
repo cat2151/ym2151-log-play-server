@@ -44,7 +44,7 @@ impl NamedPipe {
 
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let handle = connect_to_pipe(path)?;
-        Ok(PipeWriter::new(handle))
+        Ok(PipeWriter::new_owned(handle))
     }
 
     pub fn connect_default() -> io::Result<PipeWriter> {
