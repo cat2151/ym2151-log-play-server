@@ -296,16 +296,26 @@ impl CommandHandler {
         event_log: &EventLog,
         player_ref: &AudioPlayer,
     ) -> Response {
-        // Get current server time
-        let current_time_sec = {
-            let tracker = self.time_tracker.lock().unwrap();
-            tracker.elapsed_sec()
+        // Get audio stream elapsed time (not wall-clock time)
+        // This prevents timing jitter caused by variable IPC/parsing latency
+        let audio_stream_elapsed_sec = match player_ref.get_audio_elapsed_sec() {
+            Some(elapsed) => elapsed,
+            None => {
+                logging::log_always_server("⚠️  音声経過時間の取得に失敗しました");
+                return Response::Error {
+                    message: "Failed to get audio elapsed time".to_string(),
+                };
+            }
         };
+
+        // Use future scheduling offset for stable audio without dropouts
+        let future_offset_sec = crate::audio_config::timing::FUTURE_SCHEDULING_OFFSET_SEC;
 
         // Clear schedule from first event time if events exist
         if let Some(first_event) = event_log.events.first() {
-            let first_scheduled_samples =
-                crate::scheduler::sec_to_samples(current_time_sec + first_event.time);
+            let first_scheduled_samples = crate::scheduler::sec_to_samples(
+                audio_stream_elapsed_sec + future_offset_sec + first_event.time,
+            );
 
             player_ref.clear_schedule_from(first_scheduled_samples);
             logging::log_verbose_server(&format!(
@@ -319,8 +329,9 @@ impl CommandHandler {
             event_log.events.len()
         ));
 
-        // Schedule all events
-        let success_count = Self::schedule_all_events(event_log, player_ref, current_time_sec);
+        // Schedule all events using audio stream time
+        let success_count =
+            Self::schedule_all_events(event_log, player_ref, audio_stream_elapsed_sec, future_offset_sec);
 
         logging::log_verbose_server(&format!(
             "✅ {}個のイベントを正常にスケジュールしました",
@@ -329,16 +340,27 @@ impl CommandHandler {
         Response::Ok
     }
 
-    /// Schedule all events with time offset
+    /// Schedule all events with audio stream time and future offset
     fn schedule_all_events(
         event_log: &EventLog,
         player_ref: &AudioPlayer,
-        current_time_sec: f64,
+        audio_stream_elapsed_sec: f64,
+        future_offset_sec: f64,
     ) -> usize {
         for event in &event_log.events {
-            let scheduled_samples = crate::scheduler::sec_to_samples(current_time_sec + event.time);
-
-            player_ref.schedule_register_write(scheduled_samples, event.addr, event.data);
+            // Use audio stream time instead of wall-clock time to prevent jitter
+            if let Err(e) = player_ref.schedule_register_write_fixed_time_with_future_offset(
+                audio_stream_elapsed_sec,
+                future_offset_sec,
+                event.time,
+                event.addr,
+                event.data,
+            ) {
+                logging::log_always_server(&format!(
+                    "⚠️  イベントのスケジュールに失敗: addr=0x{:02X}, data=0x{:02X}, error={}",
+                    event.addr, event.data, e
+                ));
+            }
         }
 
         event_log.events.len()
