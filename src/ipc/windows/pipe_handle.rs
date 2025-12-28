@@ -75,6 +75,10 @@ impl NamedPipe {
         Ok(PipeWriter::new_owned(handle))
     }
 
+    /// Create a client connection to the default pipe path
+    ///
+    /// Convenience method that connects to the default server pipe.
+    /// Returns a PipeWriter that owns its handle and will close it on drop.
     pub fn connect_default() -> io::Result<PipeWriter> {
         Self::connect(DEFAULT_PIPE_PATH)
     }
