@@ -1,4 +1,4 @@
-Last updated: 2025-12-28
+Last updated: 2025-12-29
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -1030,6 +1030,11 @@ MIT License
                                                                                   📖 156.md
                                                                                   📖 158.md
                                                                                   📖 161.md
+                                                                                  📖 165.md
+                                                                                  📖 167.md
+                                                                                  📖 169.md
+                                                                                  📖 173.md
+                                                                                  📖 178.md
                                                                                   📖 96.md
                                                                                   📖 97.md
                                                                                   📖 98.md
@@ -1089,6 +1094,7 @@ MIT License
                                                                                   📁 tests/
                                                                                     📄 audio_tests.rs
                                                                                     📄 client_tests.rs
+                                                                                    📄 command_handler_tests.rs
                                                                                     📄 debug_wav_tests.rs
                                                                                     📄 demo_server_interactive_tests.rs
                                                                                     📄 demo_server_non_interactive_tests.rs
@@ -1176,6 +1182,11 @@ MIT License
                                                                                 📖 156.md
                                                                                 📖 158.md
                                                                                 📖 161.md
+                                                                                📖 165.md
+                                                                                📖 167.md
+                                                                                📖 169.md
+                                                                                📖 173.md
+                                                                                📖 178.md
                                                                                 📖 96.md
                                                                                 📖 97.md
                                                                                 📖 98.md
@@ -1235,6 +1246,7 @@ MIT License
                                                                                 📁 tests/
                                                                                   📄 audio_tests.rs
                                                                                   📄 client_tests.rs
+                                                                                  📄 command_handler_tests.rs
                                                                                   📄 debug_wav_tests.rs
                                                                                   📄 demo_server_interactive_tests.rs
                                                                                   📄 demo_server_non_interactive_tests.rs
@@ -1322,6 +1334,11 @@ MIT License
                                                                               📖 156.md
                                                                               📖 158.md
                                                                               📖 161.md
+                                                                              📖 165.md
+                                                                              📖 167.md
+                                                                              📖 169.md
+                                                                              📖 173.md
+                                                                              📖 178.md
                                                                               📖 96.md
                                                                               📖 97.md
                                                                               📖 98.md
@@ -1381,6 +1398,7 @@ MIT License
                                                                               📁 tests/
                                                                                 📄 audio_tests.rs
                                                                                 📄 client_tests.rs
+                                                                                📄 command_handler_tests.rs
                                                                                 📄 debug_wav_tests.rs
                                                                                 📄 demo_server_interactive_tests.rs
                                                                                 📄 demo_server_non_interactive_tests.rs
@@ -1468,6 +1486,11 @@ MIT License
                                                                             📖 156.md
                                                                             📖 158.md
                                                                             📖 161.md
+                                                                            📖 165.md
+                                                                            📖 167.md
+                                                                            📖 169.md
+                                                                            📖 173.md
+                                                                            📖 178.md
                                                                             📖 96.md
                                                                             📖 97.md
                                                                             📖 98.md
@@ -1527,6 +1550,7 @@ MIT License
                                                                             📁 tests/
                                                                               📄 audio_tests.rs
                                                                               📄 client_tests.rs
+                                                                              📄 command_handler_tests.rs
                                                                               📄 debug_wav_tests.rs
                                                                               📄 demo_server_interactive_tests.rs
                                                                               📄 demo_server_non_interactive_tests.rs
@@ -1614,6 +1638,11 @@ MIT License
                                                                           📖 156.md
                                                                           📖 158.md
                                                                           📖 161.md
+                                                                          📖 165.md
+                                                                          📖 167.md
+                                                                          📖 169.md
+                                                                          📖 173.md
+                                                                          📖 178.md
                                                                           📖 96.md
                                                                           📖 97.md
                                                                           📖 98.md
@@ -1673,6 +1702,7 @@ MIT License
                                                                           📁 tests/
                                                                             📄 audio_tests.rs
                                                                             📄 client_tests.rs
+                                                                            📄 command_handler_tests.rs
                                                                             📄 debug_wav_tests.rs
                                                                             📄 demo_server_interactive_tests.rs
                                                                             📄 demo_server_non_interactive_tests.rs
@@ -1760,6 +1790,11 @@ MIT License
                                                                         📖 156.md
                                                                         📖 158.md
                                                                         📖 161.md
+                                                                        📖 165.md
+                                                                        📖 167.md
+                                                                        📖 169.md
+                                                                        📖 173.md
+                                                                        📖 178.md
                                                                         📖 96.md
                                                                         📖 97.md
                                                                         📖 98.md
@@ -1819,6 +1854,7 @@ MIT License
                                                                         📁 tests/
                                                                           📄 audio_tests.rs
                                                                           📄 client_tests.rs
+                                                                          📄 command_handler_tests.rs
                                                                           📄 debug_wav_tests.rs
                                                                           📄 demo_server_interactive_tests.rs
                                                                           📄 demo_server_non_interactive_tests.rs
@@ -1906,6 +1942,11 @@ MIT License
                                                                       📖 156.md
                                                                       📖 158.md
                                                                       📖 161.md
+                                                                      📖 165.md
+                                                                      📖 167.md
+                                                                      📖 169.md
+                                                                      📖 173.md
+                                                                      📖 178.md
                                                                       📖 96.md
                                                                       📖 97.md
                                                                       📖 98.md
@@ -1965,6 +2006,7 @@ MIT License
                                                                       📁 tests/
                                                                         📄 audio_tests.rs
                                                                         📄 client_tests.rs
+                                                                        📄 command_handler_tests.rs
                                                                         📄 debug_wav_tests.rs
                                                                         📄 demo_server_interactive_tests.rs
                                                                         📄 demo_server_non_interactive_tests.rs
@@ -2052,6 +2094,11 @@ MIT License
                                                                     📖 156.md
                                                                     📖 158.md
                                                                     📖 161.md
+                                                                    📖 165.md
+                                                                    📖 167.md
+                                                                    📖 169.md
+                                                                    📖 173.md
+                                                                    📖 178.md
                                                                     📖 96.md
                                                                     📖 97.md
                                                                     📖 98.md
@@ -2111,6 +2158,7 @@ MIT License
                                                                     📁 tests/
                                                                       📄 audio_tests.rs
                                                                       📄 client_tests.rs
+                                                                      📄 command_handler_tests.rs
                                                                       📄 debug_wav_tests.rs
                                                                       📄 demo_server_interactive_tests.rs
                                                                       📄 demo_server_non_interactive_tests.rs
@@ -2198,6 +2246,11 @@ MIT License
                                                                   📖 156.md
                                                                   📖 158.md
                                                                   📖 161.md
+                                                                  📖 165.md
+                                                                  📖 167.md
+                                                                  📖 169.md
+                                                                  📖 173.md
+                                                                  📖 178.md
                                                                   📖 96.md
                                                                   📖 97.md
                                                                   📖 98.md
@@ -2257,6 +2310,7 @@ MIT License
                                                                   📁 tests/
                                                                     📄 audio_tests.rs
                                                                     📄 client_tests.rs
+                                                                    📄 command_handler_tests.rs
                                                                     📄 debug_wav_tests.rs
                                                                     📄 demo_server_interactive_tests.rs
                                                                     📄 demo_server_non_interactive_tests.rs
@@ -2310,6 +2364,7 @@ MIT License
                                                               📄 _config.yml
                                                               📄 build.rs
                                                               📁 generated-docs/
+                                                                📖 development-status-generated-prompt.md
                                                               🌐 googled947dc864c270e07.html
                                                               📄 install-ym2151-tools.rs
                                                               📁 issue-notes/
@@ -2344,6 +2399,11 @@ MIT License
                                                                 📖 156.md
                                                                 📖 158.md
                                                                 📖 161.md
+                                                                📖 165.md
+                                                                📖 167.md
+                                                                📖 169.md
+                                                                📖 173.md
+                                                                📖 178.md
                                                                 📖 96.md
                                                                 📖 97.md
                                                                 📖 98.md
@@ -2403,6 +2463,7 @@ MIT License
                                                                 📁 tests/
                                                                   📄 audio_tests.rs
                                                                   📄 client_tests.rs
+                                                                  📄 command_handler_tests.rs
                                                                   📄 debug_wav_tests.rs
                                                                   📄 demo_server_interactive_tests.rs
                                                                   📄 demo_server_non_interactive_tests.rs
@@ -2456,6 +2517,7 @@ MIT License
                                                             📄 _config.yml
                                                             📄 build.rs
                                                             📁 generated-docs/
+                                                              📖 development-status-generated-prompt.md
                                                             🌐 googled947dc864c270e07.html
                                                             📄 install-ym2151-tools.rs
                                                             📁 issue-notes/
@@ -2490,6 +2552,11 @@ MIT License
                                                               📖 156.md
                                                               📖 158.md
                                                               📖 161.md
+                                                              📖 165.md
+                                                              📖 167.md
+                                                              📖 169.md
+                                                              📖 173.md
+                                                              📖 178.md
                                                               📖 96.md
                                                               📖 97.md
                                                               📖 98.md
@@ -2549,6 +2616,7 @@ MIT License
                                                               📁 tests/
                                                                 📄 audio_tests.rs
                                                                 📄 client_tests.rs
+                                                                📄 command_handler_tests.rs
                                                                 📄 debug_wav_tests.rs
                                                                 📄 demo_server_interactive_tests.rs
                                                                 📄 demo_server_non_interactive_tests.rs
@@ -2602,6 +2670,7 @@ MIT License
                                                           📄 _config.yml
                                                           📄 build.rs
                                                           📁 generated-docs/
+                                                            📖 development-status-generated-prompt.md
                                                           🌐 googled947dc864c270e07.html
                                                           📄 install-ym2151-tools.rs
                                                           📁 issue-notes/
@@ -2636,6 +2705,11 @@ MIT License
                                                             📖 156.md
                                                             📖 158.md
                                                             📖 161.md
+                                                            📖 165.md
+                                                            📖 167.md
+                                                            📖 169.md
+                                                            📖 173.md
+                                                            📖 178.md
                                                             📖 96.md
                                                             📖 97.md
                                                             📖 98.md
@@ -2695,6 +2769,7 @@ MIT License
                                                             📁 tests/
                                                               📄 audio_tests.rs
                                                               📄 client_tests.rs
+                                                              📄 command_handler_tests.rs
                                                               📄 debug_wav_tests.rs
                                                               📄 demo_server_interactive_tests.rs
                                                               📄 demo_server_non_interactive_tests.rs
@@ -2748,6 +2823,7 @@ MIT License
                                                         📄 _config.yml
                                                         📄 build.rs
                                                         📁 generated-docs/
+                                                          📖 development-status-generated-prompt.md
                                                         🌐 googled947dc864c270e07.html
                                                         📄 install-ym2151-tools.rs
                                                         📁 issue-notes/
@@ -2782,6 +2858,11 @@ MIT License
                                                           📖 156.md
                                                           📖 158.md
                                                           📖 161.md
+                                                          📖 165.md
+                                                          📖 167.md
+                                                          📖 169.md
+                                                          📖 173.md
+                                                          📖 178.md
                                                           📖 96.md
                                                           📖 97.md
                                                           📖 98.md
@@ -2841,6 +2922,7 @@ MIT License
                                                           📁 tests/
                                                             📄 audio_tests.rs
                                                             📄 client_tests.rs
+                                                            📄 command_handler_tests.rs
                                                             📄 debug_wav_tests.rs
                                                             📄 demo_server_interactive_tests.rs
                                                             📄 demo_server_non_interactive_tests.rs
@@ -2894,6 +2976,7 @@ MIT License
                                                       📄 _config.yml
                                                       📄 build.rs
                                                       📁 generated-docs/
+                                                        📖 development-status-generated-prompt.md
                                                       🌐 googled947dc864c270e07.html
                                                       📄 install-ym2151-tools.rs
                                                       📁 issue-notes/
@@ -2928,6 +3011,11 @@ MIT License
                                                         📖 156.md
                                                         📖 158.md
                                                         📖 161.md
+                                                        📖 165.md
+                                                        📖 167.md
+                                                        📖 169.md
+                                                        📖 173.md
+                                                        📖 178.md
                                                         📖 96.md
                                                         📖 97.md
                                                         📖 98.md
@@ -2987,6 +3075,7 @@ MIT License
                                                         📁 tests/
                                                           📄 audio_tests.rs
                                                           📄 client_tests.rs
+                                                          📄 command_handler_tests.rs
                                                           📄 debug_wav_tests.rs
                                                           📄 demo_server_interactive_tests.rs
                                                           📄 demo_server_non_interactive_tests.rs
@@ -3040,6 +3129,7 @@ MIT License
                                                     📄 _config.yml
                                                     📄 build.rs
                                                     📁 generated-docs/
+                                                      📖 development-status-generated-prompt.md
                                                     🌐 googled947dc864c270e07.html
                                                     📄 install-ym2151-tools.rs
                                                     📁 issue-notes/
@@ -3074,6 +3164,11 @@ MIT License
                                                       📖 156.md
                                                       📖 158.md
                                                       📖 161.md
+                                                      📖 165.md
+                                                      📖 167.md
+                                                      📖 169.md
+                                                      📖 173.md
+                                                      📖 178.md
                                                       📖 96.md
                                                       📖 97.md
                                                       📖 98.md
@@ -3133,6 +3228,7 @@ MIT License
                                                       📁 tests/
                                                         📄 audio_tests.rs
                                                         📄 client_tests.rs
+                                                        📄 command_handler_tests.rs
                                                         📄 debug_wav_tests.rs
                                                         📄 demo_server_interactive_tests.rs
                                                         📄 demo_server_non_interactive_tests.rs
@@ -3186,6 +3282,7 @@ MIT License
                                                   📄 _config.yml
                                                   📄 build.rs
                                                   📁 generated-docs/
+                                                    📖 development-status-generated-prompt.md
                                                   🌐 googled947dc864c270e07.html
                                                   📄 install-ym2151-tools.rs
                                                   📁 issue-notes/
@@ -3220,6 +3317,11 @@ MIT License
                                                     📖 156.md
                                                     📖 158.md
                                                     📖 161.md
+                                                    📖 165.md
+                                                    📖 167.md
+                                                    📖 169.md
+                                                    📖 173.md
+                                                    📖 178.md
                                                     📖 96.md
                                                     📖 97.md
                                                     📖 98.md
@@ -3279,6 +3381,7 @@ MIT License
                                                     📁 tests/
                                                       📄 audio_tests.rs
                                                       📄 client_tests.rs
+                                                      📄 command_handler_tests.rs
                                                       📄 debug_wav_tests.rs
                                                       📄 demo_server_interactive_tests.rs
                                                       📄 demo_server_non_interactive_tests.rs
@@ -3332,6 +3435,7 @@ MIT License
                                                 📄 _config.yml
                                                 📄 build.rs
                                                 📁 generated-docs/
+                                                  📖 development-status-generated-prompt.md
                                                 🌐 googled947dc864c270e07.html
                                                 📄 install-ym2151-tools.rs
                                                 📁 issue-notes/
@@ -3366,6 +3470,11 @@ MIT License
                                                   📖 156.md
                                                   📖 158.md
                                                   📖 161.md
+                                                  📖 165.md
+                                                  📖 167.md
+                                                  📖 169.md
+                                                  📖 173.md
+                                                  📖 178.md
                                                   📖 96.md
                                                   📖 97.md
                                                   📖 98.md
@@ -3425,6 +3534,7 @@ MIT License
                                                   📁 tests/
                                                     📄 audio_tests.rs
                                                     📄 client_tests.rs
+                                                    📄 command_handler_tests.rs
                                                     📄 debug_wav_tests.rs
                                                     📄 demo_server_interactive_tests.rs
                                                     📄 demo_server_non_interactive_tests.rs
@@ -3478,6 +3588,7 @@ MIT License
                                               📄 _config.yml
                                               📄 build.rs
                                               📁 generated-docs/
+                                                📖 development-status-generated-prompt.md
                                               🌐 googled947dc864c270e07.html
                                               📄 install-ym2151-tools.rs
                                               📁 issue-notes/
@@ -3512,6 +3623,11 @@ MIT License
                                                 📖 156.md
                                                 📖 158.md
                                                 📖 161.md
+                                                📖 165.md
+                                                📖 167.md
+                                                📖 169.md
+                                                📖 173.md
+                                                📖 178.md
                                                 📖 96.md
                                                 📖 97.md
                                                 📖 98.md
@@ -3571,6 +3687,7 @@ MIT License
                                                 📁 tests/
                                                   📄 audio_tests.rs
                                                   📄 client_tests.rs
+                                                  📄 command_handler_tests.rs
                                                   📄 debug_wav_tests.rs
                                                   📄 demo_server_interactive_tests.rs
                                                   📄 demo_server_non_interactive_tests.rs
@@ -3624,6 +3741,7 @@ MIT License
                                             📄 _config.yml
                                             📄 build.rs
                                             📁 generated-docs/
+                                              📖 development-status-generated-prompt.md
                                             🌐 googled947dc864c270e07.html
                                             📄 install-ym2151-tools.rs
                                             📁 issue-notes/
@@ -3658,6 +3776,11 @@ MIT License
                                               📖 156.md
                                               📖 158.md
                                               📖 161.md
+                                              📖 165.md
+                                              📖 167.md
+                                              📖 169.md
+                                              📖 173.md
+                                              📖 178.md
                                               📖 96.md
                                               📖 97.md
                                               📖 98.md
@@ -3717,6 +3840,7 @@ MIT License
                                               📁 tests/
                                                 📄 audio_tests.rs
                                                 📄 client_tests.rs
+                                                📄 command_handler_tests.rs
                                                 📄 debug_wav_tests.rs
                                                 📄 demo_server_interactive_tests.rs
                                                 📄 demo_server_non_interactive_tests.rs
@@ -3770,6 +3894,7 @@ MIT License
                                           📄 _config.yml
                                           📄 build.rs
                                           📁 generated-docs/
+                                            📖 development-status-generated-prompt.md
                                           🌐 googled947dc864c270e07.html
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
@@ -3804,6 +3929,11 @@ MIT License
                                             📖 156.md
                                             📖 158.md
                                             📖 161.md
+                                            📖 165.md
+                                            📖 167.md
+                                            📖 169.md
+                                            📖 173.md
+                                            📖 178.md
                                             📖 96.md
                                             📖 97.md
                                             📖 98.md
@@ -3863,6 +3993,7 @@ MIT License
                                             📁 tests/
                                               📄 audio_tests.rs
                                               📄 client_tests.rs
+                                              📄 command_handler_tests.rs
                                               📄 debug_wav_tests.rs
                                               📄 demo_server_interactive_tests.rs
                                               📄 demo_server_non_interactive_tests.rs
@@ -3916,6 +4047,7 @@ MIT License
                                         📄 _config.yml
                                         📄 build.rs
                                         📁 generated-docs/
+                                          📖 development-status-generated-prompt.md
                                         🌐 googled947dc864c270e07.html
                                         📄 install-ym2151-tools.rs
                                         📁 issue-notes/
@@ -3950,6 +4082,11 @@ MIT License
                                           📖 156.md
                                           📖 158.md
                                           📖 161.md
+                                          📖 165.md
+                                          📖 167.md
+                                          📖 169.md
+                                          📖 173.md
+                                          📖 178.md
                                           📖 96.md
                                           📖 97.md
                                           📖 98.md
@@ -4009,6 +4146,7 @@ MIT License
                                           📁 tests/
                                             📄 audio_tests.rs
                                             📄 client_tests.rs
+                                            📄 command_handler_tests.rs
                                             📄 debug_wav_tests.rs
                                             📄 demo_server_interactive_tests.rs
                                             📄 demo_server_non_interactive_tests.rs
@@ -4062,6 +4200,7 @@ MIT License
                                       📄 _config.yml
                                       📄 build.rs
                                       📁 generated-docs/
+                                        📖 development-status-generated-prompt.md
                                       🌐 googled947dc864c270e07.html
                                       📄 install-ym2151-tools.rs
                                       📁 issue-notes/
@@ -4096,6 +4235,11 @@ MIT License
                                         📖 156.md
                                         📖 158.md
                                         📖 161.md
+                                        📖 165.md
+                                        📖 167.md
+                                        📖 169.md
+                                        📖 173.md
+                                        📖 178.md
                                         📖 96.md
                                         📖 97.md
                                         📖 98.md
@@ -4155,6 +4299,7 @@ MIT License
                                         📁 tests/
                                           📄 audio_tests.rs
                                           📄 client_tests.rs
+                                          📄 command_handler_tests.rs
                                           📄 debug_wav_tests.rs
                                           📄 demo_server_interactive_tests.rs
                                           📄 demo_server_non_interactive_tests.rs
@@ -4208,6 +4353,7 @@ MIT License
                                     📄 _config.yml
                                     📄 build.rs
                                     📁 generated-docs/
+                                      📖 development-status-generated-prompt.md
                                     🌐 googled947dc864c270e07.html
                                     📄 install-ym2151-tools.rs
                                     📁 issue-notes/
@@ -4242,6 +4388,11 @@ MIT License
                                       📖 156.md
                                       📖 158.md
                                       📖 161.md
+                                      📖 165.md
+                                      📖 167.md
+                                      📖 169.md
+                                      📖 173.md
+                                      📖 178.md
                                       📖 96.md
                                       📖 97.md
                                       📖 98.md
@@ -4301,6 +4452,7 @@ MIT License
                                       📁 tests/
                                         📄 audio_tests.rs
                                         📄 client_tests.rs
+                                        📄 command_handler_tests.rs
                                         📄 debug_wav_tests.rs
                                         📄 demo_server_interactive_tests.rs
                                         📄 demo_server_non_interactive_tests.rs
@@ -4354,6 +4506,7 @@ MIT License
                                   📄 _config.yml
                                   📄 build.rs
                                   📁 generated-docs/
+                                    📖 development-status-generated-prompt.md
                                   🌐 googled947dc864c270e07.html
                                   📄 install-ym2151-tools.rs
                                   📁 issue-notes/
@@ -4388,6 +4541,11 @@ MIT License
                                     📖 156.md
                                     📖 158.md
                                     📖 161.md
+                                    📖 165.md
+                                    📖 167.md
+                                    📖 169.md
+                                    📖 173.md
+                                    📖 178.md
                                     📖 96.md
                                     📖 97.md
                                     📖 98.md
@@ -4447,6 +4605,7 @@ MIT License
                                     📁 tests/
                                       📄 audio_tests.rs
                                       📄 client_tests.rs
+                                      📄 command_handler_tests.rs
                                       📄 debug_wav_tests.rs
                                       📄 demo_server_interactive_tests.rs
                                       📄 demo_server_non_interactive_tests.rs
@@ -4535,6 +4694,11 @@ MIT License
                                   📖 156.md
                                   📖 158.md
                                   📖 161.md
+                                  📖 165.md
+                                  📖 167.md
+                                  📖 169.md
+                                  📖 173.md
+                                  📖 178.md
                                   📖 96.md
                                   📖 97.md
                                   📖 98.md
@@ -4594,6 +4758,7 @@ MIT License
                                   📁 tests/
                                     📄 audio_tests.rs
                                     📄 client_tests.rs
+                                    📄 command_handler_tests.rs
                                     📄 debug_wav_tests.rs
                                     📄 demo_server_interactive_tests.rs
                                     📄 demo_server_non_interactive_tests.rs
@@ -4682,6 +4847,11 @@ MIT License
                                 📖 156.md
                                 📖 158.md
                                 📖 161.md
+                                📖 165.md
+                                📖 167.md
+                                📖 169.md
+                                📖 173.md
+                                📖 178.md
                                 📖 96.md
                                 📖 97.md
                                 📖 98.md
@@ -4741,6 +4911,7 @@ MIT License
                                 📁 tests/
                                   📄 audio_tests.rs
                                   📄 client_tests.rs
+                                  📄 command_handler_tests.rs
                                   📄 debug_wav_tests.rs
                                   📄 demo_server_interactive_tests.rs
                                   📄 demo_server_non_interactive_tests.rs
@@ -4829,6 +5000,11 @@ MIT License
                               📖 156.md
                               📖 158.md
                               📖 161.md
+                              📖 165.md
+                              📖 167.md
+                              📖 169.md
+                              📖 173.md
+                              📖 178.md
                               📖 96.md
                               📖 97.md
                               📖 98.md
@@ -4888,6 +5064,7 @@ MIT License
                               📁 tests/
                                 📄 audio_tests.rs
                                 📄 client_tests.rs
+                                📄 command_handler_tests.rs
                                 📄 debug_wav_tests.rs
                                 📄 demo_server_interactive_tests.rs
                                 📄 demo_server_non_interactive_tests.rs
@@ -4976,6 +5153,11 @@ MIT License
                             📖 156.md
                             📖 158.md
                             📖 161.md
+                            📖 165.md
+                            📖 167.md
+                            📖 169.md
+                            📖 173.md
+                            📖 178.md
                             📖 96.md
                             📖 97.md
                             📖 98.md
@@ -5035,6 +5217,7 @@ MIT License
                             📁 tests/
                               📄 audio_tests.rs
                               📄 client_tests.rs
+                              📄 command_handler_tests.rs
                               📄 debug_wav_tests.rs
                               📄 demo_server_interactive_tests.rs
                               📄 demo_server_non_interactive_tests.rs
@@ -5123,6 +5306,11 @@ MIT License
                           📖 156.md
                           📖 158.md
                           📖 161.md
+                          📖 165.md
+                          📖 167.md
+                          📖 169.md
+                          📖 173.md
+                          📖 178.md
                           📖 96.md
                           📖 97.md
                           📖 98.md
@@ -5182,6 +5370,7 @@ MIT License
                           📁 tests/
                             📄 audio_tests.rs
                             📄 client_tests.rs
+                            📄 command_handler_tests.rs
                             📄 debug_wav_tests.rs
                             📄 demo_server_interactive_tests.rs
                             📄 demo_server_non_interactive_tests.rs
@@ -5270,6 +5459,11 @@ MIT License
                         📖 156.md
                         📖 158.md
                         📖 161.md
+                        📖 165.md
+                        📖 167.md
+                        📖 169.md
+                        📖 173.md
+                        📖 178.md
                         📖 96.md
                         📖 97.md
                         📖 98.md
@@ -5329,6 +5523,7 @@ MIT License
                         📁 tests/
                           📄 audio_tests.rs
                           📄 client_tests.rs
+                          📄 command_handler_tests.rs
                           📄 debug_wav_tests.rs
                           📄 demo_server_interactive_tests.rs
                           📄 demo_server_non_interactive_tests.rs
@@ -5417,6 +5612,11 @@ MIT License
                       📖 156.md
                       📖 158.md
                       📖 161.md
+                      📖 165.md
+                      📖 167.md
+                      📖 169.md
+                      📖 173.md
+                      📖 178.md
                       📖 96.md
                       📖 97.md
                       📖 98.md
@@ -5476,6 +5676,7 @@ MIT License
                       📁 tests/
                         📄 audio_tests.rs
                         📄 client_tests.rs
+                        📄 command_handler_tests.rs
                         📄 debug_wav_tests.rs
                         📄 demo_server_interactive_tests.rs
                         📄 demo_server_non_interactive_tests.rs
@@ -5564,6 +5765,11 @@ MIT License
                     📖 156.md
                     📖 158.md
                     📖 161.md
+                    📖 165.md
+                    📖 167.md
+                    📖 169.md
+                    📖 173.md
+                    📖 178.md
                     📖 96.md
                     📖 97.md
                     📖 98.md
@@ -5623,6 +5829,7 @@ MIT License
                     📁 tests/
                       📄 audio_tests.rs
                       📄 client_tests.rs
+                      📄 command_handler_tests.rs
                       📄 debug_wav_tests.rs
                       📄 demo_server_interactive_tests.rs
                       📄 demo_server_non_interactive_tests.rs
@@ -5711,6 +5918,11 @@ MIT License
                   📖 156.md
                   📖 158.md
                   📖 161.md
+                  📖 165.md
+                  📖 167.md
+                  📖 169.md
+                  📖 173.md
+                  📖 178.md
                   📖 96.md
                   📖 97.md
                   📖 98.md
@@ -5770,6 +5982,7 @@ MIT License
                   📁 tests/
                     📄 audio_tests.rs
                     📄 client_tests.rs
+                    📄 command_handler_tests.rs
                     📄 debug_wav_tests.rs
                     📄 demo_server_interactive_tests.rs
                     📄 demo_server_non_interactive_tests.rs
@@ -5858,6 +6071,11 @@ MIT License
                 📖 156.md
                 📖 158.md
                 📖 161.md
+                📖 165.md
+                📖 167.md
+                📖 169.md
+                📖 173.md
+                📖 178.md
                 📖 96.md
                 📖 97.md
                 📖 98.md
@@ -5917,6 +6135,7 @@ MIT License
                 📁 tests/
                   📄 audio_tests.rs
                   📄 client_tests.rs
+                  📄 command_handler_tests.rs
                   📄 debug_wav_tests.rs
                   📄 demo_server_interactive_tests.rs
                   📄 demo_server_non_interactive_tests.rs
@@ -6005,6 +6224,11 @@ MIT License
               📖 156.md
               📖 158.md
               📖 161.md
+              📖 165.md
+              📖 167.md
+              📖 169.md
+              📖 173.md
+              📖 178.md
               📖 96.md
               📖 97.md
               📖 98.md
@@ -6064,6 +6288,7 @@ MIT License
               📁 tests/
                 📄 audio_tests.rs
                 📄 client_tests.rs
+                📄 command_handler_tests.rs
                 📄 debug_wav_tests.rs
                 📄 demo_server_interactive_tests.rs
                 📄 demo_server_non_interactive_tests.rs
@@ -6152,6 +6377,11 @@ MIT License
             📖 156.md
             📖 158.md
             📖 161.md
+            📖 165.md
+            📖 167.md
+            📖 169.md
+            📖 173.md
+            📖 178.md
             📖 96.md
             📖 97.md
             📖 98.md
@@ -6211,6 +6441,7 @@ MIT License
             📁 tests/
               📄 audio_tests.rs
               📄 client_tests.rs
+              📄 command_handler_tests.rs
               📄 debug_wav_tests.rs
               📄 demo_server_interactive_tests.rs
               📄 demo_server_non_interactive_tests.rs
@@ -6299,6 +6530,11 @@ MIT License
           📖 156.md
           📖 158.md
           📖 161.md
+          📖 165.md
+          📖 167.md
+          📖 169.md
+          📖 173.md
+          📖 178.md
           📖 96.md
           📖 97.md
           📖 98.md
@@ -6358,6 +6594,7 @@ MIT License
           📁 tests/
             📄 audio_tests.rs
             📄 client_tests.rs
+            📄 command_handler_tests.rs
             📄 debug_wav_tests.rs
             📄 demo_server_interactive_tests.rs
             📄 demo_server_non_interactive_tests.rs
@@ -6446,6 +6683,11 @@ MIT License
         📖 156.md
         📖 158.md
         📖 161.md
+        📖 165.md
+        📖 167.md
+        📖 169.md
+        📖 173.md
+        📖 178.md
         📖 96.md
         📖 97.md
         📖 98.md
@@ -6505,6 +6747,7 @@ MIT License
         📁 tests/
           📄 audio_tests.rs
           📄 client_tests.rs
+          📄 command_handler_tests.rs
           📄 debug_wav_tests.rs
           📄 demo_server_interactive_tests.rs
           📄 demo_server_non_interactive_tests.rs
@@ -6593,6 +6836,11 @@ MIT License
       📖 156.md
       📖 158.md
       📖 161.md
+      📖 165.md
+      📖 167.md
+      📖 169.md
+      📖 173.md
+      📖 178.md
       📖 96.md
       📖 97.md
       📖 98.md
@@ -6652,6 +6900,7 @@ MIT License
       📁 tests/
         📄 audio_tests.rs
         📄 client_tests.rs
+        📄 command_handler_tests.rs
         📄 debug_wav_tests.rs
         📄 demo_server_interactive_tests.rs
         📄 demo_server_non_interactive_tests.rs
@@ -6740,6 +6989,11 @@ MIT License
     📖 156.md
     📖 158.md
     📖 161.md
+    📖 165.md
+    📖 167.md
+    📖 169.md
+    📖 173.md
+    📖 178.md
     📖 96.md
     📖 97.md
     📖 98.md
@@ -6799,6 +7053,7 @@ MIT License
     📁 tests/
       📄 audio_tests.rs
       📄 client_tests.rs
+      📄 command_handler_tests.rs
       📄 debug_wav_tests.rs
       📄 demo_server_interactive_tests.rs
       📄 demo_server_non_interactive_tests.rs
@@ -6887,6 +7142,11 @@ MIT License
   📖 156.md
   📖 158.md
   📖 161.md
+  📖 165.md
+  📖 167.md
+  📖 169.md
+  📖 173.md
+  📖 178.md
   📖 96.md
   📖 97.md
   📖 98.md
@@ -6946,6 +7206,7 @@ MIT License
   📁 tests/
     📄 audio_tests.rs
     📄 client_tests.rs
+    📄 command_handler_tests.rs
     📄 debug_wav_tests.rs
     📄 demo_server_interactive_tests.rs
     📄 demo_server_non_interactive_tests.rs
@@ -7215,4 +7476,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2025-12-28 07:01:33 JST
+Generated at: 2025-12-29 07:01:46 JST

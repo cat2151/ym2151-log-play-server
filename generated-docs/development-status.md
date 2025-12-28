@@ -1,51 +1,50 @@
-Last updated: 2025-12-28
+Last updated: 2025-12-29
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #162](../issue-notes/162.md) Windows CIのissue生成スクリプトで発生するUnicodeEncodeErrorを修正する必要があります。
-- [Issue #161](../issue-notes/161.md) `build_windows.yml`のエラーログを元に、Windowsビルドワークフローの修正が必要です。
-- [Issue #118](../issue-notes/118.md) Agent生成のWindowsコードの品質低さとTDD不足が課題で、CIでのコンパイルチェック導入を検討しています。
+- Windows環境で `client_test::client_integration_tests::test_client_send_json` ([Issue #179](../issue-notes/179.md)) がテスト中にパニックを起こし失敗しています。
+- デモのタイミングがWindows実機で正確に動作するか、ヨレが発生しないか確認が必要です ([Issue #178](../issue-notes/178.md))。
+- Agentが生成するWindows用コードの品質問題 ([Issue #118](../issue-notes/118.md)) や、ハルシネーションの可能性 ([Issue #138](../issue-notes/138.md)) については、引き続き様子見の状況です。
 
 ## 次の一手候補
-1. [Issue #162](../issue-notes/162.md) Windows CIの`generate_test_failure_issue.py`におけるUnicodeEncodingErrorを修正する
-   - 最初の小さな一歩: `generate_test_failure_issue.py`内の`print`出力がWindows環境でUTF-8を使用するように、`sys.stdout.buffer.write()`を使用するか`PYTHONIOENCODING`環境変数を設定する修正案を検討し、最も堅牢な方法を選定する。
-   - Agent実行プロンプ:
+1. [Issue #179](../issue-notes/179.md): `test_client_send_json` テスト失敗の原因究明と修正
+   - 最初の小さな一歩: `tests/client_test.rs` の `test_client_send_json` がパニックする原因となっている行 `tests\client_test.rs:62:9` の周辺コードを詳細に分析し、特に `NamedPipe::create()` や `pipe.open_read()` のエラーハンドリングに注目する。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: .github/scripts/generate_test_failure_issue.py
+     対象ファイル: `tests/client_test.rs`, `src/ipc/pipe_windows.rs`
 
-     実行内容: Windows環境でのUnicodeEncodeErrorを解決するため、`generate_issue_body`関数および`main`関数内の`print`出力が常にUTF-8エンコーディングを使用するように修正してください。具体的には、`sys.stdout.buffer.write()`を使ってバイト列で出力するか、`PYTHONIOENCODING`環境変数を明示的に設定するアプローチを検討し、最も堅牢な方法を実装してください。
+     実行内容: `tests/client_test.rs` の `client_integration_tests::test_client_send_json` テストにおける `NamedPipe::create()` および `pipe.open_read()` の呼び出し周辺コードを分析し、エラーが発生してパニックに至る可能性のある箇所を特定してください。特に、Windowsの名前付きパイプの作成やオープンに関する一般的な失敗パターン（例: 同名のパイプが既に存在、アクセス権の問題、リソース枯渇など）と、Rustの `unwrap()` がパニックを引き起こす条件を考慮してください。
 
-     確認事項: PythonスクリプトのWindows上での標準出力エンコーディングの挙動、およびGitHub Actionsの`pwsh`シェルでのPythonスクリプトの実行コンテキスト。既存の`main`関数の`print(issue_body)`が問題の原因である可能性が高いです。
+     確認事項: `ym2151_log_play_server::ipc::pipe_windows::NamedPipe` の実装詳細と、`create()` および `open_read()` メソッドがどのようなエラーを返しうるかを把握してください。テスト環境（特にWindows）での名前付きパイプの挙動に関する制約も考慮してください。
 
-     期待する出力: 修正された`.github/scripts/generate_test_failure_issue.py`ファイル。変更後のスクリプトがWindows環境でUnicode文字を問題なく出力できることを確認するテストプランも合わせて提案してください。
-     ```
-
-2. [Issue #161](../issue-notes/161.md) `build_windows.yml`ワークフローのエラー原因を特定し、修正方針を立てる
-   - 最初の小さな一歩: 現在エラーとなっている`build_windows.yml`ワークフローの最新の実行ログを詳細に分析し、`generate_issue_body`ステップ周辺のエラーメッセージを特定する。特に、ファイル読み込みやスクリプト実行に関する部分に注目する。
-   - Agent実行プロンプ:
-     ```
-     対象ファイル: .github/workflows/build_windows.yml
-
-     実行内容: 現在エラーになっている`build_windows.yml`ワークフローの最新の実行ログを分析し、特に`generate_issue_body`ステップに関連するエラーメッセージを特定してください。エラーの原因を特定し、その修正方針をMarkdown形式で提案してください。
-
-     確認事項: ログ中のエラーメッセージ、関連するスクリプト（`generate_test_failure_issue.py`、`parse_nextest_junit.py`）の最近の変更点。
-
-     期待する出力: エラーの原因と、その修正案（ファイルパスと修正内容の概要を含む）をMarkdown形式で記述してください。ハルシネーションを避けるため、具体的な修正コードの生成は不要です。
+     期待する出力: パニックの原因として考えられる候補とその理由をmarkdown形式でリストアップし、それぞれの候補に対して具体的なデバッグ方法や修正の方向性を提案してください。
      ```
 
-3. [Issue #118](../issue-notes/118.md) Linux RunnerでのWindowsターゲット向けRustコードのコンパイルチェック導入を調査する
-   - 最初の小さな一歩: GitHub ActionsのLinux Runner上でRustのWindowsターゲット(`x86_64-pc-windows-msvc`など)の`cargo check`が可能かどうか、`cargo check --target`、`cross`、`cargo-xwin`といったツールの利用可能性と導入方法について調査する。
-   - Agent実行プロンプ:
+2. [Issue #178](../issue-notes/178.md): demoのWindows実機でのタイミング動作確認のためのコード分析
+   - 最初の小さな一歩: `src/client/interactive.rs` と `src/server/playback.rs` のコードをレビューし、`ASAP mode` や `audio stream time` の利用がWindows環境でのタイミング精度にどのように影響するかを分析する。特に、時間同期やスケジューリングのロジックに注目する。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: なし
+     対象ファイル: `src/client/interactive.rs`, `src/server/playback.rs`, `src/audio/stream.rs`, `src/scheduler.rs`
 
-     実行内容: GitHub ActionsのLinux Runner上でRustプロジェクトのWindowsターゲット(`x86_64-pc-windows-msvc`など)のコンパイルチェック（`cargo check`）を行う方法について調査し、実現可能性、メリット、デメリット、および具体的な実装アプローチ（`cargo check --target`、`cross`、`cargo-xwin`などのツール利用）をMarkdown形式でまとめてください。
+     実行内容: `ASAP mode` の実装、`audio stream time` の利用、およびオーディオストリームのスケジューリングロジックを分析し、Windows環境におけるデモのタイミング精度に影響を与える可能性のある要素を特定してください。特に、以前のコミット(1dd07e3, 602db80)で修正されたタイミングのジッターが本当に解消されているか、追加で確認すべき点がないかを洗い出してください。
 
-     確認事項: 既存のCI設定（特に`build_windows.yml`以外のワークフロー）、Windowsビルドの依存関係、Linux Runnerでのクロスコンパイル環境構築の一般的な課題。
+     確認事項: Windows OSにおけるオーディオAPI（WASAPIなど）の一般的な特性と、Rustの `cpal` クレートが提供する抽象化がどのように利用されているかを理解してください。時間同期の精度、システムクロックとオーディオデバイスクロックのずれ、およびマルチスレッディングにおける同期の問題がないか確認してください。
 
-     期待する出力: 調査結果を以下のセクションで構成されたMarkdown形式で出力してください。「1. 背景と目的」、「2. 検討されるツールとアプローチ」、「3. 各アプローチの比較（メリット・デメリット）」、「4. 導入に向けた推奨アプローチ」。具体的なワークフローのコードは不要です。
+     期待する出力: Windows実機でのデモ動作確認のために、特に注意して検証すべきタイミング関連のシナリオ（例: 長時間再生、異なる負荷下での再生）と、検証時に取得すべきメトリクス（例: オーディオ出力とイベント発生のずれ）をmarkdown形式でリストアップしてください。また、もしコードに改善の余地が見つかれば、その方向性も提案してください。
      ```
+
+3. `NamedPipe` のエラー処理の強化
+   - 最初の小さな一歩: `src/ipc/pipe_windows.rs` 内の `NamedPipe::create()` および `NamedPipe::open_read()` メソッドのエラーハンドリングを `Result` 型で適切に処理するようにリファクタリングする。`unwrap()` を減らし、より具体的なエラーメッセージを返すようにする。
+   - Agent実行プロンプト:
+     ```
+     対象ファイル: `src/ipc/pipe_windows.rs`
+
+     実行内容: `src/ipc/pipe_windows.rs` 内の `NamedPipe::create()` および `NamedPipe::open_read()` メソッドにおいて、現在の `unwrap()` 呼び出しを削除し、代わりに `Result` 型を利用してエラーを適切に伝播させるようにリファクタリングしてください。Windows APIエラーコードを `io::Error` にマッピングし、より詳細なエラー情報を呼び出し元に提供できるようにしてください。
+
+     確認事項: `std::io::Error` の種類と、Windows APIが返すエラーコードとのマッピング方法を把握してください。既存の `client` モジュールや `server` モジュールで `NamedPipe` を利用している箇所が、新しいエラーハンドリングに適応できるよう修正が必要か確認してください。
+
+     期待する出力: `src/ipc/pipe_windows.rs` の修正されたコードと、それに伴い `client` および `server` モジュールで必要となる可能性のある変更点に関する説明をmarkdown形式で出力してください。
 
 ---
-Generated at: 2025-12-28 07:01:49 JST
+Generated at: 2025-12-29 07:02:05 JST
