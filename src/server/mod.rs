@@ -12,9 +12,7 @@ use crate::logging;
 use crate::resampler::ResamplingQuality;
 use crate::scheduler::TimeTracker;
 use anyhow::Result;
-use command_handler::CommandHandler;
 use connection::ConnectionManager;
-use playback::PlaybackManager;
 use std::sync::atomic::AtomicBool;
 #[cfg(test)]
 use std::sync::atomic::Ordering;

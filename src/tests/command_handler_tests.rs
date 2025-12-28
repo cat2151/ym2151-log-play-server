@@ -4,10 +4,9 @@
 //! function maintains identical behavior to the original implementation.
 
 use crate::ipc::protocol::{Command, Response};
+use crate::resampler::ResamplingQuality;
 use crate::scheduler::TimeTracker;
-use crate::server::command_handler::CommandHandler;
-use crate::server::playback::PlaybackManager;
-use crate::server::state::ServerState;
+use crate::server::{CommandHandler, PlaybackManager, ServerState};
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 
@@ -17,7 +16,7 @@ fn test_play_json_interactive_error_when_not_in_interactive_mode() {
     let state = Arc::new(Mutex::new(ServerState::Stopped));
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
-    let playback_manager = PlaybackManager::new(time_tracker.clone());
+    let playback_manager = PlaybackManager::new(ResamplingQuality::Linear);
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
@@ -50,7 +49,7 @@ fn test_play_json_interactive_error_with_invalid_json_structure() {
     let state = Arc::new(Mutex::new(ServerState::Interactive));
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
-    let playback_manager = PlaybackManager::new(time_tracker.clone());
+    let playback_manager = PlaybackManager::new(ResamplingQuality::Linear);
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
@@ -79,7 +78,7 @@ fn test_play_json_interactive_error_without_audio_player() {
     let state = Arc::new(Mutex::new(ServerState::Interactive));
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
-    let playback_manager = PlaybackManager::new(time_tracker.clone());
+    let playback_manager = PlaybackManager::new(ResamplingQuality::Linear);
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
@@ -135,7 +134,7 @@ fn test_handler_state_transitions() {
     let state = Arc::new(Mutex::new(ServerState::Stopped));
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
-    let playback_manager = PlaybackManager::new(time_tracker.clone());
+    let playback_manager = PlaybackManager::new(ResamplingQuality::Linear);
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
@@ -168,7 +167,7 @@ fn test_early_return_pattern() {
     let state = Arc::new(Mutex::new(ServerState::Playing)); // Not Interactive
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let time_tracker = Arc::new(Mutex::new(TimeTracker::new()));
-    let playback_manager = PlaybackManager::new(time_tracker.clone());
+    let playback_manager = PlaybackManager::new(ResamplingQuality::Linear);
 
     let handler = CommandHandler::new(state.clone(), shutdown_flag, time_tracker, playback_manager);
 
