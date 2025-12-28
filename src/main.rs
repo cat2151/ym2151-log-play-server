@@ -118,7 +118,7 @@ fn print_usage() {
     eprintln!("  --verbose          デバッグ用に詳細な状態メッセージを出力");
     eprintln!("                     (デフォルトはサイレント、TUIアプリでは非推奨)");
     eprintln!("  --demo-interactive インタラクティブモードデモ");
-    eprintln!("                     (output_ym2151.jsonを1秒ごとに5回繰り返し演奏)");
+    eprintln!("                     （output_ym2151.jsonを1秒ごとに5回繰り返し演奏）");
 }
 
 fn main() {
