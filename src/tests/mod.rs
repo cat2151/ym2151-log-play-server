@@ -3,6 +3,7 @@
 
 mod audio_tests;
 mod client_tests;
+mod command_handler_tests;
 mod debug_wav_tests;
 mod demo_server_interactive_tests;
 mod demo_server_non_interactive_tests;
