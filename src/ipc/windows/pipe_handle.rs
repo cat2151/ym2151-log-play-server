@@ -45,8 +45,9 @@ impl NamedPipe {
         Ok(NamedPipe { path, handle })
     }
 
-    /// Connect to a server and wait for it to accept the connection
+    /// Wait for a client to connect and return a reader
     ///
+    /// This is called on the server side. It blocks until a client connects via CreateFileW.
     /// Returns a PipeReader that borrows the handle from this NamedPipe.
     /// The handle will NOT be closed when the PipeReader is dropped.
     pub fn open_read(&self) -> io::Result<PipeReader> {
@@ -65,10 +66,10 @@ impl NamedPipe {
         Ok(PipeWriter::new(self.handle))
     }
 
-    /// Create a connection to server and wait for it to be ready
+    /// Create a client connection to the server
     ///
+    /// This is called on the client side. It waits for the server to accept the connection.
     /// Returns a PipeWriter that owns its handle and will close it on drop.
-    /// This is used by clients to connect to the server.
     pub fn connect<P: AsRef<Path>>(path: P) -> io::Result<PipeWriter> {
         let handle = connect_to_pipe(path)?;
         Ok(PipeWriter::new_owned(handle))
