@@ -68,9 +68,9 @@ pub fn start_interactive() -> Result<()> {
 /// # Ok::<(), anyhow::Error>(())
 /// ```
 pub fn get_interactive_mode_state_with_retry() -> Result<bool> {
-    // GetServerStateコマンドを使用してサーバーの状態を取得し、
-    // それがInteractiveモードかを判定する。
-    // (以前のGetInteractiveModeStateコマンドは削除済み)
+    // 備忘、インタラクティブモードかをserverに問い合わせるより、stateを問い合わせるほうが、
+    // server側がシンプルになるので、そうした。
+    // インタラクティブモードかを問い合わせるほうは今後削除予定。
     Ok(get_server_state_with_retry()? == ServerState::Interactive.as_str())
 }
 
