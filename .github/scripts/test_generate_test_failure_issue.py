@@ -146,7 +146,6 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        self.assertIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
         self.assertIn("日本語訳されたエラーメッセージ", result)
         mock_translate.assert_called_once()
     
@@ -172,7 +171,6 @@ class TestGenerateIssueBodyWithTranslation(unittest.TestCase):
             repository="cat2151/ym2151-log-play-server",
         )
         
-        self.assertNotIn("## 🤖 エラーメッセージの日本語訳（AI生成）", result)
         self.assertIn("## 失敗したテスト", result)
         self.assertIn("- test_fail", result)
     
@@ -341,10 +339,10 @@ class TestTranslateErrorMessages(unittest.TestCase):
             stderr_output = stderr_capture.getvalue()
             self.assertIn("Error: Gemini API client error (HTTP 404)", stderr_output)
             self.assertIn("URL:", stderr_output)
-            self.assertIn("gemini-3-pro-preview", stderr_output)
+            self.assertIn("gemini-2.5-flash", stderr_output)
             self.assertIn("key=***", stderr_output)  # Verify API key is masked
             self.assertNotIn("test-api-key", stderr_output)  # Verify actual key not printed
-            self.assertIn("Model name: gemini-3-pro-preview", stderr_output)
+            self.assertIn("Model name: gemini-2.5-flash", stderr_output)
             self.assertIn("Note: The model or endpoint was not found", stderr_output)
         finally:
             if 'GEMINI_API_KEY' in os.environ:
@@ -382,10 +380,10 @@ class TestTranslateErrorMessages(unittest.TestCase):
             stderr_output = stderr_capture.getvalue()
             self.assertIn("Error: Gemini API client error (HTTP 400)", stderr_output)
             self.assertIn("URL:", stderr_output)
-            self.assertIn("gemini-3-pro-preview", stderr_output)
+            self.assertIn("gemini-2.5-flash", stderr_output)
             self.assertIn("key=***", stderr_output)  # Verify API key is masked
             self.assertNotIn("test-api-key", stderr_output)  # Verify actual key not printed
-            self.assertIn("Model name: gemini-3-pro-preview", stderr_output)
+            self.assertIn("Model name: gemini-2.5-flash", stderr_output)
         finally:
             if 'GEMINI_API_KEY' in os.environ:
                 del os.environ['GEMINI_API_KEY']

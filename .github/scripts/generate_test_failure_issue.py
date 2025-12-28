@@ -33,16 +33,21 @@ def translate_error_messages_with_gemini(error_details: str) -> Optional[str]:
     if not error_details or not error_details.strip():
         return None
     url = f"{GEMINI_API_BASE_URL}/{GEMINI_MODEL_NAME}:generateContent?key={api_key}"
-    prompt = f"""以下は、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
-各テストのエラーメッセージを日本語に翻訳してください。
-技術用語は適切に翻訳し、開発者が理解しやすいように要約してください。
+    prompt = f"""【前提】
+以下のエラーログは、Windowsビルド環境でのRustプロジェクトのテスト失敗情報です。
 
-失敗したテストとエラー:
+【タスク】
+各テストのエラーメッセージを日本語に翻訳してください。
+
+【制約】
+- 出力は翻訳結果のみ
+- 「これは日本語訳です」といった自己言及的な前置きは禁止
+- 原文の構造（改行・箇条書き）を維持する
+
+【入力】
 ```
 {error_details}
-```
-
-日本語訳（各テストごとに失敗原因を簡潔に説明）:"""
+```"""
     
     data = {
         "contents": [{
@@ -132,8 +137,6 @@ def generate_issue_body(
     if error_details:
         japanese_translation = translate_error_messages_with_gemini(error_details)
         if japanese_translation:
-            sections.append("## 🤖 エラーメッセージの日本語訳（AI生成）")
-            sections.append("")
             sections.append(japanese_translation)
             sections.append("")
             sections.append("---")
