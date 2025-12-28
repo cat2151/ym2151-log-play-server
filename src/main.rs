@@ -71,10 +71,10 @@ fn print_usage() {
     eprintln!(
         "  ym2151-log-play-server client <json_file> [--verbose] [--demo-interactive]  # サーバーに演奏指示"
     );
+    eprintln!("  ym2151-log-play-server client --stop [--verbose]       # 演奏を停止");
     eprintln!(
-        "  ym2151-log-play-server client --stop [--verbose]       # 演奏を停止"
+        "  ym2151-log-play-server client --shutdown [--verbose]   # サーバーをシャットダウン"
     );
-    eprintln!("  ym2151-log-play-server client --shutdown [--verbose]   # サーバーをシャットダウン");
     eprintln!();
     eprintln!("例:");
     eprintln!("  ym2151-log-play-server server");
@@ -101,9 +101,7 @@ fn print_usage() {
         "  --verbose                 デバッグ用に詳細なログを出力 (通常時はログファイルのみ)"
     );
     eprintln!("                            verbose時にWAVファイルを出力します");
-    eprintln!(
-        "  --low-quality-resampling  低品位リサンプリングを使用 (線形補間、比較用)"
-    );
+    eprintln!("  --low-quality-resampling  低品位リサンプリングを使用 (線形補間、比較用)");
     eprintln!(
         "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
     );
