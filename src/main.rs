@@ -60,6 +60,67 @@ enum Commands {
     },
 }
 
+/// Display usage information and examples
+fn print_usage() {
+    eprintln!("YM2151 Log Player - Rust implementation");
+    eprintln!();
+    eprintln!("使用方法:");
+    eprintln!(
+        "  ym2151-log-play-server server [--verbose] [--low-quality-resampling] [--demo-interactive] [--demo-non-interactive]  # サーバーとして起動"
+    );
+    eprintln!(
+        "  ym2151-log-play-server client <json_file> [--verbose] [--demo-interactive]  # サーバーに演奏指示"
+    );
+    eprintln!(
+        "  ym2151-log-play-server client --stop [--verbose]       # 演奏を停止"
+    );
+    eprintln!("  ym2151-log-play-server client --shutdown [--verbose]   # サーバーをシャットダウン");
+    eprintln!();
+    eprintln!("例:");
+    eprintln!("  ym2151-log-play-server server");
+    eprintln!("  ym2151-log-play-server server --verbose");
+    eprintln!("  ym2151-log-play-server server --low-quality-resampling");
+    eprintln!("  ym2151-log-play-server server --verbose --low-quality-resampling");
+    eprintln!("  ym2151-log-play-server server --demo-interactive");
+    eprintln!("  ym2151-log-play-server server --demo-non-interactive");
+    eprintln!("  ym2151-log-play-server client test_input.json");
+    eprintln!("  ym2151-log-play-server client test_input.json --verbose");
+    eprintln!("  ym2151-log-play-server client --stop");
+    eprintln!("  ym2151-log-play-server client --shutdown");
+    eprintln!("  ym2151-log-play-server client --demo-interactive");
+    eprintln!();
+    eprintln!("機能:");
+    eprintln!("  - サーバー/クライアントモード (Windows)");
+    eprintln!("  - JSONイベントログファイルを読み込み");
+    eprintln!("  - YM2151レジスタ操作を再現");
+    eprintln!("  - リアルタイム音声再生");
+    eprintln!("  - WAVファイル (output.wav) を生成 (verbose時)");
+    eprintln!();
+    eprintln!("サーバーオプション:");
+    eprintln!(
+        "  --verbose                 デバッグ用に詳細なログを出力 (通常時はログファイルのみ)"
+    );
+    eprintln!("                            verbose時にWAVファイルを出力します");
+    eprintln!(
+        "  --low-quality-resampling  低品位リサンプリングを使用 (線形補間、比較用)"
+    );
+    eprintln!(
+        "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
+    );
+    eprintln!(
+        "  --demo-interactive        インタラクティブデモモード (output_ym2151.jsonを使用してサーバー単体テスト)"
+    );
+    eprintln!(
+        "  --demo-non-interactive    非インタラクティブデモモード (output_ym2151.jsonを使用して音響テスト)"
+    );
+    eprintln!();
+    eprintln!("クライアントオプション:");
+    eprintln!("  --verbose          デバッグ用に詳細な状態メッセージを出力");
+    eprintln!("                     (デフォルトはサイレント、TUIアプリでは非推奨)");
+    eprintln!("  --demo-interactive インタラクティブモードデモ");
+    eprintln!("                     （output_ym2151.jsonを1秒ごとに5回繰り返し演奏）");
+}
+
 fn main() {
     // Parse arguments with custom error handling
     let cli = match Cli::try_parse() {
@@ -77,13 +138,7 @@ fn main() {
                     {
                         eprintln!("❌ エラー: 不明なオプション: {}", arg);
                         eprintln!();
-                        eprintln!("使用方法:");
-                        eprintln!(
-                            "  ym2151-log-play-server server [--verbose] [--low-quality-resampling]"
-                        );
-                        eprintln!("  ym2151-log-play-server client <JSON_FILE> [--verbose]");
-                        eprintln!("  ym2151-log-play-server client --stop [--verbose]");
-                        eprintln!("  ym2151-log-play-server client --shutdown [--verbose]");
+                        print_usage();
                     } else {
                         eprintln!("{}", e);
                     }
@@ -93,60 +148,7 @@ fn main() {
                     std::process::exit(0);
                 }
                 clap::error::ErrorKind::MissingSubcommand => {
-                    eprintln!("YM2151 Log Player - Rust implementation");
-                    eprintln!();
-                    eprintln!("使用方法:");
-                    eprintln!(
-                        "  ym2151-log-play-server server [--verbose] [--low-quality-resampling] [--demo-interactive] [--demo-non-interactive]  # サーバーとして起動"
-                    );
-                    eprintln!(
-                        "  ym2151-log-play-server client <json_file> [--verbose]  # サーバーに演奏指示"
-                    );
-                    eprintln!(
-                        "  ym2151-log-play-server client --stop [--verbose]       # 演奏を停止"
-                    );
-                    eprintln!("  ym2151-log-play-server client --shutdown [--verbose]   # サーバーをシャットダウン");
-                    eprintln!();
-                    eprintln!("例:");
-                    eprintln!("  ym2151-log-play-server server");
-                    eprintln!("  ym2151-log-play-server server --verbose");
-                    eprintln!("  ym2151-log-play-server server --low-quality-resampling");
-                    eprintln!("  ym2151-log-play-server server --verbose --low-quality-resampling");
-                    eprintln!("  ym2151-log-play-server server --demo-interactive");
-                    eprintln!("  ym2151-log-play-server server --demo-non-interactive");
-                    eprintln!("  ym2151-log-play-server client test_input.json");
-                    eprintln!("  ym2151-log-play-server client test_input.json --verbose");
-                    eprintln!("  ym2151-log-play-server client --stop");
-                    eprintln!("  ym2151-log-play-server client --shutdown");
-                    eprintln!();
-                    eprintln!("機能:");
-                    eprintln!("  - サーバー/クライアントモード (Windows)");
-                    eprintln!("  - JSONイベントログファイルを読み込み");
-                    eprintln!("  - YM2151レジスタ操作を再現");
-                    eprintln!("  - リアルタイム音声再生");
-                    eprintln!("  - WAVファイル (output.wav) を生成 (verbose時)");
-                    eprintln!();
-                    eprintln!("サーバーオプション:");
-                    eprintln!(
-                        "  --verbose                 デバッグ用に詳細なログを出力 (通常時はログファイルのみ)"
-                    );
-                    eprintln!("                            verbose時にWAVファイルを出力します");
-                    eprintln!(
-                        "  --low-quality-resampling  低品位リサンプリングを使用 (線形補間、比較用)"
-                    );
-                    eprintln!(
-                        "                            デフォルトは高品位リサンプリング (Rubato FFTベース、折り返しノイズを低減)"
-                    );
-                    eprintln!(
-                        "  --demo-interactive        インタラクティブデモモード (output_ym2151.jsonを使用してサーバー単体テスト)"
-                    );
-                    eprintln!(
-                        "  --demo-non-interactive    非インタラクティブデモモード (output_ym2151.jsonを使用して音響テスト)"
-                    );
-                    eprintln!();
-                    eprintln!("クライアントオプション:");
-                    eprintln!("  --verbose  デバッグ用に詳細な状態メッセージを出力");
-                    eprintln!("             (デフォルトはサイレント、TUIアプリでは非推奨)");
+                    print_usage();
                 }
                 _ => {
                     eprintln!("{}", e);
