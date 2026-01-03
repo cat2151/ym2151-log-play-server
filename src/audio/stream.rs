@@ -16,7 +16,9 @@ use crate::resampler::OUTPUT_SAMPLE_RATE;
 /// Audio stream manager that handles CPAL stream creation and management
 pub struct AudioStream {
     #[allow(dead_code)] // Stream must be kept alive for audio playback until dropped
-    stream: cpal::Stream,
+    stream: Option<cpal::Stream>,
+    #[allow(dead_code)] // Headless consumer thread handle
+    headless_thread: Option<std::thread::JoinHandle<()>>,
 }
 
 impl AudioStream {
@@ -29,48 +31,70 @@ impl AudioStream {
     /// * `Result<Self>` - The audio stream manager or an error
     pub fn new(sample_rx: Receiver<Vec<f32>>) -> Result<Self> {
         let host = cpal::default_host();
-        let device = host
-            .default_output_device()
-            .ok_or_else(|| anyhow::anyhow!("No output device available"))?;
+        
+        // Try to get an output device, but fall back to headless mode if not available
+        match host.default_output_device() {
+            Some(device) => {
+                // Device info respects verbose flag to avoid TUI disruption
+                logging::log_verbose_server(&format!(
+                    "Using audio device: {}",
+                    device.name().unwrap_or_else(|_| "Unknown".to_string())
+                ));
 
-        // Device info respects verbose flag to avoid TUI disruption
-        logging::log_verbose_server(&format!(
-            "Using audio device: {}",
-            device.name().unwrap_or_else(|_| "Unknown".to_string())
-        ));
+                let config = cpal::StreamConfig {
+                    channels: 2,
+                    sample_rate: cpal::SampleRate(OUTPUT_SAMPLE_RATE),
+                    buffer_size: CPAL_BUFFER_SIZE,
+                };
 
-        let config = cpal::StreamConfig {
-            channels: 2,
-            sample_rate: cpal::SampleRate(OUTPUT_SAMPLE_RATE),
-            buffer_size: CPAL_BUFFER_SIZE,
-        };
+                // Log the actual buffer size configuration
+                logging::log_verbose_server(&format!(
+                    "Audio buffer size configured: {:?}",
+                    CPAL_BUFFER_SIZE
+                ));
 
-        // Log the actual buffer size configuration
-        logging::log_verbose_server(&format!(
-            "Audio buffer size configured: {:?}",
-            CPAL_BUFFER_SIZE
-        ));
+                let leftover_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
+                let leftover_buffer_clone = leftover_buffer.clone();
 
-        let leftover_buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
-        let leftover_buffer_clone = leftover_buffer.clone();
+                let stream = device
+                    .build_output_stream(
+                        &config,
+                        move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+                            Self::audio_callback(data, &sample_rx, &leftover_buffer_clone);
+                        },
+                        |err| {
+                            // Audio stream errors should always be logged
+                            logging::log_always_server(&format!("Audio stream error: {}", err));
+                        },
+                        None,
+                    )
+                    .context("Failed to build output stream")?;
 
-        let stream = device
-            .build_output_stream(
-                &config,
-                move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-                    Self::audio_callback(data, &sample_rx, &leftover_buffer_clone);
-                },
-                |err| {
-                    // Audio stream errors should always be logged
-                    logging::log_always_server(&format!("Audio stream error: {}", err));
-                },
-                None,
-            )
-            .context("Failed to build output stream")?;
+                stream.play().context("Failed to start audio stream")?;
 
-        stream.play().context("Failed to start audio stream")?;
-
-        Ok(Self { stream })
+                Ok(Self { 
+                    stream: Some(stream),
+                    headless_thread: None,
+                })
+            }
+            None => {
+                // No audio device available - run in headless mode
+                logging::log_verbose_server("No audio device available, running in headless mode");
+                
+                // Create a thread that consumes samples without playing them
+                let headless_thread = std::thread::spawn(move || {
+                    while let Ok(_samples) = sample_rx.recv() {
+                        // Just consume the samples, don't do anything with them
+                        // This keeps the generator thread from blocking
+                    }
+                });
+                
+                Ok(Self {
+                    stream: None,
+                    headless_thread: Some(headless_thread),
+                })
+            }
+        }
     }
 
     /// Audio callback function that fills the output buffer with samples
