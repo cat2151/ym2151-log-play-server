@@ -17,7 +17,7 @@ use crate::resampler::OUTPUT_SAMPLE_RATE;
 pub struct AudioStream {
     #[allow(dead_code)] // Stream must be kept alive for audio playback until dropped
     stream: Option<cpal::Stream>,
-    #[allow(dead_code)] // Headless consumer thread handle
+    // Headless consumer thread handle (joined in Drop)
     headless_thread: Option<std::thread::JoinHandle<()>>,
 }
 
@@ -155,6 +155,17 @@ impl AudioStream {
                 data[offset..].fill(0.0);
                 break;
             }
+        }
+    }
+}
+
+impl Drop for AudioStream {
+    fn drop(&mut self) {
+        // If we have a headless thread, wait for it to finish
+        // By this point, the generator thread should have already stopped
+        // and closed the sample channel, causing the headless thread to exit
+        if let Some(handle) = self.headless_thread.take() {
+            let _ = handle.join();
         }
     }
 }
