@@ -1,4 +1,4 @@
-Last updated: 2025-12-29
+Last updated: 2026-01-04
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -877,6 +877,9 @@ mod client_integration_tests {
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+a117df2 Auto-translate README.ja.md to README.md [auto]
+2e81b6a Add DeepWiki badge to Japanese README
+dcec1c6 Update project summaries (overview & development status) [auto]
 ccbe799 Add issue note for #178 [auto]
 fcef1b7 force installにし、依存クレートのupdateにそれを反映できるようにした
 1dd07e3 Merge pull request #177 from cat2151/copilot/fix-demo-interactive-mode-timing
@@ -884,20 +887,19 @@ d9e2ce5 Add ASAP mode support: detect first event time 0.0 for immediate playbac
 602db80 Fix timing jitter in interactive mode by using audio stream time instead of wall-clock time
 4274a36 Initial plan
 4cebd0e Update issue notes for ym2151 tone editor #117
-d87ff6e Merge pull request #176 from cat2151/copilot/fix-windows-cross-compilation
-a1f078d Fix Windows GNU cross-compilation errors: remove duplicate imports and update test API usage
-af7fc66 Initial plan
 
 ### 変更されたファイル:
+README.ja.md
+README.md
+generated-docs/development-status-generated-prompt.md
+generated-docs/development-status.md
+generated-docs/project-overview-generated-prompt.md
+generated-docs/project-overview.md
 install-ym2151-tools.rs
 issue-notes/117.md
-issue-notes/173.md
 issue-notes/178.md
 src/server/command_handler.rs
-src/server/mod.rs
-src/tests/command_handler_tests.rs
-src/tests/mod.rs
 
 
 ---
-Generated at: 2025-12-29 07:01:46 JST
+Generated at: 2026-01-04 07:01:37 JST
