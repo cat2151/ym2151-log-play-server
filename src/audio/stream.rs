@@ -165,7 +165,12 @@ impl Drop for AudioStream {
         // By this point, the generator thread should have already stopped
         // and closed the sample channel, causing the headless thread to exit
         if let Some(handle) = self.headless_thread.take() {
-            let _ = handle.join();
+            if let Err(e) = handle.join() {
+                logging::log_verbose_server(&format!(
+                    "Headless audio thread panicked during cleanup: {:?}",
+                    e
+                ));
+            }
         }
     }
 }
