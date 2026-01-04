@@ -1,50 +1,50 @@
-Last updated: 2026-01-04
+Last updated: 2026-01-05
 
 # Development Status
 
 ## 現在のIssues
-- Windows CIで `client_integration_tests::test_client_send_json` テストがパニックにより失敗しています ([Issue #179](../issue-notes/179.md))。
-- Windows実機でのデモ動作における「ヨレ」の有無の確認が保留されています ([Issue #178](../issue-notes/178.md))。
-- Agentによるハルシネーションの可能性とWindowsコードの品質保証に関する課題が継続して様子見中です ([Issue #138](../issue-notes/138.md), [Issue #118](../issue-notes/118.md))。
+- [Issue #178](../issue-notes/178.md) は、Windows実機でデモ再生時に音源がヨレないかどうかの動作確認がオープンされています。
+- [Issue #138](../issue-notes/138.md) は、Agentが生成した対策案がハルシネーションであった可能性について、現状を様子見しつつ対策案を整理する段階です。
+- [Issue #118](../issue-notes/118.md) は、AgentがPRしたWindows用コードのビルド失敗がTDD不足に起因する可能性があり、日次CIでのWindows Runnerによるテスト結果を見守っています。
 
 ## 次の一手候補
-1. Windows CIにおけるテスト失敗 [Issue #179](../issue-notes/179.md) の調査と修正
-   - 最初の小さな一歩: `tests/client_test.rs`の `test_client_send_json` テストがパニックする原因を特定するため、`NamedPipe`のライフサイクルとスレッド間の同期に関する潜在的な問題をレビューする。
+1. [Issue #178](../issue-notes/178.md): Windows実機でのデモ動作確認に向けたコード影響分析
+   - 最初の小さな一歩: `src/audio/stream.rs` の最近の変更（headless mode対応）がデモの再生品質に与える影響について、コードレベルで潜在的な問題がないかをレビューします。
    - Agent実行プロンプ:
      ```
-     対象ファイル: `tests/client_test.rs`, `src/ipc/pipe_windows.rs`, `src/client/mod.rs`
+     対象ファイル: `src/audio/stream.rs`
 
-     実行内容: `tests/client_test.rs` 内の `test_client_send_json` テストがWindows CIでパニックする原因を分析してください。特に、`NamedPipe`の作成、オープン、クローズの処理と、スレッド間の同期に関する潜在的な問題を特定し、デッドロックや競合状態の可能性を検討してください。考えられる原因と、その修正方針をMarkdown形式で出力してください。
+     実行内容: `src/audio/stream.rs`における最近のheadless mode関連の変更（コミット `cc2793e`, `ba5dcb2`, `e2a41fd`, `42b4b8d` および関連するコード）が、Windows環境でのデモ再生時の「ヨレ」（再生の乱れや遅延）にどのように影響しうるかを分析し、潜在的な改善点や注意点をMarkdown形式で出力してください。特に、スレッド同期、リソース管理、エラーハンドリングの観点から分析し、デモの安定性に寄与するためのコードレビューを行ってください。
 
-     確認事項: `pipe_windows.rs`におけるNamedPipeの実装がWindowsのパイプ通信プロトコルに準拠しているか、また、テスト環境（特にスレッドの起動と終了のタイミング）が本番環境の利用シナリオと乖離していないかを確認してください。
+     確認事項: スレッドのライフサイクル管理、リソース解放のロジック、エラー発生時の動作、およびWindows環境特有のパフォーマンス特性との関連性を確認してください。
 
-     期待する出力: `test_client_send_json`のパニックの原因分析と、具体的な修正案、およびその修正案を適用するためのコード変更の概要をMarkdown形式で出力してください。
+     期待する出力: `src/audio/stream.rs` のコードレビュー結果と、デモのヨレ防止に貢献するための具体的な改善提案をMarkdown形式で記述してください。
      ```
 
-2. Windows実機でのデモ動作確認の実施 [Issue #178](../issue-notes/178.md)
-   - 最初の小さな一歩: `src/demo_server_interactive.rs` と `src/client/interactive.rs` のコードを確認し、Windows環境でデモを実行し「ヨレ」がないかを確認するための具体的な手順をまとめる。
-   - Agent実行プロンプ:
+2. [Issue #118](../issue-notes/118.md): Windows用コードのCIビルド/テスト結果の詳細分析
+   - 最初の小さな一歩: 現在のCIで実行されているWindows Runnerによるビルドとテストの過去のログを収集し、特にWindows固有コード（`src/ipc/windows/`内）における失敗の頻度とパターンを特定します。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: `src/demo_server_interactive.rs`, `src/client/interactive.rs`, `Cargo.toml`
+     対象ファイル: `.github/workflows/call-rust-windows-check.yml` (および関連するWindowsビルド/テストワークフロー) と `src/ipc/windows/*.rs` (Windows固有コード)
 
-     実行内容: Windows環境で `ym2151-log-play-server` のデモ（特に音のヨレの有無）を手動で動作確認するための手順書を詳細に作成してください。デモサーバーの起動方法、クライアントからの操作方法、確認すべき点（音のヨレ、タイミングの正確性など）を含めてください。
+     実行内容: CIで日次実行されているWindows Runnerによるビルドとテストの結果を分析し、特にWindows固有のコード（`src/ipc/windows/`ディレクトリ内）に関するビルドエラーやテスト失敗の傾向、原因、およびそれらがAgentによる過去のPRに起因するかどうかを調査してください。過去のCIログ（もし利用可能であれば）と関連するコミット履歴も参照し、失敗のパターンを特定してください。
 
-     確認事項: `Cargo.toml`でWindowsターゲット向けに設定されている依存関係やフィーチャーが適切であるかを確認してください。デモ実行に必要な外部ツールの有無も確認してください。
+     確認事項: Windowsターゲットでのコンパイルフラグ、依存関係、テスト設定、およびAgentが過去に修正したWindows関連ファイルを確認してください。また、Windows開発環境でのビルドパスやライブラリの参照についても考慮してください。
 
-     期待する出力: Windows実機でのデモ動作確認手順をMarkdown形式で出力してください。
+     期待する出力: Windows CIの現状に関する詳細な分析レポート（Markdown形式）。具体的には、失敗のパターン、関連するコード箇所、Agentによる変更との関連性、およびWindowsコードの品質向上のための推奨事項を含めてください。
      ```
 
-3. AgentによるWindowsコードのTDDとハルシネーション対策の検討 [Issue #118](../issue-notes/118.md)
-   - 最初の小さな一歩: `issue-notes/118.md` に記載されている対策案（`cargo check target gnu`, `cross`, `cargo-xwin`など）について、現状のGitHub Actions環境で導入可能性を調査する。
-   - Agent実行プロンプ:
+3. [Issue #138](../issue-notes/138.md): Agentハルシネーション対策としてのCIエラーログ最適化検討
+   - 最初の小さな一歩: 現在のCIワークフローが生成するエラーログのサイズと内容を調査し、Agentの分析にとって冗長または不要な情報が含まれていないかを確認します。
+   - Agent実行プロンプト:
      ```
-     対象ファイル: `.github/workflows/build_windows.yml`, `.github/workflows/call-rust-windows-check.yml`, `Cargo.toml`
+     対象ファイル: `.github/workflows/` ディレクトリ内の主要なCIワークフローファイル（例: `build_windows.yml`, `call-daily-project-summary.yml`など、エラーログを出力しうるもの）
 
-     実行内容: GitHub ActionsのLinux Runner上でWindowsターゲット向けRustコードのコンパイルチェック（`cargo check --target`など）を効果的に行う方法について調査し、導入可能なツールや設定（`cross`, `cargo-xwin`など）を比較分析してください。また、AgentがTDDでWindowsコードを修正する際のハルシネーションを抑制するための、CIでのコンパイルチェックの具体的な導入方法と、それによって期待される効果をMarkdown形式で出力してください。
+     実行内容: CIの実行ログ（特にエラー発生時）について、ログサイズの肥大化に寄与している可能性のある箇所を特定し、その削減策を検討してください。具体的には、冗長な出力や、Agentの分析にとって必須ではない情報がログに含まれていないかを調査し、ログレベルの調整、特定のステップの出力を抑制する方法、エラーメッセージのフィルタリング方法などを提案してください。
 
-     確認事項: 既存のWindowsビルドワークフロー (`build_windows.yml`, `call-rust-windows-check.yml`) との整合性、およびLinux Runnerでのクロスコンパイル環境構築の実現可能性を確認してください。
+     確認事項: 既存のCIワークフローのステップ、コマンドの出力設定、ログ収集のメカニズム、およびログ出力の制御に関するGitHub Actionsの機能やベストプラクティスを確認してください。
 
-     期待する出力: AgentによるWindowsコードの品質向上とハルシネーション対策のための、CIでのコンパイルチェック導入に関する調査結果と提案をMarkdown形式で出力してください。
+     期待する出力: CIエラーログの効率化に関する分析と提案をMarkdown形式で記述してください。これには、ログ削減の具体的な方法、実現可能性、およびAgentのハルシネーション防止への寄与に関する考察を含めてください。
 
 ---
-Generated at: 2026-01-04 07:01:53 JST
+Generated at: 2026-01-05 07:01:56 JST

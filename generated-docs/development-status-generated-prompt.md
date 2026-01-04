@@ -1,4 +1,4 @@
-Last updated: 2026-01-04
+Last updated: 2026-01-05
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -357,20 +357,6 @@ Last updated: 2026-01-04
 - tests/test_util_server_mutex.rs
 
 ## 現在のオープンIssues
-## [Issue #179](../issue-notes/179.md): test failed
-### ym2151-log-play-server::client_test::client_integration_tests::test_client_send_json
-
-**エラー**: スレッド 'client_integration_tests::test_client_send_json' (4896) が tests\client_test.rs:62:9 でパニックしました
-
-```
-スレッド 'client_integration_tests::test_client_send_json' (4896) が tests\client_test.rs:62:9 で...
-ラベル: ci, windows, auto-generated
---- issue-notes/179.md の内容 ---
-
-```markdown
-
-```
-
 ## [Issue #178](../issue-notes/178.md): demoがヨレないようになっているか、Windows実機で動作確認する
 [issue-notes/178.md](https://github.com/cat2151/ym2151-log-play-server/blob/main/issue-notes/178.md)
 
@@ -595,24 +581,6 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/9.md
-```md
-{% raw %}
-# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
-[issues #9](https://github.com/cat2151/github-actions/issues/9)
-
-# agentに修正させたり、人力で修正したりした
-- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
-- 詳しくはcommit logを参照のこと
-- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
-
-# test green
-
-# closeとする
-
-{% endraw %}
-```
-
 ### issue-notes/118.md
 ```md
 {% raw %}
@@ -715,178 +683,18 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 {% endraw %}
 ```
 
-### tests/client_test.rs
-```rs
-{% raw %}
-//! Integration tests for the client module
-//!
-//! These tests verify that the client can send commands to a mock server using the binary protocol.
-
-#![cfg(windows)]
-
-mod test_util_server_mutex;
-
-mod client_integration_tests {
-    use std::thread;
-    use std::time::Duration;
-    use ym2151_log_play_server::ipc::pipe_windows::NamedPipe;
-    use ym2151_log_play_server::ipc::protocol::{Command, Response};
-
-    // Import test utilities for sequential server tests
-    use super::test_util_server_mutex::server_test_lock;
-
-    /// Helper to clean up pipe before test
-    fn cleanup_pipe() {
-        // On Windows, pipes are automatically cleaned up when all handles are closed
-        thread::sleep(Duration::from_millis(50));
-    }
-
-    #[test]
-    fn test_client_send_json() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        // Start a mock server in a separate thread
-        let server_handle = thread::spawn(|| {
-            let pipe = NamedPipe::create().unwrap();
-            let mut reader = pipe.open_read().unwrap();
-
-            // Read the binary command
-            let binary_data = reader.read_binary().unwrap();
-            let cmd = Command::from_binary(&binary_data).unwrap();
-
-            // Verify it's a PlayJson command with JSON data
-            match cmd {
-                Command::PlayJson { data } => {
-                    // Verify the JSON structure
-                    assert!(data.get("events").is_some());
-                }
-                _ => panic!("Expected PlayJson command"),
-            }
-
-            // Send OK response in binary format
-            let mut writer = pipe.open_write().unwrap();
-            let response = Response::Ok;
-            let response_binary = response.to_binary().unwrap();
-            writer.write_binary(&response_binary).unwrap();
-        });
-
-        // Give server time to start and create the pipe
-        thread::sleep(Duration::from_millis(200));
-
-        // Send JSON data from client
-        let json_data = r#"{"events": [{"time": 0, "addr": "0x08", "data": "0x00"}]}"#;
-        let result = ym2151_log_play_server::client::send_json(json_data);
-        assert!(result.is_ok());
-
-        // Wait for server to finish
-        server_handle.join().unwrap();
-    }
-
-    #[test]
-    fn test_client_stop_playback() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        let server_handle = thread::spawn(|| {
-            let pipe = NamedPipe::create().unwrap();
-            let mut reader = pipe.open_read().unwrap();
-
-            // Read the binary command
-            let binary_data = reader.read_binary().unwrap();
-            let cmd = Command::from_binary(&binary_data).unwrap();
-
-            // Verify it's a Stop command
-            assert!(matches!(cmd, Command::Stop));
-
-            // Send OK response in binary format
-            let mut writer = pipe.open_write().unwrap();
-            let response = Response::Ok;
-            let response_binary = response.to_binary().unwrap();
-            writer.write_binary(&response_binary).unwrap();
-        });
-
-        thread::sleep(Duration::from_millis(200));
-
-        let result = ym2151_log_play_server::client::stop_playback();
-        assert!(result.is_ok());
-
-        server_handle.join().unwrap();
-    }
-
-    #[test]
-    fn test_client_shutdown_server() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        let server_handle = thread::spawn(|| {
-            let pipe = NamedPipe::create().unwrap();
-            let mut reader = pipe.open_read().unwrap();
-
-            // Read the binary command
-            let binary_data = reader.read_binary().unwrap();
-            let cmd = Command::from_binary(&binary_data).unwrap();
-
-            // Verify it's a Shutdown command
-            assert!(matches!(cmd, Command::Shutdown));
-
-            // Send OK response in binary format
-            let mut writer = pipe.open_write().unwrap();
-            let response = Response::Ok;
-            let response_binary = response.to_binary().unwrap();
-            writer.write_binary(&response_binary).unwrap();
-        });
-
-        thread::sleep(Duration::from_millis(200));
-
-        let result = ym2151_log_play_server::client::shutdown_server();
-        assert!(result.is_ok());
-
-        server_handle.join().unwrap();
-    }
-
-    #[test]
-    fn test_client_no_server() {
-        // Acquire lock to prevent parallel execution of server tests
-        let _lock = server_test_lock();
-
-        cleanup_pipe();
-
-        // Try to send a command when no server is running
-        // This should fail with a connection error
-        let result = ym2151_log_play_server::client::stop_playback();
-        assert!(result.is_err());
-
-        let err_msg = result.unwrap_err().to_string();
-        assert!(
-            err_msg.contains("Failed to connect to server")
-                || err_msg.contains("The system cannot find the file specified")
-                || err_msg.contains("No such file or directory")
-        );
-    }
-}
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+23f194e Merge pull request #180 from cat2151/copilot/fix-client-integration-tests
+42b4b8d Address PR review feedback: Add thread name and improve documentation
+e2a41fd Add logging for headless thread join errors in Drop
+ba5dcb2 Add Drop impl for AudioStream to properly cleanup headless thread
+cc2793e Add headless mode support to AudioStream for CI environments
+2bb1165 Initial plan
+2ffbfd8 Update project summaries (overview & development status) [auto]
 a117df2 Auto-translate README.ja.md to README.md [auto]
 2e81b6a Add DeepWiki badge to Japanese README
 dcec1c6 Update project summaries (overview & development status) [auto]
-ccbe799 Add issue note for #178 [auto]
-fcef1b7 force installにし、依存クレートのupdateにそれを反映できるようにした
-1dd07e3 Merge pull request #177 from cat2151/copilot/fix-demo-interactive-mode-timing
-d9e2ce5 Add ASAP mode support: detect first event time 0.0 for immediate playback
-602db80 Fix timing jitter in interactive mode by using audio stream time instead of wall-clock time
-4274a36 Initial plan
-4cebd0e Update issue notes for ym2151 tone editor #117
 
 ### 変更されたファイル:
 README.ja.md
@@ -896,10 +704,9 @@ generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
 install-ym2151-tools.rs
-issue-notes/117.md
 issue-notes/178.md
-src/server/command_handler.rs
+src/audio/stream.rs
 
 
 ---
-Generated at: 2026-01-04 07:01:37 JST
+Generated at: 2026-01-05 07:01:41 JST
