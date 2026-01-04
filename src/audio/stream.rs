@@ -13,7 +13,20 @@ use crate::audio_config::buffer::*;
 use crate::logging;
 use crate::resampler::OUTPUT_SAMPLE_RATE;
 
-/// Audio stream manager that handles CPAL stream creation and management
+/// Audio stream manager that handles CPAL stream creation and management.
+///
+/// This type operates in two modes:
+/// - **CPAL-backed mode**: When a default output device is available and a CPAL
+///   output stream can be created, `AudioStream` holds the active `cpal::Stream`
+///   and drives real-time audio playback.
+/// - **Headless mode**: When no suitable output device is available (for example
+///   when `default_output_device` returns `None` or stream creation fails),
+///   `AudioStream` starts a background consumer thread that continuously drains
+///   samples from the provided channel without sending them to audio hardware.
+///
+/// Headless mode is automatically selected during construction when CPAL cannot
+/// provide a usable output device, allowing the rest of the system (such as log
+/// playback and timing) to run without producing audible output.
 pub struct AudioStream {
     #[allow(dead_code)] // Stream must be kept alive for audio playback until dropped
     stream: Option<cpal::Stream>,
@@ -31,7 +44,7 @@ impl AudioStream {
     /// * `Result<Self>` - The audio stream manager or an error
     pub fn new(sample_rx: Receiver<Vec<f32>>) -> Result<Self> {
         let host = cpal::default_host();
-        
+
         // Try to get an output device, but fall back to headless mode if not available
         match host.default_output_device() {
             Some(device) => {
@@ -72,7 +85,7 @@ impl AudioStream {
 
                 stream.play().context("Failed to start audio stream")?;
 
-                Ok(Self { 
+                Ok(Self {
                     stream: Some(stream),
                     headless_thread: None,
                 })
@@ -80,15 +93,18 @@ impl AudioStream {
             None => {
                 // No audio device available - run in headless mode
                 logging::log_verbose_server("No audio device available, running in headless mode");
-                
-                // Create a thread that consumes samples without playing them
-                let headless_thread = std::thread::spawn(move || {
-                    while let Ok(_samples) = sample_rx.recv() {
-                        // Just consume the samples, don't do anything with them
-                        // This keeps the generator thread from blocking
-                    }
-                });
-                
+
+                // Create a named thread that consumes samples without playing them
+                let headless_thread = std::thread::Builder::new()
+                    .name("headless-audio".to_string())
+                    .spawn(move || {
+                        while let Ok(_samples) = sample_rx.recv() {
+                            // Just consume the samples, don't do anything with them
+                            // This keeps the generator thread from blocking
+                        }
+                    })
+                    .expect("Failed to spawn headless audio thread");
+
                 Ok(Self {
                     stream: None,
                     headless_thread: Some(headless_thread),
