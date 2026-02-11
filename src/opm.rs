@@ -2,8 +2,6 @@ use crate::opm_ffi;
 use std::mem;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const CYCLES_PER_SAMPLE: usize = 64;
-
 static FFI_CALL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 pub struct OpmChip {
@@ -36,19 +34,11 @@ impl OpmChip {
         for i in 0..num_samples {
             let mut output: [i32; 2] = [0; 2];
 
-            for _ in 0..CYCLES_PER_SAMPLE {
-                unsafe {
-                    opm_ffi::OPM_Clock(
-                        &mut self.chip,
-                        output.as_mut_ptr(),
-                        std::ptr::null_mut(),
-                        std::ptr::null_mut(),
-                        std::ptr::null_mut(),
-                    );
-                }
+            unsafe {
+                opm_ffi::call_opm_clock_64times(&mut self.chip, output.as_mut_ptr());
             }
 
-            FFI_CALL_COUNTER.fetch_add(CYCLES_PER_SAMPLE as u64, Ordering::Relaxed);
+            FFI_CALL_COUNTER.fetch_add(1, Ordering::Relaxed);
 
             buffer[i * 2] = Self::convert_sample(output[0]);
             buffer[i * 2 + 1] = Self::convert_sample(output[1]);

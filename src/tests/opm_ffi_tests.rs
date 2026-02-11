@@ -13,3 +13,14 @@ fn test_basic_initialization() {
         OPM_Reset(&mut chip);
     }
 }
+
+#[test]
+fn test_call_opm_clock_64times() {
+    unsafe {
+        let mut chip: opm_t = mem::zeroed();
+        let mut output = [0i32; 2];
+
+        OPM_Reset(&mut chip);
+        call_opm_clock_64times(&mut chip, output.as_mut_ptr());
+    }
+}

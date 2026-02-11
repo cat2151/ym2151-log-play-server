@@ -4,7 +4,7 @@
 //! to minimize audio dropouts:
 //!
 //! 1. **Generator Thread** (see `generator` module):
-//!    - Runs OPM emulation: `player.generate_samples()` → `chip.generate_samples()` → `OPM_Clock()`
+//!    - Runs OPM emulation: `player.generate_samples()` → `chip.generate_samples()` → `call_opm_clock_64times()`
 //!    - Priority boost: Windows MMCSS "Pro Audio" task (via `mmcss` module)
 //!    - Generates samples at OPM's native 55930 Hz rate
 //!
