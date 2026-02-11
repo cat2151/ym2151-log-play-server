@@ -353,8 +353,12 @@ impl CommandHandler {
         ));
 
         // Schedule all events using audio stream time
-        let success_count =
-            Self::schedule_all_events(event_log, player_ref, audio_stream_elapsed_sec, future_offset_sec);
+        let success_count = Self::schedule_all_events(
+            event_log,
+            player_ref,
+            audio_stream_elapsed_sec,
+            future_offset_sec,
+        );
 
         logging::log_verbose_server(&format!(
             "✅ {}個のイベントを正常にスケジュールしました",
