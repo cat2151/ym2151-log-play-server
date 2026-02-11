@@ -1,4 +1,4 @@
-Last updated: 2026-01-05
+Last updated: 2026-02-12
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -111,6 +111,7 @@ Last updated: 2026-01-05
 - .github/actions-tmp/.github/workflows/call-rust-windows-check.yml
 - .github/actions-tmp/.github/workflows/call-translate-readme.yml
 - .github/actions-tmp/.github/workflows/callgraph.yml
+- .github/actions-tmp/.github/workflows/check-large-files.yml
 - .github/actions-tmp/.github/workflows/check-recent-human-commit.yml
 - .github/actions-tmp/.github/workflows/daily-project-summary.yml
 - .github/actions-tmp/.github/workflows/issue-note.yml
@@ -133,6 +134,9 @@ Last updated: 2026-01-05
 - .github/actions-tmp/.github_automation/callgraph/scripts/find-process-results.cjs
 - .github/actions-tmp/.github_automation/callgraph/scripts/generate-html-graph.cjs
 - .github/actions-tmp/.github_automation/callgraph/scripts/generateHTML.cjs
+- .github/actions-tmp/.github_automation/check-large-files/README.md
+- .github/actions-tmp/.github_automation/check-large-files/check-large-files.toml.example
+- .github/actions-tmp/.github_automation/check-large-files/scripts/check_large_files.py
 - .github/actions-tmp/.github_automation/check_recent_human_commit/scripts/check-recent-human-commit.cjs
 - .github/actions-tmp/.github_automation/project_summary/docs/daily-summary-setup.md
 - .github/actions-tmp/.github_automation/project_summary/prompts/development-status-prompt.md
@@ -189,6 +193,8 @@ Last updated: 2026-01-05
 - .github/actions-tmp/issue-notes/29.md
 - .github/actions-tmp/issue-notes/3.md
 - .github/actions-tmp/issue-notes/30.md
+- .github/actions-tmp/issue-notes/35.md
+- .github/actions-tmp/issue-notes/38.md
 - .github/actions-tmp/issue-notes/4.md
 - .github/actions-tmp/issue-notes/7.md
 - .github/actions-tmp/issue-notes/8.md
@@ -218,6 +224,8 @@ Last updated: 2026-01-05
 - _codeql_detected_source_root
 - _config.yml
 - build.rs
+- call_opm_clock_64times.c
+- generated-docs/project-overview-generated-prompt.md
 - googled947dc864c270e07.html
 - install-ym2151-tools.rs
 - issue-notes/100.md
@@ -230,32 +238,13 @@ Last updated: 2026-01-05
 - issue-notes/116.md
 - issue-notes/117.md
 - issue-notes/118.md
-- issue-notes/119.md
-- issue-notes/120.md
-- issue-notes/121.md
 - issue-notes/122.md
 - issue-notes/123.md
-- issue-notes/124.md
-- issue-notes/128.md
-- issue-notes/130.md
-- issue-notes/132.md
-- issue-notes/134.md
 - issue-notes/138.md
-- issue-notes/141.md
-- issue-notes/143.md
-- issue-notes/146.md
-- issue-notes/148.md
-- issue-notes/150.md
-- issue-notes/152.md
-- issue-notes/154.md
-- issue-notes/156.md
-- issue-notes/158.md
-- issue-notes/161.md
 - issue-notes/165.md
-- issue-notes/167.md
 - issue-notes/169.md
-- issue-notes/173.md
 - issue-notes/178.md
+- issue-notes/181.md
 - issue-notes/96.md
 - issue-notes/97.md
 - issue-notes/98.md
@@ -502,6 +491,25 @@ Last updated: 2026-01-05
 {% endraw %}
 ```
 
+### .github/actions-tmp/issue-notes/38.md
+```md
+{% raw %}
+# issue PR 36 と PR 37 を取り込んだあと、存在しないissueでワークフローがエラー終了してしまった #38
+[issues #38](https://github.com/cat2151/github-actions/issues/38)
+
+# URL
+
+- https://github.com/cat2151/wavlpf/actions/runs/21907996164/job/63253441830
+
+# 実現したいこと
+
+- issueが存在しないのは想定したことであるから、エラー終了にはしない。可用性を維持する。
+  - それはそれとして、想定しないできごとが発生した場合は、fail fastする
+    - 今回は「想定したできごとなので、fail fastしない」
+
+{% endraw %}
+```
+
 ### .github/actions-tmp/issue-notes/8.md
 ```md
 {% raw %}
@@ -685,28 +693,49 @@ planにおいては、修正対象のソースファイル名と関数名を、�
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-23f194e Merge pull request #180 from cat2151/copilot/fix-client-integration-tests
-42b4b8d Address PR review feedback: Add thread name and improve documentation
-e2a41fd Add logging for headless thread join errors in Drop
-ba5dcb2 Add Drop impl for AudioStream to properly cleanup headless thread
-cc2793e Add headless mode support to AudioStream for CI environments
-2bb1165 Initial plan
-2ffbfd8 Update project summaries (overview & development status) [auto]
-a117df2 Auto-translate README.ja.md to README.md [auto]
-2e81b6a Add DeepWiki badge to Japanese README
-dcec1c6 Update project summaries (overview & development status) [auto]
+b7321c0 Merge pull request #182 from cat2151/codex/implement-call-opm-clock-64-times
+a5b36e5 Fix FFI types and wrapper includes
+44cd125 Add call_opm_clock_64times FFI path
+ecc2c3e Initial plan
+c6d5f97 Update issue notes for OPM_Clock implementation
+9c3cd1a Add issue note for #181 [auto]
 
 ### 変更されたファイル:
-README.ja.md
 README.md
+build.rs
+call_opm_clock_64times.c
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-install-ym2151-tools.rs
-issue-notes/178.md
+issue-notes/119.md
+issue-notes/120.md
+issue-notes/121.md
+issue-notes/124.md
+issue-notes/128.md
+issue-notes/130.md
+issue-notes/132.md
+issue-notes/134.md
+issue-notes/141.md
+issue-notes/143.md
+issue-notes/146.md
+issue-notes/148.md
+issue-notes/150.md
+issue-notes/152.md
+issue-notes/154.md
+issue-notes/156.md
+issue-notes/158.md
+issue-notes/161.md
+issue-notes/167.md
+issue-notes/173.md
+issue-notes/181.md
+src/audio/mod.rs
 src/audio/stream.rs
+src/opm.rs
+src/opm_ffi.rs
+src/server/command_handler.rs
+src/tests/opm_ffi_tests.rs
 
 
 ---
-Generated at: 2026-01-05 07:01:41 JST
+Generated at: 2026-02-12 07:05:07 JST

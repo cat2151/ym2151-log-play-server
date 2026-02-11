@@ -1,4 +1,4 @@
-Last updated: 2026-01-05
+Last updated: 2026-02-12
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -996,6 +996,7 @@ MIT License
                                                                                 📖 README.md
                                                                                 📄 _config.yml
                                                                                 📄 build.rs
+                                                                                📄 call_opm_clock_64times.c
                                                                                 📁 generated-docs/
                                                                                 🌐 googled947dc864c270e07.html
                                                                                 📄 install-ym2151-tools.rs
@@ -1010,32 +1011,13 @@ MIT License
                                                                                   📖 116.md
                                                                                   📖 117.md
                                                                                   📖 118.md
-                                                                                  📖 119.md
-                                                                                  📖 120.md
-                                                                                  📖 121.md
                                                                                   📖 122.md
                                                                                   📖 123.md
-                                                                                  📖 124.md
-                                                                                  📖 128.md
-                                                                                  📖 130.md
-                                                                                  📖 132.md
-                                                                                  📖 134.md
                                                                                   📖 138.md
-                                                                                  📖 141.md
-                                                                                  📖 143.md
-                                                                                  📖 146.md
-                                                                                  📖 148.md
-                                                                                  📖 150.md
-                                                                                  📖 152.md
-                                                                                  📖 154.md
-                                                                                  📖 156.md
-                                                                                  📖 158.md
-                                                                                  📖 161.md
                                                                                   📖 165.md
-                                                                                  📖 167.md
                                                                                   📖 169.md
-                                                                                  📖 173.md
                                                                                   📖 178.md
+                                                                                  📖 181.md
                                                                                   📖 96.md
                                                                                   📖 97.md
                                                                                   📖 98.md
@@ -1148,6 +1130,7 @@ MIT License
                                                                                   📄 test_util_server_mutex.rs
                                                                               📄 _config.yml
                                                                               📄 build.rs
+                                                                              📄 call_opm_clock_64times.c
                                                                               📁 generated-docs/
                                                                               🌐 googled947dc864c270e07.html
                                                                               📄 install-ym2151-tools.rs
@@ -1162,32 +1145,13 @@ MIT License
                                                                                 📖 116.md
                                                                                 📖 117.md
                                                                                 📖 118.md
-                                                                                📖 119.md
-                                                                                📖 120.md
-                                                                                📖 121.md
                                                                                 📖 122.md
                                                                                 📖 123.md
-                                                                                📖 124.md
-                                                                                📖 128.md
-                                                                                📖 130.md
-                                                                                📖 132.md
-                                                                                📖 134.md
                                                                                 📖 138.md
-                                                                                📖 141.md
-                                                                                📖 143.md
-                                                                                📖 146.md
-                                                                                📖 148.md
-                                                                                📖 150.md
-                                                                                📖 152.md
-                                                                                📖 154.md
-                                                                                📖 156.md
-                                                                                📖 158.md
-                                                                                📖 161.md
                                                                                 📖 165.md
-                                                                                📖 167.md
                                                                                 📖 169.md
-                                                                                📖 173.md
                                                                                 📖 178.md
+                                                                                📖 181.md
                                                                                 📖 96.md
                                                                                 📖 97.md
                                                                                 📖 98.md
@@ -1300,6 +1264,7 @@ MIT License
                                                                                 📄 test_util_server_mutex.rs
                                                                             📄 _config.yml
                                                                             📄 build.rs
+                                                                            📄 call_opm_clock_64times.c
                                                                             📁 generated-docs/
                                                                             🌐 googled947dc864c270e07.html
                                                                             📄 install-ym2151-tools.rs
@@ -1314,32 +1279,13 @@ MIT License
                                                                               📖 116.md
                                                                               📖 117.md
                                                                               📖 118.md
-                                                                              📖 119.md
-                                                                              📖 120.md
-                                                                              📖 121.md
                                                                               📖 122.md
                                                                               📖 123.md
-                                                                              📖 124.md
-                                                                              📖 128.md
-                                                                              📖 130.md
-                                                                              📖 132.md
-                                                                              📖 134.md
                                                                               📖 138.md
-                                                                              📖 141.md
-                                                                              📖 143.md
-                                                                              📖 146.md
-                                                                              📖 148.md
-                                                                              📖 150.md
-                                                                              📖 152.md
-                                                                              📖 154.md
-                                                                              📖 156.md
-                                                                              📖 158.md
-                                                                              📖 161.md
                                                                               📖 165.md
-                                                                              📖 167.md
                                                                               📖 169.md
-                                                                              📖 173.md
                                                                               📖 178.md
+                                                                              📖 181.md
                                                                               📖 96.md
                                                                               📖 97.md
                                                                               📖 98.md
@@ -1452,6 +1398,7 @@ MIT License
                                                                               📄 test_util_server_mutex.rs
                                                                           📄 _config.yml
                                                                           📄 build.rs
+                                                                          📄 call_opm_clock_64times.c
                                                                           📁 generated-docs/
                                                                           🌐 googled947dc864c270e07.html
                                                                           📄 install-ym2151-tools.rs
@@ -1466,32 +1413,13 @@ MIT License
                                                                             📖 116.md
                                                                             📖 117.md
                                                                             📖 118.md
-                                                                            📖 119.md
-                                                                            📖 120.md
-                                                                            📖 121.md
                                                                             📖 122.md
                                                                             📖 123.md
-                                                                            📖 124.md
-                                                                            📖 128.md
-                                                                            📖 130.md
-                                                                            📖 132.md
-                                                                            📖 134.md
                                                                             📖 138.md
-                                                                            📖 141.md
-                                                                            📖 143.md
-                                                                            📖 146.md
-                                                                            📖 148.md
-                                                                            📖 150.md
-                                                                            📖 152.md
-                                                                            📖 154.md
-                                                                            📖 156.md
-                                                                            📖 158.md
-                                                                            📖 161.md
                                                                             📖 165.md
-                                                                            📖 167.md
                                                                             📖 169.md
-                                                                            📖 173.md
                                                                             📖 178.md
+                                                                            📖 181.md
                                                                             📖 96.md
                                                                             📖 97.md
                                                                             📖 98.md
@@ -1604,6 +1532,7 @@ MIT License
                                                                             📄 test_util_server_mutex.rs
                                                                         📄 _config.yml
                                                                         📄 build.rs
+                                                                        📄 call_opm_clock_64times.c
                                                                         📁 generated-docs/
                                                                         🌐 googled947dc864c270e07.html
                                                                         📄 install-ym2151-tools.rs
@@ -1618,32 +1547,13 @@ MIT License
                                                                           📖 116.md
                                                                           📖 117.md
                                                                           📖 118.md
-                                                                          📖 119.md
-                                                                          📖 120.md
-                                                                          📖 121.md
                                                                           📖 122.md
                                                                           📖 123.md
-                                                                          📖 124.md
-                                                                          📖 128.md
-                                                                          📖 130.md
-                                                                          📖 132.md
-                                                                          📖 134.md
                                                                           📖 138.md
-                                                                          📖 141.md
-                                                                          📖 143.md
-                                                                          📖 146.md
-                                                                          📖 148.md
-                                                                          📖 150.md
-                                                                          📖 152.md
-                                                                          📖 154.md
-                                                                          📖 156.md
-                                                                          📖 158.md
-                                                                          📖 161.md
                                                                           📖 165.md
-                                                                          📖 167.md
                                                                           📖 169.md
-                                                                          📖 173.md
                                                                           📖 178.md
+                                                                          📖 181.md
                                                                           📖 96.md
                                                                           📖 97.md
                                                                           📖 98.md
@@ -1756,6 +1666,7 @@ MIT License
                                                                           📄 test_util_server_mutex.rs
                                                                       📄 _config.yml
                                                                       📄 build.rs
+                                                                      📄 call_opm_clock_64times.c
                                                                       📁 generated-docs/
                                                                       🌐 googled947dc864c270e07.html
                                                                       📄 install-ym2151-tools.rs
@@ -1770,32 +1681,13 @@ MIT License
                                                                         📖 116.md
                                                                         📖 117.md
                                                                         📖 118.md
-                                                                        📖 119.md
-                                                                        📖 120.md
-                                                                        📖 121.md
                                                                         📖 122.md
                                                                         📖 123.md
-                                                                        📖 124.md
-                                                                        📖 128.md
-                                                                        📖 130.md
-                                                                        📖 132.md
-                                                                        📖 134.md
                                                                         📖 138.md
-                                                                        📖 141.md
-                                                                        📖 143.md
-                                                                        📖 146.md
-                                                                        📖 148.md
-                                                                        📖 150.md
-                                                                        📖 152.md
-                                                                        📖 154.md
-                                                                        📖 156.md
-                                                                        📖 158.md
-                                                                        📖 161.md
                                                                         📖 165.md
-                                                                        📖 167.md
                                                                         📖 169.md
-                                                                        📖 173.md
                                                                         📖 178.md
+                                                                        📖 181.md
                                                                         📖 96.md
                                                                         📖 97.md
                                                                         📖 98.md
@@ -1908,6 +1800,7 @@ MIT License
                                                                         📄 test_util_server_mutex.rs
                                                                     📄 _config.yml
                                                                     📄 build.rs
+                                                                    📄 call_opm_clock_64times.c
                                                                     📁 generated-docs/
                                                                     🌐 googled947dc864c270e07.html
                                                                     📄 install-ym2151-tools.rs
@@ -1922,32 +1815,13 @@ MIT License
                                                                       📖 116.md
                                                                       📖 117.md
                                                                       📖 118.md
-                                                                      📖 119.md
-                                                                      📖 120.md
-                                                                      📖 121.md
                                                                       📖 122.md
                                                                       📖 123.md
-                                                                      📖 124.md
-                                                                      📖 128.md
-                                                                      📖 130.md
-                                                                      📖 132.md
-                                                                      📖 134.md
                                                                       📖 138.md
-                                                                      📖 141.md
-                                                                      📖 143.md
-                                                                      📖 146.md
-                                                                      📖 148.md
-                                                                      📖 150.md
-                                                                      📖 152.md
-                                                                      📖 154.md
-                                                                      📖 156.md
-                                                                      📖 158.md
-                                                                      📖 161.md
                                                                       📖 165.md
-                                                                      📖 167.md
                                                                       📖 169.md
-                                                                      📖 173.md
                                                                       📖 178.md
+                                                                      📖 181.md
                                                                       📖 96.md
                                                                       📖 97.md
                                                                       📖 98.md
@@ -2060,6 +1934,7 @@ MIT License
                                                                       📄 test_util_server_mutex.rs
                                                                   📄 _config.yml
                                                                   📄 build.rs
+                                                                  📄 call_opm_clock_64times.c
                                                                   📁 generated-docs/
                                                                   🌐 googled947dc864c270e07.html
                                                                   📄 install-ym2151-tools.rs
@@ -2074,32 +1949,13 @@ MIT License
                                                                     📖 116.md
                                                                     📖 117.md
                                                                     📖 118.md
-                                                                    📖 119.md
-                                                                    📖 120.md
-                                                                    📖 121.md
                                                                     📖 122.md
                                                                     📖 123.md
-                                                                    📖 124.md
-                                                                    📖 128.md
-                                                                    📖 130.md
-                                                                    📖 132.md
-                                                                    📖 134.md
                                                                     📖 138.md
-                                                                    📖 141.md
-                                                                    📖 143.md
-                                                                    📖 146.md
-                                                                    📖 148.md
-                                                                    📖 150.md
-                                                                    📖 152.md
-                                                                    📖 154.md
-                                                                    📖 156.md
-                                                                    📖 158.md
-                                                                    📖 161.md
                                                                     📖 165.md
-                                                                    📖 167.md
                                                                     📖 169.md
-                                                                    📖 173.md
                                                                     📖 178.md
+                                                                    📖 181.md
                                                                     📖 96.md
                                                                     📖 97.md
                                                                     📖 98.md
@@ -2212,6 +2068,7 @@ MIT License
                                                                     📄 test_util_server_mutex.rs
                                                                 📄 _config.yml
                                                                 📄 build.rs
+                                                                📄 call_opm_clock_64times.c
                                                                 📁 generated-docs/
                                                                 🌐 googled947dc864c270e07.html
                                                                 📄 install-ym2151-tools.rs
@@ -2226,32 +2083,13 @@ MIT License
                                                                   📖 116.md
                                                                   📖 117.md
                                                                   📖 118.md
-                                                                  📖 119.md
-                                                                  📖 120.md
-                                                                  📖 121.md
                                                                   📖 122.md
                                                                   📖 123.md
-                                                                  📖 124.md
-                                                                  📖 128.md
-                                                                  📖 130.md
-                                                                  📖 132.md
-                                                                  📖 134.md
                                                                   📖 138.md
-                                                                  📖 141.md
-                                                                  📖 143.md
-                                                                  📖 146.md
-                                                                  📖 148.md
-                                                                  📖 150.md
-                                                                  📖 152.md
-                                                                  📖 154.md
-                                                                  📖 156.md
-                                                                  📖 158.md
-                                                                  📖 161.md
                                                                   📖 165.md
-                                                                  📖 167.md
                                                                   📖 169.md
-                                                                  📖 173.md
                                                                   📖 178.md
+                                                                  📖 181.md
                                                                   📖 96.md
                                                                   📖 97.md
                                                                   📖 98.md
@@ -2364,6 +2202,7 @@ MIT License
                                                                   📄 test_util_server_mutex.rs
                                                               📄 _config.yml
                                                               📄 build.rs
+                                                              📄 call_opm_clock_64times.c
                                                               📁 generated-docs/
                                                               🌐 googled947dc864c270e07.html
                                                               📄 install-ym2151-tools.rs
@@ -2378,32 +2217,13 @@ MIT License
                                                                 📖 116.md
                                                                 📖 117.md
                                                                 📖 118.md
-                                                                📖 119.md
-                                                                📖 120.md
-                                                                📖 121.md
                                                                 📖 122.md
                                                                 📖 123.md
-                                                                📖 124.md
-                                                                📖 128.md
-                                                                📖 130.md
-                                                                📖 132.md
-                                                                📖 134.md
                                                                 📖 138.md
-                                                                📖 141.md
-                                                                📖 143.md
-                                                                📖 146.md
-                                                                📖 148.md
-                                                                📖 150.md
-                                                                📖 152.md
-                                                                📖 154.md
-                                                                📖 156.md
-                                                                📖 158.md
-                                                                📖 161.md
                                                                 📖 165.md
-                                                                📖 167.md
                                                                 📖 169.md
-                                                                📖 173.md
                                                                 📖 178.md
+                                                                📖 181.md
                                                                 📖 96.md
                                                                 📖 97.md
                                                                 📖 98.md
@@ -2516,6 +2336,7 @@ MIT License
                                                                 📄 test_util_server_mutex.rs
                                                             📄 _config.yml
                                                             📄 build.rs
+                                                            📄 call_opm_clock_64times.c
                                                             📁 generated-docs/
                                                             🌐 googled947dc864c270e07.html
                                                             📄 install-ym2151-tools.rs
@@ -2530,32 +2351,13 @@ MIT License
                                                               📖 116.md
                                                               📖 117.md
                                                               📖 118.md
-                                                              📖 119.md
-                                                              📖 120.md
-                                                              📖 121.md
                                                               📖 122.md
                                                               📖 123.md
-                                                              📖 124.md
-                                                              📖 128.md
-                                                              📖 130.md
-                                                              📖 132.md
-                                                              📖 134.md
                                                               📖 138.md
-                                                              📖 141.md
-                                                              📖 143.md
-                                                              📖 146.md
-                                                              📖 148.md
-                                                              📖 150.md
-                                                              📖 152.md
-                                                              📖 154.md
-                                                              📖 156.md
-                                                              📖 158.md
-                                                              📖 161.md
                                                               📖 165.md
-                                                              📖 167.md
                                                               📖 169.md
-                                                              📖 173.md
                                                               📖 178.md
+                                                              📖 181.md
                                                               📖 96.md
                                                               📖 97.md
                                                               📖 98.md
@@ -2668,6 +2470,7 @@ MIT License
                                                               📄 test_util_server_mutex.rs
                                                           📄 _config.yml
                                                           📄 build.rs
+                                                          📄 call_opm_clock_64times.c
                                                           📁 generated-docs/
                                                           🌐 googled947dc864c270e07.html
                                                           📄 install-ym2151-tools.rs
@@ -2682,32 +2485,13 @@ MIT License
                                                             📖 116.md
                                                             📖 117.md
                                                             📖 118.md
-                                                            📖 119.md
-                                                            📖 120.md
-                                                            📖 121.md
                                                             📖 122.md
                                                             📖 123.md
-                                                            📖 124.md
-                                                            📖 128.md
-                                                            📖 130.md
-                                                            📖 132.md
-                                                            📖 134.md
                                                             📖 138.md
-                                                            📖 141.md
-                                                            📖 143.md
-                                                            📖 146.md
-                                                            📖 148.md
-                                                            📖 150.md
-                                                            📖 152.md
-                                                            📖 154.md
-                                                            📖 156.md
-                                                            📖 158.md
-                                                            📖 161.md
                                                             📖 165.md
-                                                            📖 167.md
                                                             📖 169.md
-                                                            📖 173.md
                                                             📖 178.md
+                                                            📖 181.md
                                                             📖 96.md
                                                             📖 97.md
                                                             📖 98.md
@@ -2820,6 +2604,7 @@ MIT License
                                                             📄 test_util_server_mutex.rs
                                                         📄 _config.yml
                                                         📄 build.rs
+                                                        📄 call_opm_clock_64times.c
                                                         📁 generated-docs/
                                                         🌐 googled947dc864c270e07.html
                                                         📄 install-ym2151-tools.rs
@@ -2834,32 +2619,13 @@ MIT License
                                                           📖 116.md
                                                           📖 117.md
                                                           📖 118.md
-                                                          📖 119.md
-                                                          📖 120.md
-                                                          📖 121.md
                                                           📖 122.md
                                                           📖 123.md
-                                                          📖 124.md
-                                                          📖 128.md
-                                                          📖 130.md
-                                                          📖 132.md
-                                                          📖 134.md
                                                           📖 138.md
-                                                          📖 141.md
-                                                          📖 143.md
-                                                          📖 146.md
-                                                          📖 148.md
-                                                          📖 150.md
-                                                          📖 152.md
-                                                          📖 154.md
-                                                          📖 156.md
-                                                          📖 158.md
-                                                          📖 161.md
                                                           📖 165.md
-                                                          📖 167.md
                                                           📖 169.md
-                                                          📖 173.md
                                                           📖 178.md
+                                                          📖 181.md
                                                           📖 96.md
                                                           📖 97.md
                                                           📖 98.md
@@ -2972,6 +2738,7 @@ MIT License
                                                           📄 test_util_server_mutex.rs
                                                       📄 _config.yml
                                                       📄 build.rs
+                                                      📄 call_opm_clock_64times.c
                                                       📁 generated-docs/
                                                       🌐 googled947dc864c270e07.html
                                                       📄 install-ym2151-tools.rs
@@ -2986,32 +2753,13 @@ MIT License
                                                         📖 116.md
                                                         📖 117.md
                                                         📖 118.md
-                                                        📖 119.md
-                                                        📖 120.md
-                                                        📖 121.md
                                                         📖 122.md
                                                         📖 123.md
-                                                        📖 124.md
-                                                        📖 128.md
-                                                        📖 130.md
-                                                        📖 132.md
-                                                        📖 134.md
                                                         📖 138.md
-                                                        📖 141.md
-                                                        📖 143.md
-                                                        📖 146.md
-                                                        📖 148.md
-                                                        📖 150.md
-                                                        📖 152.md
-                                                        📖 154.md
-                                                        📖 156.md
-                                                        📖 158.md
-                                                        📖 161.md
                                                         📖 165.md
-                                                        📖 167.md
                                                         📖 169.md
-                                                        📖 173.md
                                                         📖 178.md
+                                                        📖 181.md
                                                         📖 96.md
                                                         📖 97.md
                                                         📖 98.md
@@ -3124,6 +2872,7 @@ MIT License
                                                         📄 test_util_server_mutex.rs
                                                     📄 _config.yml
                                                     📄 build.rs
+                                                    📄 call_opm_clock_64times.c
                                                     📁 generated-docs/
                                                     🌐 googled947dc864c270e07.html
                                                     📄 install-ym2151-tools.rs
@@ -3138,32 +2887,13 @@ MIT License
                                                       📖 116.md
                                                       📖 117.md
                                                       📖 118.md
-                                                      📖 119.md
-                                                      📖 120.md
-                                                      📖 121.md
                                                       📖 122.md
                                                       📖 123.md
-                                                      📖 124.md
-                                                      📖 128.md
-                                                      📖 130.md
-                                                      📖 132.md
-                                                      📖 134.md
                                                       📖 138.md
-                                                      📖 141.md
-                                                      📖 143.md
-                                                      📖 146.md
-                                                      📖 148.md
-                                                      📖 150.md
-                                                      📖 152.md
-                                                      📖 154.md
-                                                      📖 156.md
-                                                      📖 158.md
-                                                      📖 161.md
                                                       📖 165.md
-                                                      📖 167.md
                                                       📖 169.md
-                                                      📖 173.md
                                                       📖 178.md
+                                                      📖 181.md
                                                       📖 96.md
                                                       📖 97.md
                                                       📖 98.md
@@ -3276,6 +3006,7 @@ MIT License
                                                       📄 test_util_server_mutex.rs
                                                   📄 _config.yml
                                                   📄 build.rs
+                                                  📄 call_opm_clock_64times.c
                                                   📁 generated-docs/
                                                   🌐 googled947dc864c270e07.html
                                                   📄 install-ym2151-tools.rs
@@ -3290,32 +3021,13 @@ MIT License
                                                     📖 116.md
                                                     📖 117.md
                                                     📖 118.md
-                                                    📖 119.md
-                                                    📖 120.md
-                                                    📖 121.md
                                                     📖 122.md
                                                     📖 123.md
-                                                    📖 124.md
-                                                    📖 128.md
-                                                    📖 130.md
-                                                    📖 132.md
-                                                    📖 134.md
                                                     📖 138.md
-                                                    📖 141.md
-                                                    📖 143.md
-                                                    📖 146.md
-                                                    📖 148.md
-                                                    📖 150.md
-                                                    📖 152.md
-                                                    📖 154.md
-                                                    📖 156.md
-                                                    📖 158.md
-                                                    📖 161.md
                                                     📖 165.md
-                                                    📖 167.md
                                                     📖 169.md
-                                                    📖 173.md
                                                     📖 178.md
+                                                    📖 181.md
                                                     📖 96.md
                                                     📖 97.md
                                                     📖 98.md
@@ -3428,6 +3140,7 @@ MIT License
                                                     📄 test_util_server_mutex.rs
                                                 📄 _config.yml
                                                 📄 build.rs
+                                                📄 call_opm_clock_64times.c
                                                 📁 generated-docs/
                                                 🌐 googled947dc864c270e07.html
                                                 📄 install-ym2151-tools.rs
@@ -3442,32 +3155,13 @@ MIT License
                                                   📖 116.md
                                                   📖 117.md
                                                   📖 118.md
-                                                  📖 119.md
-                                                  📖 120.md
-                                                  📖 121.md
                                                   📖 122.md
                                                   📖 123.md
-                                                  📖 124.md
-                                                  📖 128.md
-                                                  📖 130.md
-                                                  📖 132.md
-                                                  📖 134.md
                                                   📖 138.md
-                                                  📖 141.md
-                                                  📖 143.md
-                                                  📖 146.md
-                                                  📖 148.md
-                                                  📖 150.md
-                                                  📖 152.md
-                                                  📖 154.md
-                                                  📖 156.md
-                                                  📖 158.md
-                                                  📖 161.md
                                                   📖 165.md
-                                                  📖 167.md
                                                   📖 169.md
-                                                  📖 173.md
                                                   📖 178.md
+                                                  📖 181.md
                                                   📖 96.md
                                                   📖 97.md
                                                   📖 98.md
@@ -3580,6 +3274,7 @@ MIT License
                                                   📄 test_util_server_mutex.rs
                                               📄 _config.yml
                                               📄 build.rs
+                                              📄 call_opm_clock_64times.c
                                               📁 generated-docs/
                                               🌐 googled947dc864c270e07.html
                                               📄 install-ym2151-tools.rs
@@ -3594,32 +3289,13 @@ MIT License
                                                 📖 116.md
                                                 📖 117.md
                                                 📖 118.md
-                                                📖 119.md
-                                                📖 120.md
-                                                📖 121.md
                                                 📖 122.md
                                                 📖 123.md
-                                                📖 124.md
-                                                📖 128.md
-                                                📖 130.md
-                                                📖 132.md
-                                                📖 134.md
                                                 📖 138.md
-                                                📖 141.md
-                                                📖 143.md
-                                                📖 146.md
-                                                📖 148.md
-                                                📖 150.md
-                                                📖 152.md
-                                                📖 154.md
-                                                📖 156.md
-                                                📖 158.md
-                                                📖 161.md
                                                 📖 165.md
-                                                📖 167.md
                                                 📖 169.md
-                                                📖 173.md
                                                 📖 178.md
+                                                📖 181.md
                                                 📖 96.md
                                                 📖 97.md
                                                 📖 98.md
@@ -3732,8 +3408,8 @@ MIT License
                                                 📄 test_util_server_mutex.rs
                                             📄 _config.yml
                                             📄 build.rs
+                                            📄 call_opm_clock_64times.c
                                             📁 generated-docs/
-                                              📖 development-status-generated-prompt.md
                                             🌐 googled947dc864c270e07.html
                                             📄 install-ym2151-tools.rs
                                             📁 issue-notes/
@@ -3747,32 +3423,13 @@ MIT License
                                               📖 116.md
                                               📖 117.md
                                               📖 118.md
-                                              📖 119.md
-                                              📖 120.md
-                                              📖 121.md
                                               📖 122.md
                                               📖 123.md
-                                              📖 124.md
-                                              📖 128.md
-                                              📖 130.md
-                                              📖 132.md
-                                              📖 134.md
                                               📖 138.md
-                                              📖 141.md
-                                              📖 143.md
-                                              📖 146.md
-                                              📖 148.md
-                                              📖 150.md
-                                              📖 152.md
-                                              📖 154.md
-                                              📖 156.md
-                                              📖 158.md
-                                              📖 161.md
                                               📖 165.md
-                                              📖 167.md
                                               📖 169.md
-                                              📖 173.md
                                               📖 178.md
+                                              📖 181.md
                                               📖 96.md
                                               📖 97.md
                                               📖 98.md
@@ -3885,8 +3542,8 @@ MIT License
                                               📄 test_util_server_mutex.rs
                                           📄 _config.yml
                                           📄 build.rs
+                                          📄 call_opm_clock_64times.c
                                           📁 generated-docs/
-                                            📖 development-status-generated-prompt.md
                                           🌐 googled947dc864c270e07.html
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
@@ -3900,32 +3557,13 @@ MIT License
                                             📖 116.md
                                             📖 117.md
                                             📖 118.md
-                                            📖 119.md
-                                            📖 120.md
-                                            📖 121.md
                                             📖 122.md
                                             📖 123.md
-                                            📖 124.md
-                                            📖 128.md
-                                            📖 130.md
-                                            📖 132.md
-                                            📖 134.md
                                             📖 138.md
-                                            📖 141.md
-                                            📖 143.md
-                                            📖 146.md
-                                            📖 148.md
-                                            📖 150.md
-                                            📖 152.md
-                                            📖 154.md
-                                            📖 156.md
-                                            📖 158.md
-                                            📖 161.md
                                             📖 165.md
-                                            📖 167.md
                                             📖 169.md
-                                            📖 173.md
                                             📖 178.md
+                                            📖 181.md
                                             📖 96.md
                                             📖 97.md
                                             📖 98.md
@@ -4038,8 +3676,8 @@ MIT License
                                             📄 test_util_server_mutex.rs
                                         📄 _config.yml
                                         📄 build.rs
+                                        📄 call_opm_clock_64times.c
                                         📁 generated-docs/
-                                          📖 development-status-generated-prompt.md
                                         🌐 googled947dc864c270e07.html
                                         📄 install-ym2151-tools.rs
                                         📁 issue-notes/
@@ -4053,32 +3691,13 @@ MIT License
                                           📖 116.md
                                           📖 117.md
                                           📖 118.md
-                                          📖 119.md
-                                          📖 120.md
-                                          📖 121.md
                                           📖 122.md
                                           📖 123.md
-                                          📖 124.md
-                                          📖 128.md
-                                          📖 130.md
-                                          📖 132.md
-                                          📖 134.md
                                           📖 138.md
-                                          📖 141.md
-                                          📖 143.md
-                                          📖 146.md
-                                          📖 148.md
-                                          📖 150.md
-                                          📖 152.md
-                                          📖 154.md
-                                          📖 156.md
-                                          📖 158.md
-                                          📖 161.md
                                           📖 165.md
-                                          📖 167.md
                                           📖 169.md
-                                          📖 173.md
                                           📖 178.md
+                                          📖 181.md
                                           📖 96.md
                                           📖 97.md
                                           📖 98.md
@@ -4191,8 +3810,8 @@ MIT License
                                           📄 test_util_server_mutex.rs
                                       📄 _config.yml
                                       📄 build.rs
+                                      📄 call_opm_clock_64times.c
                                       📁 generated-docs/
-                                        📖 development-status-generated-prompt.md
                                       🌐 googled947dc864c270e07.html
                                       📄 install-ym2151-tools.rs
                                       📁 issue-notes/
@@ -4206,32 +3825,13 @@ MIT License
                                         📖 116.md
                                         📖 117.md
                                         📖 118.md
-                                        📖 119.md
-                                        📖 120.md
-                                        📖 121.md
                                         📖 122.md
                                         📖 123.md
-                                        📖 124.md
-                                        📖 128.md
-                                        📖 130.md
-                                        📖 132.md
-                                        📖 134.md
                                         📖 138.md
-                                        📖 141.md
-                                        📖 143.md
-                                        📖 146.md
-                                        📖 148.md
-                                        📖 150.md
-                                        📖 152.md
-                                        📖 154.md
-                                        📖 156.md
-                                        📖 158.md
-                                        📖 161.md
                                         📖 165.md
-                                        📖 167.md
                                         📖 169.md
-                                        📖 173.md
                                         📖 178.md
+                                        📖 181.md
                                         📖 96.md
                                         📖 97.md
                                         📖 98.md
@@ -4344,8 +3944,8 @@ MIT License
                                         📄 test_util_server_mutex.rs
                                     📄 _config.yml
                                     📄 build.rs
+                                    📄 call_opm_clock_64times.c
                                     📁 generated-docs/
-                                      📖 development-status-generated-prompt.md
                                     🌐 googled947dc864c270e07.html
                                     📄 install-ym2151-tools.rs
                                     📁 issue-notes/
@@ -4359,32 +3959,13 @@ MIT License
                                       📖 116.md
                                       📖 117.md
                                       📖 118.md
-                                      📖 119.md
-                                      📖 120.md
-                                      📖 121.md
                                       📖 122.md
                                       📖 123.md
-                                      📖 124.md
-                                      📖 128.md
-                                      📖 130.md
-                                      📖 132.md
-                                      📖 134.md
                                       📖 138.md
-                                      📖 141.md
-                                      📖 143.md
-                                      📖 146.md
-                                      📖 148.md
-                                      📖 150.md
-                                      📖 152.md
-                                      📖 154.md
-                                      📖 156.md
-                                      📖 158.md
-                                      📖 161.md
                                       📖 165.md
-                                      📖 167.md
                                       📖 169.md
-                                      📖 173.md
                                       📖 178.md
+                                      📖 181.md
                                       📖 96.md
                                       📖 97.md
                                       📖 98.md
@@ -4497,8 +4078,8 @@ MIT License
                                       📄 test_util_server_mutex.rs
                                   📄 _config.yml
                                   📄 build.rs
+                                  📄 call_opm_clock_64times.c
                                   📁 generated-docs/
-                                    📖 development-status-generated-prompt.md
                                   🌐 googled947dc864c270e07.html
                                   📄 install-ym2151-tools.rs
                                   📁 issue-notes/
@@ -4512,32 +4093,13 @@ MIT License
                                     📖 116.md
                                     📖 117.md
                                     📖 118.md
-                                    📖 119.md
-                                    📖 120.md
-                                    📖 121.md
                                     📖 122.md
                                     📖 123.md
-                                    📖 124.md
-                                    📖 128.md
-                                    📖 130.md
-                                    📖 132.md
-                                    📖 134.md
                                     📖 138.md
-                                    📖 141.md
-                                    📖 143.md
-                                    📖 146.md
-                                    📖 148.md
-                                    📖 150.md
-                                    📖 152.md
-                                    📖 154.md
-                                    📖 156.md
-                                    📖 158.md
-                                    📖 161.md
                                     📖 165.md
-                                    📖 167.md
                                     📖 169.md
-                                    📖 173.md
                                     📖 178.md
+                                    📖 181.md
                                     📖 96.md
                                     📖 97.md
                                     📖 98.md
@@ -4650,8 +4212,8 @@ MIT License
                                     📄 test_util_server_mutex.rs
                                 📄 _config.yml
                                 📄 build.rs
+                                📄 call_opm_clock_64times.c
                                 📁 generated-docs/
-                                  📖 development-status-generated-prompt.md
                                 🌐 googled947dc864c270e07.html
                                 📄 install-ym2151-tools.rs
                                 📁 issue-notes/
@@ -4665,32 +4227,13 @@ MIT License
                                   📖 116.md
                                   📖 117.md
                                   📖 118.md
-                                  📖 119.md
-                                  📖 120.md
-                                  📖 121.md
                                   📖 122.md
                                   📖 123.md
-                                  📖 124.md
-                                  📖 128.md
-                                  📖 130.md
-                                  📖 132.md
-                                  📖 134.md
                                   📖 138.md
-                                  📖 141.md
-                                  📖 143.md
-                                  📖 146.md
-                                  📖 148.md
-                                  📖 150.md
-                                  📖 152.md
-                                  📖 154.md
-                                  📖 156.md
-                                  📖 158.md
-                                  📖 161.md
                                   📖 165.md
-                                  📖 167.md
                                   📖 169.md
-                                  📖 173.md
                                   📖 178.md
+                                  📖 181.md
                                   📖 96.md
                                   📖 97.md
                                   📖 98.md
@@ -4803,8 +4346,8 @@ MIT License
                                   📄 test_util_server_mutex.rs
                               📄 _config.yml
                               📄 build.rs
+                              📄 call_opm_clock_64times.c
                               📁 generated-docs/
-                                📖 development-status-generated-prompt.md
                               🌐 googled947dc864c270e07.html
                               📄 install-ym2151-tools.rs
                               📁 issue-notes/
@@ -4818,32 +4361,13 @@ MIT License
                                 📖 116.md
                                 📖 117.md
                                 📖 118.md
-                                📖 119.md
-                                📖 120.md
-                                📖 121.md
                                 📖 122.md
                                 📖 123.md
-                                📖 124.md
-                                📖 128.md
-                                📖 130.md
-                                📖 132.md
-                                📖 134.md
                                 📖 138.md
-                                📖 141.md
-                                📖 143.md
-                                📖 146.md
-                                📖 148.md
-                                📖 150.md
-                                📖 152.md
-                                📖 154.md
-                                📖 156.md
-                                📖 158.md
-                                📖 161.md
                                 📖 165.md
-                                📖 167.md
                                 📖 169.md
-                                📖 173.md
                                 📖 178.md
+                                📖 181.md
                                 📖 96.md
                                 📖 97.md
                                 📖 98.md
@@ -4956,8 +4480,8 @@ MIT License
                                 📄 test_util_server_mutex.rs
                             📄 _config.yml
                             📄 build.rs
+                            📄 call_opm_clock_64times.c
                             📁 generated-docs/
-                              📖 development-status-generated-prompt.md
                             🌐 googled947dc864c270e07.html
                             📄 install-ym2151-tools.rs
                             📁 issue-notes/
@@ -4971,32 +4495,13 @@ MIT License
                               📖 116.md
                               📖 117.md
                               📖 118.md
-                              📖 119.md
-                              📖 120.md
-                              📖 121.md
                               📖 122.md
                               📖 123.md
-                              📖 124.md
-                              📖 128.md
-                              📖 130.md
-                              📖 132.md
-                              📖 134.md
                               📖 138.md
-                              📖 141.md
-                              📖 143.md
-                              📖 146.md
-                              📖 148.md
-                              📖 150.md
-                              📖 152.md
-                              📖 154.md
-                              📖 156.md
-                              📖 158.md
-                              📖 161.md
                               📖 165.md
-                              📖 167.md
                               📖 169.md
-                              📖 173.md
                               📖 178.md
+                              📖 181.md
                               📖 96.md
                               📖 97.md
                               📖 98.md
@@ -5109,8 +4614,8 @@ MIT License
                               📄 test_util_server_mutex.rs
                           📄 _config.yml
                           📄 build.rs
+                          📄 call_opm_clock_64times.c
                           📁 generated-docs/
-                            📖 development-status-generated-prompt.md
                           🌐 googled947dc864c270e07.html
                           📄 install-ym2151-tools.rs
                           📁 issue-notes/
@@ -5124,32 +4629,13 @@ MIT License
                             📖 116.md
                             📖 117.md
                             📖 118.md
-                            📖 119.md
-                            📖 120.md
-                            📖 121.md
                             📖 122.md
                             📖 123.md
-                            📖 124.md
-                            📖 128.md
-                            📖 130.md
-                            📖 132.md
-                            📖 134.md
                             📖 138.md
-                            📖 141.md
-                            📖 143.md
-                            📖 146.md
-                            📖 148.md
-                            📖 150.md
-                            📖 152.md
-                            📖 154.md
-                            📖 156.md
-                            📖 158.md
-                            📖 161.md
                             📖 165.md
-                            📖 167.md
                             📖 169.md
-                            📖 173.md
                             📖 178.md
+                            📖 181.md
                             📖 96.md
                             📖 97.md
                             📖 98.md
@@ -5262,8 +4748,8 @@ MIT License
                             📄 test_util_server_mutex.rs
                         📄 _config.yml
                         📄 build.rs
+                        📄 call_opm_clock_64times.c
                         📁 generated-docs/
-                          📖 development-status-generated-prompt.md
                         🌐 googled947dc864c270e07.html
                         📄 install-ym2151-tools.rs
                         📁 issue-notes/
@@ -5277,32 +4763,13 @@ MIT License
                           📖 116.md
                           📖 117.md
                           📖 118.md
-                          📖 119.md
-                          📖 120.md
-                          📖 121.md
                           📖 122.md
                           📖 123.md
-                          📖 124.md
-                          📖 128.md
-                          📖 130.md
-                          📖 132.md
-                          📖 134.md
                           📖 138.md
-                          📖 141.md
-                          📖 143.md
-                          📖 146.md
-                          📖 148.md
-                          📖 150.md
-                          📖 152.md
-                          📖 154.md
-                          📖 156.md
-                          📖 158.md
-                          📖 161.md
                           📖 165.md
-                          📖 167.md
                           📖 169.md
-                          📖 173.md
                           📖 178.md
+                          📖 181.md
                           📖 96.md
                           📖 97.md
                           📖 98.md
@@ -5415,8 +4882,8 @@ MIT License
                           📄 test_util_server_mutex.rs
                       📄 _config.yml
                       📄 build.rs
+                      📄 call_opm_clock_64times.c
                       📁 generated-docs/
-                        📖 development-status-generated-prompt.md
                       🌐 googled947dc864c270e07.html
                       📄 install-ym2151-tools.rs
                       📁 issue-notes/
@@ -5430,32 +4897,13 @@ MIT License
                         📖 116.md
                         📖 117.md
                         📖 118.md
-                        📖 119.md
-                        📖 120.md
-                        📖 121.md
                         📖 122.md
                         📖 123.md
-                        📖 124.md
-                        📖 128.md
-                        📖 130.md
-                        📖 132.md
-                        📖 134.md
                         📖 138.md
-                        📖 141.md
-                        📖 143.md
-                        📖 146.md
-                        📖 148.md
-                        📖 150.md
-                        📖 152.md
-                        📖 154.md
-                        📖 156.md
-                        📖 158.md
-                        📖 161.md
                         📖 165.md
-                        📖 167.md
                         📖 169.md
-                        📖 173.md
                         📖 178.md
+                        📖 181.md
                         📖 96.md
                         📖 97.md
                         📖 98.md
@@ -5568,8 +5016,8 @@ MIT License
                         📄 test_util_server_mutex.rs
                     📄 _config.yml
                     📄 build.rs
+                    📄 call_opm_clock_64times.c
                     📁 generated-docs/
-                      📖 development-status-generated-prompt.md
                     🌐 googled947dc864c270e07.html
                     📄 install-ym2151-tools.rs
                     📁 issue-notes/
@@ -5583,32 +5031,13 @@ MIT License
                       📖 116.md
                       📖 117.md
                       📖 118.md
-                      📖 119.md
-                      📖 120.md
-                      📖 121.md
                       📖 122.md
                       📖 123.md
-                      📖 124.md
-                      📖 128.md
-                      📖 130.md
-                      📖 132.md
-                      📖 134.md
                       📖 138.md
-                      📖 141.md
-                      📖 143.md
-                      📖 146.md
-                      📖 148.md
-                      📖 150.md
-                      📖 152.md
-                      📖 154.md
-                      📖 156.md
-                      📖 158.md
-                      📖 161.md
                       📖 165.md
-                      📖 167.md
                       📖 169.md
-                      📖 173.md
                       📖 178.md
+                      📖 181.md
                       📖 96.md
                       📖 97.md
                       📖 98.md
@@ -5721,8 +5150,8 @@ MIT License
                       📄 test_util_server_mutex.rs
                   📄 _config.yml
                   📄 build.rs
+                  📄 call_opm_clock_64times.c
                   📁 generated-docs/
-                    📖 development-status-generated-prompt.md
                   🌐 googled947dc864c270e07.html
                   📄 install-ym2151-tools.rs
                   📁 issue-notes/
@@ -5736,32 +5165,13 @@ MIT License
                     📖 116.md
                     📖 117.md
                     📖 118.md
-                    📖 119.md
-                    📖 120.md
-                    📖 121.md
                     📖 122.md
                     📖 123.md
-                    📖 124.md
-                    📖 128.md
-                    📖 130.md
-                    📖 132.md
-                    📖 134.md
                     📖 138.md
-                    📖 141.md
-                    📖 143.md
-                    📖 146.md
-                    📖 148.md
-                    📖 150.md
-                    📖 152.md
-                    📖 154.md
-                    📖 156.md
-                    📖 158.md
-                    📖 161.md
                     📖 165.md
-                    📖 167.md
                     📖 169.md
-                    📖 173.md
                     📖 178.md
+                    📖 181.md
                     📖 96.md
                     📖 97.md
                     📖 98.md
@@ -5874,8 +5284,8 @@ MIT License
                     📄 test_util_server_mutex.rs
                 📄 _config.yml
                 📄 build.rs
+                📄 call_opm_clock_64times.c
                 📁 generated-docs/
-                  📖 development-status-generated-prompt.md
                 🌐 googled947dc864c270e07.html
                 📄 install-ym2151-tools.rs
                 📁 issue-notes/
@@ -5889,32 +5299,13 @@ MIT License
                   📖 116.md
                   📖 117.md
                   📖 118.md
-                  📖 119.md
-                  📖 120.md
-                  📖 121.md
                   📖 122.md
                   📖 123.md
-                  📖 124.md
-                  📖 128.md
-                  📖 130.md
-                  📖 132.md
-                  📖 134.md
                   📖 138.md
-                  📖 141.md
-                  📖 143.md
-                  📖 146.md
-                  📖 148.md
-                  📖 150.md
-                  📖 152.md
-                  📖 154.md
-                  📖 156.md
-                  📖 158.md
-                  📖 161.md
                   📖 165.md
-                  📖 167.md
                   📖 169.md
-                  📖 173.md
                   📖 178.md
+                  📖 181.md
                   📖 96.md
                   📖 97.md
                   📖 98.md
@@ -6027,8 +5418,8 @@ MIT License
                   📄 test_util_server_mutex.rs
               📄 _config.yml
               📄 build.rs
+              📄 call_opm_clock_64times.c
               📁 generated-docs/
-                📖 development-status-generated-prompt.md
               🌐 googled947dc864c270e07.html
               📄 install-ym2151-tools.rs
               📁 issue-notes/
@@ -6042,32 +5433,13 @@ MIT License
                 📖 116.md
                 📖 117.md
                 📖 118.md
-                📖 119.md
-                📖 120.md
-                📖 121.md
                 📖 122.md
                 📖 123.md
-                📖 124.md
-                📖 128.md
-                📖 130.md
-                📖 132.md
-                📖 134.md
                 📖 138.md
-                📖 141.md
-                📖 143.md
-                📖 146.md
-                📖 148.md
-                📖 150.md
-                📖 152.md
-                📖 154.md
-                📖 156.md
-                📖 158.md
-                📖 161.md
                 📖 165.md
-                📖 167.md
                 📖 169.md
-                📖 173.md
                 📖 178.md
+                📖 181.md
                 📖 96.md
                 📖 97.md
                 📖 98.md
@@ -6180,8 +5552,8 @@ MIT License
                 📄 test_util_server_mutex.rs
             📄 _config.yml
             📄 build.rs
+            📄 call_opm_clock_64times.c
             📁 generated-docs/
-              📖 development-status-generated-prompt.md
             🌐 googled947dc864c270e07.html
             📄 install-ym2151-tools.rs
             📁 issue-notes/
@@ -6195,32 +5567,13 @@ MIT License
               📖 116.md
               📖 117.md
               📖 118.md
-              📖 119.md
-              📖 120.md
-              📖 121.md
               📖 122.md
               📖 123.md
-              📖 124.md
-              📖 128.md
-              📖 130.md
-              📖 132.md
-              📖 134.md
               📖 138.md
-              📖 141.md
-              📖 143.md
-              📖 146.md
-              📖 148.md
-              📖 150.md
-              📖 152.md
-              📖 154.md
-              📖 156.md
-              📖 158.md
-              📖 161.md
               📖 165.md
-              📖 167.md
               📖 169.md
-              📖 173.md
               📖 178.md
+              📖 181.md
               📖 96.md
               📖 97.md
               📖 98.md
@@ -6333,8 +5686,8 @@ MIT License
               📄 test_util_server_mutex.rs
           📄 _config.yml
           📄 build.rs
+          📄 call_opm_clock_64times.c
           📁 generated-docs/
-            📖 development-status-generated-prompt.md
           🌐 googled947dc864c270e07.html
           📄 install-ym2151-tools.rs
           📁 issue-notes/
@@ -6348,32 +5701,13 @@ MIT License
             📖 116.md
             📖 117.md
             📖 118.md
-            📖 119.md
-            📖 120.md
-            📖 121.md
             📖 122.md
             📖 123.md
-            📖 124.md
-            📖 128.md
-            📖 130.md
-            📖 132.md
-            📖 134.md
             📖 138.md
-            📖 141.md
-            📖 143.md
-            📖 146.md
-            📖 148.md
-            📖 150.md
-            📖 152.md
-            📖 154.md
-            📖 156.md
-            📖 158.md
-            📖 161.md
             📖 165.md
-            📖 167.md
             📖 169.md
-            📖 173.md
             📖 178.md
+            📖 181.md
             📖 96.md
             📖 97.md
             📖 98.md
@@ -6486,8 +5820,8 @@ MIT License
             📄 test_util_server_mutex.rs
         📄 _config.yml
         📄 build.rs
+        📄 call_opm_clock_64times.c
         📁 generated-docs/
-          📖 development-status-generated-prompt.md
         🌐 googled947dc864c270e07.html
         📄 install-ym2151-tools.rs
         📁 issue-notes/
@@ -6501,32 +5835,13 @@ MIT License
           📖 116.md
           📖 117.md
           📖 118.md
-          📖 119.md
-          📖 120.md
-          📖 121.md
           📖 122.md
           📖 123.md
-          📖 124.md
-          📖 128.md
-          📖 130.md
-          📖 132.md
-          📖 134.md
           📖 138.md
-          📖 141.md
-          📖 143.md
-          📖 146.md
-          📖 148.md
-          📖 150.md
-          📖 152.md
-          📖 154.md
-          📖 156.md
-          📖 158.md
-          📖 161.md
           📖 165.md
-          📖 167.md
           📖 169.md
-          📖 173.md
           📖 178.md
+          📖 181.md
           📖 96.md
           📖 97.md
           📖 98.md
@@ -6639,8 +5954,8 @@ MIT License
           📄 test_util_server_mutex.rs
       📄 _config.yml
       📄 build.rs
+      📄 call_opm_clock_64times.c
       📁 generated-docs/
-        📖 development-status-generated-prompt.md
       🌐 googled947dc864c270e07.html
       📄 install-ym2151-tools.rs
       📁 issue-notes/
@@ -6654,32 +5969,13 @@ MIT License
         📖 116.md
         📖 117.md
         📖 118.md
-        📖 119.md
-        📖 120.md
-        📖 121.md
         📖 122.md
         📖 123.md
-        📖 124.md
-        📖 128.md
-        📖 130.md
-        📖 132.md
-        📖 134.md
         📖 138.md
-        📖 141.md
-        📖 143.md
-        📖 146.md
-        📖 148.md
-        📖 150.md
-        📖 152.md
-        📖 154.md
-        📖 156.md
-        📖 158.md
-        📖 161.md
         📖 165.md
-        📖 167.md
         📖 169.md
-        📖 173.md
         📖 178.md
+        📖 181.md
         📖 96.md
         📖 97.md
         📖 98.md
@@ -6792,8 +6088,8 @@ MIT License
         📄 test_util_server_mutex.rs
     📄 _config.yml
     📄 build.rs
+    📄 call_opm_clock_64times.c
     📁 generated-docs/
-      📖 development-status-generated-prompt.md
     🌐 googled947dc864c270e07.html
     📄 install-ym2151-tools.rs
     📁 issue-notes/
@@ -6807,32 +6103,13 @@ MIT License
       📖 116.md
       📖 117.md
       📖 118.md
-      📖 119.md
-      📖 120.md
-      📖 121.md
       📖 122.md
       📖 123.md
-      📖 124.md
-      📖 128.md
-      📖 130.md
-      📖 132.md
-      📖 134.md
       📖 138.md
-      📖 141.md
-      📖 143.md
-      📖 146.md
-      📖 148.md
-      📖 150.md
-      📖 152.md
-      📖 154.md
-      📖 156.md
-      📖 158.md
-      📖 161.md
       📖 165.md
-      📖 167.md
       📖 169.md
-      📖 173.md
       📖 178.md
+      📖 181.md
       📖 96.md
       📖 97.md
       📖 98.md
@@ -6945,8 +6222,8 @@ MIT License
       📄 test_util_server_mutex.rs
   📄 _config.yml
   📄 build.rs
+  📄 call_opm_clock_64times.c
   📁 generated-docs/
-    📖 development-status-generated-prompt.md
   🌐 googled947dc864c270e07.html
   📄 install-ym2151-tools.rs
   📁 issue-notes/
@@ -6960,32 +6237,13 @@ MIT License
     📖 116.md
     📖 117.md
     📖 118.md
-    📖 119.md
-    📖 120.md
-    📖 121.md
     📖 122.md
     📖 123.md
-    📖 124.md
-    📖 128.md
-    📖 130.md
-    📖 132.md
-    📖 134.md
     📖 138.md
-    📖 141.md
-    📖 143.md
-    📖 146.md
-    📖 148.md
-    📖 150.md
-    📖 152.md
-    📖 154.md
-    📖 156.md
-    📖 158.md
-    📖 161.md
     📖 165.md
-    📖 167.md
     📖 169.md
-    📖 173.md
     📖 178.md
+    📖 181.md
     📖 96.md
     📖 97.md
     📖 98.md
@@ -7098,8 +6356,8 @@ MIT License
     📄 test_util_server_mutex.rs
 📄 _config.yml
 📄 build.rs
+📄 call_opm_clock_64times.c
 📁 generated-docs/
-  📖 development-status-generated-prompt.md
 🌐 googled947dc864c270e07.html
 📄 install-ym2151-tools.rs
 📁 issue-notes/
@@ -7113,32 +6371,13 @@ MIT License
   📖 116.md
   📖 117.md
   📖 118.md
-  📖 119.md
-  📖 120.md
-  📖 121.md
   📖 122.md
   📖 123.md
-  📖 124.md
-  📖 128.md
-  📖 130.md
-  📖 132.md
-  📖 134.md
   📖 138.md
-  📖 141.md
-  📖 143.md
-  📖 146.md
-  📖 148.md
-  📖 150.md
-  📖 152.md
-  📖 154.md
-  📖 156.md
-  📖 158.md
-  📖 161.md
   📖 165.md
-  📖 167.md
   📖 169.md
-  📖 173.md
   📖 178.md
+  📖 181.md
   📖 96.md
   📖 97.md
   📖 98.md
@@ -7468,4 +6707,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2026-01-05 07:01:41 JST
+Generated at: 2026-02-12 07:05:07 JST
