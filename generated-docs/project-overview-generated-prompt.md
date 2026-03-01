@@ -1,4 +1,4 @@
-Last updated: 2026-02-12
+Last updated: 2026-03-02
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -2606,6 +2606,7 @@ MIT License
                                                         📄 build.rs
                                                         📄 call_opm_clock_64times.c
                                                         📁 generated-docs/
+                                                          📖 development-status-generated-prompt.md
                                                         🌐 googled947dc864c270e07.html
                                                         📄 install-ym2151-tools.rs
                                                         📁 issue-notes/
@@ -2740,6 +2741,7 @@ MIT License
                                                       📄 build.rs
                                                       📄 call_opm_clock_64times.c
                                                       📁 generated-docs/
+                                                        📖 development-status-generated-prompt.md
                                                       🌐 googled947dc864c270e07.html
                                                       📄 install-ym2151-tools.rs
                                                       📁 issue-notes/
@@ -2874,6 +2876,7 @@ MIT License
                                                     📄 build.rs
                                                     📄 call_opm_clock_64times.c
                                                     📁 generated-docs/
+                                                      📖 development-status-generated-prompt.md
                                                     🌐 googled947dc864c270e07.html
                                                     📄 install-ym2151-tools.rs
                                                     📁 issue-notes/
@@ -3008,6 +3011,7 @@ MIT License
                                                   📄 build.rs
                                                   📄 call_opm_clock_64times.c
                                                   📁 generated-docs/
+                                                    📖 development-status-generated-prompt.md
                                                   🌐 googled947dc864c270e07.html
                                                   📄 install-ym2151-tools.rs
                                                   📁 issue-notes/
@@ -3142,6 +3146,7 @@ MIT License
                                                 📄 build.rs
                                                 📄 call_opm_clock_64times.c
                                                 📁 generated-docs/
+                                                  📖 development-status-generated-prompt.md
                                                 🌐 googled947dc864c270e07.html
                                                 📄 install-ym2151-tools.rs
                                                 📁 issue-notes/
@@ -3276,6 +3281,7 @@ MIT License
                                               📄 build.rs
                                               📄 call_opm_clock_64times.c
                                               📁 generated-docs/
+                                                📖 development-status-generated-prompt.md
                                               🌐 googled947dc864c270e07.html
                                               📄 install-ym2151-tools.rs
                                               📁 issue-notes/
@@ -3410,6 +3416,7 @@ MIT License
                                             📄 build.rs
                                             📄 call_opm_clock_64times.c
                                             📁 generated-docs/
+                                              📖 development-status-generated-prompt.md
                                             🌐 googled947dc864c270e07.html
                                             📄 install-ym2151-tools.rs
                                             📁 issue-notes/
@@ -3544,6 +3551,7 @@ MIT License
                                           📄 build.rs
                                           📄 call_opm_clock_64times.c
                                           📁 generated-docs/
+                                            📖 development-status-generated-prompt.md
                                           🌐 googled947dc864c270e07.html
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
@@ -3678,6 +3686,7 @@ MIT License
                                         📄 build.rs
                                         📄 call_opm_clock_64times.c
                                         📁 generated-docs/
+                                          📖 development-status-generated-prompt.md
                                         🌐 googled947dc864c270e07.html
                                         📄 install-ym2151-tools.rs
                                         📁 issue-notes/
@@ -3812,6 +3821,7 @@ MIT License
                                       📄 build.rs
                                       📄 call_opm_clock_64times.c
                                       📁 generated-docs/
+                                        📖 development-status-generated-prompt.md
                                       🌐 googled947dc864c270e07.html
                                       📄 install-ym2151-tools.rs
                                       📁 issue-notes/
@@ -3946,6 +3956,7 @@ MIT License
                                     📄 build.rs
                                     📄 call_opm_clock_64times.c
                                     📁 generated-docs/
+                                      📖 development-status-generated-prompt.md
                                     🌐 googled947dc864c270e07.html
                                     📄 install-ym2151-tools.rs
                                     📁 issue-notes/
@@ -4080,6 +4091,7 @@ MIT License
                                   📄 build.rs
                                   📄 call_opm_clock_64times.c
                                   📁 generated-docs/
+                                    📖 development-status-generated-prompt.md
                                   🌐 googled947dc864c270e07.html
                                   📄 install-ym2151-tools.rs
                                   📁 issue-notes/
@@ -4214,6 +4226,7 @@ MIT License
                                 📄 build.rs
                                 📄 call_opm_clock_64times.c
                                 📁 generated-docs/
+                                  📖 development-status-generated-prompt.md
                                 🌐 googled947dc864c270e07.html
                                 📄 install-ym2151-tools.rs
                                 📁 issue-notes/
@@ -4348,6 +4361,7 @@ MIT License
                               📄 build.rs
                               📄 call_opm_clock_64times.c
                               📁 generated-docs/
+                                📖 development-status-generated-prompt.md
                               🌐 googled947dc864c270e07.html
                               📄 install-ym2151-tools.rs
                               📁 issue-notes/
@@ -4482,6 +4496,7 @@ MIT License
                             📄 build.rs
                             📄 call_opm_clock_64times.c
                             📁 generated-docs/
+                              📖 development-status-generated-prompt.md
                             🌐 googled947dc864c270e07.html
                             📄 install-ym2151-tools.rs
                             📁 issue-notes/
@@ -4616,6 +4631,7 @@ MIT License
                           📄 build.rs
                           📄 call_opm_clock_64times.c
                           📁 generated-docs/
+                            📖 development-status-generated-prompt.md
                           🌐 googled947dc864c270e07.html
                           📄 install-ym2151-tools.rs
                           📁 issue-notes/
@@ -4750,6 +4766,7 @@ MIT License
                         📄 build.rs
                         📄 call_opm_clock_64times.c
                         📁 generated-docs/
+                          📖 development-status-generated-prompt.md
                         🌐 googled947dc864c270e07.html
                         📄 install-ym2151-tools.rs
                         📁 issue-notes/
@@ -4884,6 +4901,7 @@ MIT License
                       📄 build.rs
                       📄 call_opm_clock_64times.c
                       📁 generated-docs/
+                        📖 development-status-generated-prompt.md
                       🌐 googled947dc864c270e07.html
                       📄 install-ym2151-tools.rs
                       📁 issue-notes/
@@ -5018,6 +5036,7 @@ MIT License
                     📄 build.rs
                     📄 call_opm_clock_64times.c
                     📁 generated-docs/
+                      📖 development-status-generated-prompt.md
                     🌐 googled947dc864c270e07.html
                     📄 install-ym2151-tools.rs
                     📁 issue-notes/
@@ -5152,6 +5171,7 @@ MIT License
                   📄 build.rs
                   📄 call_opm_clock_64times.c
                   📁 generated-docs/
+                    📖 development-status-generated-prompt.md
                   🌐 googled947dc864c270e07.html
                   📄 install-ym2151-tools.rs
                   📁 issue-notes/
@@ -5286,6 +5306,7 @@ MIT License
                 📄 build.rs
                 📄 call_opm_clock_64times.c
                 📁 generated-docs/
+                  📖 development-status-generated-prompt.md
                 🌐 googled947dc864c270e07.html
                 📄 install-ym2151-tools.rs
                 📁 issue-notes/
@@ -5420,6 +5441,7 @@ MIT License
               📄 build.rs
               📄 call_opm_clock_64times.c
               📁 generated-docs/
+                📖 development-status-generated-prompt.md
               🌐 googled947dc864c270e07.html
               📄 install-ym2151-tools.rs
               📁 issue-notes/
@@ -5554,6 +5576,7 @@ MIT License
             📄 build.rs
             📄 call_opm_clock_64times.c
             📁 generated-docs/
+              📖 development-status-generated-prompt.md
             🌐 googled947dc864c270e07.html
             📄 install-ym2151-tools.rs
             📁 issue-notes/
@@ -5688,6 +5711,7 @@ MIT License
           📄 build.rs
           📄 call_opm_clock_64times.c
           📁 generated-docs/
+            📖 development-status-generated-prompt.md
           🌐 googled947dc864c270e07.html
           📄 install-ym2151-tools.rs
           📁 issue-notes/
@@ -5822,6 +5846,7 @@ MIT License
         📄 build.rs
         📄 call_opm_clock_64times.c
         📁 generated-docs/
+          📖 development-status-generated-prompt.md
         🌐 googled947dc864c270e07.html
         📄 install-ym2151-tools.rs
         📁 issue-notes/
@@ -5956,6 +5981,7 @@ MIT License
       📄 build.rs
       📄 call_opm_clock_64times.c
       📁 generated-docs/
+        📖 development-status-generated-prompt.md
       🌐 googled947dc864c270e07.html
       📄 install-ym2151-tools.rs
       📁 issue-notes/
@@ -6090,6 +6116,7 @@ MIT License
     📄 build.rs
     📄 call_opm_clock_64times.c
     📁 generated-docs/
+      📖 development-status-generated-prompt.md
     🌐 googled947dc864c270e07.html
     📄 install-ym2151-tools.rs
     📁 issue-notes/
@@ -6224,6 +6251,7 @@ MIT License
   📄 build.rs
   📄 call_opm_clock_64times.c
   📁 generated-docs/
+    📖 development-status-generated-prompt.md
   🌐 googled947dc864c270e07.html
   📄 install-ym2151-tools.rs
   📁 issue-notes/
@@ -6358,6 +6386,7 @@ MIT License
 📄 build.rs
 📄 call_opm_clock_64times.c
 📁 generated-docs/
+  📖 development-status-generated-prompt.md
 🌐 googled947dc864c270e07.html
 📄 install-ym2151-tools.rs
 📁 issue-notes/
@@ -6707,4 +6736,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2026-02-12 07:05:07 JST
+Generated at: 2026-03-02 07:01:28 JST
