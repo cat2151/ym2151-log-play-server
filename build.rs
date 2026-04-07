@@ -22,7 +22,9 @@ fn main() {
                         .components()
                         .all(|component| matches!(component, std::path::Component::Normal(_)))
                 {
-                    if let Some(ref_watch_path) = git_path(ref_path_str) {
+                    if let Some(ref_watch_path) =
+                        git_path(ref_path_str).filter(|path| is_path_within_git_dir(path))
+                    {
                         println!("cargo:rerun-if-changed={}", ref_watch_path.display());
                     }
                 }
@@ -46,4 +48,18 @@ fn git_output(args: &[&str]) -> Option<String> {
 
 fn git_path(path: &str) -> Option<std::path::PathBuf> {
     git_output(&["rev-parse", "--git-path", path]).map(std::path::PathBuf::from)
+}
+
+fn git_dir() -> Option<std::path::PathBuf> {
+    git_output(&["rev-parse", "--absolute-git-dir"]).map(std::path::PathBuf::from)
+}
+
+fn is_path_within_git_dir(path: &std::path::Path) -> bool {
+    let canonical_path = std::fs::canonicalize(path).ok();
+    let canonical_git_dir = git_dir().and_then(|dir| std::fs::canonicalize(dir).ok());
+
+    match (canonical_path, canonical_git_dir) {
+        (Some(path), Some(git_dir)) => path.starts_with(git_dir),
+        _ => false,
+    }
 }
