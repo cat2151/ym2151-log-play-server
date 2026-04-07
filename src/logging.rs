@@ -96,7 +96,7 @@ pub(crate) fn open_log_file(file_name: &str) -> std::io::Result<File> {
     OpenOptions::new().create(true).append(true).open(&path)
 }
 
-pub(crate) fn warn_log_open_failure(path: &Path, error: &std::io::Error) {
+pub(crate) fn eprintln_log_open_failure(path: &Path, error: &std::io::Error) {
     eprintln!(
         "⚠️  Warning: Failed to open log file {}: {}",
         path.display(),
@@ -114,7 +114,7 @@ fn write_to_log(message: &str) {
                 eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
             }
         }
-        Err(error) => warn_log_open_failure(&path, &error),
+        Err(error) => eprintln_log_open_failure(&path, &error),
     }
 }
 
