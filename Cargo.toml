@@ -19,7 +19,7 @@ hound = "3.5"
 anyhow = "1.0"
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive"] }
-cat-self-update-lib = { git = "https://github.com/cat2151/cat-self-update", rev = "e324426de0a3c219d1a63a939df93ff8f007916a" }
+cat-self-update-lib = { git = "https://github.com/cat2151/cat-self-update" }
 rubato = "0.16.2"  # High-quality audio resampling library
 
 [target.'cfg(windows)'.dependencies]
