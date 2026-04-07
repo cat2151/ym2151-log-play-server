@@ -33,10 +33,11 @@ fn test_open_log_file_at_creates_parent_directory() {
     let file = open_log_file_at(&log_path).unwrap();
     drop(file);
 
+    assert!(log_dir.join("nested").exists());
     assert!(log_path.exists());
 
-    let _ = std::fs::remove_file(&log_path);
-    let _ = std::fs::remove_dir_all(&log_dir);
+    std::fs::remove_file(&log_path).unwrap();
+    std::fs::remove_dir_all(&log_dir).unwrap();
 }
 
 #[cfg(windows)]
