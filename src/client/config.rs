@@ -48,7 +48,7 @@ pub fn is_client_verbose() -> bool {
 /// Write a message to the log file
 fn write_to_log(message: &str) {
     let path = crate::logging::log_file_path(LOG_FILE);
-    match crate::logging::open_log_file(LOG_FILE) {
+    match crate::logging::open_log_file_at(&path) {
         Ok(mut file) => {
             let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
             if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {

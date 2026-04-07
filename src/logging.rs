@@ -15,10 +15,11 @@
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 /// Global verbose flag
 static VERBOSE: Mutex<bool> = Mutex::new(false);
+static LOG_DIRECTORY: OnceLock<PathBuf> = OnceLock::new();
 
 /// Log file path
 const LOG_FILE: &str = "ym2151-server.log";
@@ -74,26 +75,26 @@ pub(crate) fn log_directory_from_env(
         .join(LOG_DIR_NAME)
 }
 
-pub(crate) fn log_directory() -> PathBuf {
-    log_directory_from_env(
-        std::env::var_os("LOCALAPPDATA").map(PathBuf::from),
-        std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from),
-        std::env::var_os("HOME").map(PathBuf::from),
-    )
+pub(crate) fn log_directory() -> &'static PathBuf {
+    LOG_DIRECTORY.get_or_init(|| {
+        log_directory_from_env(
+            std::env::var_os("LOCALAPPDATA").map(PathBuf::from),
+            std::env::var_os("XDG_CONFIG_HOME").map(PathBuf::from),
+            std::env::var_os("HOME").map(PathBuf::from),
+        )
+    })
 }
 
 pub(crate) fn log_file_path(file_name: &str) -> PathBuf {
     log_directory().join(file_name)
 }
 
-pub(crate) fn open_log_file(file_name: &str) -> std::io::Result<File> {
-    let path = log_file_path(file_name);
-
+pub(crate) fn open_log_file_at(path: &Path) -> std::io::Result<File> {
     if let Some(parent) = path.parent() {
         create_dir_all(parent)?;
     }
 
-    OpenOptions::new().create(true).append(true).open(&path)
+    OpenOptions::new().create(true).append(true).open(path)
 }
 
 pub(crate) fn eprintln_log_open_failure(path: &Path, error: &std::io::Error) {
@@ -107,7 +108,7 @@ pub(crate) fn eprintln_log_open_failure(path: &Path, error: &std::io::Error) {
 /// Write a message to the log file
 fn write_to_log(message: &str) {
     let path = log_file_path(LOG_FILE);
-    match open_log_file(LOG_FILE) {
+    match open_log_file_at(&path) {
         Ok(mut file) => {
             let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
             if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {

@@ -17,6 +17,28 @@ fn test_verbose_default() {
     let _ = is_server_verbose();
 }
 
+#[test]
+fn test_open_log_file_at_creates_parent_directory() {
+    let unique = format!(
+        "ym2151-log-test-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    );
+    let log_dir = std::env::temp_dir().join(unique);
+    let log_path = log_dir.join("nested").join("test.log");
+
+    let file = open_log_file_at(&log_path).unwrap();
+    drop(file);
+
+    assert!(log_path.exists());
+
+    let _ = std::fs::remove_file(&log_path);
+    let _ = std::fs::remove_dir_all(&log_dir);
+}
+
 #[cfg(windows)]
 #[test]
 fn test_log_directory_uses_local_appdata_on_windows() {
