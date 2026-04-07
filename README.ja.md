@@ -241,8 +241,10 @@ cargo run --release -- client --shutdown
 
 ```
 使用方法:
+  ym2151-log-play-server check                     # 更新の有無を確認
   ym2151-log-play-server server [OPTIONS]           # サーバーモード
   ym2151-log-play-server client [OPTIONS] [FILE]    # クライアントモード
+  ym2151-log-play-server update                    # 最新版へ更新
 
 サーバーモード:
   server                    サーバーとして待機状態で起動
@@ -258,6 +260,9 @@ cargo run --release -- client --shutdown
   client --shutdown --verbose  詳細な状態メッセージ付きでサーバーをシャットダウン
 
 例:
+  # 更新の有無を確認
+  ym2151-log-play-server check
+
   # サーバー起動
   ym2151-log-play-server server
 
@@ -278,6 +283,9 @@ cargo run --release -- client --shutdown
 
   # 別のターミナルから: サーバー終了
   ym2151-log-play-server client --shutdown
+
+  # 最新版へ更新
+  ym2151-log-play-server update
 ```
 
 ### 使用例シナリオ

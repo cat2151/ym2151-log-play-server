@@ -14,6 +14,7 @@ pub mod opm_ffi;
 pub mod player;
 pub mod resampler;
 pub mod scheduler;
+pub mod self_update;
 pub mod server;
 pub mod wav_writer;
 

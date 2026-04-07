@@ -241,8 +241,10 @@ cargo run --release -- client --shutdown
 
 ```
 Usage:
+  ym2151-log-play-server check                     # Check for updates
   ym2151-log-play-server server [OPTIONS]           # Server mode
   ym2151-log-play-server client [OPTIONS] [FILE]    # Client mode
+  ym2151-log-play-server update                    # Update to the latest version
 
 Server mode:
   server                    Starts as a persistent server in a waiting state
@@ -258,6 +260,9 @@ Client mode:
   client --shutdown --verbose  Shuts down the server with detailed status messages
 
 Examples:
+  # Check for updates
+  ym2151-log-play-server check
+
   # Start server
   ym2151-log-play-server server
 
@@ -278,6 +283,9 @@ Examples:
 
   # From another terminal: Shut down server
   ym2151-log-play-server client --shutdown
+
+  # Update to the latest version
+  ym2151-log-play-server update
 ```
 
 ### Example Scenarios
