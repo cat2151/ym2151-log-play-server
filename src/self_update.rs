@@ -38,10 +38,10 @@ where
 }
 
 pub(crate) fn repository_owner_and_name(repository_url: &str) -> Result<(&str, &str)> {
+    let repository_url = repository_url.trim().trim_end_matches('/');
     let repository_path = repository_url
-        .trim()
-        .trim_end_matches('/')
         .strip_prefix("https://github.com/")
+        .or_else(|| repository_url.strip_prefix("http://github.com/"))
         .ok_or_else(|| anyhow!("GitHubリポジトリURLの解析に失敗しました: {repository_url}"))?;
 
     let mut parts = repository_path.split('/');

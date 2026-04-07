@@ -87,3 +87,22 @@ fn test_repository_owner_and_name_rejects_invalid_url() {
         .to_string()
         .contains("GitHubリポジトリURLの解析に失敗しました"));
 }
+
+#[test]
+fn test_repository_owner_and_name_accepts_http_github_url() {
+    let (owner, repo) =
+        repository_owner_and_name("http://github.com/cat2151/ym2151-log-play-server")
+            .expect("http GitHub URL should parse");
+    assert_eq!(owner, "cat2151");
+    assert_eq!(repo, "ym2151-log-play-server");
+}
+
+#[test]
+fn test_repository_owner_and_name_rejects_additional_path_segments() {
+    let error =
+        repository_owner_and_name("https://github.com/cat2151/ym2151-log-play-server/issues")
+            .expect_err("URL with extra path should fail");
+    assert!(error
+        .to_string()
+        .contains("GitHubリポジトリURLの解析に失敗しました"));
+}

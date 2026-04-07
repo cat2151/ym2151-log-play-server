@@ -59,7 +59,9 @@ fn is_path_within_git_dir(path: &std::path::Path) -> bool {
     let canonical_git_dir = git_dir().and_then(|dir| std::fs::canonicalize(dir).ok());
 
     match (canonical_path, canonical_git_dir) {
-        (Some(path), Some(git_dir)) => path.starts_with(git_dir),
+        (Some(canonical_path_value), Some(canonical_git_dir_value)) => {
+            canonical_path_value.starts_with(canonical_git_dir_value)
+        }
         _ => false,
     }
 }
