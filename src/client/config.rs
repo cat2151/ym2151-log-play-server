@@ -55,13 +55,7 @@ fn write_to_log(message: &str) {
                 eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
             }
         }
-        Err(error) => {
-            eprintln!(
-                "⚠️  Warning: Failed to open log file {}: {}",
-                path.display(),
-                error
-            );
-        }
+        Err(error) => crate::logging::warn_log_open_failure(&path, &error),
     }
 }
 
