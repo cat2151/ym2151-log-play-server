@@ -1,50 +1,60 @@
-Last updated: 2026-03-04
+Last updated: 2026-04-08
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #178](../issue-notes/178.md) は、デモのパフォーマンスがWindows実機で安定しているかを確認するタスクです。
-- [Issue #138](../issue-notes/138.md) は、Agentの提案のハルシネーションリスクに関して、CIエラーログの縮小を含め、追加の対策が必要か様子見しています。
-- [Issue #118](../issue-notes/118.md) は、Agent生成のWindows向けコードがTDD不足でビルドに失敗する問題に対し、CIでのWindows Runnerテスト導入後の状況を監視しています。
+- [Issue #195](../issue-notes/195.md)と[Issue #194](../issue-notes/194.md)では、`clap`と`cat-self-update-lib`を用いた自己更新機能付きCLIの実装を進めています。
+- [Issue #178](../issue-notes/178.md)では、Windows実機でのデモ動作の安定性確認が課題として残っています。
+- [Issue #118](../issue-notes/118.md)と[Issue #138](../issue-notes/138.md)は、Agentによるハルシネーションの問題とその対策について引き続き様子見を行っています。
 
 ## 次の一手候補
-1. [Issue #178](../issue-notes/178.md): demoがヨレないか、Windows実機で動作確認する
-   - 最初の小さな一歩: Windows環境を用意し、既存のデモを実際に実行して、音のヨレやパフォーマンスの問題がないか手動で確認する。
+1. [Issue #194](../issue-notes/194.md): `update`サブコマンドと`check`サブコマンドを、`cat-self-update-lib`と`clap`で実装する
+   - 最初の小さな一歩: `clap`クレートを`Cargo.toml`に追加し、`src/main.rs`に`check`サブコマンドの基本的な構造と、そのヘルプメッセージを定義する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: `Cargo.toml`, `src/main.rs`
+
+     実行内容:
+     1. `Cargo.toml`の`[dependencies]`セクションに`clap`クレートを追加します（バージョンは適宜最新の安定版を使用）。`features = ["derive"]`を有効にします。
+     2. `src/main.rs`に`check`サブコマンドを定義する基本的な`clap`構造を追加します。これは`main`関数のCLIパーサーに組み込まれる形とします。
+     3. `check`サブコマンドには「現在のバイナリ情報を表示し、GitHub上の最新バージョンと比較する」という内容の簡潔なヘルプメッセージを記述します。
+
+     確認事項: 既存の`server`および`client`サブコマンドとの衝突がないこと、`Cargo.toml`の依存関係が適切に解決されることを確認してください。
+
+     期待する出力: 修正された`Cargo.toml`と`src/main.rs`の内容をMarkdownコードブロックで出力してください。
+     ```
+
+2. [Issue #195](../issue-notes/195.md): ビルド時にコミットハッシュを埋め込む
+   - 最初の小さな一歩: `build.rs`を設定し、ビルド時にGitのコミットハッシュを取得して、それを`src/main.rs`で利用可能な定数として埋め込む。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `src/main.rs`, `src/audio/mod.rs`, `src/mmcss.rs`, `Cargo.toml`
+     対象ファイル: `build.rs`, `src/main.rs`
 
-     実行内容: Windows環境でデモ実行時のオーディオレイテンシや安定性に関連する可能性のあるRustコード（特にオーディオ関連の初期化、スレッドプライオリティ設定、IPC通信部分）を特定し、パフォーマンス上のボトルネックやOS固有の設定要件について分析してください。
+     実行内容:
+     1. `build.rs`ファイルが存在しない場合は新規作成し、Gitの現在のコミットハッシュを取得して環境変数として設定するロジックを追加します。
+     2. `src/main.rs`でその環境変数からコミットハッシュを読み込み、`const`または`static`変数として定義します。この値は`check`サブコマンドが利用することを想定します。
 
-     確認事項: WindowsのオーディオAPI (WASAPI等) の利用状況、スレッドスケジューリング、および`mmcss`モジュールが正しく設定・利用されているかを確認してください。
+     確認事項: `build.rs`が正しく実行され、コミットハッシュが`src/main.rs`で利用可能になることを確認してください。また、`Cargo.toml`に`build`スクリプトの指定が適切であることを確認してください。
 
-     期待する出力: Windows環境でデモのオーディオ品質を最大限に引き出すための推奨事項や、潜在的な問題点のリストをMarkdown形式で出力してください。
+     期待する出力: `build.rs`と`src/main.rs`の変更内容をMarkdownコードブロックで出力してください。
      ```
 
-2. [Issue #138](../issue-notes/138.md): PR 137のagentのハルシネーション疑惑（初手の対策案が誤っており、userがより深く分析させたら正しい対策案に到達した）はハルシネーションの可能性がある。対策案を洗い出して整理する
-   - 最初の小さな一歩: `issue-notes/138.md`に記載されている「対策案」の「CIエラーログの縮小」について、具体的にどのようなログが縮小可能か、またその実現可能性を調査する。
+3. [Issue #118](../issue-notes/118.md): AgentによるWindowsコードのTDD強化策の調査
+   - 最初の小さな一歩: `.github/workflows/build_windows.yml`と`.github/workflows/call-rust-windows-cargo-check.yml`を分析し、Linux runner上でWindowsターゲットの`cargo check`を実行する可能性と、その出力をAgentがどのように活用できるかを検討する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `.github/workflows/call-daily-project-summary.yml`, `.github/workflows/build_windows.yml` および `.github/scripts/` 内のログ処理に関連しそうなスクリプト。
+     対象ファイル: `.github/workflows/build_windows.yml`, `.github/workflows/call-rust-windows-cargo-check.yml`, `issue-notes/118.md`
 
-     実行内容: GitHub ActionsのCIログ（特にエラー出力）の構造と生成メカニズムを分析し、50KBを超えるような大きなログを、エラー部分のみに効果的に縮小・抽出する方法について調査してください。`build_windows.yml`のようなビルドログが大きくなりがちなワークフローのログ処理に焦点を当てます。
+     実行内容:
+     1. 上記ワークフローファイルを分析し、現在Windows環境でどのようにビルドチェックが行われているかを理解します。
+     2. `issue-notes/118.md`の内容、特に`cargo check target gnu`や`cross`、`cargo-xwin`などの提案を考慮し、Linux Runner上でWindowsターゲットの`cargo check`を実行するための実現可能性と、そのメリット・デメリットを分析してください。
+     3. この分析に基づき、AgentがTDDサイクルにその結果を組み込むための具体的な方法（例: 実行コマンド、出力形式、Agentへのフィードバック方法）を考察してください。
 
-     確認事項: GitHub Actionsのログ出力機能、`grep`や`sed`などの一般的なCLIツールでのログフィルタリングの可能性、およびActionの`outputs`や`summaries`機能の利用可否。
+     確認事項: 既存のCI/CDワークフローを変更せずに、追加のチェックとして導入できるか、またAgentがその結果を解釈可能かを確認してください。既存のWindows CIとの重複や効率性も考慮します。
 
-     期待する出力: CIログをエラー部分に縮小するための具体的なスクリプト案（Bash, Python等）またはGitHub Actionsのワークフロー変更案をMarkdown形式で提示してください。
-     ```
-
-3. [Issue #118](../issue-notes/118.md): （様子見中）agentがPRしたWindows用codeが、TDDされていないためハルシネーション検知と修正がされずビルドが通らない
-   - 最初の小さな一歩: 現在のCI（日次Windows Runnerテスト）がAgent生成コードの品質問題（ハルシネーションによるビルドエラー）をどの程度検知・改善しているか、過去のCI実行ログをレビューし、状況を評価する。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `.github/workflows/call-rust-windows-check.yml`, `issue-notes/118.md`
-
-     実行内容: 最近のCI実行ログ（特にWindows Runnerでのビルドとテスト）を分析し、Agentが生成したコードの品質が改善されたか、または引き続きビルドエラーやテスト失敗が発生しているかを評価してください。特に、`[Issue #118](../issue-notes/118.md)` で述べられている「ハルシネーションによるビルドエラー」が減少しているかどうかに焦点を当てます。
-
-     確認事項: `call-rust-windows-check.yml` の実行履歴、ログ内のエラーメッセージ、警告の有無、テスト結果（成功/失敗）の変化傾向。
-
-     期待する出力: 過去のCI結果から得られるWindowsビルドの安定性に関する評価レポートをMarkdown形式で出力してください。具体的には、ビルド成功率、主要なエラーの傾向、Agent生成コードとの関連性について記述し、Issueクローズの条件を満たしているかどうかの見解を含めてください。
+     期待する出力:
+     1. Linux RunnerでのWindowsターゲット`cargo check`の実現可能性に関する分析結果（メリット・デメリット）。
+     2. Agentがこのチェック結果をTDDに活用するための具体的な提案（Markdown形式）。
 
 ---
-Generated at: 2026-03-04 07:03:55 JST
+Generated at: 2026-04-08 07:10:05 JST

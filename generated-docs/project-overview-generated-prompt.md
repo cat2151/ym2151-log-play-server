@@ -1,4 +1,4 @@
-Last updated: 2026-03-04
+Last updated: 2026-04-08
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -1018,7 +1018,7 @@ MIT License
                                                                                   📖 169.md
                                                                                   📖 178.md
                                                                                   📖 181.md
-                                                                                  📖 188.md
+                                                                                  📖 194.md
                                                                                   📖 96.md
                                                                                   📖 97.md
                                                                                   📖 98.md
@@ -1153,7 +1153,7 @@ MIT License
                                                                                 📖 169.md
                                                                                 📖 178.md
                                                                                 📖 181.md
-                                                                                📖 188.md
+                                                                                📖 194.md
                                                                                 📖 96.md
                                                                                 📖 97.md
                                                                                 📖 98.md
@@ -1288,7 +1288,7 @@ MIT License
                                                                               📖 169.md
                                                                               📖 178.md
                                                                               📖 181.md
-                                                                              📖 188.md
+                                                                              📖 194.md
                                                                               📖 96.md
                                                                               📖 97.md
                                                                               📖 98.md
@@ -1423,7 +1423,7 @@ MIT License
                                                                             📖 169.md
                                                                             📖 178.md
                                                                             📖 181.md
-                                                                            📖 188.md
+                                                                            📖 194.md
                                                                             📖 96.md
                                                                             📖 97.md
                                                                             📖 98.md
@@ -1558,7 +1558,7 @@ MIT License
                                                                           📖 169.md
                                                                           📖 178.md
                                                                           📖 181.md
-                                                                          📖 188.md
+                                                                          📖 194.md
                                                                           📖 96.md
                                                                           📖 97.md
                                                                           📖 98.md
@@ -1693,7 +1693,7 @@ MIT License
                                                                         📖 169.md
                                                                         📖 178.md
                                                                         📖 181.md
-                                                                        📖 188.md
+                                                                        📖 194.md
                                                                         📖 96.md
                                                                         📖 97.md
                                                                         📖 98.md
@@ -1828,7 +1828,7 @@ MIT License
                                                                       📖 169.md
                                                                       📖 178.md
                                                                       📖 181.md
-                                                                      📖 188.md
+                                                                      📖 194.md
                                                                       📖 96.md
                                                                       📖 97.md
                                                                       📖 98.md
@@ -1963,7 +1963,7 @@ MIT License
                                                                     📖 169.md
                                                                     📖 178.md
                                                                     📖 181.md
-                                                                    📖 188.md
+                                                                    📖 194.md
                                                                     📖 96.md
                                                                     📖 97.md
                                                                     📖 98.md
@@ -2098,7 +2098,7 @@ MIT License
                                                                   📖 169.md
                                                                   📖 178.md
                                                                   📖 181.md
-                                                                  📖 188.md
+                                                                  📖 194.md
                                                                   📖 96.md
                                                                   📖 97.md
                                                                   📖 98.md
@@ -2233,7 +2233,7 @@ MIT License
                                                                 📖 169.md
                                                                 📖 178.md
                                                                 📖 181.md
-                                                                📖 188.md
+                                                                📖 194.md
                                                                 📖 96.md
                                                                 📖 97.md
                                                                 📖 98.md
@@ -2368,7 +2368,7 @@ MIT License
                                                               📖 169.md
                                                               📖 178.md
                                                               📖 181.md
-                                                              📖 188.md
+                                                              📖 194.md
                                                               📖 96.md
                                                               📖 97.md
                                                               📖 98.md
@@ -2503,7 +2503,7 @@ MIT License
                                                             📖 169.md
                                                             📖 178.md
                                                             📖 181.md
-                                                            📖 188.md
+                                                            📖 194.md
                                                             📖 96.md
                                                             📖 97.md
                                                             📖 98.md
@@ -2638,7 +2638,7 @@ MIT License
                                                           📖 169.md
                                                           📖 178.md
                                                           📖 181.md
-                                                          📖 188.md
+                                                          📖 194.md
                                                           📖 96.md
                                                           📖 97.md
                                                           📖 98.md
@@ -2773,7 +2773,7 @@ MIT License
                                                         📖 169.md
                                                         📖 178.md
                                                         📖 181.md
-                                                        📖 188.md
+                                                        📖 194.md
                                                         📖 96.md
                                                         📖 97.md
                                                         📖 98.md
@@ -2888,7 +2888,6 @@ MIT License
                                                     📄 build.rs
                                                     📄 call_opm_clock_64times.c
                                                     📁 generated-docs/
-                                                      📖 development-status-generated-prompt.md
                                                     🌐 googled947dc864c270e07.html
                                                     📄 install-ym2151-tools.rs
                                                     📁 issue-notes/
@@ -2909,7 +2908,7 @@ MIT License
                                                       📖 169.md
                                                       📖 178.md
                                                       📖 181.md
-                                                      📖 188.md
+                                                      📖 194.md
                                                       📖 96.md
                                                       📖 97.md
                                                       📖 98.md
@@ -3024,7 +3023,6 @@ MIT License
                                                   📄 build.rs
                                                   📄 call_opm_clock_64times.c
                                                   📁 generated-docs/
-                                                    📖 development-status-generated-prompt.md
                                                   🌐 googled947dc864c270e07.html
                                                   📄 install-ym2151-tools.rs
                                                   📁 issue-notes/
@@ -3045,7 +3043,7 @@ MIT License
                                                     📖 169.md
                                                     📖 178.md
                                                     📖 181.md
-                                                    📖 188.md
+                                                    📖 194.md
                                                     📖 96.md
                                                     📖 97.md
                                                     📖 98.md
@@ -3160,7 +3158,6 @@ MIT License
                                                 📄 build.rs
                                                 📄 call_opm_clock_64times.c
                                                 📁 generated-docs/
-                                                  📖 development-status-generated-prompt.md
                                                 🌐 googled947dc864c270e07.html
                                                 📄 install-ym2151-tools.rs
                                                 📁 issue-notes/
@@ -3181,7 +3178,7 @@ MIT License
                                                   📖 169.md
                                                   📖 178.md
                                                   📖 181.md
-                                                  📖 188.md
+                                                  📖 194.md
                                                   📖 96.md
                                                   📖 97.md
                                                   📖 98.md
@@ -3296,7 +3293,6 @@ MIT License
                                               📄 build.rs
                                               📄 call_opm_clock_64times.c
                                               📁 generated-docs/
-                                                📖 development-status-generated-prompt.md
                                               🌐 googled947dc864c270e07.html
                                               📄 install-ym2151-tools.rs
                                               📁 issue-notes/
@@ -3317,7 +3313,7 @@ MIT License
                                                 📖 169.md
                                                 📖 178.md
                                                 📖 181.md
-                                                📖 188.md
+                                                📖 194.md
                                                 📖 96.md
                                                 📖 97.md
                                                 📖 98.md
@@ -3432,7 +3428,6 @@ MIT License
                                             📄 build.rs
                                             📄 call_opm_clock_64times.c
                                             📁 generated-docs/
-                                              📖 development-status-generated-prompt.md
                                             🌐 googled947dc864c270e07.html
                                             📄 install-ym2151-tools.rs
                                             📁 issue-notes/
@@ -3453,7 +3448,7 @@ MIT License
                                               📖 169.md
                                               📖 178.md
                                               📖 181.md
-                                              📖 188.md
+                                              📖 194.md
                                               📖 96.md
                                               📖 97.md
                                               📖 98.md
@@ -3568,7 +3563,6 @@ MIT License
                                           📄 build.rs
                                           📄 call_opm_clock_64times.c
                                           📁 generated-docs/
-                                            📖 development-status-generated-prompt.md
                                           🌐 googled947dc864c270e07.html
                                           📄 install-ym2151-tools.rs
                                           📁 issue-notes/
@@ -3589,7 +3583,7 @@ MIT License
                                             📖 169.md
                                             📖 178.md
                                             📖 181.md
-                                            📖 188.md
+                                            📖 194.md
                                             📖 96.md
                                             📖 97.md
                                             📖 98.md
@@ -3725,7 +3719,7 @@ MIT License
                                           📖 169.md
                                           📖 178.md
                                           📖 181.md
-                                          📖 188.md
+                                          📖 194.md
                                           📖 96.md
                                           📖 97.md
                                           📖 98.md
@@ -3861,7 +3855,7 @@ MIT License
                                         📖 169.md
                                         📖 178.md
                                         📖 181.md
-                                        📖 188.md
+                                        📖 194.md
                                         📖 96.md
                                         📖 97.md
                                         📖 98.md
@@ -3997,7 +3991,7 @@ MIT License
                                       📖 169.md
                                       📖 178.md
                                       📖 181.md
-                                      📖 188.md
+                                      📖 194.md
                                       📖 96.md
                                       📖 97.md
                                       📖 98.md
@@ -4133,7 +4127,7 @@ MIT License
                                     📖 169.md
                                     📖 178.md
                                     📖 181.md
-                                    📖 188.md
+                                    📖 194.md
                                     📖 96.md
                                     📖 97.md
                                     📖 98.md
@@ -4269,7 +4263,7 @@ MIT License
                                   📖 169.md
                                   📖 178.md
                                   📖 181.md
-                                  📖 188.md
+                                  📖 194.md
                                   📖 96.md
                                   📖 97.md
                                   📖 98.md
@@ -4405,7 +4399,7 @@ MIT License
                                 📖 169.md
                                 📖 178.md
                                 📖 181.md
-                                📖 188.md
+                                📖 194.md
                                 📖 96.md
                                 📖 97.md
                                 📖 98.md
@@ -4541,7 +4535,7 @@ MIT License
                               📖 169.md
                               📖 178.md
                               📖 181.md
-                              📖 188.md
+                              📖 194.md
                               📖 96.md
                               📖 97.md
                               📖 98.md
@@ -4677,7 +4671,7 @@ MIT License
                             📖 169.md
                             📖 178.md
                             📖 181.md
-                            📖 188.md
+                            📖 194.md
                             📖 96.md
                             📖 97.md
                             📖 98.md
@@ -4813,7 +4807,7 @@ MIT License
                           📖 169.md
                           📖 178.md
                           📖 181.md
-                          📖 188.md
+                          📖 194.md
                           📖 96.md
                           📖 97.md
                           📖 98.md
@@ -4949,7 +4943,7 @@ MIT License
                         📖 169.md
                         📖 178.md
                         📖 181.md
-                        📖 188.md
+                        📖 194.md
                         📖 96.md
                         📖 97.md
                         📖 98.md
@@ -5085,7 +5079,7 @@ MIT License
                       📖 169.md
                       📖 178.md
                       📖 181.md
-                      📖 188.md
+                      📖 194.md
                       📖 96.md
                       📖 97.md
                       📖 98.md
@@ -5221,7 +5215,7 @@ MIT License
                     📖 169.md
                     📖 178.md
                     📖 181.md
-                    📖 188.md
+                    📖 194.md
                     📖 96.md
                     📖 97.md
                     📖 98.md
@@ -5357,7 +5351,7 @@ MIT License
                   📖 169.md
                   📖 178.md
                   📖 181.md
-                  📖 188.md
+                  📖 194.md
                   📖 96.md
                   📖 97.md
                   📖 98.md
@@ -5493,7 +5487,7 @@ MIT License
                 📖 169.md
                 📖 178.md
                 📖 181.md
-                📖 188.md
+                📖 194.md
                 📖 96.md
                 📖 97.md
                 📖 98.md
@@ -5629,7 +5623,7 @@ MIT License
               📖 169.md
               📖 178.md
               📖 181.md
-              📖 188.md
+              📖 194.md
               📖 96.md
               📖 97.md
               📖 98.md
@@ -5765,7 +5759,7 @@ MIT License
             📖 169.md
             📖 178.md
             📖 181.md
-            📖 188.md
+            📖 194.md
             📖 96.md
             📖 97.md
             📖 98.md
@@ -5901,7 +5895,7 @@ MIT License
           📖 169.md
           📖 178.md
           📖 181.md
-          📖 188.md
+          📖 194.md
           📖 96.md
           📖 97.md
           📖 98.md
@@ -6037,7 +6031,7 @@ MIT License
         📖 169.md
         📖 178.md
         📖 181.md
-        📖 188.md
+        📖 194.md
         📖 96.md
         📖 97.md
         📖 98.md
@@ -6173,7 +6167,7 @@ MIT License
       📖 169.md
       📖 178.md
       📖 181.md
-      📖 188.md
+      📖 194.md
       📖 96.md
       📖 97.md
       📖 98.md
@@ -6309,7 +6303,7 @@ MIT License
     📖 169.md
     📖 178.md
     📖 181.md
-    📖 188.md
+    📖 194.md
     📖 96.md
     📖 97.md
     📖 98.md
@@ -6445,7 +6439,7 @@ MIT License
   📖 169.md
   📖 178.md
   📖 181.md
-  📖 188.md
+  📖 194.md
   📖 96.md
   📖 97.md
   📖 98.md
@@ -6775,4 +6769,4 @@ googled947dc864c270e07.html
 
 
 ---
-Generated at: 2026-03-04 07:03:37 JST
+Generated at: 2026-04-08 07:09:47 JST
