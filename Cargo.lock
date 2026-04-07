@@ -136,7 +136,7 @@ checksum = "b35204fbdc0b3f4446b89fc1ac2cf84a8a68971995d0bf2e925ec7cd960f9cb3"
 [[package]]
 name = "cat-self-update-lib"
 version = "0.1.0"
-source = "git+https://github.com/cat2151/cat-self-update#e324426de0a3c219d1a63a939df93ff8f007916a"
+source = "git+https://github.com/cat2151/cat-self-update?rev=e324426de0a3c219d1a63a939df93ff8f007916a#e324426de0a3c219d1a63a939df93ff8f007916a"
 
 [[package]]
 name = "cc"
