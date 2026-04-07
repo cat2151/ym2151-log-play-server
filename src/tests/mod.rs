@@ -18,5 +18,6 @@ mod play_json_interactive_tests;
 mod player_tests;
 mod resampler_tests;
 mod scheduler_tests;
+mod self_update_tests;
 mod server_tests;
 mod wav_writer_tests;

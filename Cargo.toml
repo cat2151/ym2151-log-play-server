@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["cat2151"]
 license = "MIT"
 description = "YM2151 Log Player - Rust implementation"
+repository = "https://github.com/cat2151/ym2151-log-play-server"
 
 [lib]
 name = "ym2151_log_play_server"
@@ -18,6 +19,7 @@ hound = "3.5"
 anyhow = "1.0"
 chrono = "0.4"
 clap = { version = "4.5", features = ["derive"] }
+cat-self-update-lib = { git = "https://github.com/cat2151/cat-self-update" }
 rubato = "0.16.2"  # High-quality audio resampling library
 
 [target.'cfg(windows)'.dependencies]

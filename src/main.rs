@@ -4,6 +4,7 @@ use ym2151_log_play_server::demo_client_interactive;
 use ym2151_log_play_server::demo_server_interactive;
 use ym2151_log_play_server::demo_server_non_interactive;
 use ym2151_log_play_server::logging;
+use ym2151_log_play_server::self_update as self_update_support;
 use ym2151_log_play_server::server::Server;
 
 /// YM2151 Log Player - Rust implementation
@@ -18,6 +19,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// 更新の有無を確認
+    Check,
     /// サーバーとして起動
     Server {
         /// デバッグ用に詳細なログを出力 (通常時はログファイルのみ)
@@ -58,6 +61,8 @@ enum Commands {
         #[arg(long)]
         demo_interactive: bool,
     },
+    /// 最新版へ更新
+    Update,
 }
 
 /// Display usage information and examples
@@ -65,6 +70,7 @@ fn print_usage() {
     eprintln!("YM2151 Log Player - Rust implementation");
     eprintln!();
     eprintln!("使用方法:");
+    eprintln!("  ym2151-log-play-server check                                                  # 更新の有無を確認");
     eprintln!(
         "  ym2151-log-play-server server [--verbose] [--low-quality-resampling] [--demo-interactive] [--demo-non-interactive]  # サーバーとして起動"
     );
@@ -75,8 +81,10 @@ fn print_usage() {
     eprintln!(
         "  ym2151-log-play-server client --shutdown [--verbose]   # サーバーをシャットダウン"
     );
+    eprintln!("  ym2151-log-play-server update                                                 # 最新版へ更新");
     eprintln!();
     eprintln!("例:");
+    eprintln!("  ym2151-log-play-server check");
     eprintln!("  ym2151-log-play-server server");
     eprintln!("  ym2151-log-play-server server --verbose");
     eprintln!("  ym2151-log-play-server server --low-quality-resampling");
@@ -88,9 +96,11 @@ fn print_usage() {
     eprintln!("  ym2151-log-play-server client --stop");
     eprintln!("  ym2151-log-play-server client --shutdown");
     eprintln!("  ym2151-log-play-server client --demo-interactive");
+    eprintln!("  ym2151-log-play-server update");
     eprintln!();
     eprintln!("機能:");
     eprintln!("  - サーバー/クライアントモード (Windows)");
+    eprintln!("  - GitHub からの更新確認/自己更新");
     eprintln!("  - JSONイベントログファイルを読み込み");
     eprintln!("  - YM2151レジスタ操作を再現");
     eprintln!("  - リアルタイム音声再生");
@@ -157,6 +167,16 @@ fn main() {
     };
 
     match cli.command {
+        Commands::Check => match self_update_support::check_for_updates() {
+            Ok(result) => {
+                println!("{result}");
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("❌ エラー: {e}");
+                std::process::exit(1);
+            }
+        },
         Commands::Server {
             verbose,
             low_quality_resampling,
@@ -302,5 +322,14 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        Commands::Update => match self_update_support::run_self_update() {
+            Ok(_) => {
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("❌ エラー: {e}");
+                std::process::exit(1);
+            }
+        },
     }
 }
