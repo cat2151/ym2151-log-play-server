@@ -1,6 +1,16 @@
 use crate::logging::*;
 use std::path::PathBuf;
 
+struct TempLogDir(PathBuf);
+
+impl Drop for TempLogDir {
+    fn drop(&mut self) {
+        if self.0.exists() {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+}
+
 #[test]
 fn test_init_verbose() {
     init(true);
@@ -28,6 +38,7 @@ fn test_open_log_file_at_creates_parent_directory() {
             .as_nanos()
     );
     let log_dir = std::env::temp_dir().join(unique);
+    let _temp_log_dir = TempLogDir(log_dir.clone());
     let log_path = log_dir.join("nested").join("test.log");
 
     let file = open_log_file_at(&log_path).unwrap();
@@ -35,9 +46,6 @@ fn test_open_log_file_at_creates_parent_directory() {
 
     assert!(log_dir.join("nested").exists());
     assert!(log_path.exists());
-
-    std::fs::remove_file(&log_path).unwrap();
-    std::fs::remove_dir_all(&log_dir).unwrap();
 }
 
 #[cfg(windows)]

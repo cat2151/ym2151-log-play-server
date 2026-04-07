@@ -89,6 +89,7 @@ pub(crate) fn log_file_path(file_name: &str) -> PathBuf {
     log_directory().join(file_name)
 }
 
+/// Create parent directories for the provided log path, then open the file in append mode.
 pub(crate) fn open_log_file_at(path: &Path) -> std::io::Result<File> {
     if let Some(parent) = path.parent() {
         create_dir_all(parent)?;
