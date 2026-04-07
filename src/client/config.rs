@@ -2,7 +2,6 @@
 //!
 //! This module handles client-side configuration such as verbose mode.
 
-use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Mutex;
 
@@ -48,11 +47,15 @@ pub fn is_client_verbose() -> bool {
 
 /// Write a message to the log file
 fn write_to_log(message: &str) {
-    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(LOG_FILE) {
-        let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-        if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {
-            eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
+    let path = crate::logging::log_file_path(LOG_FILE);
+    match crate::logging::open_log_file_at(&path) {
+        Ok(mut file) => {
+            let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
+            if let Err(e) = writeln!(file, "[{}] {}", timestamp, message) {
+                eprintln!("⚠️  Warning: Failed to write to log file: {}", e);
+            }
         }
+        Err(error) => crate::logging::eprintln_log_open_failure(&path, &error),
     }
 }
 
