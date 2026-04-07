@@ -67,7 +67,7 @@ pub fn run_server_demo_non_interactive(verbose: bool, low_quality_resampling: bo
         .map(|e| e.time)
         .fold(0.0f64, |a, b| a.max(b));
 
-    let max_event_time_sec = max_event_time_samples as f64 / sample_rate;
+    let max_event_time_sec = max_event_time_samples / sample_rate;
 
     // Create player directly with the event log
     let player = Player::new(event_log.clone());
